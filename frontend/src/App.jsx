@@ -10,17 +10,90 @@ import { PrimeReactProvider } from 'primereact/api';
 import { FileUpload } from 'primereact/fileupload';
 import { usePapaParse } from 'react-papaparse';
 
-import { Form, Accordion } from 'react-bootstrap';
+import { Button, Form, Accordion, Modal } from 'react-bootstrap';
 
 import { Route, Routes, Link, useNavigate, useLocation } from "react-router-dom";
 
+
+import { Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { ImgComparisonSlider } from '@img-comparison-slider/react';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+
+
 const CSVUploader = () => {
+
+  function UtilityModal(props) {
+    const navigate = useNavigate();
+  
+    // Datos de ejemplo que se pasarán en el estado
+    const file = props.file;
+    
+    const signalType = document.getElementById("signalType").value;
+    const timestampColumn = document.getElementById("timestampColumn");
+    const signalValues = document.getElementById("signalValues");
+    const errorMessage = document.getElementById("error-message");
+
+
+    return (
+      <Modal
+        {...props}
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="contained-modal-title-vcenter">
+            Select SignaliX utility
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="d-flex justify-content-center gap-3">
+          <Button
+            variant="primary"
+            onClick={() =>
+              navigate("/resampling", {
+                state: {
+                  file,
+                  signalType: signalType,
+                  timestampColumn: timestampColumn,
+                  signalValues: signalValues,
+                },
+              })
+            }
+          >
+            Resampling
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              navigate("/processing", {
+                state: {
+                  file,
+                  signalType: signalType,
+                  timestampColumn: timestampColumn,
+                  signalValues: signalValues,
+                },
+              })
+            }
+          >
+            Processing
+          </Button>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={props.onHide}>Close</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
 
   const fileUploader = useRef();
   const { readString } = usePapaParse();
   const navigate = useNavigate();
 
-  const customBase64Uploader = async (event) => {
+  const [modalShow, setModalShow] = useState(false);
+
+  const selectUtility = (event) => {
     const signalType = document.getElementById("signalType");
     const timestampColumn = document.getElementById("timestampColumn");
     const signalValues = document.getElementById("signalValues");
@@ -36,41 +109,11 @@ const CSVUploader = () => {
 
     const file = event.files[0];
 
-    if (file) {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("signalType", signalType.value);
-      formData.append("timestampColumn", timestampColumn.value);
-      formData.append("signalValues", signalValues.value);
+    fileUploader.current.clear();
+    fileUploader.current.setUploadedFiles(event.files);
 
-      try {
-        const response = await fetch("http://localhost:8000/upload", {
-          method: "POST",
-          body: formData,
-        });
+    setModalShow(true);
 
-        if (response.ok) {
-          const result = await response.json();
-          console.log("File uploaded:", result);
-          fileUploader.current.clear();
-          fileUploader.current.setUploadedFiles(event.files);
-
-          // Navigate to the processing page with the necessary data
-          navigate("/processing", {
-            state: {
-              file,
-              signalType: signalType.value,
-              timestampColumn: timestampColumn.value,
-              signalValues: signalValues.value,
-            },
-          });
-        } else {
-          console.error("Upload error", response.statusText);
-        }
-      } catch (error) {
-        console.error("Request error:", error);
-      }
-    }
   };
 
   const fileSelected = (event) => {
@@ -110,21 +153,27 @@ const CSVUploader = () => {
   };
 
   return (
-    <PrimeReactProvider>
-      <div className="card">
-        <p id="error-message" style={{ color: "red" }}></p>
-        <FileUpload
-          ref={fileUploader}
-          customUpload
-          uploadHandler={customBase64Uploader}
-          onSelect={fileSelected}
-          accept=".csv"
-          maxFileSize={10000000}
-          emptyTemplate={<p className="m-0">Drag and drop files here to upload.</p>}
-        />
-      </div>
-    </PrimeReactProvider>
-
+    <>
+      <PrimeReactProvider>
+        <div className="card">
+          <p id="error-message" style={{ color: "red" }}></p>
+          <FileUpload
+            ref={fileUploader}
+            customUpload
+            uploadHandler={selectUtility}
+            onSelect={fileSelected}
+            accept=".csv"
+            maxFileSize={10000000}
+            emptyTemplate={<p className="m-0">Drag and drop files here to upload.</p>}
+          />
+        </div>
+      </PrimeReactProvider>
+      <UtilityModal
+        show={modalShow}
+        onHide={() => setModalShow(false)}
+        
+      />
+    </>
   );
 };
 
@@ -170,20 +219,26 @@ const Home = () => {
   );
 };
 
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-
 
 const Processing = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, signalValues } = location.state || {};
   const [pipelines, setPipelines] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState(null); 
+  const [chartData, setChartData] = useState(null);
+  const [chartImages, setchartImages] = useState([]);
   const { readString } = usePapaParse();
+  const [selectPipeline, setselectPipeline] = useState(1);
+
+  const chartOptions = {
+    responsive: true,
+    scales: {
+      x: { type: 'linear', position: 'bottom' },
+      y: { beginAtZero: true },
+    },
+  };
+
+  const lineRefs = useRef([]);
 
   useEffect(() => {
     const requestPipelines = async () => {
@@ -217,7 +272,7 @@ const Processing = () => {
       requestPipelines();
     }
 
-    if (file) {
+    if (file && !loading) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target.result;
@@ -227,32 +282,70 @@ const Processing = () => {
             const signalValuesIdx = results.data[0].indexOf(signalValues);
 
             const rows = results.data.slice(1);
-            console.log(rows);
             const minTimestamp = Math.min(...rows.map(row => parseInt(row[timestampsColumnsIdx])));
 
-            const chartData = {
-              datasets: [
-                {
-                  label: signalValues,
-                  data: rows.map(row => ({
-                    x: (parseInt(row[timestampsColumnsIdx]) - minTimestamp),
-                    y: row[signalValuesIdx],
-                  })),
-                  borderColor: 'rgb(75, 192, 192)',
-                  backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                  fill: false,
-                },
-              ],
-            };
-            console.log(chartData)
-            setChartData(chartData);
+            let datasets = [
+              {
+                label: "Señal Original",
+                data: rows.map(row => ({
+                  x: parseInt(row[timestampsColumnsIdx]) - minTimestamp,
+                  y: parseFloat(row[signalValuesIdx]),
+                })),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                fill: false,
+              },
+            ];
+
+            pipelines.forEach((pipeline, index) => {
+              datasets.push({
+                label: pipeline.title,
+                data: pipeline.signal.map(row => ({
+                  x: parseInt(row[timestampsColumnsIdx]) - minTimestamp,
+                  y: parseFloat(row[signalValuesIdx]),
+                })),
+                borderColor: `hsl(${(index * 60) % 360}, 70%, 50%)`,
+                backgroundColor: `hsla(${(index * 60) % 360}, 70%, 50%, 0.2)`,
+                fill: false,
+              });
+            });
+
+            setChartData({ datasets });
           }
         });
       };
       reader.readAsText(file);
     }
 
-  }, [file, signalType, timestampColumn, signalValues, loading, readString]);
+  }, [file, signalType, timestampColumn, signalValues, loading, readString, pipelines]);
+
+
+  useEffect(() => {
+
+    if (!loading && !!chartData && !chartImages.length) {
+      let images = [];
+
+      console.log(chartData)
+      chartData.datasets.forEach(dataset => {
+
+        let ctx = document.createElement('canvas').getContext('2d');
+
+        const aux = new ChartJS(ctx, {
+          type: 'line',
+          data: {
+            datasets: [dataset],
+          },
+          options: chartOptions,
+        });
+
+        images.push(aux.toBase64Image());
+      });
+
+      setchartImages(images);
+      console.log(images);
+    }
+
+  });
 
   const renderPipelines = () => {
     if (loading) {
@@ -262,9 +355,9 @@ const Processing = () => {
         <Accordion>
           {pipelines.map((pipeline, index) => (
             <Accordion.Item key={index} eventKey={`${index}`}>
-              <Accordion.Header>{pipeline.title}</Accordion.Header>
+              <Accordion.Header onClick={() => (setselectPipeline(index + 1))}>{pipeline.title}</Accordion.Header>
               <Accordion.Body>
-                {pipeline.qualityMetric}
+                Calidad de la señal: {pipeline.qualityMetric}
               </Accordion.Body>
             </Accordion.Item>
           ))}
@@ -273,20 +366,26 @@ const Processing = () => {
     }
   };
 
-  const renderChart = () => {
+  const renderCharts = (index1, index2) => {
     if (loading || !chartData) {
       return <div>Loading chart...</div>;
     } else {
-      const chartOptions = {
-        responsive: true,
-        scales: {
-          x: { type: 'linear', position: 'bottom' },
-          y: { beginAtZero: true },
-        },
-      };
 
-      return (
-        <Line data={chartData} options={chartOptions} />
+      const datasets = [
+        chartData.datasets[index1],
+        chartData.datasets[index2],
+      ];
+
+      return (<>
+        <Line
+          data={{ datasets }}
+          options={chartOptions}
+        />
+        <ImgComparisonSlider>
+          <img slot="first" src={chartImages[index1]} />
+          <img slot="second" src={chartImages[index2]} />
+        </ImgComparisonSlider>
+      </>
       );
     }
   };
@@ -296,7 +395,7 @@ const Processing = () => {
       <h1>Processing</h1>
       <div className="row align-items-start">
         <div className="col">
-          {renderChart()}
+          {renderCharts(0, selectPipeline)}
         </div>
         <div className="col">
           {renderPipelines()}
