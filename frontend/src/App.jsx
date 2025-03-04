@@ -24,17 +24,19 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const CSVUploader = () => {
 
-  function UtilityModal(props) {
-    const navigate = useNavigate();
   
-    // Datos de ejemplo que se pasarán en el estado
-    const file = props.file;
-    
-    const signalType = document.getElementById("signalType").value;
-    const timestampColumn = document.getElementById("timestampColumn");
-    const signalValues = document.getElementById("signalValues");
-    const errorMessage = document.getElementById("error-message");
+  const fileUploader = useRef();
+  const { readString } = usePapaParse();
+  const navigate = useNavigate();
 
+  const [modalShow, setModalShow] = useState(false);
+  const [file, setFile] = useState(null);
+  const [signalType, setSignalType] = useState("");
+  const [timestampColumn, setTimestampColumn] = useState("");
+  const [signalValues, setSignalValues] = useState("");
+
+
+  function UtilityModal(props) {
 
     return (
       <Modal
@@ -87,12 +89,6 @@ const CSVUploader = () => {
     );
   }
 
-  const fileUploader = useRef();
-  const { readString } = usePapaParse();
-  const navigate = useNavigate();
-
-  const [modalShow, setModalShow] = useState(false);
-
   const selectUtility = (event) => {
     const signalType = document.getElementById("signalType");
     const timestampColumn = document.getElementById("timestampColumn");
@@ -105,6 +101,10 @@ const CSVUploader = () => {
       return;
     } else {
       errorMessage.textContent = "";
+      setFile(event.files[0]);
+      setSignalType(signalType.value);
+      setTimestampColumn(timestampColumn.value);
+      setSignalValues(signalValues.value);
     }
 
     const file = event.files[0];
@@ -135,7 +135,7 @@ const CSVUploader = () => {
             signalType.options.add(new Option("", ""));
 
             let timestampColumn = document.getElementById("timestampColumn");
-            timestampColumn.options.add(new Option("", ""));
+            timestampColumn.options.add(new Option("No timestamps", "No timestamps"));
 
             let signalValues = document.getElementById("signalValues");
             signalValues.options.add(new Option("", ""));
@@ -178,6 +178,12 @@ const CSVUploader = () => {
 };
 
 const Home = () => {
+  const [timestampValue, setTimestampValue] = useState("");
+
+  const handleTimestampChange = (event) => {
+    setTimestampValue(event.target.value);
+  };
+
   return (
     <div>
       <header className="App-header text-center py-5">
@@ -203,18 +209,53 @@ const Home = () => {
                 </Form.Group>
                 <Form.Group className="form-group">
                   <Form.Label>Timestamp Column</Form.Label>
-                  <Form.Select className="form-control" id="timestampColumn" />
+                  <Form.Select
+                    className="form-control"
+                    id="timestampColumn"
+                    onChange={handleTimestampChange}
+                  >
+                  </Form.Select>
                 </Form.Group>
+                {timestampValue === "No timestamps" && (
+                  <Form.Group className="form-group">
+                    <Form.Label>Additional Field</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter value"
+                    />
+                  </Form.Group>
+                )}
                 <Form.Group className="form-group">
                   <Form.Label>Signal Values</Form.Label>
                   <Form.Select className="form-control" id="signalValues" />
                 </Form.Group>
               </Form>
             </div>
-            <div id="output"></div>
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+const Resampling = () => {
+  const location = useLocation();
+  const { file, signalType, timestampColumn, signalValues } = location.state || {};
+
+  return (
+    <div className="container text-center">
+      <h1>Resampling</h1>
+      {file ? (
+        <div>
+          <p><strong>Archivo:</strong> {file.name}</p>
+          <p><strong>Tipo de Señal:</strong> {signalType}</p>
+          <p><strong>Columna de Tiempo:</strong> {timestampColumn}</p>
+          <p><strong>Valores de Señal:</strong> {signalValues}</p>
+        </div>
+      ) : (
+        <p>No hay datos disponibles.</p>
+      )}
+      <Link to="/" className="btn btn-primary">Volver a inicio</Link>
     </div>
   );
 };
@@ -426,6 +467,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/processing" element={<Processing />} />
+        <Route path="/resampling" element={<Resampling />} />
       </Routes>
     </div>
   );
