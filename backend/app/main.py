@@ -43,31 +43,32 @@ async def upload_file(
 @app.post("/process")
 async def process(
     file: UploadFile = File(...), 
-    signalType: str = Form(...), 
-    timestampColumn: str = Form(...), 
-    signalValues: str = Form(...)
+    signalType: int = Form(...), 
+    timestampColumn: int = Form(...), 
+    signalValues: int = Form(...)
 ):
 
     df = pd.read_csv(file.file)
 
-    if signalValues not in df.columns:
+    if signalValues >= len(df.columns):
         return JSONResponse(status_code=400, content={"error": f"La columna '{signalValues}' no existe en el archivo."})
 
-    signal_data = df[signalValues]
+    signal_data = df[df.columns[signalValues]]
 
     no_outliers = hampel_IQR_GSR(signal_data)
     filtering = gaussian1_gsr(no_outliers)
 
 
     df_outliers = df.copy()
-    df_outliers[signalValues] = no_outliers
+    df_outliers[df.columns[signalValues]] = no_outliers
 
     df_filtering = df.copy()
-    df_filtering[signalValues] = filtering
+    df_filtering[df.columns[signalValues]] = filtering
 
     pipelines = [
-        {"title": "Pipeline 1", "signal": df_filtering.values.tolist(), "qualityMetric": gsr_quality(filtering)},
-        {"title": "Pipeline 2", "signal": df_outliers.values.tolist(), "qualityMetric": gsr_quality(no_outliers)},
+       {"title": "Pipeline 1", "signal": df_outliers.values.tolist(), "qualityMetric": gsr_quality(no_outliers)},
+        {"title": "Pipeline 2", "signal": df_filtering.values.tolist(), "qualityMetric": gsr_quality(filtering)},
+
     ]
     
     return JSONResponse(content={"pipelines": pipelines})
