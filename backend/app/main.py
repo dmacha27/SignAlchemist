@@ -7,12 +7,16 @@ import neurokit2 as nk
 import numpy as np
 from scipy.signal import cheby2, sosfiltfilt, resample
 from scipy.ndimage import gaussian_filter1d
+import json
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*']
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"], 
+    allow_headers=["*"], 
 )
 
 @app.get("/")
@@ -20,30 +24,37 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.options("/upload")
-async def options_upload():
+@app.options("/resampling")
+async def options_resampling():
     return {"message": "Preflight OPTIONS request handled"}
 
-@app.post("/upload")
-async def upload_file(
-    file: UploadFile = File(...),  # Para manejar el archivo
-    signalType: str = Form(...),   # Para manejar signalType
-    timestampColumn: str = Form(...),  # Para manejar timestampColumn
-    signalValues: str = Form(...)   # Para manejar signalValues
+@app.post("/resampling")
+async def resampling(
+    data: str = Form(...),
+    source_sampling_rate: float = Form(...),
+    target_sampling_rate: float = Form(...),
 ):
-    # Aquí puedes procesar los datos como desees
-    return JSONResponse(content={
-        "filename": file.filename,
-        "signalType": signalType,
-        "timestampColumn": timestampColumn,
-        "signalValues": signalValues
-    })
+    print(data, flush=True)
+    data = np.array(json.loads(data))
+
+    num = int(len(data[:, 1]) * (target_sampling_rate / source_sampling_rate))
+
+    new_values = resample(data[:, 1], num)
+
+    min_timestamp = min(data[:, 0])
+    max_timestamp = max(data[:, 0])
+
+    new_time = np.linspace(min_timestamp, max_timestamp, num)
+
+    new_data = np.stack((new_time, new_values), axis=1)
+
+    return JSONResponse(content={"data": new_data.tolist()})
 
 
 @app.post("/process")
 async def process(
     file: UploadFile = File(...), 
-    signalType: int = Form(...), 
+    signalType: str = Form(...), 
     timestampColumn: int = Form(...), 
     signalValues: int = Form(...)
 ):

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { PrimeReactProvider } from 'primereact/api';
 import { FileUpload } from 'primereact/fileupload';
@@ -12,7 +12,13 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const chartOptions = {
     responsive: true,
     scales: {
-        x: { type: 'linear', position: 'bottom' },
+        x: {
+            type: 'linear', position: 'bottom',
+            title: {
+                display: true,
+                text: "(s)"
+            }
+        },
         y: { beginAtZero: true },
     },
 };
@@ -40,7 +46,7 @@ const UtilityModal = ({ show, onHide, navigate, file, signalType, timestampColum
             <Button onClick={onHide}>Close</Button>
         </Modal.Footer>
     </Modal>
-);
+)
 
 const CSVUploader = ({ file, setFile }) => {
     const fileUploader = useRef();
@@ -59,7 +65,7 @@ const CSVUploader = ({ file, setFile }) => {
         const signalValues_select = document.getElementById("signalValues");
         const errorMessage = document.getElementById("error-message");
 
-        if (!signalType_select.value || !timestampColumn_select.value || !signalValues_select.value) {
+        if (!signalType_select.value || !timestampColumn_select.value || !samplingRate_select.value || !signalValues_select.value) {
             errorMessage.textContent = "All fields must be selected before uploading.";
             return;
         }
@@ -71,13 +77,17 @@ const CSVUploader = ({ file, setFile }) => {
         setSignalValues(signalValues_select.value);
 
         fileUploader.current.clear();
-        fileUploader.current.setUploadedFiles(event.files);
+
         setModalShow(true);
     };
 
     const fileSelected = (event) => {
-        const file = event.files[0];
-        if (!file) return;
+        const new_file = event.files[0];
+        const clearSelect = (selectId) => {
+            document.getElementById(selectId).innerHTML = "";
+        };
+
+        if (!new_file) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -85,34 +95,46 @@ const CSVUploader = ({ file, setFile }) => {
             readString(content, {
                 complete: (results) => {
                     if (results.data.length > 0) {
-                        const headers = results.data[0].map((item, index) => 
+                        // results.data[0] contains header (if present in CSV) or data.
+                        // Both cases results.data[0] contains as many elements as columns
+                        const headers = results.data[0].map((item, index) =>
                             isNaN(item) ? [item, index] : [`Column ${index + 1}`, index]
                         );
 
                         results.data = isNaN(results.data[0][0]) ? results.data.slice(1) : results.data;
-                        
-                        let signalType = document.getElementById("signalType");
-                        signalType.options.add(new Option("", ""));
 
-                        let timestampColumn = document.getElementById("timestampColumn");
-                        timestampColumn.options.add(new Option("", ""));
-                        timestampColumn.options.add(new Option("No timestamps", "No timestamps"));
+                        // Delete options select
+                        ["signalType", "timestampColumn", "samplingRate", "signalValues"].forEach(clearSelect);
 
-                        let signalValues = document.getElementById("signalValues");
-                        signalValues.options.add(new Option("", ""));
+                        // Populate FORM Selects
 
-                        headers.forEach(([option, value]) => {
-                            signalType.options.add(new Option(option, value));
-                            timestampColumn.options.add(new Option(option, value));
-                            signalValues.options.add(new Option(option, value));
+                        let signalType_select = document.getElementById("signalType");
+                        // Stackoverflow: https://stackoverflow.com/questions/39546133/remove-all-options-from-select-tag
+                        const singal_types = ["", "GSR", "BVP"];
+                        singal_types.forEach(type => {
+                            signalType_select.options.add(new Option(type, type));
                         });
 
+                        let timestampColumn_select = document.getElementById("timestampColumn");
+                        timestampColumn_select.options.add(new Option("", ""));
+                        timestampColumn_select.options.add(new Option("No timestamps", "No timestamps"));
+
+                        let signalValues_select = document.getElementById("signalValues");
+                        signalValues_select.options.add(new Option("", ""));
+
+                        headers.forEach(([option, value]) => {
+                            timestampColumn_select.options.add(new Option(option, value));
+                            signalValues_select.options.add(new Option(option, value));
+                        });
+
+
+                        // Headers removed
                         setFile(new Blob([results.data.map(row => row.join(',')).join('\n')], { type: 'text/csv' }));
                     }
                 }
             });
         };
-        reader.readAsText(file);
+        reader.readAsText(new_file);
     };
 
     return (
@@ -122,6 +144,7 @@ const CSVUploader = ({ file, setFile }) => {
                     <p id="error-message" style={{ color: "red" }}></p>
                     <FileUpload
                         ref={fileUploader}
+                        uploadLabel='Process'
                         customUpload
                         uploadHandler={handleUtilityModal}
                         onSelect={fileSelected}
@@ -146,81 +169,119 @@ const CSVUploader = ({ file, setFile }) => {
 };
 
 const Home = () => {
-    const [timestampValue, setTimestampValue] = useState("");
+    const [timestampValue, setTimestampValue] = useState(""); // p.e "No timestamps"
     const [file, setFile] = useState(null);
     const [fileRows, setFileRows] = useState(null);
     const { readString } = usePapaParse();
+    let samplingRate = null;
 
-    const handleTimestampChange = (event) => setTimestampValue(event.target.value);
+    // Stackoverflow: https://stackoverflow.com/questions/30399123/finding-difference-between-consecutive-numbers-in-an-array-in-javascript
+    const diff = (A) => { return A.slice(1).map((item, index) => { return item - A[index] }) }
 
-    const handleSamplingRateChange = (event) => {console.log("GOLA")};
+    // Stackoverflow: https://stackoverflow.com/questions/29544371/finding-the-average-of-an-array-using-js
+    const average = array => array.reduce((a, b) => a + b) / array.length;
 
-    const handleSignalValuesChange = (event) => {
+    useEffect(() => {
+        if (!file) return;
+        console.log(file);
         const reader = new FileReader();
-
-        let timestampColumn = document.getElementById("timestampColumn");
-        let signalValues = document.getElementById("signalValues");
 
         reader.onload = (e) => {
             const content = e.target.result;
             readString(content, {
                 complete: (results) => {
                     const rows = results.data;
-                    
-                    let x = [];
-                    const y = rows.map(row => parseFloat(row[signalValues.value]));
-                    console.log(y)
-                    if (timestampColumn.value == "No timestamps") {
-                        let samplingRate = document.getElementById("samplingRate").value;
-
-                        for (let i = 0; i < y.length; i ++) {
-                            x.push(i * (1 / samplingRate));
-                        }
-
-                    } else {
-                        const minTimestamp = Math.min(...rows.map(row => parseInt(row[timestampColumn.value])));
-                        x = rows.map(row => parseInt(row[timestampColumn.value]) - minTimestamp);
-                    }
-                    
-                    console.log(x)
-                    const datasets = [{
-                        label: "Señal Original",
-                        data: x.map((value, index) => ({
-                            x: value,
-                            y: y[index],
-                        })),
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        fill: false,
-                    }];
-
-                    const homeChart = document.getElementById('homeChart');
-                    homeChart.innerHTML = "";
-
-                    const canvas = document.createElement("canvas");
-                    
-                    chartOptions.scales.x["title"] = {
-                        display: true,
-                        text: timestampColumn.options[timestampColumn.selectedIndex].text
-                    }
-
-                    chartOptions.scales.y["title"] = {
-                        display: true,
-                        text: signalValues.options[signalValues.selectedIndex].text
-                    }
-
-                    new ChartJS(canvas, {
-                        type: 'line',
-                        data: { datasets },
-                        options: chartOptions,
-                    });
-
-                    homeChart.appendChild(canvas);
                     setFileRows(rows);
                 },
             });
         };
         reader.readAsText(file);
+
+    }, [file]); // Effect only when file is modified
+
+    const renderChart = () => {
+        let timestampColumn_select = document.getElementById("timestampColumn");
+        let samplingRate_select = document.getElementById("samplingRate");
+        let signalValues_select = document.getElementById("signalValues");
+
+        let x = [];
+
+        // y values (or what are supose to be y values) dont need processing (its the signal)
+        const y = fileRows.map(row => parseFloat(row[signalValues_select.value]));
+
+        // x values need processing in case there are no timestamps present in the data file
+        if (timestampColumn.value == "No timestamps") {
+
+            for (let i = 0; i < y.length; i++) {
+                x.push(i * (1 / samplingRate_select.value));
+            }
+
+            samplingRate = null;
+
+        } else {
+            const minTimestamp = Math.min(...fileRows.map(row => parseFloat(row[timestampColumn_select.value])));
+            x = fileRows.map(row => parseFloat(row[timestampColumn_select.value]) - minTimestamp);
+
+            samplingRate = 1 / average(diff(x));
+            samplingRate_select.value = samplingRate
+        }
+
+        const badge = document.getElementById("samplingRateBadge");
+        if (samplingRate) {
+            badge.innerText = `Detected sampling rate of ${samplingRate.toFixed(3)} Hz`;
+            badge.style.display = "block";
+        } else {
+            badge.style.display = "none";
+        }
+
+
+        const datasets = [{
+            label: "Señal Original",
+            data: x.map((value, index) => ({
+                x: value,
+                y: y[index],
+            })),
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            fill: false,
+        }];
+
+        const homeChart = document.getElementById('homeChart');
+        homeChart.innerHTML = "";
+
+        const canvas = document.createElement("canvas");
+
+        chartOptions.scales.x["title"] = {
+            display: true,
+            text: timestampColumn_select.options[timestampColumn_select.selectedIndex].text + " (s)"
+        }
+
+        chartOptions.scales.y["title"] = {
+            display: true,
+            text: signalValues_select.options[signalValues_select.selectedIndex].text
+        }
+
+        new ChartJS(canvas, {
+            type: 'line',
+            data: { datasets },
+            options: chartOptions,
+        });
+
+        homeChart.appendChild(canvas);
+
+    };
+
+    const handleTimestampChange = (event) => {
+        setTimestampValue(event.target.value);
+        renderChart();
+    };
+
+    const handleSamplingRateChange = (event) => {
+        renderChart();
+    };
+
+    const handleSignalValuesChange = (event) => {
+        renderChart();
     };
 
     return (
@@ -250,12 +311,14 @@ const Home = () => {
                                     <Form.Label>Timestamp Column</Form.Label>
                                     <Form.Select className="form-control" id="timestampColumn" onChange={handleTimestampChange} />
                                 </Form.Group>
-                                {timestampValue === "No timestamps" && (
-                                    <Form.Group className="form-group">
-                                        <Form.Label>Sampling rate (Hz)</Form.Label>
-                                        <Form.Control type="number" placeholder="Enter value" id="samplingRate" onChange={handleSamplingRateChange} />
-                                    </Form.Group>
-                                )}
+                                <Form.Group className="form-group">
+                                    <Form.Label>Sampling rate (Hz)</Form.Label>
+                                    <Form.Control type="number"
+                                        placeholder='Enter Hz'
+                                        id="samplingRate"
+                                        onChange={handleSamplingRateChange}
+                                        disabled={timestampValue !== "No timestamps"} />
+                                </Form.Group>
                                 <Form.Group className="form-group">
                                     <Form.Label>Signal Values</Form.Label>
                                     <Form.Select className="form-control" id="signalValues" onChange={handleSignalValuesChange}></Form.Select>
@@ -264,15 +327,18 @@ const Home = () => {
                         </div>
                     </div>
                     <div className="col-6">
-                        <div className="card">
+                        <div className="card text-center">
+                            <span id="samplingRateBadge" className="badge bg-primary mx-auto w-50" style={{ display: "none" }}>
+                                Detected sampling rate of {samplingRate} Hz
+                            </span>
                             <div id="homeChart">
-                            <Line data={{
+                                <Line data={{
                                     datasets: [{
                                         label: 'Original signal', data: [], borderColor: 'rgb(75, 192, 192)',
                                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                                         fill: false
                                     }]
-                                }} options={chartOptions} />;
+                                }} options={chartOptions} />
                             </div>
                         </div>
                     </div>
