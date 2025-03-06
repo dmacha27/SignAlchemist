@@ -57,6 +57,7 @@ const CSVUploader = ({ file, setFile }) => {
     const [timestampColumn, setTimestampColumn] = useState("");
     const [samplingRate, setSamplingRate] = useState(0);
     const [signalValues, setSignalValues] = useState("");
+    const [ogFile, setOgFile] = useState(null);
 
     const handleUtilityModal = (event) => {
         const signalType_select = document.getElementById("signalType");
@@ -127,9 +128,10 @@ const CSVUploader = ({ file, setFile }) => {
                             signalValues_select.options.add(new Option(option, value));
                         });
 
+                        
 
-                        // Headers removed
-                        setFile(new Blob([results.data.map(row => row.join(',')).join('\n')], { type: 'text/csv' }));
+                        const fileRows = [headers.map(item => item[0]).join(',')].concat(results.data.map(row => row.join(',')));
+                        setFile(new Blob([fileRows.join('\n')], { type: 'text/csv' }));
                     }
                 }
             });
@@ -190,7 +192,7 @@ const Home = () => {
             const content = e.target.result;
             readString(content, {
                 complete: (results) => {
-                    const rows = results.data;
+                    const rows = results.data.slice(1); // No headers
                     setFileRows(rows);
                 },
             });

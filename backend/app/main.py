@@ -6,6 +6,7 @@ import pandas as pd
 import neurokit2 as nk
 import numpy as np
 from scipy.signal import cheby2, sosfiltfilt, resample
+from scipy.interpolate import interp1d, UnivariateSpline
 from scipy.ndimage import gaussian_filter1d
 import json
 
@@ -31,20 +32,30 @@ async def options_resampling():
 @app.post("/resampling")
 async def resampling(
     data: str = Form(...),
+    interpolation_technique: str = Form(...),
     source_sampling_rate: float = Form(...),
     target_sampling_rate: float = Form(...),
 ):
-    print(data, flush=True)
+
+
     data = np.array(json.loads(data))
-
-    num = int(len(data[:, 1]) * (target_sampling_rate / source_sampling_rate))
-
-    new_values = resample(data[:, 1], num)
 
     min_timestamp = min(data[:, 0])
     max_timestamp = max(data[:, 0])
 
+    num = int(len(data[:, 1]) * (target_sampling_rate / source_sampling_rate))
+
+
     new_time = np.linspace(min_timestamp, max_timestamp, num)
+
+
+    if interpolation_technique == "spline":
+      interp_func = UnivariateSpline(data[:, 0], data[:, 1])
+    else:
+      interp_func = interp1d(data[:, 0], data[:, 1])
+    
+
+    new_values = interp_func(new_time)
 
     new_data = np.stack((new_time, new_values), axis=1)
 
