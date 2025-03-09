@@ -31,12 +31,17 @@ const UtilityModal = ({ show, onHide, navigate, file, signalType, timestampColum
             </Modal.Title>
         </Modal.Header>
         <Modal.Body className="d-flex justify-content-center gap-3">
-            <Button variant="primary" onClick={() =>
+            <Button onClick={() =>
                 navigate("/resampling", { state: { file, signalType, timestampColumn, samplingRate, signalValues } })
             }>
                 Resampling
             </Button>
-            <Button variant="secondary" onClick={() =>
+            <Button onClick={() =>
+                navigate("/filtering", { state: { file, signalType, timestampColumn, samplingRate, signalValues } })
+            }>
+                Filtering
+            </Button>
+            <Button onClick={() =>
                 navigate("/processing", { state: { file, signalType, timestampColumn, samplingRate, signalValues } })
             }>
                 Processing
@@ -57,7 +62,6 @@ const CSVUploader = ({ file, setFile }) => {
     const [timestampColumn, setTimestampColumn] = useState("");
     const [samplingRate, setSamplingRate] = useState(0);
     const [signalValues, setSignalValues] = useState("");
-    const [ogFile, setOgFile] = useState(null);
 
     const handleUtilityModal = (event) => {
         const signalType_select = document.getElementById("signalType");
@@ -111,7 +115,7 @@ const CSVUploader = ({ file, setFile }) => {
 
                         let signalType_select = document.getElementById("signalType");
                         // Stackoverflow: https://stackoverflow.com/questions/39546133/remove-all-options-from-select-tag
-                        const singal_types = ["", "GSR", "BVP"];
+                        const singal_types = ["", "GSR", "BVP", "HR", "OTHER"];
                         singal_types.forEach(type => {
                             signalType_select.options.add(new Option(type, type));
                         });
@@ -183,6 +187,8 @@ const Home = () => {
     // Stackoverflow: https://stackoverflow.com/questions/29544371/finding-the-average-of-an-array-using-js
     const average = array => array.reduce((a, b) => a + b) / array.length;
 
+    const roundIfReallyClose = (num) => {return Math.abs(num - Math.round(num)) <= 0.01 ? Math.round(num) : num}
+
     useEffect(() => {
         if (!file) return;
         console.log(file);
@@ -223,14 +229,20 @@ const Home = () => {
         } else {
             const minTimestamp = Math.min(...fileRows.map(row => parseFloat(row[timestampColumn_select.value])));
             x = fileRows.map(row => parseFloat(row[timestampColumn_select.value]) - minTimestamp);
-
-            samplingRate = 1 / average(diff(x));
-            samplingRate_select.value = samplingRate
+            
+            // REVISAAAAARRRRRRRR
+            // REVISAAAAARRRRRRRR
+            // REVISAAAAARRRRRRRR
+            // REVISAAAAARRRRRRRR
+            // REVISAAAAARRRRRRRR
+            // REVISAAAAARRRRRRRR
+            samplingRate =  1 / average(diff(x.slice(0, 20000)));
+            samplingRate_select.value = samplingRate.toFixed(1)
         }
 
         const badge = document.getElementById("samplingRateBadge");
         if (samplingRate) {
-            badge.innerText = `Detected sampling rate of ${samplingRate.toFixed(3)} Hz`;
+            badge.innerText = `Detected sampling rate of ${samplingRate.toFixed(1)} Hz`;
             badge.style.display = "block";
         } else {
             badge.style.display = "none";
@@ -288,7 +300,7 @@ const Home = () => {
 
     return (
         <div>
-            <header className="App-header text-center py-5">
+            <header className="App-header text-center py-2">
                 <h1>SignaliX</h1>
                 <p>Signal processing.</p>
                 <button className="btn btn-light btn-lg">

@@ -3,12 +3,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { usePapaParse } from 'react-papaparse';
 
 import { Button, Form, Table } from 'react-bootstrap';
+import toast from 'react-hot-toast';
 
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
 
 ChartJS.register(zoomPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+
+import FilterFields from './FilterFields';
+
 
 const max_length_lag = 5000;
 
@@ -40,29 +44,14 @@ const InfoTable = ({ headers, data }) => {
   chartOptions.scales.x.title = { display: true, text: headers[0] + " (s)" };
   chartOptions.scales.y.title = { display: true, text: headers[1] };
 
-  const duration = data[data.length - 1][0] - data[0][0];
-  const signalLength = data.length;
-  const samplingRateCalculated = (signalLength / duration);
-
-  // Stackoverflow: https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
-  const seconds_to_minutes = (s) => { return (s - (s %= 60)) / 60 + (9 < s ? 'mins ' : 'mins') + s }
-
-
   return (
     <div>
-      <div className='shadow-sm rounded border p-1'>
-        <p><strong>Duration:</strong> {
-          seconds_to_minutes(duration)
-        } s</p>
-        <p><strong>Sampling rate:</strong> {samplingRateCalculated.toFixed(1)} Hz</p>
-        <p><strong>Signal length:</strong> {signalLength} samples</p>
-      </div>
 
       {/*<Line data={{ datasets }} options={chartOptions} />*/}
       <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', marginTop: '10px', border: '1px solid #ddd', borderRadius: '5px' }}>
         <Table striped bordered hover size="sm">
           <thead>
-            <tr style={{position: 'sticky', top: 0}}>
+            <tr style={{ position: 'sticky', top: 0 }}>
               <th>{(data.length > max_length_lag) ? "Truncated" : ""}</th>
               <th>{headers[0]}</th>
               <th>{headers[1]}</th>
@@ -100,9 +89,10 @@ const CustomChart = ({ data }) => {
     ...chartOptions,
     plugins: {
       zoom: {
-        pan: { 
+        pan: {
           enabled: !isLargeDataset,
-          mode: "x"},
+          mode: "x"
+        },
         zoom: {
           wheel: { enabled: !isLargeDataset },
           pinch: { enabled: !isLargeDataset },
@@ -112,7 +102,6 @@ const CustomChart = ({ data }) => {
     }
   }
 
-  console.log(specificOptions)
   const datasets = [
     {
       label: "Signal",
@@ -147,32 +136,62 @@ const CustomChart = ({ data }) => {
   );
 };
 
-const DownloadResample = ({ headers, data }) => {
+const DownloadFiltered = ({ headers, data }) => {
   const fileRows = [headers.map(item => item).join(',')].concat(data.map(row => row.join(',')));
   const download = new Blob([fileRows.join('\n')], { type: 'text/csv' });
 
   const url = URL.createObjectURL(download);
   return (
-    <a href={url} download="resampled_signal.csv" className="btn btn-success p-2">
+    <a href={url} download="filtered_signal.csv" className="btn btn-success p-2">
       📥 Download CSV
     </a>
   );
 };
 
-const Resampling = () => {
+const filtersFields = {
+  butterworth: {
+    order: { value: 2 },
+    lowcut: { value: 0 },
+    highcut: { value: 1000 },
+    python: {value: ""}
+  },
+  bessel: {
+    lowcut: { value: 0 },
+    highcut: { value: 1000 },
+    python: {value: ""}
+  },
+  fir: {
+    lowcut: { value: 0 },
+    highcut: { value: 1000 },
+    python: {value: ""}
+  },
+  savgol: {
+    order: { value: 2 },
+    lowcut: { value: 0 },
+    highcut: { value: 1000 },
+    python: {value: ""}
+  },
+};
+
+
+const Filtering = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } = location.state || {};
 
   const [fileRows, setFileRows] = useState(null);
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
-  const [chartDataResampled, setChartDataResampled] = useState(null);
+  const [chartDataFiltered, setChartDataFiltered] = useState(null);
+
+  const [filter, setFilter] = useState("butterworth");
+  const [fields, setFields] = useState(filtersFields[filter]);
+
+
   const { readString } = usePapaParse();
 
   useEffect(() => {
     if (!file) return;
 
-    console.log(file);
     const reader = new FileReader();
 
     reader.onload = (e) => {
@@ -183,7 +202,6 @@ const Resampling = () => {
           const file_headers = results.data[0].map((item, index) =>
             isNaN(item) ? item : `Column ${index + 1}`
           );
-
 
           const rows = isNaN(results.data[0][0]) ? results.data.slice(1) : results.data;
 
@@ -200,8 +218,6 @@ const Resampling = () => {
             }
 
           } else {
-            const minTimestamp = Math.min(...rows.map(row => parseFloat(row[timestampColumn])));
-
             for (let i = 0; i < rows.length; i++) {
               const timestamp = parseFloat(rows[i][timestampColumn]);
               data_original.push([timestamp, y[i]]);
@@ -211,7 +227,7 @@ const Resampling = () => {
           setFileRows(rows);
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
-          setChartDataResampled(data_original);
+          setChartDataFiltered(data_original);
         },
       });
     };
@@ -219,36 +235,62 @@ const Resampling = () => {
 
   }, [file]);
 
-
-  const requestResample = (interpolation_technique, target_sampling_rate) => {
-
+  const requestFilter = () => {
 
     const formData = new FormData();
 
-    formData.append('data', JSON.stringify(chartDataOriginal));
-    formData.append('interpolation_technique', parseFloat(interpolation_technique));
-    formData.append('source_sampling_rate', parseFloat(samplingRate));
-    formData.append('target_sampling_rate', parseFloat(target_sampling_rate));
+    formData.append('signal', JSON.stringify(chartDataOriginal));
+    formData.append('sampling_rate', samplingRate);
+
+    // Recorrer las propiedades del filtro seleccionado
+    Object.keys(fields).forEach((field) => {
+      const fieldValue = fields[field].value;
+      formData.append(field, fieldValue);
+    });
+
+    formData.append('method', filter);
+
+    console.log(formData)
 
     // Realizar la petición POST a la API de resampling
-    fetch('http://localhost:8000/resampling', {
+    fetch('http://localhost:8000/filtering', {
       method: 'POST',
       body: formData,
     })
-      .then((response) => response.json())
-      .then((data) => {
+      .then(async (response) => {
+        if (!response.ok) {
+          const data = await response.json();
 
-        setChartDataResampled(data["data"]);
+          if (!response.ok) {
+            setChartDataFiltered(chartDataOriginal);
+            console.log(data.error);
+            toast.error(data.error);
+            return null;
+          }
+
+          return data;
+        }
+        return response.json();;
+      })
+      .then((data) => {
+        if (data) {
+          setChartDataFiltered(data["data"]);
+        }
+
       })
       .catch((error) => {
         console.error('Error al realizar el resampling:', error);
       });
   };
 
+  const handleFieldChange = (field, new_value) => {
+    setFields((prevFields) => ({ ...prevFields, [field]: { value: new_value } }));
+  };
+
   return (
     <>
       <div className="container text-center">
-        <h1>Resampling</h1>
+        <h1>Filtering</h1>
 
         <div>
           <p><strong>Tipo de Señal:</strong> {signalType}</p>
@@ -266,34 +308,29 @@ const Resampling = () => {
                 <div className="card p-3">
                   <Form>
                     <Form.Group className="form-group">
-                      <Form.Label>Interpolation technique</Form.Label>
-                      <Form.Select className="form-control" id="interpTechnique">
-                        <option value="spline">Spline</option>
-                        <option value="1d">Interp1d</option>
+                      <Form.Label>Filtering technique</Form.Label>
+                      <Form.Select className="form-control" id="filterTechnique" onChange={(event) => { setFilter(event.target.value); setFields(filtersFields[event.target.value]) }}>
+                        <option value="butterworth">Butterworth</option>
+                        <option value="bessel">Bessel</option>
+                        <option value="fir">Fir</option>
+                        <option value="savgol">Savgol</option>
                       </Form.Select>
                     </Form.Group>
-                    <Form.Group className="form-group">
-                      <Form.Label>New rate (Hz)</Form.Label>
-                      <Form.Control type="number"
-                        placeholder='Enter Hz'
-                        defaultValue={samplingRate}
-                        id="samplingRate" />
-                    </Form.Group>
+                    <FilterFields fields={fields} onFieldChange={handleFieldChange} />
                   </Form>
-                  <Button className="m-2" onClick={() => requestResample(document.getElementById("interpTechnique").value, document.getElementById("samplingRate").value)}>Resample</Button>
+                  <Button className="m-2" onClick={() => requestFilter()}>Filter</Button>
                   <Link to="/" className="btn btn-primary m-2">Back home</Link>
                 </div>
               </div>
 
               <div className="col-md-4 col-12">
-                <h3>Resampled</h3>
+                <h3>Filtered</h3>
                 <div className="card">
-                  {chartDataResampled &&
+                  {chartDataFiltered &&
                     <>
-                      <InfoTable headers={headers} data={chartDataResampled} />
-                      <DownloadResample headers={headers} data={chartDataResampled} />
-                    </>
-                  }
+                      <InfoTable headers={headers} data={chartDataFiltered} />
+                      <DownloadFiltered headers={headers} data={chartDataFiltered}></DownloadFiltered>
+                    </>}
                 </div>
               </div>
             </div>
@@ -310,7 +347,7 @@ const Resampling = () => {
           </div>
           <div className="col-md-6 col-12">
             <div className="card">
-              {chartDataResampled && <CustomChart data={chartDataResampled} />}
+              {chartDataFiltered && <CustomChart data={chartDataFiltered} />}
             </div>
           </div>
         </div>
@@ -319,4 +356,4 @@ const Resampling = () => {
   );
 };
 
-export default Resampling;
+export default Filtering;

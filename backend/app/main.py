@@ -62,6 +62,55 @@ async def resampling(
     return JSONResponse(content={"data": new_data.tolist()})
 
 
+@app.options("/filtering")
+async def options_resampling():
+    return {"message": "Preflight OPTIONS request handled"}
+
+@app.post("/filtering")
+async def resampling(
+    signal: str = Form(...),
+    sampling_rate: int = Form(...),
+    method: str = Form(...),
+    lowcut: float = Form(None),
+    highcut: float = Form(None),
+    order: int = Form(None),
+    python: str = Form(...)
+):
+    try:
+        order = 2 if not order else order
+
+        data = np.array(json.loads(signal))
+
+        if python == "":
+          new_values = nk.signal_filter(
+              data[:, 1], sampling_rate=sampling_rate, method=method, 
+              lowcut=lowcut, highcut=highcut, order=order
+          )
+        else:
+          try:
+            namespace = globals().copy()
+            exec(python, namespace)
+            filter_signal = namespace["filter_signal"]
+            
+            new_values = filter_signal(data[:, 1])
+          except Exception as e:
+            return JSONResponse(
+              content={"error": str(e)},
+              status_code=400
+            )
+          
+          
+        new_data = np.stack((data[:, 0], new_values), axis=1)
+
+        return JSONResponse(content={"data": new_data.tolist()})
+
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=400
+        )
+
+
 @app.post("/process")
 async def process(
     file: UploadFile = File(...), 
