@@ -13,6 +13,7 @@
   "dependencies": {
     "@img-comparison-slider/react": "^8.0.2",
     "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
     "chart.js": "^4.4.8",
     "chartjs-plugin-zoom": "^2.2.0",
     "primereact": "^10.9.2",

@@ -74,19 +74,15 @@ async def resampling(
     lowcut: float = Form(None),
     highcut: float = Form(None),
     order: int = Form(None),
-    python: str = Form(...)
+    python: str = Form(None)
 ):
     try:
         order = 2 if not order else order
+        python = "" if not python else python
 
         data = np.array(json.loads(signal))
 
-        if python == "":
-          new_values = nk.signal_filter(
-              data[:, 1], sampling_rate=sampling_rate, method=method, 
-              lowcut=lowcut, highcut=highcut, order=order
-          )
-        else:
+        if python != "":
           try:
             namespace = globals().copy()
             exec(python, namespace)
@@ -95,10 +91,14 @@ async def resampling(
             new_values = filter_signal(data[:, 1])
           except Exception as e:
             return JSONResponse(
-              content={"error": str(e)},
-              status_code=400
-            )
-          
+            content={"error": str(e)},
+            status_code=400
+        )
+        else:
+           new_values = nk.signal_filter(
+              data[:, 1], sampling_rate=sampling_rate, method=method, 
+              lowcut=lowcut, highcut=highcut, order=order
+          )
           
         new_data = np.stack((data[:, 0], new_values), axis=1)
 

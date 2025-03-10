@@ -293,7 +293,7 @@ const Filtering = () => {
         <h1>Filtering</h1>
 
         <div>
-          <p><strong>Tipo de Señal:</strong> {signalType}</p>
+          <p><strong>Signal type:</strong> {signalType}</p>
 
           <div className="container">
             <div className="row justify-content-around gy-3 p-2">
