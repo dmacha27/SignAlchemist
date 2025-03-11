@@ -115,7 +115,7 @@ const CSVUploader = ({ file, setFile }) => {
 
                         let signalType_select = document.getElementById("signalType");
                         // Stackoverflow: https://stackoverflow.com/questions/39546133/remove-all-options-from-select-tag
-                        const singal_types = ["", "GSR", "BVP", "HR", "OTHER"];
+                        const singal_types = ["", "EDA", "PPG", "OTHER"];
                         singal_types.forEach(type => {
                             signalType_select.options.add(new Option(type, type));
                         });
@@ -302,7 +302,7 @@ const Home = () => {
         <div>
             <header className="App-header text-center py-2">
                 <h1>SignaliX</h1>
-                <p>Signal processing.</p>
+                <p>Physiological signal processing.</p>
                 <button className="btn btn-light btn-lg">
                     <Link to="/about">About this project</Link>
                 </button>

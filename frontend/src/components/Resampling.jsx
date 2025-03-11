@@ -62,7 +62,7 @@ const InfoTable = ({ headers, data }) => {
       <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', marginTop: '10px', border: '1px solid #ddd', borderRadius: '5px' }}>
         <Table striped bordered hover size="sm">
           <thead>
-            <tr style={{position: 'sticky', top: 0}}>
+            <tr style={{ position: 'sticky', top: 0 }}>
               <th>{(data.length > max_length_lag) ? "Truncated" : ""}</th>
               <th>{headers[0]}</th>
               <th>{headers[1]}</th>
@@ -100,9 +100,10 @@ const CustomChart = ({ data }) => {
     ...chartOptions,
     plugins: {
       zoom: {
-        pan: { 
+        pan: {
           enabled: !isLargeDataset,
-          mode: "x"},
+          mode: "x"
+        },
         zoom: {
           wheel: { enabled: !isLargeDataset },
           pinch: { enabled: !isLargeDataset },
@@ -153,7 +154,7 @@ const DownloadResample = ({ headers, data }) => {
 
   const url = URL.createObjectURL(download);
   return (
-    <a href={url} download="resampled_signal.csv" className="btn btn-success p-2">
+    <a href={url} download="resampled_signal.csv" className="btn btn-success p-2 mt-1">
       📥 Download CSV
     </a>
   );
@@ -221,7 +222,7 @@ const Resampling = () => {
 
 
   const requestResample = (interpolation_technique, target_sampling_rate) => {
-
+    window.scrollTo(0, document.body.scrollHeight);
 
     const formData = new FormData();
 
@@ -230,19 +231,22 @@ const Resampling = () => {
     formData.append('source_sampling_rate', parseFloat(samplingRate));
     formData.append('target_sampling_rate', parseFloat(target_sampling_rate));
 
-    // Realizar la petición POST a la API de resampling
-    fetch('http://localhost:8000/resampling', {
-      method: 'POST',
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-
-        setChartDataResampled(data["data"]);
+    setTimeout(() => {
+      // Realizar la petición POST a la API de resampling
+      fetch('http://localhost:8000/resampling', {
+        method: 'POST',
+        body: formData,
       })
-      .catch((error) => {
-        console.error('Error al realizar el resampling:', error);
-      });
+        .then((response) => response.json())
+        .then((data) => {
+
+          setChartDataResampled(data["data"]);
+        })
+        .catch((error) => {
+          console.error('Error al realizar el resampling:', error);
+        });
+    }, 500);
+
   };
 
   return (
@@ -281,7 +285,6 @@ const Resampling = () => {
                     </Form.Group>
                   </Form>
                   <Button className="m-2" onClick={() => requestResample(document.getElementById("interpTechnique").value, document.getElementById("samplingRate").value)}>Resample</Button>
-                  <Link to="/" className="btn btn-primary m-2">Back home</Link>
                 </div>
               </div>
 

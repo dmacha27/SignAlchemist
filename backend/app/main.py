@@ -3,11 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 import pandas as pd
-import neurokit2 as nk
+import neurokit2
 import numpy as np
-from scipy.signal import cheby2, sosfiltfilt, resample
-from scipy.interpolate import interp1d, UnivariateSpline
-from scipy.ndimage import gaussian_filter1d
+import scipy
+
+#from scipy.signal import cheby2, sosfiltfilt, resample
+#from scipy.interpolate import interp1d, UnivariateSpline
+#from scipy.ndimage import gaussian_filter1d
+
 import json
 
 app = FastAPI()
@@ -50,9 +53,9 @@ async def resampling(
 
 
     if interpolation_technique == "spline":
-      interp_func = UnivariateSpline(data[:, 0], data[:, 1])
+      interp_func = scipy.interpolate.UnivariateSpline(data[:, 0], data[:, 1])
     else:
-      interp_func = interp1d(data[:, 0], data[:, 1])
+      interp_func = scipy.interpolate.interp1d(data[:, 0], data[:, 1])
     
 
     new_values = interp_func(new_time)
@@ -63,11 +66,11 @@ async def resampling(
 
 
 @app.options("/filtering")
-async def options_resampling():
+async def options_filtering():
     return {"message": "Preflight OPTIONS request handled"}
 
 @app.post("/filtering")
-async def resampling(
+async def filtering(
     signal: str = Form(...),
     sampling_rate: int = Form(...),
     method: str = Form(...),
@@ -89,17 +92,17 @@ async def resampling(
             filter_signal = namespace["filter_signal"]
             
             new_values = filter_signal(data[:, 1])
+
           except Exception as e:
             return JSONResponse(
             content={"error": str(e)},
-            status_code=400
-        )
+            status_code=400)
         else:
-           new_values = nk.signal_filter(
+          new_values = neurokit2.signal_filter(
               data[:, 1], sampling_rate=sampling_rate, method=method, 
               lowcut=lowcut, highcut=highcut, order=order
           )
-          
+        
         new_data = np.stack((data[:, 0], new_values), axis=1)
 
         return JSONResponse(content={"data": new_data.tolist()})
@@ -146,7 +149,7 @@ async def process(
 
 def hampel_IQR_GSR(gsr):
 
-    gsr_filtered = np.array(nk.rsp_clean(gsr, sampling_rate=4, method="hampel"))
+    gsr_filtered = np.array(neurokit2.rsp_clean(gsr, sampling_rate=4, method="hampel"))
 
     Q1 = np.percentile(gsr_filtered, 25)
     Q3 = np.percentile(gsr_filtered, 75)
@@ -169,7 +172,7 @@ def hampel_IQR_GSR(gsr):
 def gaussian1_gsr(gsr):
 
     sigma = 400
-    column_values_resampled = gaussian_filter1d(gsr, sigma=sigma)
+    column_values_resampled = scipy.ndimage.gaussian_filter1d(gsr, sigma=sigma)
 
     return column_values_resampled
 

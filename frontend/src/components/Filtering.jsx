@@ -142,7 +142,7 @@ const DownloadFiltered = ({ headers, data }) => {
 
   const url = URL.createObjectURL(download);
   return (
-    <a href={url} download="filtered_signal.csv" className="btn btn-success p-2">
+    <a href={url} download="filtered_signal.csv" className="btn btn-success p-2 mt-1">
       📥 Download CSV
     </a>
   );
@@ -153,23 +153,23 @@ const filtersFields = {
     order: { value: 2 },
     lowcut: { value: 0 },
     highcut: { value: 1000 },
-    python: {value: ""}
+    python: { value: "" }
   },
   bessel: {
     lowcut: { value: 0 },
     highcut: { value: 1000 },
-    python: {value: ""}
+    python: { value: "" }
   },
   fir: {
     lowcut: { value: 0 },
     highcut: { value: 1000 },
-    python: {value: ""}
+    python: { value: "" }
   },
   savgol: {
     order: { value: 2 },
     lowcut: { value: 0 },
     highcut: { value: 1000 },
-    python: {value: ""}
+    python: { value: "" }
   },
 };
 
@@ -236,7 +236,7 @@ const Filtering = () => {
   }, [file]);
 
   const requestFilter = () => {
-
+    window.scrollTo(0, document.body.scrollHeight);
     const formData = new FormData();
 
     formData.append('signal', JSON.stringify(chartDataOriginal));
@@ -252,35 +252,37 @@ const Filtering = () => {
 
     console.log(formData)
 
-    // Realizar la petición POST a la API de resampling
-    fetch('http://localhost:8000/filtering', {
-      method: 'POST',
-      body: formData,
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          const data = await response.json();
-
+    setTimeout(() => {
+      // Realizar la petición POST a la API de resampling
+      fetch('http://localhost:8000/filtering', {
+        method: 'POST',
+        body: formData,
+      })
+        .then(async (response) => {
           if (!response.ok) {
-            setChartDataFiltered(chartDataOriginal);
-            console.log(data.error);
-            toast.error(data.error);
-            return null;
+            const data = await response.json();
+
+            if (!response.ok) {
+              setChartDataFiltered(chartDataOriginal);
+              console.log(data.error);
+              toast.error(data.error);
+              return null;
+            }
+
+            return data;
+          }
+          return response.json();;
+        })
+        .then((data) => {
+          if (data) {
+            setChartDataFiltered(data["data"]);
           }
 
-          return data;
-        }
-        return response.json();;
-      })
-      .then((data) => {
-        if (data) {
-          setChartDataFiltered(data["data"]);
-        }
-
-      })
-      .catch((error) => {
-        console.error('Error al realizar el resampling:', error);
-      });
+        })
+        .catch((error) => {
+          console.error('Error al realizar el resampling:', error);
+        });
+    }, 500);
   };
 
   const handleFieldChange = (field, new_value) => {
@@ -319,7 +321,6 @@ const Filtering = () => {
                     <FilterFields fields={fields} onFieldChange={handleFieldChange} />
                   </Form>
                   <Button className="m-2" onClick={() => requestFilter()}>Filter</Button>
-                  <Link to="/" className="btn btn-primary m-2">Back home</Link>
                 </div>
               </div>
 
