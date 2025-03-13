@@ -7,6 +7,8 @@ import neurokit2
 import numpy as np
 import scipy
 
+from app.metrics import *
+
 #from scipy.signal import cheby2, sosfiltfilt, resample
 #from scipy.interpolate import interp1d, UnivariateSpline
 #from scipy.ndimage import gaussian_filter1d
@@ -72,6 +74,7 @@ async def options_filtering():
 @app.post("/filtering")
 async def filtering(
     signal: str = Form(...),
+    signal_type: str = Form(...),
     sampling_rate: int = Form(...),
     method: str = Form(...),
     lowcut: float = Form(None),
@@ -105,13 +108,24 @@ async def filtering(
         
         new_data = np.stack((data[:, 0], new_values), axis=1)
 
-        return JSONResponse(content={"data": new_data.tolist()})
+        return JSONResponse(content={"data": new_data.tolist(), 
+                                     "original_quality": get_metrics(data[:, 1], fs=sampling_rate, signal_type=signal_type),
+                                     "filtered_quality": get_metrics(new_values, fs=sampling_rate, signal_type=signal_type)})
 
     except Exception as e:
         return JSONResponse(
             content={"error": str(e)},
             status_code=400
         )
+
+
+
+def get_metrics(signal, fs, signal_type):
+   
+   if signal_type == "EDA":
+      return {"Böttcher, S., Vieluf, S., Bruno, E., Joseph, B., Epitashvili, N., Biondi, A., ... & Loddenkemper, T. (2022). Data quality evaluation in wearable monitoring. Scientific reports, 12(1), 21412.": gsr_quality(signal, fs=fs),
+              "Kleckner, I. R., Jones, R. M., Wilder-Smith, O., Wormwood, J. B., Akcakaya, M., Quigley, K. S., ... & Goodwin, M. S. (2017). Simple, transparent, and flexible automated quality assessment procedures for ambulatory electrodermal activity data. IEEE Transactions on Biomedical Engineering, 65(7), 1460-1467.": gsr_automated_2secs(signal, fs=fs)}
+
 
 
 @app.post("/process")

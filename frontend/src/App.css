@@ -64,3 +64,47 @@
     opacity: 1;
   }
 }
+
+
+/* Loader author: https://github.com/Afif13/*/
+.loader {
+  display: inline-grid;
+  padding: 5px;
+  background: #fff;
+  filter: blur(4px) contrast(12);
+}
+.loader:before {
+  content: "";
+  height: 40px;
+  aspect-ratio: 3;
+  --c: #0000 64%,#000 66% 98%,#0000 101%;
+  background:
+    radial-gradient(35% 146% at 50% 159%,var(--c)) 0 0,
+    radial-gradient(35% 146% at 50% -59%,var(--c)) 100% 100%;
+  background-size: calc(200%/3) 50%;
+  background-repeat: repeat-x;
+  -webkit-mask: repeating-linear-gradient(90deg,#000 0 10%,#0000 0 20%);
+  animation: l12 .8s infinite linear;
+}
+@keyframes l12{
+  to {background-position: -200% 0,-100% 100%}
+}
+
+.flip-container {
+  perspective: 1000px;
+}
+
+.flip-card {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s;
+}
+
+.flip-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card .card-body {
+  backface-visibility: hidden;
+}

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { PrimeReactProvider } from 'primereact/api';
 import { FileUpload } from 'primereact/fileupload';
 import { usePapaParse } from 'react-papaparse';
-import { Button, Form, Modal } from 'react-bootstrap';
+import { Button, Form, Modal, Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
@@ -132,7 +132,7 @@ const CSVUploader = ({ file, setFile }) => {
                             signalValues_select.options.add(new Option(option, value));
                         });
 
-                        
+
 
                         const fileRows = [headers.map(item => item[0]).join(',')].concat(results.data.map(row => row.join(',')));
                         setFile(new Blob([fileRows.join('\n')], { type: 'text/csv' }));
@@ -187,7 +187,7 @@ const Home = () => {
     // Stackoverflow: https://stackoverflow.com/questions/29544371/finding-the-average-of-an-array-using-js
     const average = array => array.reduce((a, b) => a + b) / array.length;
 
-    const roundIfReallyClose = (num) => {return Math.abs(num - Math.round(num)) <= 0.01 ? Math.round(num) : num}
+    const roundIfReallyClose = (num) => { return Math.abs(num - Math.round(num)) <= 0.01 ? Math.round(num) : num }
 
     useEffect(() => {
         if (!file) return;
@@ -229,14 +229,14 @@ const Home = () => {
         } else {
             const minTimestamp = Math.min(...fileRows.map(row => parseFloat(row[timestampColumn_select.value])));
             x = fileRows.map(row => parseFloat(row[timestampColumn_select.value]) - minTimestamp);
-            
+
             // REVISAAAAARRRRRRRR
             // REVISAAAAARRRRRRRR
             // REVISAAAAARRRRRRRR
             // REVISAAAAARRRRRRRR
             // REVISAAAAARRRRRRRR
             // REVISAAAAARRRRRRRR
-            samplingRate =  1 / average(diff(x.slice(0, 20000)));
+            samplingRate = 1 / average(diff(x.slice(0, 20000)));
             samplingRate_select.value = samplingRate.toFixed(1)
         }
 
@@ -299,66 +299,87 @@ const Home = () => {
     };
 
     return (
-        <div>
+        <Container>
             <header className="App-header text-center py-2">
                 <h1>SignaliX</h1>
                 <p>Physiological signal processing.</p>
-                <button className="btn btn-light btn-lg">
-                    <Link to="/about">About this project</Link>
-                </button>
+                <Button variant="light" size="lg" as={Link} to="/about">
+                    About this project
+                </Button>
             </header>
-            <div className="container">
-                <div className="row justify-content-center p-2">
-                    <div className="col-6">
+
+            <Container>
+                <Row className="justify-content-center p-2">
+                    <Col md={6}>
                         <CSVUploader file={file} setFile={setFile} />
-                    </div>
-                </div>
-                <div className="row justify-content-center p-2">
-                    <div className="col-6">
-                        <div className="card">
-                            <Form>
-                                <Form.Group className="form-group">
-                                    <Form.Label>Signal type</Form.Label>
-                                    <Form.Select className="form-control" id="signalType" />
-                                </Form.Group>
-                                <Form.Group className="form-group">
-                                    <Form.Label>Timestamp Column</Form.Label>
-                                    <Form.Select className="form-control" id="timestampColumn" onChange={handleTimestampChange} />
-                                </Form.Group>
-                                <Form.Group className="form-group">
-                                    <Form.Label>Sampling rate (Hz)</Form.Label>
-                                    <Form.Control type="number"
-                                        placeholder='Enter Hz'
-                                        id="samplingRate"
-                                        onChange={handleSamplingRateChange}
-                                        disabled={timestampValue !== "No timestamps"} />
-                                </Form.Group>
-                                <Form.Group className="form-group">
-                                    <Form.Label>Signal Values</Form.Label>
-                                    <Form.Select className="form-control" id="signalValues" onChange={handleSignalValuesChange}></Form.Select>
-                                </Form.Group>
-                            </Form>
-                        </div>
-                    </div>
-                    <div className="col-6">
-                        <div className="card text-center">
-                            <span id="samplingRateBadge" className="badge bg-primary mx-auto w-50" style={{ display: "none" }}>
-                                Detected sampling rate of {samplingRate} Hz
-                            </span>
-                            <div id="homeChart">
-                                <Line data={{
-                                    datasets: [{
-                                        label: 'Original signal', data: [], borderColor: 'rgb(75, 192, 192)',
-                                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                        fill: false
-                                    }]
-                                }} options={chartOptions} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </Col>
+                </Row>
+
+                <Row className="justify-content-center p-2">
+
+                    <Col md={6}>
+                        <Card>
+                            <Card.Body>
+                                <Form>
+                                    <Form.Group>
+                                        <Form.Label>Signal type</Form.Label>
+                                        <Form.Select id="signalType" />
+                                    </Form.Group>
+
+                                    <Form.Group>
+                                        <Form.Label>Timestamp Column</Form.Label>
+                                        <Form.Select id="timestampColumn" onChange={handleTimestampChange} />
+                                    </Form.Group>
+
+                                    <Form.Group>
+                                        <Form.Label>Sampling rate (Hz)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            placeholder="Enter Hz"
+                                            id="samplingRate"
+                                            onChange={handleSamplingRateChange}
+                                            disabled={timestampValue !== "No timestamps"}
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group>
+                                        <Form.Label>Signal Values</Form.Label>
+                                        <Form.Select id="signalValues" onChange={handleSignalValuesChange} />
+                                    </Form.Group>
+                                </Form>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+
+                    <Col md={6}>
+                        <Card className="text-center">
+                            <Card.Body>
+                                <Badge bg="primary" className="mx-auto w-50" id="samplingRateBadge" style={{ display: "none" }}>
+                                    Detected sampling rate of {samplingRate} Hz
+                                </Badge>
+
+                                <div id="homeChart">
+                                    <Line
+                                        data={{
+                                            datasets: [
+                                                {
+                                                    label: "Original signal",
+                                                    data: [],
+                                                    borderColor: "rgb(75, 192, 192)",
+                                                    backgroundColor: "rgba(75, 192, 192, 0.2)",
+                                                    fill: false,
+                                                },
+                                            ],
+                                        }}
+                                        options={chartOptions}
+                                    />
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </Container>
+        </Container>
     );
 };
 
