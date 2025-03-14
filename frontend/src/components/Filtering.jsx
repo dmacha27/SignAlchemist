@@ -323,7 +323,6 @@ const Filtering = () => {
             setChartDataFiltered(data["data"]);
             setMetricsOriginal(data["original_quality"]);
             setMetricsFiltered(data["filtered_quality"]);
-            setFlipped(false); // Necessary to regenerate images
           }
 
         })
@@ -404,9 +403,12 @@ const Filtering = () => {
         <button onClick={() => { setFlipped(!flipped) }} className="btn btn-primary mb-3">
           Flip comparison
         </button>
-
-        <div id="charts" className={`flip-container ${flipped ? 'flipped' : ''}`}>
-          {!flipped && (
+        <div id="charts">
+          <div
+            id="charts-original"
+            className={`flip-container ${flipped ? 'flipped' : ''}`}
+            style={{ display: flipped ? 'none' : 'block' }} // Oculta cuando flipped es true
+          >
             <Row className="d-flex justify-content-around gy-3 p-1">
               <Col md={6} xs={12}>
                 <Card>
@@ -423,9 +425,13 @@ const Filtering = () => {
                 </Card>
               </Col>
             </Row>
-          )}
+          </div>
 
-          {flipped && (
+          <div
+            id="charts-comparison"
+            className={`flip-container ${flipped ? 'flipped' : ''}`}
+            style={{ display: flipped ? 'block' : 'none' }} // Muestra cuando flipped es true
+          >
             <Row className="d-flex justify-content-around gy-3 p-1">
               <Card>
                 <Card.Body>
@@ -442,11 +448,9 @@ const Filtering = () => {
                   )}
                 </Card.Body>
               </Card>
-
             </Row>
-          )}
+          </div>
         </div>
-
         <Row className="d-flex justify-content-around gy-3 p-1">
           <Col md={6} xs={12}>
             <Card className="mt-2">
