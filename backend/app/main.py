@@ -6,6 +6,8 @@ import pandas as pd
 import neurokit2
 import numpy as np
 import scipy
+from scipy.signal import cheby2, sosfiltfilt, resample
+from scipy.ndimage import gaussian_filter1d
 
 from app.metrics import *
 
@@ -130,36 +132,69 @@ def get_metrics(signal, fs, signal_type):
 
 @app.post("/process")
 async def process(
-    file: UploadFile = File(...), 
-    signalType: str = Form(...), 
-    timestampColumn: int = Form(...), 
-    signalValues: int = Form(...)
-):
+    signal: str = Form(...), 
+    signalType: str = Form(...)
+    ):
 
-    df = pd.read_csv(file.file)
+    data = np.array(json.loads(signal))
 
-    if signalValues >= len(df.columns):
-        return JSONResponse(status_code=400, content={"error": f"La columna '{signalValues}' no existe en el archivo."})
+    signal_data = data[:, 1]
 
-    signal_data = df[df.columns[signalValues]]
+    outliers_functions_names = ["IQR", "HAMPEL"]
+    filter_functions_names = ["Butterworth", "Gaussian"]
 
-    no_outliers = hampel_IQR_GSR(signal_data)
-    filtering = gaussian1_gsr(no_outliers)
+    outliers_functions = [IQR, hampel_IQR_GSR]
+    filter_functions = [butterworth_gsr_bvp, gaussian1_gsr]
 
+    pipelines = []
 
-    df_outliers = df.copy()
-    df_outliers[df.columns[signalValues]] = no_outliers
+    for i, outlier_func in enumerate(outliers_functions):
+        signal_no_outliers = outlier_func(signal_data)
+        
+        for j, filter_func in enumerate(filter_functions):
+            filtered_signal = filter_func(signal_no_outliers)
+            
+            data_processed = data.copy()
+            data_processed[:, 1] = filtered_signal
+            
+            quality = gsr_quality(np.array(filtered_signal))
 
-    df_filtering = df.copy()
-    df_filtering[df.columns[signalValues]] = filtering
+            pipelines.append({
+                "title": f"Pipeline {outliers_functions_names[i]}-{filter_functions_names[j]}",
+                "signal": data_processed.tolist(),
+                "qualityMetric": quality
+            })
 
-    pipelines = [
-       {"title": "Pipeline 1", "signal": df_outliers.values.tolist(), "qualityMetric": gsr_quality(no_outliers)},
-        {"title": "Pipeline 2", "signal": df_filtering.values.tolist(), "qualityMetric": gsr_quality(filtering)},
-
-    ]
-    
     return JSONResponse(content={"pipelines": pipelines})
+
+def IQR(signal):
+
+    signal_array = np.array(signal, dtype=float) 
+    
+    Q1 = np.percentile(signal_array, 25)
+    Q3 = np.percentile(signal_array, 75)
+    IQR = Q3 - Q1
+
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    outliers = (signal_array < lower_bound) | (signal_array > upper_bound)
+
+    clean_signal = signal_array.copy()
+    clean_signal[outliers] = np.nan
+
+    nans = np.isnan(clean_signal)
+    if any(nans):
+        clean_signal[nans] = np.interp(
+            np.where(nans)[0],  # Índices de los NaN
+            np.where(~nans)[0],  # Índices de los valores válidos
+            clean_signal[~nans]   # Valores válidos
+        )
+
+    clean_signal[np.isnan(clean_signal)] = np.nanmean(clean_signal)
+
+    return clean_signal.tolist()
+
 
 def hampel_IQR_GSR(gsr):
 
@@ -183,12 +218,19 @@ def hampel_IQR_GSR(gsr):
     return gsr_clean_series.to_numpy()
 
 
-def gaussian1_gsr(gsr):
+def butterworth_gsr_bvp(signal, sampling_rate=64):
+    signal_filtered = nk.signal.signal_filter(
+        signal,
+        sampling_rate=sampling_rate, 
+        highcut=1 
+    )
+    
+    return list(signal_filtered)
 
-    sigma = 400
-    column_values_resampled = scipy.ndimage.gaussian_filter1d(gsr, sigma=sigma)
 
-    return column_values_resampled
+def gaussian1_gsr(signal): 
+	new_values = scipy.ndimage.gaussian_filter1d(signal, sigma=300) 
+	return new_values
 
 def gsr_quality(eda, fs=4):
   """Python implementation of Matlab code in Github.

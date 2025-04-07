@@ -74,7 +74,6 @@ const InfoModal = ({ show, onHide }) => {
 
 
 const FilterFields = ({ fields, onFieldChange }) => {
-  const [open, setOpen] = useState(false);
   const [modalShow, setModalShow] = useState(false);
 
   return (
@@ -101,20 +100,10 @@ const FilterFields = ({ fields, onFieldChange }) => {
         } else {
           return (
             <>
-              <Button
-                className='mt-2'
-                onClick={() => setOpen(!open)}
-                aria-controls="example-collapse-text"
-                aria-expanded={open}
-              >
-                Customize
-              </Button>
-              <Collapse in={open}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Python code</Form.Label> <i onClick={() => { setModalShow(true) }} title="Info" className="bi bi-info-square info-icon"></i>
-                  <Form.Control as="textarea" value={fieldConfig.value} onChange={(e) => onFieldChange(field, e.target.value)} rows={3} />
-                </Form.Group>
-              </Collapse>
+              <Form.Group className="mb-3">
+                <Form.Label>Python code</Form.Label> <i onClick={() => { setModalShow(true) }} title="Info" className="bi bi-info-square info-icon"></i>
+                <Form.Control as="textarea" value={fieldConfig.value} onChange={(e) => onFieldChange(field, e.target.value)} rows={3} />
+              </Form.Group>
             </>
           );
         }

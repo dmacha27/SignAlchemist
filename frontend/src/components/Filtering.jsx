@@ -33,18 +33,11 @@ const chartOptions = {
   },
 };
 
-const InfoTable = ({ headers, data }) => {
-  // data: [[x1, y1], [x2, y2], [x3, y3]]
-  const datasets = [{
-    label: "Signal",
-    data: data.map((row) => ({ x: row[0], y: row[1] })),
-    borderColor: 'rgb(75, 192, 192)',
-    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-    fill: false,
-  }];
+const InfoTable = ({ table }) => {
+  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
 
-  chartOptions.scales.x.title = { display: true, text: headers[0] + " (s)" };
-  chartOptions.scales.y.title = { display: true, text: headers[1] };
+  const headers = table[0];
+  const data = table.slice(1);
 
   return (
     <>
@@ -102,8 +95,12 @@ const InfoMetrics = ({ metrics }) => {
   );
 };
 
-const CustomChart = ({ data, setChartImage }) => {
-  // data: [[x1, y1], [x2, y2], [x3, y3]]
+const CustomChart = ({ table, setChartImage }) => {
+  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
+
+  const headers = table[0];
+  const data = table.slice(1);
+
   const chartRef = useRef(null);
 
   const isLargeDataset = data.length > max_length_lag;
@@ -139,6 +136,9 @@ const CustomChart = ({ data, setChartImage }) => {
     },
   }
 
+  specificOptions.scales.x.title = { display: true, text: headers[0] + " (s)" };
+  specificOptions.scales.y.title = { display: true, text: headers[1] };
+
   const datasets = [
     {
       label: "Signal",
@@ -170,7 +170,10 @@ const CustomChart = ({ data, setChartImage }) => {
   );
 };
 
-const DownloadFiltered = ({ headers, data }) => {
+const DownloadFiltered = ({ table }) => {
+  const headers = table[0];
+  const data = table.slice(1);
+
   const fileRows = [headers.map(item => item).join(',')].concat(data.map(row => row.join(',')));
   const download = new Blob([fileRows.join('\n')], { type: 'text/csv' });
 
@@ -243,32 +246,30 @@ const Filtering = () => {
       readString(content, {
         complete: (results) => {
 
-          const file_headers = results.data[0].map((item, index) =>
-            isNaN(item) ? item : `Column ${index + 1}`
-          );
+          const file_headers = [...results.data[0], "Timestamp (calc)"];
+          const rows = results.data.slice(1);
 
-          const rows = isNaN(results.data[0][0]) ? results.data.slice(1) : results.data;
-
-          let data_original = [];
+          let data_original = [[file_headers[timestampColumn], file_headers[signalValues]]];
 
           // y values (or what are supose to be y values) dont need processing (its the signal)
           const y = rows.map(row => parseFloat(row[signalValues]));
 
           // x values need processing in case there are no timestamps present in the data file
-          if (timestampColumn == "No timestamps") {
-            file_headers.unshift("Timestamp (calc)");
+          if (timestampColumn == file_headers.length-1) {
             for (let i = 0; i < y.length; i++) {
-              data_original.push([i * (1 / samplingRate), y[i]]);
+              const timestamp = i * (1 / samplingRate);
+              data_original.push([timestamp, y[i]]);
             }
 
           } else {
+
             for (let i = 0; i < rows.length; i++) {
               const timestamp = parseFloat(rows[i][timestampColumn]);
               data_original.push([timestamp, y[i]]);
             }
           }
 
-          setFileRows(rows);
+          setFileRows([...results.data[0].map(item => item[0]).join(',')].concat(rows.map(row => row.join(','))));
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
           setChartDataFiltered(data_original);
@@ -286,7 +287,9 @@ const Filtering = () => {
 
     const formData = new FormData();
 
-    formData.append('signal', JSON.stringify(chartDataOriginal));
+    const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
+
+    formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
     formData.append('signal_type', signalType);
     formData.append('sampling_rate', samplingRate);
 
@@ -320,6 +323,7 @@ const Filtering = () => {
         })
         .then((data) => {
           if (data) {
+            data["data"].unshift([headers[timestampColumn], headers[signalValues]]);
             setChartDataFiltered(data["data"]);
             setMetricsOriginal(data["original_quality"]);
             setMetricsFiltered(data["filtered_quality"]);
@@ -350,7 +354,7 @@ const Filtering = () => {
                 <h3>Original</h3>
                 <Card>
                   <Card.Body>
-                    {chartDataOriginal && <InfoTable headers={headers} data={chartDataOriginal} />}
+                    {chartDataOriginal && <InfoTable table={chartDataOriginal} />}
                   </Card.Body>
                 </Card>
               </Col>
@@ -376,7 +380,7 @@ const Filtering = () => {
 
                       <FilterFields fields={fields} onFieldChange={handleFieldChange} />
                     </Form>
-                    <Button className="m-2" onClick={requestFilter}>Filter</Button>
+                    <Button className="m-2" onClick={requestFilter}>Execute filter</Button>
                   </Card.Body>
                 </Card>
               </Col>
@@ -387,8 +391,8 @@ const Filtering = () => {
                   <Card.Body>
                     {chartDataFiltered && (
                       <>
-                        <InfoTable headers={headers} data={chartDataFiltered} />
-                        <DownloadFiltered headers={headers} data={chartDataFiltered} />
+                        <InfoTable table={chartDataFiltered} />
+                        <DownloadFiltered table={chartDataFiltered} />
                       </>
                     )}
                   </Card.Body>
@@ -413,14 +417,14 @@ const Filtering = () => {
               <Col md={6} xs={12}>
                 <Card>
                   <Card.Body>
-                    {chartDataOriginal && <CustomChart data={chartDataOriginal} setChartImage={setChartImageOriginal} />}
+                    {chartDataOriginal && <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />}
                   </Card.Body>
                 </Card>
               </Col>
               <Col md={6} xs={12}>
                 <Card>
                   <Card.Body>
-                    {chartDataFiltered && <CustomChart data={chartDataFiltered} setChartImage={setChartImageFiltered} />}
+                    {chartDataFiltered && <CustomChart table={chartDataFiltered} setChartImage={setChartImageFiltered} />}
                   </Card.Body>
                 </Card>
               </Col>
