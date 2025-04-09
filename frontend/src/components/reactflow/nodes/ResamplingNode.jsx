@@ -7,12 +7,42 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { Button, Form } from 'react-bootstrap';
+import { FaClock, FaSpinner, FaCheck } from 'react-icons/fa';
 
 function ResamplingNode({ id, data }) {
-  const { updateNodeData } = useReactFlow();
+  const samplingRate = data.samplingRate;
+  const { updateNodeData } = useReactFlow(); 
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [interpolationTechnique, setInterpolationTechnique] = useState('spline');
-  const samplingRate = data.samplingRate;
+  const [targetSamplingRate, setTargetSamplingRate] = useState(samplingRate);
+  const [executionState, setExecutionState] = useState('waiting');
+  
+
+  useEffect(() => {
+
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      execute: () => {
+        console.log("GOLA");  
+        requestResample();
+      },
+    }));
+
+    // Clean table for execution
+    const handleDeleteTables = () => {
+      updateNodeData(id, (prev) => ({
+        ...prev,
+        table: null,
+      }));
+      setExecutionState('waiting');
+    };
+
+    window.addEventListener('delete-source-tables', handleDeleteTables);
+
+    return () => {
+      window.removeEventListener('delete-source-tables', handleDeleteTables);
+    };
+  }, [id]);
 
   const incomingConnections = useNodeConnections({
     type: 'target',
@@ -26,14 +56,15 @@ function ResamplingNode({ id, data }) {
   const sourceNodeData = useNodesData(sourceNodeId);
   const table = sourceNodeData?.data?.table;
 
-  const requestResample = async (interpolation_technique, target_sampling_rate) => {
+  const requestResample = async () => {
     if (!table) return;
-    console.log(samplingRate)
+    setExecutionState('running');
+
     const formData = new FormData();
     formData.append('signal', JSON.stringify(table.slice(1)));
-    formData.append('interpolation_technique', interpolation_technique);
+    formData.append('interpolation_technique', interpolationTechnique);
     formData.append('source_sampling_rate', parseFloat(samplingRate));
-    formData.append('target_sampling_rate', parseFloat(target_sampling_rate));
+    formData.append('target_sampling_rate', parseFloat(targetSamplingRate));
 
     try {
       const response = await fetch('http://localhost:8000/resampling', {
@@ -51,12 +82,26 @@ function ResamplingNode({ id, data }) {
         ...prev,
         table: new_table,
       }));
+      setExecutionState('executed');
     } catch (error) {
       console.error('Failed to apply resampling:', error);
       updateNodeData(id, (prev) => ({
         ...prev,
         table: table,
       }));
+    }
+  };
+
+  const renderExecutionIcon = () => {
+    switch (executionState) {
+      case 'waiting':
+        return <FaClock />;
+      case 'running':
+        return <FaSpinner className="spin" />;
+      case 'executed':
+        return <FaCheck />;
+      default:
+        return null;
     }
   };
 
@@ -83,19 +128,23 @@ function ResamplingNode({ id, data }) {
           <Form.Control
             type="number"
             placeholder='Enter Hz'
-            defaultValue={samplingRate}
+            value={targetSamplingRate}
+            onChange={(e) => setTargetSamplingRate(e.target.value)}
             id="samplingRate"
           />
         </Form.Group>
       </Form>
       <Button
         className="m-2"
-        onClick={() => requestResample(interpolationTechnique, document.getElementById("samplingRate").value)}
+        onClick={() => requestResample()}
       >
         Resample
       </Button>
       <Handle type="source" position={Position.Right} />
-
+      
+      <div style={{ position: 'absolute', top: 5, right: 5 }}>
+        {renderExecutionIcon()}
+      </div>
     </div>
   );
 }

@@ -13,6 +13,21 @@ function OutliersNode({ id }) {
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [outlierTechnique, setOutlierTechnique] = useState('hampel');
 
+  useEffect(() => {
+    const handleDeleteTables = () => {
+      updateNodeData(id, (prev) => ({
+        ...prev,
+        table: null,
+      }));
+    };
+
+    window.addEventListener('delete-source-tables', handleDeleteTables);
+
+    return () => {
+      window.removeEventListener('delete-source-tables', handleDeleteTables);
+    };
+  }, [id]);
+
   const incomingConnections = useNodeConnections({
     type: 'target',
   });

@@ -14,11 +14,13 @@ import {
 import '@xyflow/react/dist/style.css';
 
 
-import InputSignal from './nodes/InputSignal';
-import OutputSignal from './nodes/OutputSignal';
-import ResamplingNode from './nodes/ResamplingNode';
-import OutliersNode from './nodes/OutliersNode';
-import FilteringNode from './nodes/FilteringNode';
+import InputSignal from './reactflow/nodes/InputSignal';
+import OutputSignal from './reactflow/nodes/OutputSignal';
+import ResamplingNode from './reactflow/nodes/ResamplingNode';
+import OutliersNode from './reactflow/nodes/OutliersNode';
+import FilteringNode from './reactflow/nodes/FilteringNode';
+
+import { AnimatedEdge } from './reactflow/edges/animatedEdge';
 
 import { usePapaParse } from 'react-papaparse';
 
@@ -259,6 +261,10 @@ const Processing = () => {
     FilteringNode
   };
 
+  const edgeTypes = {
+    AnimatedEdge
+  };
+
   useEffect(() => {
     if (!chartDataOriginal) return;
 
@@ -297,9 +303,41 @@ const Processing = () => {
   };
 
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [],
+    (params) => {
+      setEdges((eds) =>
+        addEdge({ ...params, type: 'AnimatedEdge' }, eds)
+      );
+    },
+    []
   );
+  
+  const deleteSourceTablesAndExecute = async () => {
+    const eventDelete = new CustomEvent('delete-source-tables');
+    window.dispatchEvent(eventDelete);
+    
+
+    const updatedNodes = nodes.map(node => {
+      if (node.id !== '1' && node.id !== '2') {
+        return { ...node, data: { ...node.data, table: null } };
+      }
+      return node;
+    });
+
+    setNodes(updatedNodes);
+
+    const nodesToCheck = updatedNodes.filter(node => node.id !== '1' && node.id !== '2');
+
+    if (nodesToCheck.length === 0) {
+      console.log('No hay nodos para verificar.');
+      return;
+    }
+
+    const eventGenerate = new CustomEvent('generate-table');
+    window.dispatchEvent(eventGenerate);
+    console.log('Todos los nodos han vaciado su data.table. Generando tabla...');
+  };
+  
+
 
   return (
     <>
@@ -308,7 +346,8 @@ const Processing = () => {
 
         <div>
           <p><strong>Signal type:</strong> {signalType}</p>
-          <Row className="my-4 justify-content-center">
+          <Row className="my-4 justify-content-center">      
+            <Button onClick={deleteSourceTablesAndExecute}>Run</Button>
             <Col xs="auto" className="d-grid gap-2 mx-2">
               <Button
                 variant="primary"
@@ -345,6 +384,7 @@ const Processing = () => {
                 <ReactFlow
                   nodes={nodes}
                   edges={edges}
+                  edgeTypes={edgeTypes}
                   onNodesChange={onNodesChange}
                   onEdgesChange={onEdgesChange}
                   nodeTypes={nodeTypes}

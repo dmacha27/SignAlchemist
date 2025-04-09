@@ -7,7 +7,9 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { Button, Form } from 'react-bootstrap';
-import FilterFields from '../FilterFields';
+import FilterFields from '../../FilterFields';
+import { FaClock, FaSpinner, FaCheck } from 'react-icons/fa';
+
 
 const filtersFields = {
   butterworth: {
@@ -43,6 +45,24 @@ function FilteringNode({ id, data }) {
   const [fields, setFields] = useState(filtersFields[filter]);
   const signalType = data.signalType;
   const samplingRate = data.samplingRate;
+  const [executionState, setExecutionState] = useState('waiting');
+
+
+  useEffect(() => {
+    const handleDeleteTables = () => {
+      updateNodeData(id, (prev) => ({
+        ...prev,
+        table: null,
+      }));
+      setExecutionState('waiting');
+    };
+
+    window.addEventListener('delete-source-tables', handleDeleteTables);
+
+    return () => {
+      window.removeEventListener('delete-source-tables', handleDeleteTables);
+    };
+  }, [id]);
 
   const incomingConnections = useNodeConnections({
     type: 'target',
@@ -58,7 +78,9 @@ function FilteringNode({ id, data }) {
   //console.log("Filter", sourceNodeData)
 
   const requestFilter = async (signalType, samplingRate) => {
-
+    if (!table) return;
+    setExecutionState('running');
+    
     const formData = new FormData();
 
     const signalOnly = table.slice(1);
@@ -90,6 +112,7 @@ function FilteringNode({ id, data }) {
         ...prev,
         table: new_table,
       }));
+      setExecutionState('executed');
     } catch (error) {
       console.error('Failed to apply filter:', error);
       updateNodeData(id, (prev) => ({
@@ -103,6 +126,19 @@ function FilteringNode({ id, data }) {
   const handleFieldChange = (field, new_value) => {
     setFields((prevFields) => ({ ...prevFields, [field]: { value: new_value } }));
   };
+
+  const renderExecutionIcon = () => {
+      switch (executionState) {
+        case 'waiting':
+          return <FaClock />;
+        case 'running':
+          return <FaSpinner className="spin" />;
+        case 'executed':
+          return <FaCheck />;
+        default:
+          return null;
+      }
+    };
 
   return (
     <div className="node shadow-sm p-3" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
@@ -134,7 +170,9 @@ function FilteringNode({ id, data }) {
         Filter
       </Button>
       <Handle type="source" position={Position.Right} id="output" />
-
+      <div style={{ position: 'absolute', top: 5, right: 5 }}>
+        {renderExecutionIcon()}
+      </div>
     </div>
   );
 }

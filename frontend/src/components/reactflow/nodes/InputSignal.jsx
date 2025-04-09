@@ -1,11 +1,33 @@
-import { useCallback, useState } from 'react';
-import { Handle, Position, useReactFlow } from '@xyflow/react';
+import { useEffect, useState } from 'react';
+import { Handle, Position, useNodeConnections, useNodesData } from '@xyflow/react';
 import { Table } from 'react-bootstrap';
 
 
 function InputSignal({ id, data }) {
   const [headers, setHeaders] = useState(data.table[0]);
   const [table, setTable] = useState(data.table);
+
+
+  const outgoingConnections = useNodeConnections({
+    type: 'source',
+  });
+
+  const targetId = outgoingConnections?.find(conn => conn.source === id)?.target;
+  const targetNodeData = useNodesData(targetId);
+
+  useEffect(() => {
+  
+      const handleExecute = () => {
+        console.log(targetNodeData?.data);
+        targetNodeData.data.execute();
+      };
+  
+      window.addEventListener('generate-table', handleExecute);
+  
+      return () => {
+        window.removeEventListener('generate-table', handleExecute);
+      };
+    }, [targetNodeData]);
 
   return (
     <>
@@ -33,5 +55,5 @@ function InputSignal({ id, data }) {
     </>
   );
 }
- 
+
 export default InputSignal;
