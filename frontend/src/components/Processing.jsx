@@ -1,5 +1,24 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
+import {
+  Handle,
+  Position,
+  ReactFlow,
+  MiniMap,
+  Background,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  useNodesData,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+
+
+import InputSignal from './nodes/InputSignal';
+import OutputSignal from './nodes/OutputSignal';
+import ResamplingNode from './nodes/ResamplingNode';
+import OutliersNode from './nodes/OutliersNode';
+import FilteringNode from './nodes/FilteringNode';
 
 import { usePapaParse } from 'react-papaparse';
 
@@ -185,49 +204,7 @@ const Processing = () => {
   const [chartImageOriginal, setChartImageOriginal] = useState(null);
   const [chartImageProcessed, setChartImageProcessed] = useState(null);
   const { readString } = usePapaParse();
-  const [selectPipeline, setSelectPipeline] = useState(0);
   const [flipped, setFlipped] = useState(false);
-
-  const resquestPipelines = async (dataOriginal, file_headers) => {
-    const formData = new FormData();
-
-    const dataOriginal_noheaders = dataOriginal.slice(1);
-
-    formData.append('signal', JSON.stringify(dataOriginal_noheaders));
-    formData.append("signalType", signalType);
-
-    try {
-      const response = await fetch("http://localhost:8000/process", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-
-        let data_processed = [];
-
-        result.pipelines.forEach((pipeline, index) => {
-          let data_pipeline = [[file_headers[timestampColumn], file_headers[signalValues]]];
-
-          for (let i = 0; i < pipeline.signal.length; i++) {
-            const timestamp = parseFloat(pipeline.signal[i][0]); // First column should always be timestamps
-            data_pipeline.push([timestamp, pipeline.signal[i][1]]); // Second column should always be signal values
-          }
-
-          data_processed.push(data_pipeline);
-        });
-
-        setPipelines(result.pipelines || []);
-        setChartDataProcessed(data_processed);
-        console.log(data_processed)
-      } else {
-        console.error("Upload error", response.statusText);
-      }
-    } catch (error) {
-      console.error("Request error:", error);
-    }
-  }
 
   useEffect(() => {
     if (!file) return;
@@ -247,7 +224,7 @@ const Processing = () => {
           const y = rows.map(row => parseFloat(row[signalValues]));
 
           // x values need processing in case there are no timestamps present in the data file
-          if (timestampColumn == file_headers.length-1) {
+          if (timestampColumn == file_headers.length - 1) {
             for (let i = 0; i < y.length; i++) {
               const timestamp = i * (1 / samplingRate);
               data_original.push([timestamp, y[i]]);
@@ -262,13 +239,67 @@ const Processing = () => {
 
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
-          resquestPipelines(data_original, file_headers);
         }
       });
     };
     reader.readAsText(file);
 
   }, [file, signalType, timestampColumn, signalValues]);
+
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [last_id, setLastId] = useState(0);
+
+  const nodeTypes = {
+    InputSignal,
+    OutputSignal,
+    OutliersNode,
+    ResamplingNode,
+    FilteringNode
+  };
+
+  useEffect(() => {
+    if (!chartDataOriginal) return;
+
+    const initialNodes = [
+      {
+        id: '1',
+        type: 'InputSignal',
+        position: { x: 0, y: 150 },
+        data: { table: chartDataOriginal },
+      },
+      {
+        id: '2',
+        type: 'OutputSignal',
+        position: { x: 1000, y: 150 },
+        data: { setData: setChartDataProcessed }
+      },
+    ];
+
+    setNodes(initialNodes);
+    setLastId(initialNodes.length);
+
+  }, [chartDataOriginal]);
+
+  const addNode = (type, options = {}) => {
+    const newNode = {
+      id: String(last_id + 1),
+      type: type,
+      position: { x: 500, y: 150 },
+      data: {
+        ...options,
+      }
+    };
+
+    setNodes((prevNodes) => [...prevNodes, newNode]);
+    setLastId(last_id + 1);
+  };
+
+  const onConnect = useCallback(
+    (params) => setEdges((eds) => addEdge(params, eds)),
+    [],
+  );
 
   return (
     <>
@@ -277,56 +308,53 @@ const Processing = () => {
 
         <div>
           <p><strong>Signal type:</strong> {signalType}</p>
-
+          <Row className="my-4 justify-content-center">
+            <Col xs="auto" className="d-grid gap-2 mx-2">
+              <Button
+                variant="primary"
+                onClick={() => addNode('ResamplingNode', { samplingRate })}
+              >
+                Add Resampling Node
+              </Button>
+            </Col>
+            <Col xs="auto" className="d-grid gap-2 mx-2">
+              <Button
+                variant="secondary"
+                onClick={() => addNode('OutliersNode')}
+              >
+                Add Outliers Node
+              </Button>
+            </Col>
+            <Col xs="auto" className="d-grid gap-2 mx-2">
+              <Button
+                variant="success"
+                onClick={() =>
+                  addNode('FilteringNode', {
+                    signalType,
+                    samplingRate,
+                  })
+                }
+              >
+                Add Filtering Node
+              </Button>
+            </Col>
+          </Row>
           <Container>
-            <Row className="justify-content-around gy-3 p-2">
-              <Col md={4} xs={12}>
-                <h3>Original</h3>
-                <Card>
-                  <Card.Body>
-                    {chartDataOriginal && (
-                      <>
-                        <InfoTable table={chartDataOriginal} />
-                      </>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={3} xs={12} className="align-self-center">
-                <Card className="p-3">
-                  <Card.Body>
-                    {pipelines ? (
-                      <InfoPipelines pipelines={pipelines} setSelectPipeline={setSelectPipeline}></InfoPipelines>
-                    ) : (
-                      <>
-                        <span className="loader"></span>
-                        <p className="mt-2">Waiting for request...</p>
-                      </>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={4} xs={12}>
-                <h3>Processed</h3>
-                <Card>
-                  <Card.Body>
-                    {chartDataProcessed ? (
-                      <>
-                        <InfoTable table={chartDataProcessed[selectPipeline]} />
-                        <DownloadFiltered table={chartDataProcessed[selectPipeline]} />
-                      </>
-                    ): (
-                      <>
-                        <span className="loader"></span>
-                        <p className="mt-2">Waiting for request...</p>
-                      </>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
+            {chartDataOriginal && (
+              <div style={{ height: 500 }}>
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  nodeTypes={nodeTypes}
+                  onConnect={onConnect}
+                  fitView
+                >
+                  <MiniMap nodeStrokeWidth={2} />
+                </ReactFlow>
+              </div>
+            )}
           </Container>
         </div>
       </Container>
@@ -360,11 +388,11 @@ const Processing = () => {
                 <Card>
                   <Card.Body>
                     {chartDataProcessed ? (
-                      <CustomChart table={chartDataProcessed[selectPipeline]} setChartImage={setChartImageProcessed}></CustomChart>
+                      <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed}></CustomChart>
                     ) : (
                       <>
                         <span className="loader"></span>
-                        <p className="mt-2">Waiting for request...</p>
+                        <p className="mt-2">Waiting for pipeline execution...</p>
                       </>
                     )}
                   </Card.Body>
@@ -397,22 +425,6 @@ const Processing = () => {
             </Row>
           </div>
         </div>
-        <Row className="d-flex justify-content-around gy-3 p-1">
-          <Col md={6} xs={12}>
-            <Card className="mt-2">
-              <Card.Body>
-                
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6} xs={12}>
-            <Card className="mt-2">
-              <Card.Body>
-                
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
       </Container>
     </>
   );

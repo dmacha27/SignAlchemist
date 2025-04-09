@@ -507,7 +507,7 @@ const Home = () => {
                                 ) : (
                                     <>
                                         <span className="loader"></span>
-                                        <p className="mt-2">Waiting for parameters...</p>
+                                        <p className="mt-2">Waiting for file...</p>
                                     </>
                                 )}
                             </Card.Body>
