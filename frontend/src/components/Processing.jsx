@@ -24,7 +24,7 @@ import { AnimatedEdge } from './reactflow/edges/animatedEdge';
 
 import { usePapaParse } from 'react-papaparse';
 
-import { Button, Form, Table, Container, Row, Col, Card, Accordion, Badge, Alert, Popover, OverlayTrigger } from 'react-bootstrap';
+import { Button, Stack, Table, Container, Row, Col, Card, Accordion, ButtonGroup, ToggleButton, Badge, Alert, Popover, OverlayTrigger } from 'react-bootstrap';
 
 import { useLocation } from "react-router-dom";
 
@@ -32,6 +32,7 @@ import { useLocation } from "react-router-dom";
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { ImgComparisonSlider } from '@img-comparison-slider/react';
+import { FaFilter, FaChartLine, FaBullseye, FaColumns, FaExchangeAlt } from 'react-icons/fa';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -124,73 +125,6 @@ const CustomChart = ({ table, setChartImage }) => {
           </Button>
       }
     </Container>
-  );
-};
-
-const InfoTable = ({ table }) => {
-  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-
-  const headers = table[0];
-  const data = table.slice(1);
-
-  return (
-    <>
-      <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', marginTop: '10px', border: '1px solid #ddd', borderRadius: '5px' }}>
-        <Table striped bordered hover size="sm">
-          <thead>
-            <tr style={{ position: 'sticky', top: 0 }}>
-              <th>{(data.length > max_length_lag) ? "Truncated" : ""}</th>
-              <th>{headers[0]}</th>
-              <th>{headers[1]}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.slice(0, max_length_lag).map((row, index) => (
-              <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{row[0].toFixed(4)}</td>
-                <td>{row[1].toFixed(4)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </div>
-    </>
-  );
-};
-
-const DownloadFiltered = ({ table }) => {
-  const headers = table[0];
-  const data = table.slice(1);
-
-  const fileRows = [headers.map(item => item).join(',')].concat(data.map(row => row.join(',')));
-  const download = new Blob([fileRows.join('\n')], { type: 'text/csv' });
-
-  const url = URL.createObjectURL(download);
-  return (
-    <Button
-      variant="success"
-      className="p-2 mt-1"
-      href={url}
-      download="processed_signal.csv"
-    >
-      📥 Download CSV
-    </Button>
-  );
-};
-
-const InfoPipelines = ({ pipelines, setSelectPipeline }) => {
-  return (
-    <Accordion>
-      {pipelines.map((pipeline, index) => (
-        <Accordion.Item key={index} eventKey={`${index}`}>
-          <Accordion.Header onClick={() => (setSelectPipeline(index))}>{pipeline.title}</Accordion.Header>
-          <Accordion.Body>
-            {/*Signal quality: {pipeline.qualityMetric}*/}
-          </Accordion.Body>
-        </Accordion.Item>
-      ))}
-    </Accordion>
   );
 };
 
@@ -310,11 +244,11 @@ const Processing = () => {
     },
     []
   );
-  
+
   const deleteSourceTablesAndExecute = async () => {
-    const eventDelete = new CustomEvent('delete-source-tables');
+
+    const eventDelete = new CustomEvent('delete-source-tables0');
     window.dispatchEvent(eventDelete);
-    
 
     const updatedNodes = nodes.map(node => {
       if (node.id !== '1' && node.id !== '2') {
@@ -328,81 +262,130 @@ const Processing = () => {
     const nodesToCheck = updatedNodes.filter(node => node.id !== '1' && node.id !== '2');
 
     if (nodesToCheck.length === 0) {
-      console.log('No hay nodos para verificar.');
+      console.log('No intermediate nodes.');
       return;
     }
 
-    const eventGenerate = new CustomEvent('generate-table');
+    const eventGenerate = new CustomEvent('start-execute');
     window.dispatchEvent(eventGenerate);
-    console.log('Todos los nodos han vaciado su data.table. Generando tabla...');
+    console.log('All nodea clean. Executing all...');
   };
-  
+
 
 
   return (
     <>
-      <Container className="text-center">
+      <Container className="text-center border-bottom">
         <h1>Processing</h1>
 
         <div>
           <p><strong>Signal type:</strong> {signalType}</p>
-          <Row className="my-4 justify-content-center">      
-            <Button onClick={deleteSourceTablesAndExecute}>Run</Button>
-            <Col xs="auto" className="d-grid gap-2 mx-2">
-              <Button
-                variant="primary"
-                onClick={() => addNode('ResamplingNode', { samplingRate })}
-              >
-                Add Resampling Node
-              </Button>
+          <Row className="my-4">
+
+            <Col md="10" className="border-end">
+              {chartDataOriginal && (
+                <div style={{ height: 500 }}>
+                  <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    edgeTypes={edgeTypes}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    nodeTypes={nodeTypes}
+                    onConnect={onConnect}
+                    fitView
+                  >
+                    <MiniMap nodeStrokeWidth={2} />
+                  </ReactFlow>
+                </div>
+              )}
             </Col>
-            <Col xs="auto" className="d-grid gap-2 mx-2">
-              <Button
-                variant="secondary"
-                onClick={() => addNode('OutliersNode')}
-              >
-                Add Outliers Node
-              </Button>
-            </Col>
-            <Col xs="auto" className="d-grid gap-2 mx-2">
-              <Button
-                variant="success"
-                onClick={() =>
-                  addNode('FilteringNode', {
-                    signalType,
-                    samplingRate,
-                  })
-                }
-              >
-                Add Filtering Node
-              </Button>
+
+            <Col
+              md="2"
+              style={{ minHeight: '500px' }}
+            >
+              <div className="d-flex flex-column justify-content-center align-items-center h-100 gap-2">
+                <h5 className="text-center mb-3">🛠 Nodes</h5>
+
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => addNode('ResamplingNode', { samplingRate })}
+                  className="d-flex align-items-center gap-2 justify-content-center w-100"
+                >
+                  <FaChartLine />
+                  Resampling
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => addNode('OutliersNode')}
+                  className="d-flex align-items-center gap-2 justify-content-center w-100"
+                >
+                  <FaBullseye />
+                  Outliers
+                </Button>
+
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={() => addNode('FilteringNode', { signalType, samplingRate })}
+                  className="d-flex align-items-center gap-2 justify-content-center w-100"
+                >
+                  <FaFilter />
+                  Filtering
+                </Button>
+
+                <hr className="w-100 my-2" />
+
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={deleteSourceTablesAndExecute}
+                  className="d-flex align-items-center gap-2 justify-content-center w-100"
+                >
+                  🚀 Run Pipeline
+                </Button>
+              </div>
             </Col>
           </Row>
-          <Container>
-            {chartDataOriginal && (
-              <div style={{ height: 500 }}>
-                <ReactFlow
-                  nodes={nodes}
-                  edges={edges}
-                  edgeTypes={edgeTypes}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  nodeTypes={nodeTypes}
-                  onConnect={onConnect}
-                  fitView
-                >
-                  <MiniMap nodeStrokeWidth={2} />
-                </ReactFlow>
-              </div>
-            )}
-          </Container>
+
         </div>
       </Container>
 
-      <Container>
-        <button onClick={() => { setFlipped(!flipped) }} className="btn btn-primary mb-3">
-          Flip comparison
-        </button>
+      <Container className='mt-2'>
+        <Row className="justify-content-center mb-3">
+          <Col md="auto">
+            <ButtonGroup>
+              <ToggleButton
+                id="toggle-original"
+                type="radio"
+                variant={!flipped ? 'primary' : 'outline-primary'}
+                name="view"
+                value="original"
+                checked={!flipped}
+                onChange={() => setFlipped(false)}
+              >
+                <FaColumns className="me-2" />
+                Dual View
+              </ToggleButton>
+              <ToggleButton
+                id="toggle-comparison"
+                type="radio"
+                variant={flipped ? 'primary' : 'outline-primary'}
+                name="view"
+                value="comparison"
+                checked={flipped}
+                onChange={() => setFlipped(true)}
+              >
+                <FaExchangeAlt className="me-2" />
+                Comparison
+              </ToggleButton>
+            </ButtonGroup>
+          </Col>
+        </Row>
         <div id="charts">
           <div
             id="charts-original"

@@ -7,27 +7,35 @@ function InputSignal({ id, data }) {
   const [headers, setHeaders] = useState(data.table[0]);
   const [table, setTable] = useState(data.table);
 
-
   const outgoingConnections = useNodeConnections({
     type: 'source',
   });
 
-  const targetId = outgoingConnections?.find(conn => conn.source === id)?.target;
-  const targetNodeData = useNodesData(targetId);
+  const targetNodeId = outgoingConnections?.find(conn => conn.source === id)?.target;
 
   useEffect(() => {
-  
-      const handleExecute = () => {
-        console.log(targetNodeData?.data);
-        targetNodeData.data.execute();
-      };
-  
-      window.addEventListener('generate-table', handleExecute);
-  
-      return () => {
-        window.removeEventListener('generate-table', handleExecute);
-      };
-    }, [targetNodeData]);
+
+    const handleDeleteTable = () => {
+      const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
+      window.dispatchEvent(event);
+    };
+
+    const handleExecute = () => {
+      const event = new CustomEvent(`execute-node${targetNodeId}`, {
+        detail: { table: data.table },
+      });
+      window.dispatchEvent(event);
+    };
+
+    window.addEventListener('start-execute', handleExecute);
+    window.addEventListener('delete-source-tables0', handleDeleteTable);
+
+    return () => {
+      window.removeEventListener('start-execute', handleExecute);
+      window.removeEventListener('delete-source-tables0', handleDeleteTable);
+    };
+  }, [targetNodeId]);
+
 
   return (
     <>
@@ -50,7 +58,12 @@ function InputSignal({ id, data }) {
             ))}
           </tbody>
         </Table>
-        <Handle type="source" position={Position.Right} />
+        <Handle type="source" position={Position.Right} style={{ // Make the handle invisible and increase the touch area
+        zIndex: 999,
+        border: 'none',
+        width: '15px',
+        height: '15px',
+      }}/>
       </div>
     </>
   );

@@ -7,54 +7,71 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { Button, Form } from 'react-bootstrap';
-import { FaClock, FaSpinner, FaCheck } from 'react-icons/fa';
+import { FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
 
 function ResamplingNode({ id, data }) {
   const samplingRate = data.samplingRate;
-  const { updateNodeData } = useReactFlow(); 
+  const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
+  const [targetNodeId, setTargetNodeId] = useState(null);
   const [interpolationTechnique, setInterpolationTechnique] = useState('spline');
   const [targetSamplingRate, setTargetSamplingRate] = useState(samplingRate);
   const [executionState, setExecutionState] = useState('waiting');
-  
 
-  useEffect(() => {
-
-    updateNodeData(id, (prev) => ({
-      ...prev,
-      execute: () => {
-        console.log("GOLA");  
-        requestResample();
-      },
-    }));
-
-    // Clean table for execution
-    const handleDeleteTables = () => {
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: null,
-      }));
-      setExecutionState('waiting');
-    };
-
-    window.addEventListener('delete-source-tables', handleDeleteTables);
-
-    return () => {
-      window.removeEventListener('delete-source-tables', handleDeleteTables);
-    };
-  }, [id]);
-
-  const incomingConnections = useNodeConnections({
+  const connections = useNodeConnections({
     type: 'target',
   });
 
   useEffect(() => {
-    const sourceId = incomingConnections?.find(conn => conn.target === id)?.source;
+    const sourceId = connections?.find(conn => conn.target === id)?.source;
+    const targetId = connections?.find(conn => conn.source === id)?.target;
     setSourceNodeId(sourceId);
-  }, [incomingConnections]);
+    setTargetNodeId(targetId);
+  }, [connections]);
 
   const sourceNodeData = useNodesData(sourceNodeId);
-  const table = sourceNodeData?.data?.table;
+  let table = sourceNodeData?.data?.table;
+
+  useEffect(() => {
+
+    const handleDeleteTable = () => {
+      updateNodeData(id, (prev) => ({
+        ...prev,
+        table: null,
+      }));
+
+      setExecutionState('waiting');
+
+      const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
+      window.dispatchEvent(event);
+    };
+
+
+    const handleExecute = async (e) => {
+      const table_source = e.detail.table;
+
+      if (table_source) {
+        table = table_source;
+        const new_table = await requestResample();
+
+        if (targetNodeId) {
+          const customEvent = new CustomEvent(`execute-node${targetNodeId}`, {
+            detail: { table: new_table },
+          });
+          window.dispatchEvent(customEvent);
+        }
+      }
+    };
+
+    window.addEventListener(`execute-node${id}`, handleExecute);
+    window.addEventListener(`delete-source-tables${id}`, handleDeleteTable);
+
+    return () => {
+      window.removeEventListener(`execute-node${id}`, handleExecute);
+      window.removeEventListener(`delete-source-tables${id}`, handleDeleteTable);
+    };
+  }, [targetNodeId, interpolationTechnique, targetSamplingRate]);
+
 
   const requestResample = async () => {
     if (!table) return;
@@ -65,6 +82,9 @@ function ResamplingNode({ id, data }) {
     formData.append('interpolation_technique', interpolationTechnique);
     formData.append('source_sampling_rate', parseFloat(samplingRate));
     formData.append('target_sampling_rate', parseFloat(targetSamplingRate));
+
+    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
+    window.dispatchEvent(event);
 
     try {
       const response = await fetch('http://localhost:8000/resampling', {
@@ -82,13 +102,18 @@ function ResamplingNode({ id, data }) {
         ...prev,
         table: new_table,
       }));
+
       setExecutionState('executed');
+      return new_table;
     } catch (error) {
       console.error('Failed to apply resampling:', error);
       updateNodeData(id, (prev) => ({
         ...prev,
         table: table,
       }));
+
+      setExecutionState('error');
+      return table;
     }
   };
 
@@ -100,10 +125,13 @@ function ResamplingNode({ id, data }) {
         return <FaSpinner className="spin" />;
       case 'executed':
         return <FaCheck />;
+      case 'error':
+        return <FaExclamationCircle />;
       default:
         return null;
     }
   };
+
 
   return (
     <div className="node shadow-sm p-3" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
@@ -137,11 +165,12 @@ function ResamplingNode({ id, data }) {
       <Button
         className="m-2"
         onClick={() => requestResample()}
+        disabled={!table}
       >
         Resample
       </Button>
       <Handle type="source" position={Position.Right} />
-      
+
       <div style={{ position: 'absolute', top: 5, right: 5 }}>
         {renderExecutionIcon()}
       </div>

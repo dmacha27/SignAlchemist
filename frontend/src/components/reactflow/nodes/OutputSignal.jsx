@@ -12,8 +12,7 @@ function OutputSignal({ id, data }) {
   const sourceId = incomingConnections?.find(conn => conn.target === id)?.source;
   const sourceNodeData = useNodesData(sourceId);
   const table = sourceNodeData?.data?.table;
-  if (table) setChartDataProcessed(table);
-  //console.log("Output:", table);
+  setChartDataProcessed(table);
 
   return (
     <>
