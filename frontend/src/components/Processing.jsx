@@ -1,18 +1,20 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import {
-  Handle,
-  Position,
   ReactFlow,
   MiniMap,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
   addEdge,
-  useNodesData,
+  MarkerType,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
+import generateDataOriginal from '../utils';
+
+import CustomChart from './common/CustomChart';
 
 import InputSignal from './reactflow/nodes/InputSignal';
 import OutputSignal from './reactflow/nodes/OutputSignal';
@@ -20,120 +22,21 @@ import ResamplingNode from './reactflow/nodes/ResamplingNode';
 import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
 
-import { AnimatedEdge } from './reactflow/edges/animatedEdge';
+import AnimatedEdge from './reactflow/edges/AnimatedEdge';
 
 import { usePapaParse } from 'react-papaparse';
 
-import { Button, Stack, Table, Container, Row, Col, Card, Accordion, ButtonGroup, ToggleButton, Badge, Alert, Popover, OverlayTrigger } from 'react-bootstrap';
+import { Button, Stack, Table, Container, Row, Col, Card, Accordion, ButtonGroup, ToggleButton, Badge, Alert, Popover, OverlayTrigger, Modal } from 'react-bootstrap';
 
 import { useLocation } from "react-router-dom";
 
-
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { ImgComparisonSlider } from '@img-comparison-slider/react';
-import { FaFilter, FaChartLine, FaBullseye, FaColumns, FaExchangeAlt } from 'react-icons/fa';
+import { FaFilter, FaChartLine, FaBullseye, FaColumns, FaExchangeAlt, FaWaveSquare, FaProjectDiagram, FaBalanceScale, FaSquare, FaRocket, FaSignal, FaTrash, FaEye } from 'react-icons/fa';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-const max_length_lag = 5000;
-
-const chartOptions = {
-  responsive: true,
-  plugins: {},
-  scales: {
-    x: {
-      type: 'linear', position: 'bottom',
-      title: {
-        display: true,
-        text: "(s)"
-      }
-    },
-    y: { beginAtZero: true },
-  },
-};
-
-const CustomChart = ({ table, setChartImage }) => {
-  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-
-  const headers = table[0];
-  const data = table.slice(1);
-
-  const chartRef = useRef(null);
-
-  const isLargeDataset = data.length > max_length_lag;
-
-  const resetZoom = () => {
-    if (chartRef.current) {
-      chartRef.current.resetZoom();
-    }
-  };
-
-  const specificOptions = {
-    ...chartOptions,
-    plugins: {
-      zoom: {
-        pan: {
-          enabled: !isLargeDataset,
-          mode: "x"
-        },
-        zoom: {
-          wheel: { enabled: !isLargeDataset },
-          pinch: { enabled: !isLargeDataset },
-          mode: "x"
-        },
-      },
-    },
-    animation: {
-      onComplete: () => {
-        if (chartRef.current) {
-          const imageUrl = chartRef.current.toBase64Image();
-          setChartImage(imageUrl);
-        }
-      },
-    },
-  }
-
-  specificOptions.scales.x.title = { display: true, text: headers[0] + " (s)" };
-  specificOptions.scales.y.title = { display: true, text: headers[1] };
-
-  const datasets = [
-    {
-      label: "Signal",
-      pointRadius: isLargeDataset ? 0 : 2,
-      data: data.map((row) => ({
-        x: row[0],
-        y: row[1],
-      })),
-      borderColor: "rgb(75, 192, 192)",
-      backgroundColor: "rgba(75, 192, 192, 0.2)",
-      fill: false,
-    },
-  ];
-
-  return (
-    <Container className="text-center">
-      <Line ref={chartRef} data={{ datasets }} options={specificOptions} />
-
-      {
-        isLargeDataset ?
-          <Alert variant="warning" className="w-75 m-auto" role="alert">
-            Data is too large to interact.
-          </Alert> :
-          <Button variant="secondary" className="mt-3" onClick={resetZoom}>
-            Reset Zoom
-          </Button>
-      }
-    </Container>
-  );
-};
 
 const Processing = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } = location.state || {};
-
-  const [pipelines, setPipelines] = useState([]);
-  const [headers, setHeaders] = useState([]);
 
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [chartDataProcessed, setChartDataProcessed] = useState(null);
@@ -141,11 +44,13 @@ const Processing = () => {
   const [chartImageProcessed, setChartImageProcessed] = useState(null);
   const { readString } = usePapaParse();
   const [flipped, setFlipped] = useState(false);
+  const [showPopover, setShowPopover] = useState(false);
 
   useEffect(() => {
     if (!file) return;
 
     const reader = new FileReader();
+
     reader.onload = (e) => {
       const content = e.target.result;
       readString(content, {
@@ -154,26 +59,8 @@ const Processing = () => {
           const file_headers = [...results.data[0], "Timestamp (calc)"];
           const rows = results.data.slice(1);
 
-          let data_original = [[file_headers[timestampColumn], file_headers[signalValues]]];
+          let data_original = generateDataOriginal(file_headers, rows, timestampColumn, signalValues, samplingRate);
 
-          // y values (or what are supose to be y values) dont need processing (its the signal)
-          const y = rows.map(row => parseFloat(row[signalValues]));
-
-          // x values need processing in case there are no timestamps present in the data file
-          if (timestampColumn == file_headers.length - 1) {
-            for (let i = 0; i < y.length; i++) {
-              const timestamp = i * (1 / samplingRate);
-              data_original.push([timestamp, y[i]]);
-            }
-
-          } else {
-            for (let i = 0; i < rows.length; i++) {
-              const timestamp = parseFloat(rows[i][timestampColumn]);
-              data_original.push([timestamp, y[i]]);
-            }
-          }
-
-          setHeaders(file_headers);
           setChartDataOriginal(data_original);
         }
       });
@@ -212,7 +99,7 @@ const Processing = () => {
       {
         id: '2',
         type: 'OutputSignal',
-        position: { x: 1000, y: 150 },
+        position: { x: 1100, y: 150 },
         data: { setData: setChartDataProcessed }
       },
     ];
@@ -226,7 +113,7 @@ const Processing = () => {
     const newNode = {
       id: String(last_id + 1),
       type: type,
-      position: { x: 500, y: 150 },
+      position: { x: 500, y: 120 },
       data: {
         ...options,
       }
@@ -239,11 +126,30 @@ const Processing = () => {
   const onConnect = useCallback(
     (params) => {
       setEdges((eds) =>
-        addEdge({ ...params, type: 'AnimatedEdge' }, eds)
+        addEdge({
+          ...params,
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+            color: '#0d6dfd',
+          },
+          style: {
+            strokeWidth: 2,
+            stroke: '#0d6dfd',
+          }
+        }, eds)
       );
     },
     []
   );
+
+  const cleanFlow = () => {
+    setNodes((prevNodes) => prevNodes.slice(0, 2));
+    setEdges([]);
+    setLastId(2);
+    setChartImageProcessed(null);
+  }
 
   const deleteSourceTablesAndExecute = async () => {
 
@@ -261,7 +167,7 @@ const Processing = () => {
 
     const nodesToCheck = updatedNodes.filter(node => node.id !== '1' && node.id !== '2');
 
-    if (nodesToCheck.length === 0) {
+    if (nodesToCheck.length === 0 || edges.length === 0 ) {
       console.log('No intermediate nodes.');
       return;
     }
@@ -275,88 +181,163 @@ const Processing = () => {
 
   return (
     <>
-      <Container className="text-center border-bottom">
-        <h1>Processing</h1>
+      <Container className="py-4 border-bottom">
+        <h1 className="text-center mb-2">
+          <FaWaveSquare className="me-2 text-primary" />
+          Signal Processing
+        </h1>
+        <p className="text-center text-muted">
+          <strong>Signal type:</strong> {signalType}
+        </p>
+      </Container>
 
-        <div>
-          <p><strong>Signal type:</strong> {signalType}</p>
-          <Row className="my-4">
+      <Container className="my-4 border-bottom">
+        <Row>
+          {/* Main Flow Area */}
+          <Col md={9} className="mb-4">
+            <Card className="shadow-sm rounded-4 border-1">
+              <Card.Header className="bg-light fw-bold">
+                <FaProjectDiagram className="me-2 text-primary" />
+                Pipeline Flow
+              </Card.Header>
+              <Card.Body className="p-0">
+                {chartDataOriginal ? (
+                  <div style={{ height: 500 }} className="overflow-hidden">
+                    <ReactFlow
+                      nodes={nodes}
+                      edges={edges}
+                      edgeTypes={edgeTypes}
+                      onNodesChange={onNodesChange}
+                      onEdgesChange={onEdgesChange}
+                      nodeTypes={nodeTypes}
+                      onConnect={onConnect}
+                      fitView
+                      minZoom={0.3}
+                    >
+                      <Background color="#ccc" variant={BackgroundVariant.Dots} />
+                      <MiniMap nodeStrokeWidth={2} />
+                    </ReactFlow>
+                  </div>
+                ) : (
+                  <div className="text-center py-5 text-muted">
+                    <span className="loader"></span>
+                    <p className="mt-2">Loading flow...</p>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
 
-            <Col md="10" className="border-end">
-              {chartDataOriginal && (
-                <div style={{ height: 500 }}>
-                  <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    edgeTypes={edgeTypes}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    nodeTypes={nodeTypes}
-                    onConnect={onConnect}
-                    fitView
-                  >
-                    <MiniMap nodeStrokeWidth={2} />
-                  </ReactFlow>
-                </div>
-              )}
-            </Col>
-
-            <Col
-              md="2"
-              style={{ minHeight: '500px' }}
-            >
-              <div className="d-flex flex-column justify-content-center align-items-center h-100 gap-2">
-                <h5 className="text-center mb-3">🛠 Nodes</h5>
-
+          {/* Sidebar Buttons */}
+          <Col md={3}>
+            <Card className="shadow-sm rounded-4 border-1 sticky-top">
+              <Card.Header className="bg-light fw-bold">
+                <FaSquare className="me-2 text-primary" />
+                Pipeline Nodes
+              </Card.Header>
+              <Card.Body className="d-flex flex-column gap-3">
                 <Button
-                  variant="primary"
+                  title='Add resampling node'
+                  variant="outline-primary"
                   size="sm"
                   onClick={() => addNode('ResamplingNode', { samplingRate })}
-                  className="d-flex align-items-center gap-2 justify-content-center w-100"
+                  className="d-flex align-items-center justify-content-center gap-2"
                 >
                   <FaChartLine />
                   Resampling
                 </Button>
 
                 <Button
-                  variant="secondary"
+                  title='Add outlier detection node'
+                  variant="outline-secondary"
                   size="sm"
                   onClick={() => addNode('OutliersNode')}
-                  className="d-flex align-items-center gap-2 justify-content-center w-100"
+                  className="d-flex align-items-center justify-content-center gap-2"
                 >
                   <FaBullseye />
                   Outliers
                 </Button>
 
                 <Button
-                  variant="success"
+                  title='Add filtering node'
+                  variant="outline-success"
                   size="sm"
                   onClick={() => addNode('FilteringNode', { signalType, samplingRate })}
-                  className="d-flex align-items-center gap-2 justify-content-center w-100"
+                  className="d-flex align-items-center justify-content-center gap-2"
                 >
                   <FaFilter />
                   Filtering
                 </Button>
 
-                <hr className="w-100 my-2" />
+                <hr className="my-2" />
 
                 <Button
+                  title='Start-end execution'
                   variant="danger"
                   size="sm"
                   onClick={deleteSourceTablesAndExecute}
-                  className="d-flex align-items-center gap-2 justify-content-center w-100"
+                  className="d-flex align-items-center justify-content-center gap-2"
                 >
-                  🚀 Run Pipeline
+                  <FaRocket />
+                  Run Pipeline
                 </Button>
-              </div>
-            </Col>
-          </Row>
 
-        </div>
+                <OverlayTrigger
+                  trigger="click"
+                  placement="top"
+                  show={showPopover}
+                  onToggle={() => setShowPopover(!showPopover)}
+                  overlay={
+                    <Popover>
+                      <Popover.Header as="h3">Confirm reset</Popover.Header>
+                      <Popover.Body>
+                        <div className="d-flex flex-column gap-2">
+                          <span>Are you sure you want to clean the pipeline?</span>
+                          <div className="d-flex justify-content-end gap-2">
+                            <Button variant="secondary" size="sm" onClick={() => setShowPopover(false)}>Cancel</Button>
+                            <Button variant="danger" size="sm" onClick={() => {
+                              cleanFlow();
+                              setShowPopover(false);
+                            }}>
+                              Yes, clean
+                            </Button>
+                          </div>
+                        </div>
+                      </Popover.Body>
+                    </Popover>
+                  }
+                >
+                  <Button
+                    title="Restart flow"
+                    variant="info"
+                    size="sm"
+                    className="d-flex align-items-center justify-content-center gap-2 text-white"
+                  >
+                    <FaTrash />
+                    Clean Pipeline
+                  </Button>
+                </OverlayTrigger>
+                <Button
+                  title='Go to charts'
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    document.getElementById("charts").scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="m-auto rounded-circle d-flex align-items-center justify-content-center"
+                  style={{ width: '40px', height: '40px' }}
+                >
+                  <FaEye />
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
 
-      <Container className='mt-2'>
-        <Row className="justify-content-center mb-3">
+      {/* Toggle View */}
+      <Container className="mt-2">
+        <Row className="justify-content-center mb-4">
           <Col md="auto">
             <ButtonGroup>
               <ToggleButton
@@ -386,37 +367,48 @@ const Processing = () => {
             </ButtonGroup>
           </Col>
         </Row>
+
+        {/* Dual View */}
         <div id="charts">
           <div
             id="charts-original"
             className={`flip-container ${flipped ? 'flipped' : ''}`}
-            style={{ display: flipped ? 'none' : 'block' }} // Oculta cuando flipped es true
+            style={{ display: flipped ? 'none' : 'block' }}
           >
-            <Row className="d-flex justify-content-around gy-3 p-1">
-              <Col md={6} xs={12}>
-                <Card>
+            <Row className="gy-4">
+              <Col md={6}>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaSignal className="me-2 text-primary" />
+                    Original Signal
+                  </Card.Header>
                   <Card.Body>
                     {chartDataOriginal ? (
-                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal}></CustomChart>
+                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
                     ) : (
-                      <>
+                      <div className="text-center">
                         <span className="loader"></span>
                         <p className="mt-2">Waiting for request...</p>
-                      </>
+                      </div>
                     )}
                   </Card.Body>
                 </Card>
               </Col>
-              <Col md={6} xs={12}>
-                <Card>
+
+              <Col md={6}>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaWaveSquare className="me-2 text-success" />
+                    Processed Signal
+                  </Card.Header>
                   <Card.Body>
                     {chartDataProcessed ? (
-                      <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed}></CustomChart>
+                      <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} />
                     ) : (
-                      <>
+                      <div className="text-center">
                         <span className="loader"></span>
                         <p className="mt-2">Waiting for pipeline execution...</p>
-                      </>
+                      </div>
                     )}
                   </Card.Body>
                 </Card>
@@ -424,27 +416,34 @@ const Processing = () => {
             </Row>
           </div>
 
+          {/* Comparison View */}
           <div
             id="charts-comparison"
             className={`flip-container ${flipped ? 'flipped' : ''}`}
-            style={{ display: flipped ? 'block' : 'none' }} // Muestra cuando flipped es true
+            style={{ display: flipped ? 'block' : 'none' }}
           >
-            <Row className="d-flex justify-content-around gy-3 p-1">
-              <Card>
-                <Card.Body>
-                  {(chartImageOriginal && chartImageProcessed) ? (
-                    <ImgComparisonSlider>
-                      <img slot="first" src={chartImageOriginal} />
-                      <img slot="second" src={chartImageProcessed} />
-                    </ImgComparisonSlider>
-                  ) : (
-                    <>
-                      <span className="loader"></span>
-                      <p className="mt-2">Rendering comparison...</p>
-                    </>
-                  )}
-                </Card.Body>
-              </Card>
+            <Row className="justify-content-center">
+              <Col md={10}>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaBalanceScale className="me-2 text-info" />
+                    Comparison View
+                  </Card.Header>
+                  <Card.Body>
+                    {(chartImageOriginal && chartImageProcessed) ? (
+                      <ImgComparisonSlider>
+                        <img slot="first" src={chartImageOriginal} />
+                        <img slot="second" src={chartImageProcessed} />
+                      </ImgComparisonSlider>
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2">Rendering comparison...</p>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
             </Row>
           </div>
         </div>

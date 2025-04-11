@@ -58,12 +58,7 @@ function InputSignal({ id, data }) {
             ))}
           </tbody>
         </Table>
-        <Handle type="source" position={Position.Right} style={{ // Make the handle invisible and increase the touch area
-        zIndex: 999,
-        border: 'none',
-        width: '15px',
-        height: '15px',
-      }}/>
+        <Handle type="source" position={Position.Right} className="custom-handle" />
       </div>
     </>
   );

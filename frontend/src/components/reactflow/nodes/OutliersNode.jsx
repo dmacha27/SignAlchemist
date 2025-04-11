@@ -7,7 +7,7 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { Button, Form } from 'react-bootstrap';
-import { FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
+import { FaBullseye, FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
 
 function OutliersNode({ id }) {
   const { updateNodeData } = useReactFlow();
@@ -131,9 +131,9 @@ function OutliersNode({ id }) {
 
 
   return (
-    <div className="node shadow-sm p-3" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
-      <h5>Outliers</h5>
-      <Handle type="target" position={Position.Left} />
+    <div className="node shadow-sm p-3 bg-white" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
+      <h5><FaBullseye /> Outliers</h5>
+      <Handle type="target" position={Position.Left} className="custom-handle" />
 
       <Form>
         <Form.Group className="form-group">
@@ -154,11 +154,11 @@ function OutliersNode({ id }) {
         className='m-2'
         variant="success"
         disabled={!table}
-        onClick={() => requestOutliers(outlierTechnique)}
+        onClick={() => requestOutliers()}
       >
         Apply Outliers
       </Button>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} className="custom-handle" />
 
       <div style={{ position: 'absolute', top: 5, right: 5 }}>
         {renderExecutionIcon()}

@@ -7,8 +7,8 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { Button, Form } from 'react-bootstrap';
-import FilterFields from '../../FilterFields';
-import { FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
+import FilterFields from '../../common/FilterFields';
+import { FaFilter, FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
 
 
 const filtersFields = {
@@ -176,9 +176,9 @@ function FilteringNode({ id, data }) {
   };
 
   return (
-    <div className="node shadow-sm p-3" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
-      <h5>Filtering</h5>
-      <Handle type="target" position={Position.Left} />
+    <div className="node shadow-sm p-3 bg-white" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
+      <h5><FaFilter /> Filtering</h5>
+      <Handle type="target" position={Position.Left} className="custom-handle" />
 
       <Form>
         <Form.Group>
@@ -205,7 +205,7 @@ function FilteringNode({ id, data }) {
       >
         Filter
       </Button>
-      <Handle type="source" position={Position.Right} id="output" />
+      <Handle type="source" position={Position.Right} id="output" className="custom-handle" />
       <div style={{ position: 'absolute', top: 5, right: 5 }}>
         {renderExecutionIcon()}
       </div>

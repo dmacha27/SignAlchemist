@@ -1,10 +1,17 @@
 import { useState } from 'react';
 
 
-import { Button, Form, Collapse, Modal } from 'react-bootstrap';
+import { Button, Form, Modal } from 'react-bootstrap';
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 
+/**
+ * InfoModal component displays a modal with Python function information and example code.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.show - Boolean that controls whether the modal is visible or not.
+ * @param {function} props.onHide - Function to close the modal.
+ */
 const InfoModal = ({ show, onHide }) => {
   const content = 'def filter_signal(signal): \n\tnew_values = scipy.ndimage.gaussian_filter1d(signal, sigma=30) \n\treturn new_values';
   const handleCopy = () => {
@@ -72,7 +79,13 @@ const InfoModal = ({ show, onHide }) => {
     </Modal>);
 }
 
-
+/**
+ * FilterFields component renders form fields for different filter parameters and displays a modal for Python code information.
+ * 
+ * @param {Object} props
+ * @param {Object} props.fields - An object containing the filter fields and their configuration.
+ * @param {function} props.onFieldChange - A callback function to handle field value changes.
+ */
 const FilterFields = ({ fields, onFieldChange }) => {
   const [modalShow, setModalShow] = useState(false);
 

@@ -30,3 +30,5 @@ export function AnimatedEdge(props) {
     </>
   );
 }
+
+export default AnimatedEdge;

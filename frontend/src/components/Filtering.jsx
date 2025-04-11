@@ -1,70 +1,20 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { usePapaParse } from 'react-papaparse';
 
-import { Button, Form, Table, Container, Row, Col, Card, Badge, Alert, Popover, OverlayTrigger } from 'react-bootstrap';
+import generateDataOriginal from '../utils';
+
+import CustomChart from './common/CustomChart';
+import DownloadSignal from './common/DownloadSignal';
+import InfoTable from './common/InfoTable';
+import FilterFields from './common/FilterFields';
+
+import { Button, Form, Table, Container, Row, Col, Card, Badge, Popover, OverlayTrigger, ButtonGroup, ToggleButton } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-import zoomPlugin from 'chartjs-plugin-zoom';
-
-ChartJS.register(zoomPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+import { FaFilter, FaSignal, FaTools, FaExpandAlt, FaColumns, FaExchangeAlt, FaBalanceScale } from 'react-icons/fa';
 
 import { ImgComparisonSlider } from '@img-comparison-slider/react';
-
-import FilterFields from './FilterFields';
-
-
-const max_length_lag = 5000;
-
-const chartOptions = {
-  responsive: true,
-  plugins: {},
-  scales: {
-    x: {
-      type: 'linear', position: 'bottom',
-      title: {
-        display: true,
-        text: "(s)"
-      }
-    },
-    y: { beginAtZero: true },
-  },
-};
-
-const InfoTable = ({ table }) => {
-  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-
-  const headers = table[0];
-  const data = table.slice(1);
-
-  return (
-    <>
-      <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', marginTop: '10px', border: '1px solid #ddd', borderRadius: '5px' }}>
-        <Table striped bordered hover size="sm">
-          <thead>
-            <tr style={{ position: 'sticky', top: 0 }}>
-              <th>{(data.length > max_length_lag) ? "Truncated" : ""}</th>
-              <th>{headers[0]}</th>
-              <th>{headers[1]}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.slice(0, max_length_lag).map((row, index) => (
-              <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{row[0].toFixed(4)}</td>
-                <td>{row[1].toFixed(4)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </div>
-    </>
-  );
-};
-
 
 const InfoMetrics = ({ metrics }) => {
   return (
@@ -92,101 +42,6 @@ const InfoMetrics = ({ metrics }) => {
         );
       })}
     </Row>
-  );
-};
-
-const CustomChart = ({ table, setChartImage }) => {
-  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-
-  const headers = table[0];
-  const data = table.slice(1);
-
-  const chartRef = useRef(null);
-
-  const isLargeDataset = data.length > max_length_lag;
-
-  const resetZoom = () => {
-    if (chartRef.current) {
-      chartRef.current.resetZoom();
-    }
-  };
-
-  const specificOptions = {
-    ...chartOptions,
-    plugins: {
-      zoom: {
-        pan: {
-          enabled: !isLargeDataset,
-          mode: "x"
-        },
-        zoom: {
-          wheel: { enabled: !isLargeDataset },
-          pinch: { enabled: !isLargeDataset },
-          mode: "x"
-        },
-      },
-    },
-    animation: {
-      onComplete: () => {
-        if (chartRef.current) {
-          const imageUrl = chartRef.current.toBase64Image();
-          setChartImage(imageUrl);
-        }
-      },
-    },
-  }
-
-  specificOptions.scales.x.title = { display: true, text: headers[0] + " (s)" };
-  specificOptions.scales.y.title = { display: true, text: headers[1] };
-
-  const datasets = [
-    {
-      label: "Signal",
-      pointRadius: isLargeDataset ? 0 : 2,
-      data: data.map((row) => ({
-        x: row[0],
-        y: row[1],
-      })),
-      borderColor: "rgb(75, 192, 192)",
-      backgroundColor: "rgba(75, 192, 192, 0.2)",
-      fill: false,
-    },
-  ];
-
-  return (
-    <Container className="text-center">
-      <Line ref={chartRef} data={{ datasets }} options={specificOptions} />
-
-      {
-        isLargeDataset ?
-          <Alert variant="warning" className="w-75 m-auto" role="alert">
-            Data is too large to interact.
-          </Alert> :
-          <Button variant="secondary" className="mt-3" onClick={resetZoom}>
-            Reset Zoom
-          </Button>
-      }
-    </Container>
-  );
-};
-
-const DownloadFiltered = ({ table }) => {
-  const headers = table[0];
-  const data = table.slice(1);
-
-  const fileRows = [headers.map(item => item).join(',')].concat(data.map(row => row.join(',')));
-  const download = new Blob([fileRows.join('\n')], { type: 'text/csv' });
-
-  const url = URL.createObjectURL(download);
-  return (
-    <Button
-      variant="success"
-      className="p-2 mt-1"
-      href={url}
-      download="filtered_signal.csv"
-    >
-      📥 Download CSV
-    </Button>
   );
 };
 
@@ -249,25 +104,7 @@ const Filtering = () => {
           const file_headers = [...results.data[0], "Timestamp (calc)"];
           const rows = results.data.slice(1);
 
-          let data_original = [[file_headers[timestampColumn], file_headers[signalValues]]];
-
-          // y values (or what are supose to be y values) dont need processing (its the signal)
-          const y = rows.map(row => parseFloat(row[signalValues]));
-
-          // x values need processing in case there are no timestamps present in the data file
-          if (timestampColumn == file_headers.length-1) {
-            for (let i = 0; i < y.length; i++) {
-              const timestamp = i * (1 / samplingRate);
-              data_original.push([timestamp, y[i]]);
-            }
-
-          } else {
-
-            for (let i = 0; i < rows.length; i++) {
-              const timestamp = parseFloat(rows[i][timestampColumn]);
-              data_original.push([timestamp, y[i]]);
-            }
-          }
+          let data_original = generateDataOriginal(file_headers, rows, timestampColumn, signalValues, samplingRate);
 
           setFileRows([...results.data[0].map(item => item[0]).join(',')].concat(rows.map(row => row.join(','))));
           setHeaders(file_headers);
@@ -342,71 +179,129 @@ const Filtering = () => {
 
   return (
     <>
-      <Container className="text-center">
-        <h1>Filtering</h1>
-
-        <div>
-          <p><strong>Signal type:</strong> {signalType}</p>
-
-          <Container>
-            <Row className="justify-content-around gy-3 p-2">
-              <Col md={4} xs={12}>
-                <h3>Original</h3>
-                <Card>
-                  <Card.Body>
-                    {chartDataOriginal && <InfoTable table={chartDataOriginal} />}
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={3} xs={12} className="align-self-center">
-                <Card className="p-3">
-                  <Card.Body>
-                    <Form>
-                      <Form.Group>
-                        <Form.Label>Filtering technique</Form.Label>
-                        <Form.Select id="filterTechnique"
-                          onChange={(event) => {
-                            setFilter(event.target.value);
-                            setFields(filtersFields[event.target.value]);
-                          }}
-                        >
-                          <option value="butterworth">Butterworth</option>
-                          <option value="bessel">Bessel</option>
-                          <option value="fir">Fir</option>
-                          <option value="savgol">Savgol</option>
-                        </Form.Select>
-                      </Form.Group>
-
-                      <FilterFields fields={fields} onFieldChange={handleFieldChange} />
-                    </Form>
-                    <Button className="m-2" onClick={requestFilter}>Execute filter</Button>
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={4} xs={12}>
-                <h3>Filtered</h3>
-                <Card>
-                  <Card.Body>
-                    {chartDataFiltered && (
-                      <>
-                        <InfoTable table={chartDataFiltered} />
-                        <DownloadFiltered table={chartDataFiltered} />
-                      </>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </Container>
-        </div>
+      <Container className="py-4 border-bottom">
+        <h1 className="text-center mb-2">
+          <FaFilter className="me-2 text-primary" />
+          Filtering
+        </h1>
+        <p className="text-center text-muted">
+          <strong>Signal type:</strong> {signalType}
+        </p>
       </Container>
 
-      <Container>
-        <button onClick={() => { setFlipped(!flipped) }} className="btn btn-primary mb-3">
-          Flip comparison
-        </button>
+      <Container className="my-4 border-bottom">
+        <Row className="gy-4">
+          {/* Original Signal */}
+          <Col md={4}>
+            <Card className="shadow-sm rounded-4 border-1">
+              <Card.Header className="bg-light fw-bold">
+                <FaSignal className="me-2 text-primary" />
+                Original Signal
+              </Card.Header>
+              <Card.Body>
+                {chartDataOriginal ? (
+                  <InfoTable table={chartDataOriginal} onlyTable={true} />
+                ) : (
+                  <div className="text-center text-muted">No data available</div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Filtering Controls */}
+          <Col md={4}>
+            <Card className="shadow-sm rounded-4 border-1">
+              <Card.Header className="bg-light fw-bold">
+                <FaTools className="me-2 text-secondary" />
+                Filtering Controls
+              </Card.Header>
+              <Card.Body>
+                <Form>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Filtering technique</Form.Label>
+                    <Form.Select
+                      id="filterTechnique"
+                      onChange={(event) => {
+                        setFilter(event.target.value);
+                        setFields(filtersFields[event.target.value]);
+                      }}
+                    >
+                      <option value="butterworth">Butterworth</option>
+                      <option value="bessel">Bessel</option>
+                      <option value="fir">Fir</option>
+                      <option value="savgol">Savgol</option>
+                    </Form.Select>
+                  </Form.Group>
+
+                  <FilterFields fields={fields} onFieldChange={handleFieldChange} />
+                </Form>
+                <div className="d-grid">
+                  <Button
+                    variant="primary"
+                    onClick={requestFilter}
+                  >
+                    <FaExpandAlt className="me-2" />
+                    Execute filter
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Filtered Signal */}
+          <Col md={4}>
+            <Card className="shadow-sm rounded-4 border-1">
+              <Card.Header className="bg-light fw-bold">
+                <FaFilter className="me-2 text-success" />
+                Filtered Signal
+              </Card.Header>
+              <Card.Body>
+                {chartDataFiltered ? (
+                  <>
+                    <InfoTable table={chartDataFiltered} onlyTable={true}/>
+                    <DownloadSignal table={chartDataFiltered} name="filtered" />
+                  </>
+                ) : (
+                  <div className="text-center text-muted">Awaiting output</div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+
+      <Container className="mt-2">
+        <Row className="justify-content-center mb-4">
+          <Col md="auto">
+            <ButtonGroup>
+              <ToggleButton
+                id="toggle-original"
+                type="radio"
+                variant={!flipped ? 'primary' : 'outline-primary'}
+                name="view"
+                value="original"
+                checked={!flipped}
+                onChange={() => setFlipped(false)}
+              >
+                <FaColumns className="me-2" />
+                Dual View
+              </ToggleButton>
+              <ToggleButton
+                id="toggle-comparison"
+                type="radio"
+                variant={flipped ? 'primary' : 'outline-primary'}
+                name="view"
+                value="comparison"
+                checked={flipped}
+                onChange={() => setFlipped(true)}
+              >
+                <FaExchangeAlt className="me-2" />
+                Comparison
+              </ToggleButton>
+            </ButtonGroup>
+          </Col>
+        </Row>
+
         <div id="charts">
           <div
             id="charts-original"
@@ -415,16 +310,38 @@ const Filtering = () => {
           >
             <Row className="d-flex justify-content-around gy-3 p-1">
               <Col md={6} xs={12}>
-                <Card>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaSignal className="me-2 text-primary" />
+                    Original Signal
+                  </Card.Header>
                   <Card.Body>
-                    {chartDataOriginal && <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />}
+                    {chartDataOriginal ? (
+                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2">Waiting for request...</p>
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
               <Col md={6} xs={12}>
-                <Card>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaFilter className="me-2 text-success" />
+                    Filtered Signal
+                  </Card.Header>
                   <Card.Body>
-                    {chartDataFiltered && <CustomChart table={chartDataFiltered} setChartImage={setChartImageFiltered} />}
+                    {chartDataFiltered ? (
+                      <CustomChart table={chartDataFiltered} setChartImage={setChartImageFiltered} />
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2">Waiting for request...</p>
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
@@ -437,21 +354,27 @@ const Filtering = () => {
             style={{ display: flipped ? 'block' : 'none' }} // Muestra cuando flipped es true
           >
             <Row className="d-flex justify-content-around gy-3 p-1">
-              <Card>
-                <Card.Body>
-                  {(chartImageOriginal && chartImageFiltered) ? (
-                    <ImgComparisonSlider>
-                      <img slot="first" src={chartImageOriginal} />
-                      <img slot="second" src={chartImageFiltered} />
-                    </ImgComparisonSlider>
-                  ) : (
-                    <>
-                      <span className="loader"></span>
-                      <p className="mt-2">Rendering comparison...</p>
-                    </>
-                  )}
-                </Card.Body>
-              </Card>
+              <Col md={10}>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaBalanceScale className="me-2 text-info" />
+                    Comparison View
+                  </Card.Header>
+                  <Card.Body>
+                    {(chartImageOriginal && chartImageFiltered) ? (
+                      <ImgComparisonSlider>
+                        <img slot="first" src={chartImageOriginal} />
+                        <img slot="second" src={chartImageFiltered} />
+                      </ImgComparisonSlider>
+                    ) : (
+                      <>
+                        <span className="loader"></span>
+                        <p className="mt-2">Rendering comparison...</p>
+                      </>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
             </Row>
           </div>
         </div>
@@ -488,6 +411,7 @@ const Filtering = () => {
       </Container>
     </>
   );
+
 };
 
 export default Filtering;

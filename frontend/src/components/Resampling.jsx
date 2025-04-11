@@ -1,180 +1,29 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { usePapaParse } from 'react-papaparse';
 
-import { Button, Form, Table } from 'react-bootstrap';
+import generateDataOriginal from '../utils';
 
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-import zoomPlugin from 'chartjs-plugin-zoom';
+import CustomChart from './common/CustomChart';
+import DownloadSignal from './common/DownloadSignal';
+import InfoTable from './common/InfoTable';
 
-ChartJS.register(zoomPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+import { Button, Form, Table, Container, Row, Col, Card, Badge, Popover, OverlayTrigger, ButtonGroup, ToggleButton } from 'react-bootstrap';
 
-const max_length_lag = 5000;
+import { FaChartLine, FaSignal, FaTools, FaColumns, FaBalanceScale, FaExchangeAlt, FaExpandAlt } from 'react-icons/fa';
 
-const chartOptions = {
-  responsive: true,
-  plugins: {},
-  scales: {
-    x: {
-      type: 'linear', position: 'bottom',
-      title: {
-        display: true,
-        text: "(s)"
-      }
-    },
-    y: { beginAtZero: true },
-  },
-};
-
-const InfoTable = ({ table }) => {
-  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-
-  const headers = table[0];
-  const data = table.slice(1);
-
-  const duration = data[data.length - 1][0] - data[0][0];
-  const signalLength = data.length;
-  const samplingRateCalculated = (signalLength / duration);
-
-  // Stackoverflow: https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
-  const seconds_to_minutes = (s) => { return (s - (s %= 60)) / 60 + (9 < s ? 'mins ' : 'mins') + s }
-
-
-  return (
-    <div>
-      <div className='shadow-sm rounded border p-1'>
-        <p><strong>Duration:</strong> {
-          seconds_to_minutes(duration)
-        } s</p>
-        <p><strong>Sampling rate:</strong> {samplingRateCalculated.toFixed(1)} Hz</p>
-        <p><strong>Signal length:</strong> {signalLength} samples</p>
-      </div>
-
-      <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', marginTop: '10px', border: '1px solid #ddd', borderRadius: '5px' }}>
-        <Table striped bordered hover size="sm">
-          <thead>
-            <tr style={{ position: 'sticky', top: 0 }}>
-              <th>{(data.length > max_length_lag) ? "Truncated" : ""}</th>
-              <th>{headers[0]}</th>
-              <th>{headers[1]}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.slice(0, max_length_lag).map((row, index) => (
-              <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{row[0].toFixed(4)}</td>
-                <td>{row[1].toFixed(4)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </div>
-    </div>
-  );
-};
-
-
-const CustomChart = ({ table }) => {
-  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-
-  const headers = table[0];
-  const data = table.slice(1);
-
-  const chartRef = useRef(null);
-
-  const isLargeDataset = data.length > max_length_lag;
-
-  const resetZoom = () => {
-    if (chartRef.current) {
-      chartRef.current.resetZoom();
-    }
-  };
-
-  const specificOptions = {
-    ...chartOptions,
-    plugins: {
-      zoom: {
-        pan: {
-          enabled: !isLargeDataset,
-          mode: "x"
-        },
-        zoom: {
-          wheel: { enabled: !isLargeDataset },
-          pinch: { enabled: !isLargeDataset },
-          mode: "x"
-        },
-      },
-    }
-  }
-
-  specificOptions.scales.x.title = { display: true, text: headers[0] + " (s)" };
-  specificOptions.scales.y.title = { display: true, text: headers[1] };
-
-  const datasets = [
-    {
-      label: "Signal",
-      pointRadius: isLargeDataset ? 0 : 2,
-      data: data.map((row) => ({
-        x: row[0],
-        y: row[1],
-      })),
-      borderColor: "rgb(75, 192, 192)",
-      backgroundColor: "rgba(75, 192, 192, 0.2)",
-      fill: false,
-    },
-  ];
-
-  return (
-    <div className="text-center">
-      <Line ref={chartRef} data={{ datasets }} options={specificOptions} />
-
-      {
-        (isLargeDataset) ?
-          <><div className="alert alert-warning w-75 m-auto" role="alert">
-            Data is too large to interact.
-          </div>
-          </> :
-          <button className="btn btn-secondary mt-3" onClick={resetZoom}>
-            Reset Zoom
-          </button>
-      }
-
-
-    </div>
-  );
-};
-
-const DownloadResample = ({ table }) => {
-
-  const headers = table[0];
-  const data = table.slice(1);
-
-  const fileRows = [headers.map(item => item).join(',')].concat(data.map(row => row.join(',')));
-  const download = new Blob([fileRows.join('\n')], { type: 'text/csv' });
-
-  const url = URL.createObjectURL(download);
-  return (
-    <Button
-      variant="success"
-      className="p-2 mt-1"
-      href={url}
-      download="resampled_signal.csv"
-    >
-      📥 Download CSV
-    </Button>
-  );
-};
+import { ImgComparisonSlider } from '@img-comparison-slider/react';
 
 const Resampling = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } = location.state || {};
 
-  const [fileRows, setFileRows] = useState(null);
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [chartDataResampled, setChartDataResampled] = useState(null);
+  const [chartImageOriginal, setChartImageOriginal] = useState(null);
+  const [chartImageResampled, setChartImageResampled] = useState(null);
+  const [flipped, setFlipped] = useState(false);
   const { readString } = usePapaParse();
 
   useEffect(() => {
@@ -190,27 +39,8 @@ const Resampling = () => {
           const file_headers = [...results.data[0], "Timestamp (calc)"];
           const rows = results.data.slice(1);
 
-          let data_original = [[file_headers[timestampColumn], file_headers[signalValues]]];
+          let data_original = generateDataOriginal(file_headers, rows, timestampColumn, signalValues, samplingRate);
 
-          // y values (or what are supose to be y values) dont need processing (its the signal)
-          const y = rows.map(row => parseFloat(row[signalValues]));
-
-          // x values need processing in case there are no timestamps present in the data file
-          if (timestampColumn == file_headers.length-1) {
-            for (let i = 0; i < y.length; i++) {
-              const timestamp = i * (1 / samplingRate);
-              data_original.push([timestamp, y[i]]);
-            }
-
-          } else {
-
-            for (let i = 0; i < rows.length; i++) {
-              const timestamp = parseFloat(rows[i][timestampColumn]);
-              data_original.push([timestamp, y[i]]);
-            }
-          }
-
-          setFileRows([...results.data[0].map(item => item[0]).join(',')].concat(rows.map(row => row.join(','))));
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
           setChartDataResampled(data_original);
@@ -229,8 +59,8 @@ const Resampling = () => {
 
     const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
 
-    formData.append('data', JSON.stringify(chartDataOriginal_noheaders));
-    formData.append('interpolation_technique', parseFloat(interpolation_technique));
+    formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
+    formData.append('interpolation_technique', interpolation_technique);
     formData.append('source_sampling_rate', parseFloat(samplingRate));
     formData.append('target_sampling_rate', parseFloat(target_sampling_rate));
 
@@ -254,75 +84,212 @@ const Resampling = () => {
 
   return (
     <>
-      <div className="container text-center">
-        <h1>Resampling</h1>
+      <Container className="py-4 border-bottom">
+        <h1 className="text-center mb-2">
+          <FaChartLine className="me-2 text-primary" />
+          Resampling
+        </h1>
+        <p className="text-center text-muted">
+          <strong>Signal type:</strong> {signalType}
+        </p>
+      </Container>
 
-        <div>
-          <p><strong>Signal type:</strong> {signalType}</p>
+      <Container className="my-4 border-bottom">
+        <Row className="gy-4">
+          {/* Original Signal */}
+          <Col md={4}>
+            <Card className="shadow-sm rounded-4 border-1">
+              <Card.Header className="bg-light fw-bold">
+                <FaSignal className="me-2 text-primary" />
+                Original Signal
+              </Card.Header>
+              <Card.Body>
+                {chartDataOriginal ? (
+                  <InfoTable table={chartDataOriginal} onlyTable={false} />
+                ) : (
+                  <div className="text-center text-muted">No data available</div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
 
-          <div className="container">
-            <div className="row justify-content-around gy-3 p-2">
-              <div className="col-md-4 col-12">
-                <h3>Original</h3>
-                <div className="card">
-                  {chartDataOriginal && <InfoTable table={chartDataOriginal}/>}
-                </div>
-              </div>
+          {/* Resampling Controls */}
+          <Col md={4}>
+            <Card className="shadow-sm rounded-4 border-1 sticky-top">
+              <Card.Header className="bg-light fw-bold">
+                <FaTools className="me-2 text-secondary" />
+                Resampling Controls
+              </Card.Header>
+              <Card.Body>
+                <Form>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Interpolation technique</Form.Label>
+                    <Form.Select id="interpTechnique">
+                      <option value="spline">Spline</option>
+                      <option value="1d">Interp1d</option>
+                    </Form.Select>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>New rate (Hz)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      placeholder="Enter Hz"
+                      defaultValue={samplingRate}
+                      id="samplingRate"
+                    />
+                  </Form.Group>
+                  <div className="d-grid">
+                    <Button
+                      variant="primary"
+                      onClick={() =>
+                        requestResample(
+                          document.getElementById("interpTechnique").value,
+                          document.getElementById("samplingRate").value
+                        )
+                      }
+                    >
+                      <FaExpandAlt className="me-2" />
+                      Resample
+                    </Button>
+                  </div>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
 
-              <div className="col-md-3 col-12 align-self-center">
-                <div className="card p-3">
-                  <Form>
-                    <Form.Group className="form-group">
-                      <Form.Label>Interpolation technique</Form.Label>
-                      <Form.Select className="form-control" id="interpTechnique">
-                        <option value="spline">Spline</option>
-                        <option value="1d">Interp1d</option>
-                      </Form.Select>
-                    </Form.Group>
-                    <Form.Group className="form-group">
-                      <Form.Label>New rate (Hz)</Form.Label>
-                      <Form.Control type="number"
-                        placeholder='Enter Hz'
-                        defaultValue={samplingRate}
-                        id="samplingRate" />
-                    </Form.Group>
-                  </Form>
-                  <Button className="m-2" onClick={() => requestResample(document.getElementById("interpTechnique").value, document.getElementById("samplingRate").value)}>Resample</Button>
-                </div>
-              </div>
+          {/* Resampled Signal */}
+          <Col md={4}>
+            <Card className="shadow-sm rounded-4 border-1">
+              <Card.Header className="bg-light fw-bold">
+                <FaChartLine className="me-2 text-success" />
+                Resampled Signal
+              </Card.Header>
+              <Card.Body>
+                {chartDataResampled ? (
+                  <>
+                    <InfoTable table={chartDataResampled} onlyTable={false}/>
+                    <DownloadSignal table={chartDataResampled} name="resampled"/>
+                  </>
+                ) : (
+                  <div className="text-center text-muted">Awaiting output</div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
 
-              <div className="col-md-4 col-12">
-                <h3>Resampled</h3>
-                <div className="card">
-                  {chartDataResampled &&
-                    <>
-                      <InfoTable table={chartDataResampled} />
-                      <DownloadResample table={chartDataResampled} />
-                    </>
-                  }
-                </div>
-              </div>
-            </div>
+      <Container className="mt-2">
+        <Row className="justify-content-center mb-4">
+          <Col md="auto">
+            <ButtonGroup>
+              <ToggleButton
+                id="toggle-original"
+                type="radio"
+                variant={!flipped ? 'primary' : 'outline-primary'}
+                name="view"
+                value="original"
+                checked={!flipped}
+                onChange={() => setFlipped(false)}
+              >
+                <FaColumns className="me-2" />
+                Dual View
+              </ToggleButton>
+              <ToggleButton
+                id="toggle-comparison"
+                type="radio"
+                variant={flipped ? 'primary' : 'outline-primary'}
+                name="view"
+                value="comparison"
+                checked={flipped}
+                onChange={() => setFlipped(true)}
+              >
+                <FaExchangeAlt className="me-2" />
+                Comparison
+              </ToggleButton>
+            </ButtonGroup>
+          </Col>
+        </Row>
+        <div id="charts">
+          <div
+            id="charts-original"
+            className={`flip-container ${flipped ? 'flipped' : ''}`}
+            style={{ display: flipped ? 'none' : 'block' }}
+          >
+            <Row className="d-flex justify-content-around gy-3 p-1">
+              <Col md={6} xs={12}>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaSignal className="me-2 text-primary" />
+                    Original Signal
+                  </Card.Header>
+                  <Card.Body>
+                    {chartDataOriginal ? (
+                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2">Waiting for request...</p>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={6} xs={12}>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaChartLine className="me-2 text-success" />
+                    Resampled Signal
+                  </Card.Header>
+                  <Card.Body>
+                    {chartDataResampled ? (
+                      <CustomChart table={chartDataResampled} setChartImage={setChartImageResampled} />
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2">Waiting for request...</p>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </div>
+
+          <div
+            id="charts-comparison"
+            className={`flip-container ${flipped ? 'flipped' : ''}`}
+            style={{ display: flipped ? 'block' : 'none' }} // Muestra cuando flipped es true
+          >
+            <Row className="d-flex justify-content-around gy-3 p-1">
+              <Col md={10}>
+                <Card className="shadow-sm">
+                  <Card.Header className="bg-light fw-semibold">
+                    <FaBalanceScale className="me-2 text-info" />
+                    Comparison View
+                  </Card.Header>
+                  <Card.Body>
+                    {(chartImageOriginal && chartImageResampled) ? (
+                      <ImgComparisonSlider>
+                        <img slot="first" src={chartImageOriginal} />
+                        <img slot="second" src={chartImageResampled} />
+                      </ImgComparisonSlider>
+                    ) : (
+                      <>
+                        <span className="loader"></span>
+                        <p className="mt-2">Rendering comparison...</p>
+                      </>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
           </div>
         </div>
-      </div>
-
-      <div>
-        <div className="row d-flex justify-content-around gy-3 p-4">
-          <div className="col-md-6 col-12">
-            <div className="card">
-              {chartDataOriginal && <CustomChart table={chartDataOriginal} />}
-            </div>
-          </div>
-          <div className="col-md-6 col-12">
-            <div className="card">
-              {chartDataResampled && <CustomChart table={chartDataResampled} />}
-            </div>
-          </div>
-        </div>
-      </div>
+      </Container>
     </>
   );
+
 };
 
 export default Resampling;

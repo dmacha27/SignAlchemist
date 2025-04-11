@@ -25,6 +25,7 @@ function OutputSignal({ id, data }) {
             marginTop: '10px',
             border: '1px solid #ddd',
             borderRadius: '5px',
+            backgroundColor: '#fff'
           }}
         >
           <p style={{ padding: 10 }}>⌛ Waiting for processed signal...</p>
@@ -75,7 +76,7 @@ function OutputSignal({ id, data }) {
         </div>
       )}
   
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={Position.Left} className="custom-handle" />
     </>
   );
   

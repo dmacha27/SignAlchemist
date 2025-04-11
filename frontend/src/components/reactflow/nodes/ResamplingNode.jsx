@@ -7,7 +7,7 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { Button, Form } from 'react-bootstrap';
-import { FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
+import { FaChartLine, FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
 
 function ResamplingNode({ id, data }) {
   const samplingRate = data.samplingRate;
@@ -134,9 +134,9 @@ function ResamplingNode({ id, data }) {
 
 
   return (
-    <div className="node shadow-sm p-3" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
-      <h5>Resampling</h5>
-      <Handle type="target" position={Position.Left} />
+    <div className="node shadow-sm p-3 bg-white" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
+      <h5><FaChartLine /> Resampling</h5>
+      <Handle type="target" position={Position.Left} className="custom-handle" />
 
       <Form>
         <Form.Group className="form-group">
@@ -169,7 +169,7 @@ function ResamplingNode({ id, data }) {
       >
         Resample
       </Button>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} className="custom-handle" />
 
       <div style={{ position: 'absolute', top: 5, right: 5 }}>
         {renderExecutionIcon()}

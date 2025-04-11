@@ -10,9 +10,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -21,6 +23,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -49,7 +52,7 @@
   top: 10px;
   right: 10px;
   cursor: pointer;
-  
+
   &:hover {
     opacity: 1;
   }
@@ -73,21 +76,25 @@
   background: #fff;
   filter: blur(4px) contrast(12);
 }
+
 .loader:before {
   content: "";
   height: 40px;
   aspect-ratio: 3;
-  --c: #0000 64%,#000 66% 98%,#0000 101%;
+  --c: #0000 64%, #000 66% 98%, #0000 101%;
   background:
-    radial-gradient(35% 146% at 50% 159%,var(--c)) 0 0,
-    radial-gradient(35% 146% at 50% -59%,var(--c)) 100% 100%;
+    radial-gradient(35% 146% at 50% 159%, var(--c)) 0 0,
+    radial-gradient(35% 146% at 50% -59%, var(--c)) 100% 100%;
   background-size: calc(200%/3) 50%;
   background-repeat: repeat-x;
-  -webkit-mask: repeating-linear-gradient(90deg,#000 0 10%,#0000 0 20%);
+  -webkit-mask: repeating-linear-gradient(90deg, #000 0 10%, #0000 0 20%);
   animation: l12 .8s infinite linear;
 }
-@keyframes l12{
-  to {background-position: -200% 0,-100% 100%}
+
+@keyframes l12 {
+  to {
+    background-position: -200% 0, -100% 100%
+  }
 }
 
 .flip-container {
@@ -107,4 +114,12 @@
 
 .flip-card .card-body {
   backface-visibility: hidden;
+}
+
+.react-flow__handle.custom-handle {
+  width: 16px;
+  height: 16px;
+  background-color: #0d6dfd;
+  border: 2px solid white;
+  border-radius: 50%;
 }
