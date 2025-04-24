@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Handle, Position, useNodeConnections, useNodesData } from '@xyflow/react';
-import { Table } from 'react-bootstrap';
+import { Table, Card } from 'react-bootstrap';
 
 
 function InputSignal({ id, data }) {
@@ -38,14 +38,18 @@ function InputSignal({ id, data }) {
 
 
   return (
-    <>
-      <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', marginTop: '10px', border: '1px solid #ddd', borderRadius: '5px' }}>
-        <Table striped bordered hover size="sm">
-          <thead>
-            <tr style={{ position: 'sticky', top: 0 }}>
+    <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative mt-2">
+      <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
+        <span className="fw-bold fs-5 text-dark">Original Signal</span>
+      </div>
+
+      <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '5px' }}>
+        <Table striped bordered hover size="sm" className="table-sm">
+          <thead className="bg-light">
+            <tr style={{ position: 'sticky', top: 0, zIndex: 1 }}>
               <th>{""}</th>
-              <th>{headers[0]}</th>
-              <th>{headers[1]}</th>
+              <th className="fw-semibold text-dark">{headers[0]}</th>
+              <th className="fw-semibold text-dark">{headers[1]}</th>
             </tr>
           </thead>
           <tbody>
@@ -58,9 +62,10 @@ function InputSignal({ id, data }) {
             ))}
           </tbody>
         </Table>
-        <Handle type="source" position={Position.Right} className="custom-handle" />
       </div>
-    </>
+
+      <Handle type="source" position={Position.Right} className="custom-handle" />
+    </Card>
   );
 }
 

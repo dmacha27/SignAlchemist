@@ -9,10 +9,10 @@ import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
 import FilterFields from './common/FilterFields';
 
-import { Button, Form, Table, Container, Row, Col, Card, Badge, Popover, OverlayTrigger, ButtonGroup, ToggleButton } from 'react-bootstrap';
+import { Button, Form, Container, Row, Col, Card, Badge, Popover, OverlayTrigger, ButtonGroup, ToggleButton } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 
-import { FaFilter, FaSignal, FaTools, FaExpandAlt, FaColumns, FaExchangeAlt, FaBalanceScale } from 'react-icons/fa';
+import { FaFilter, FaSignal, FaTools, FaColumns, FaExchangeAlt, FaBalanceScale } from 'react-icons/fa';
 
 import { ImgComparisonSlider } from '@img-comparison-slider/react';
 
@@ -189,7 +189,7 @@ const Filtering = () => {
         </p>
       </Container>
 
-      <Container className="my-4 border-bottom">
+      <Container className="py-4 border-bottom">
         <Row className="gy-4">
           {/* Original Signal */}
           <Col md={4}>
@@ -240,7 +240,7 @@ const Filtering = () => {
                     variant="primary"
                     onClick={requestFilter}
                   >
-                    <FaExpandAlt className="me-2" />
+                    <FaFilter className="me-2" />
                     Execute filter
                   </Button>
                 </div>
@@ -258,7 +258,7 @@ const Filtering = () => {
               <Card.Body>
                 {chartDataFiltered ? (
                   <>
-                    <InfoTable table={chartDataFiltered} onlyTable={true}/>
+                    <InfoTable table={chartDataFiltered} onlyTable={true} />
                     <DownloadSignal table={chartDataFiltered} name="filtered" />
                   </>
                 ) : (
@@ -270,7 +270,7 @@ const Filtering = () => {
         </Row>
       </Container>
 
-      <Container className="mt-2">
+      <Container className="py-4">
         <Row className="justify-content-center mb-4">
           <Col md="auto">
             <ButtonGroup>
@@ -362,9 +362,12 @@ const Filtering = () => {
                   </Card.Header>
                   <Card.Body>
                     {(chartImageOriginal && chartImageFiltered) ? (
-                      <ImgComparisonSlider>
+                      <ImgComparisonSlider >
                         <img slot="first" src={chartImageOriginal} />
                         <img slot="second" src={chartImageFiltered} />
+                        <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                          <path stroke="#000" d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2" stroke-width="1" fill="#fff" vector-effect="non-scaling-stroke"></path>
+                        </svg>
                       </ImgComparisonSlider>
                     ) : (
                       <>

@@ -6,8 +6,9 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react';
-import { Button, Form } from 'react-bootstrap';
-import { FaBullseye, FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
+import { Button, Form, Card } from 'react-bootstrap';
+import { FaBullseye } from 'react-icons/fa';
+import ExecutionIcon from '../../common/ExecutionIcon';
 
 function OutliersNode({ id }) {
   const { updateNodeData } = useReactFlow();
@@ -99,7 +100,7 @@ function OutliersNode({ id }) {
         ...prev,
         table: new_table,
       }));
-      
+
       setExecutionState('executed');
       return new_table;
     } catch (error) {
@@ -114,56 +115,54 @@ function OutliersNode({ id }) {
     }
   };
 
-  const renderExecutionIcon = () => {
-      switch (executionState) {
-        case 'waiting':
-          return <FaClock />;
-        case 'running':
-          return <FaSpinner className="spin" />;
-        case 'executed':
-          return <FaCheck />;
-        case 'error':
-          return <FaExclamationCircle />;
-        default:
-          return null;
-      }
-    };
-
 
   return (
-    <div className="node shadow-sm p-3 bg-white" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
-      <h5><FaBullseye /> Outliers</h5>
+    <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
+      <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
+        <FaBullseye className="text-secondary" size={20} />
+        <span className="fw-bold fs-5 text-dark">Outlier Detection</span>
+      </div>
+
       <Handle type="target" position={Position.Left} className="custom-handle" />
 
       <Form>
-        <Form.Group className="form-group">
-          <Form.Label>Outlier technique</Form.Label>
+        <Form.Group className="mb-4" controlId="outlierTechnique">
+          <Form.Label className="text-uppercase small fw-medium text-muted mb-2">
+            Select Outlier Technique
+          </Form.Label>
           <Form.Select
-            className="form-control"
-            id="outlierTechnique"
+            size="sm"
             value={outlierTechnique}
             onChange={(e) => setOutlierTechnique(e.target.value)}
+            className="border-0 bg-light rounded-3 shadow-sm"
           >
             <option value="hampel">Hampel</option>
             <option value="iqr">IQR</option>
           </Form.Select>
         </Form.Group>
       </Form>
-      
-      <Button
-        className='m-2'
-        variant="success"
-        disabled={!table}
-        onClick={() => requestOutliers()}
-      >
-        Apply Outliers
-      </Button>
+
+      <div className="d-grid">
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!table}
+          onClick={requestOutliers}
+          className="rounded-2 fw-semibold"
+        >
+          Apply Outliers
+        </Button>
+      </div>
+
       <Handle type="source" position={Position.Right} className="custom-handle" />
 
-      <div style={{ position: 'absolute', top: 5, right: 5 }}>
-        {renderExecutionIcon()}
+      <div className="position-absolute" style={{ top: 0, right: '2px', zIndex: 10 }}>
+        <div className="bg-light">
+          <ExecutionIcon executionState={executionState}></ExecutionIcon>
+        </div>
       </div>
-    </div>
+    </Card>
+
   );
 }
 

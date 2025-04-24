@@ -94,7 +94,7 @@ const Resampling = () => {
         </p>
       </Container>
 
-      <Container className="my-4 border-bottom">
+      <Container className="py-4 border-bottom">
         <Row className="gy-4">
           {/* Original Signal */}
           <Col md={4}>
@@ -167,8 +167,8 @@ const Resampling = () => {
               <Card.Body>
                 {chartDataResampled ? (
                   <>
-                    <InfoTable table={chartDataResampled} onlyTable={false}/>
-                    <DownloadSignal table={chartDataResampled} name="resampled"/>
+                    <InfoTable table={chartDataResampled} onlyTable={false} />
+                    <DownloadSignal table={chartDataResampled} name="resampled" />
                   </>
                 ) : (
                   <div className="text-center text-muted">Awaiting output</div>
@@ -179,7 +179,7 @@ const Resampling = () => {
         </Row>
       </Container>
 
-      <Container className="mt-2">
+      <Container className="py-4">
         <Row className="justify-content-center mb-4">
           <Col md="auto">
             <ButtonGroup>
@@ -270,9 +270,12 @@ const Resampling = () => {
                   </Card.Header>
                   <Card.Body>
                     {(chartImageOriginal && chartImageResampled) ? (
-                      <ImgComparisonSlider>
+                      <ImgComparisonSlider >
                         <img slot="first" src={chartImageOriginal} />
                         <img slot="second" src={chartImageResampled} />
+                        <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                          <path stroke="#000" d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2" stroke-width="1" fill="#fff" vector-effect="non-scaling-stroke"></path>
+                        </svg>
                       </ImgComparisonSlider>
                     ) : (
                       <>

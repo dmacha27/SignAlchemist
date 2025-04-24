@@ -194,7 +194,7 @@ const CSVUploader = ({ file, setFile, setHeaders }) => {
                         onClear={clearForm}
                         onRemove={clearForm}
                         accept=".csv"
-                        maxFileSize={10000000}
+                        maxFileSize={52428868} // 50 MB
                         emptyTemplate={<p className="m-0">Drag and drop files here to upload.</p>}
                     />
                 </div>
@@ -331,6 +331,8 @@ const CustomChart = ({ table }) => {
 };
 
 const Home = () => {
+    window.history.replaceState({}, '')
+
     const [timestampColumn, setTimestampColumn] = useState(-1);
     const [signalValues, setSignalValues] = useState(-1);
     const [samplingRate, setSamplingRate] = useState(null);

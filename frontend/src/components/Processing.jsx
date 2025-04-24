@@ -167,7 +167,7 @@ const Processing = () => {
 
     const nodesToCheck = updatedNodes.filter(node => node.id !== '1' && node.id !== '2');
 
-    if (nodesToCheck.length === 0 || edges.length === 0 ) {
+    if (nodesToCheck.length === 0 || edges.length === 0) {
       console.log('No intermediate nodes.');
       return;
     }
@@ -191,7 +191,7 @@ const Processing = () => {
         </p>
       </Container>
 
-      <Container className="my-4 border-bottom">
+      <Container className="py-4 border-bottom">
         <Row>
           {/* Main Flow Area */}
           <Col md={9} className="mb-4">
@@ -336,7 +336,7 @@ const Processing = () => {
       </Container>
 
       {/* Toggle View */}
-      <Container className="mt-2">
+      <Container className="py-4">
         <Row className="justify-content-center mb-4">
           <Col md="auto">
             <ButtonGroup>
@@ -431,9 +431,12 @@ const Processing = () => {
                   </Card.Header>
                   <Card.Body>
                     {(chartImageOriginal && chartImageProcessed) ? (
-                      <ImgComparisonSlider>
+                      <ImgComparisonSlider >
                         <img slot="first" src={chartImageOriginal} />
                         <img slot="second" src={chartImageProcessed} />
+                        <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                          <path stroke="#000" d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2" stroke-width="1" fill="#fff" vector-effect="non-scaling-stroke"></path>
+                        </svg>
                       </ImgComparisonSlider>
                     ) : (
                       <div className="text-center">

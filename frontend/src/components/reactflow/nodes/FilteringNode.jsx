@@ -6,9 +6,10 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react';
-import { Button, Form } from 'react-bootstrap';
+import { Button, Form, Card } from 'react-bootstrap';
 import FilterFields from '../../common/FilterFields';
-import { FaFilter, FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
+import { FaFilter } from 'react-icons/fa';
+import ExecutionIcon from '../../common/ExecutionIcon';
 
 
 const filtersFields = {
@@ -105,7 +106,7 @@ function FilteringNode({ id, data }) {
   const requestFilter = async () => {
     if (!table) return;
     setExecutionState('running');
-    
+
     const formData = new FormData();
 
     const signalOnly = table.slice(1);
@@ -160,57 +161,61 @@ function FilteringNode({ id, data }) {
     setFields((prevFields) => ({ ...prevFields, [field]: { value: new_value } }));
   };
 
-  const renderExecutionIcon = () => {
-    switch (executionState) {
-      case 'waiting':
-        return <FaClock />;
-      case 'running':
-        return <FaSpinner className="spin" />;
-      case 'executed':
-        return <FaCheck />;
-      case 'error':
-        return <FaExclamationCircle />;
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="node shadow-sm p-3 bg-white" style={{ border: '1px solid #ddd', borderRadius: '5px' }}>
-      <h5><FaFilter /> Filtering</h5>
+    <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
+      <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
+        <FaFilter className="text-success" size={20} />
+        <span className="fw-bold fs-5 text-dark">Filtering</span>
+      </div>
+
       <Handle type="target" position={Position.Left} className="custom-handle" />
 
       <Form>
-        <Form.Group>
-          <Form.Label>Filtering technique</Form.Label>
-          <Form.Select id="filterTechnique"
-            onChange={(event) => {
-              setFilter(event.target.value);
-              setFields(filtersFields[event.target.value]);
+        <Form.Group className="mb-4" controlId="filterTechnique">
+          <Form.Label className="text-uppercase small fw-medium text-muted mb-2">
+            Filtering technique
+          </Form.Label>
+          <Form.Select
+            size="sm"
+            value={filter}
+            onChange={(e) => {
+              setFilter(e.target.value);
+              setFields(filtersFields[e.target.value]);
             }}
+            className="border-0 bg-light rounded-3 shadow-sm"
           >
             <option value="butterworth">Butterworth</option>
             <option value="bessel">Bessel</option>
-            <option value="fir">Fir</option>
+            <option value="fir">FIR</option>
             <option value="savgol">Savgol</option>
           </Form.Select>
         </Form.Group>
 
         <FilterFields fields={fields} onFieldChange={handleFieldChange} />
       </Form>
-      <Button
-        className="m-2"
-        onClick={() => requestFilter()}
-        disabled={!table}
-      >
-        Filter
-      </Button>
-      <Handle type="source" position={Position.Right} id="output" className="custom-handle" />
-      <div style={{ position: 'absolute', top: 5, right: 5 }}>
-        {renderExecutionIcon()}
+
+      <div className="d-grid">
+        <Button
+          variant="success"
+          size="sm"
+          onClick={() => requestFilter()}
+          disabled={!table}
+          className="rounded-2 fw-semibold"
+        >
+          Filter
+        </Button>
       </div>
-    </div>
+
+      <Handle type="source" position={Position.Right} id="output" className="custom-handle" />
+
+      <div className="position-absolute" style={{ top: 0, right: '2px' }}>
+        <div className="bg-light">
+          <ExecutionIcon executionState={executionState}></ExecutionIcon>
+        </div>
+      </div>
+    </Card>
   );
+
 }
 
 export default FilteringNode;
