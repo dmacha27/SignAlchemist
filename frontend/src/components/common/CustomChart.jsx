@@ -128,38 +128,57 @@ const CustomChart = memo(({ table, setChartImage }) => { // Avoid re-render on p
   const chartOptions = {
     ...baseChartOptions,
     onClick: function (evt) {
-      var elements = chartRef.current.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+      const elements = chartRef.current.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+      if (elements.length === 0) return;
 
-      if (elements.length > 0) {
-        console.log(elements[0])
-        const pointIndex = elements[0].index;
-        const timestamp = chartRef.current.data.datasets[0].data[pointIndex].x;
+      const pointIndex = elements[0].index;
+      const timestamp = chartRef.current.data.datasets[0].data[pointIndex].x;
 
-        const zoomRange = 5000;
-        const highlightColor = '#fa6400';
-        const defaultColor = '#2196f3';
-        const charts = Object.values(ChartJS.instances);
+      const zoomRange = 5000;
+      const highlightColor = '#fa6400';
+      const defaultColor = '#2196f3';
+      const charts = Object.values(ChartJS.instances);
 
-        charts.forEach(chart => {
+      charts.forEach(chart => {
 
-          // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
-          const dataset = chart.data.datasets[0];
-          dataset.pointBackgroundColor = dataset.data.map((_, i) =>
-            i === pointIndex ? highlightColor : defaultColor
+        // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
+        const dataset = chart.data.datasets[0];
+        dataset.pointBackgroundColor = dataset.data.map((_, i) =>
+          i === pointIndex ? highlightColor : defaultColor
+        );
+
+        dataset.pointBorderColor = dataset.data.map((_, i) =>
+          i === pointIndex ? highlightColor : defaultColor
+        );
+
+        dataset.pointRadius = dataset.data.map((_, i) =>
+          i === pointIndex ? 6 : 2
+        );
+        chart.options.scales.x.min = timestamp - zoomRange;
+        chart.options.scales.x.max = timestamp + zoomRange;
+
+        chart.update();
+
+      });
+
+    },
+    onHover: (event, chartElements) => {
+      if (chartElements.length === 0) return;
+
+      const elements = chartRef.current.getElementsAtEventForMode(event.native, 'nearest', { intersect: true }, false);
+      if (elements.length === 0) return;
+
+      // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
+      const index = elements[0].index;
+      Object.values(ChartJS.instances).forEach(chart => {
+        if (chartRef.current !== chart) {
+          chart.tooltip.setActiveElements(
+            [{ datasetIndex: 0, index }],
+            { x: event.native.x, y: event.native.y }
           );
-
-          dataset.pointBorderColor = dataset.data.map((_, i) =>
-            i === pointIndex ? highlightColor : defaultColor
-          );
-
-          dataset.pointRadius = dataset.data.map((_, i) =>
-            i === pointIndex ? 6 : 2
-          );
-          chart.options.scales.x.min = timestamp - zoomRange;
-          chart.options.scales.x.max = timestamp + zoomRange;
           chart.update();
-        });
-      }
+        }
+      });
     },
     plugins: {
       ...baseChartOptions.plugins,
@@ -191,10 +210,10 @@ const CustomChart = memo(({ table, setChartImage }) => { // Avoid re-render on p
         type: rows[0][0] == 0.0 ? 'linear' : 'time',
         title: {
           ...baseChartOptions.scales.x.title,
-          text: rows[0][0] == 0.0 ? `${headers[0]} (ms)`: `${headers[0]} (date)`
+          text: rows[0][0] == 0.0 ? `${headers[0]} (ms)` : `${headers[0]} (date)`
         },
 
-        ...( rows[0][0] == 0.0 ? {} : {
+        ...(rows[0][0] == 0.0 ? {} : {
           time: baseChartOptions.scales.x.time
         })
       },
