@@ -15,7 +15,7 @@ import {
   TimeScale
 } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { FaUndoAlt, FaSearch } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
 
 ChartJS.register(
   zoomPlugin,
@@ -87,11 +87,16 @@ const baseChartOptions = {
  * @param {Array} props.table - A 2D array with headers in the first row and data points in subsequent rows.
  * @param {function} props.setChartImage - A function that sets the chart image as a base64 string when the animation completes.
  */
-const CustomChart = memo(({ table, setChartImage }) => { // Avoid re-render on parent render if table and setChartImage do not change.
+const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avoid re-render on parent render if table and setChartImage do not change.
   // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
 
   const chartRef = useRef(null);
   const [headers, ...rows] = table;
+
+  const minValue = Math.min(...rows.map(row => row[0])); //seconds
+  const maxValue = Math.max(...rows.map(row => row[0]));
+
+  const zoomRange = parseInt((maxValue*1000 - minValue*1000) * 0.02);
 
   const isLargeDataset = rows.length > MAX_DATA_LENGTH;
 
@@ -102,9 +107,6 @@ const CustomChart = memo(({ table, setChartImage }) => { // Avoid re-render on p
 
   const handleResetZoom = () => {
     if (chartRef.current) {
-
-      const minValue = Math.min(...rows.map(row => row[0])) - 50;
-      const maxValue = Math.max(...rows.map(row => row[0])) + 50;
 
       chartRef.current.options.scales.x.min = minValue * 1000;
       chartRef.current.options.scales.x.max = maxValue * 1000;
@@ -134,10 +136,10 @@ const CustomChart = memo(({ table, setChartImage }) => { // Avoid re-render on p
       const pointIndex = elements[0].index;
       const timestamp = chartRef.current.data.datasets[0].data[pointIndex].x;
 
-      const zoomRange = 5000;
+
       const highlightColor = '#fa6400';
       const defaultColor = '#2196f3';
-      const charts = Object.values(ChartJS.instances);
+      const charts = parallel ? Object.values(ChartJS.instances): [chartRef.current];
 
       charts.forEach(chart => {
 
@@ -170,7 +172,8 @@ const CustomChart = memo(({ table, setChartImage }) => { // Avoid re-render on p
 
       // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
       const index = elements[0].index;
-      Object.values(ChartJS.instances).forEach(chart => {
+      const charts = parallel ? Object.values(ChartJS.instances): [chartRef.current];
+      charts.forEach(chart => {
         if (chartRef.current !== chart) {
           chart.tooltip.setActiveElements(
             [{ datasetIndex: 0, index }],

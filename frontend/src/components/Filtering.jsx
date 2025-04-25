@@ -109,7 +109,26 @@ const Filtering = () => {
           setFileRows([...results.data[0].map(item => item[0]).join(',')].concat(rows.map(row => row.join(','))));
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
-          setChartDataFiltered(data_original);
+          //setChartDataFiltered(data_original);
+
+          const originalMetricsForm = new FormData();
+          originalMetricsForm.append("signal", JSON.stringify(data_original.slice(1)));
+          originalMetricsForm.append("signal_type", signalType);
+          originalMetricsForm.append("sampling_rate", samplingRate);
+
+          fetch('http://localhost:8000/metrics', {
+            method: 'POST',
+            body: originalMetricsForm,
+          })
+            .then(async (res) => {
+              const metricsOriginal = await res.json();
+              if (!res.ok) {
+                console.log(metricsOriginal.error);
+                toast.error(metricsOriginal.error);
+                return;
+              }
+              setMetricsOriginal(metricsOriginal);
+            });
         },
       });
     };
@@ -147,7 +166,7 @@ const Filtering = () => {
             const data = await response.json();
 
             if (!response.ok) {
-              setChartDataFiltered(chartDataOriginal);
+              setChartDataFiltered(null);
               setMetricsFiltered(null);
               console.log(data.error);
               toast.error(data.error);
@@ -160,10 +179,29 @@ const Filtering = () => {
         })
         .then((data) => {
           if (data) {
+
             data["data"].unshift([headers[timestampColumn], headers[signalValues]]);
             setChartDataFiltered(data["data"]);
-            setMetricsOriginal(data["original_quality"]);
-            setMetricsFiltered(data["filtered_quality"]);
+
+            const filteredMetricsForm = new FormData();
+            filteredMetricsForm.append("signal", JSON.stringify(data["data"].slice(1)));
+            filteredMetricsForm.append("signal_type", signalType);
+            filteredMetricsForm.append("sampling_rate", samplingRate);
+
+            fetch('http://localhost:8000/metrics', {
+              method: 'POST',
+              body: filteredMetricsForm,
+            })
+              .then(async (res) => {
+                const metricsFiltered = await res.json();
+                if (!res.ok) {
+                  console.log(metricsFiltered.error);
+                  toast.error(metricsFiltered.error);
+                  return;
+                }
+                setMetricsFiltered(metricsFiltered);
+              });
+
           }
 
         })
@@ -262,7 +300,10 @@ const Filtering = () => {
                     <DownloadSignal table={chartDataFiltered} name="filtered" />
                   </>
                 ) : (
-                  <div className="text-center text-muted">Awaiting output</div>
+                  <div className="text-center">
+                    <span className="loader"></span>
+                    <p className="mt-2">Waiting for request...</p>
+                  </div>
                 )}
               </Card.Body>
             </Card>

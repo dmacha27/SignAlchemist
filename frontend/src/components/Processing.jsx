@@ -33,6 +33,34 @@ import { useLocation } from "react-router-dom";
 import { ImgComparisonSlider } from '@img-comparison-slider/react';
 import { FaFilter, FaChartLine, FaBullseye, FaColumns, FaExchangeAlt, FaWaveSquare, FaProjectDiagram, FaBalanceScale, FaSquare, FaRocket, FaSignal, FaTrash, FaEye } from 'react-icons/fa';
 
+const InfoMetrics = ({ metrics }) => {
+  return (
+    <Row className="justify-content-around">
+      {Object.keys(metrics).map((apa, index) => {
+        const popoverTop = (
+          <Popover id={`popover-${index}`} title="Reference">
+            <div className="fw-bold text-primary p-2 text-center">{apa}</div>
+          </Popover>
+        );
+
+        return (
+          <Col md={4} xs={12} key={index}>
+            <OverlayTrigger trigger="click" placement="top" overlay={popoverTop}>
+              <Card role="button" title="See reference!">
+                <Card.Body>
+                  <Card.Title>
+                    <Badge bg="secondary">{metrics[apa].toFixed(4)}</Badge>
+                  </Card.Title>
+                  <Card.Text>Metric {index + 1}</Card.Text>
+                </Card.Body>
+              </Card>
+            </OverlayTrigger>
+          </Col>
+        );
+      })}
+    </Row>
+  );
+};
 
 const Processing = () => {
   const location = useLocation();
@@ -44,6 +72,8 @@ const Processing = () => {
   const [chartImageProcessed, setChartImageProcessed] = useState(null);
   const { readString } = usePapaParse();
   const [flipped, setFlipped] = useState(false);
+  const [metricsOriginal, setMetricsOriginal] = useState(null);
+  const [metricsProcessed, setMetricsProcessed] = useState(null);
   const [showPopover, setShowPopover] = useState(false);
 
   useEffect(() => {
@@ -94,13 +124,13 @@ const Processing = () => {
         id: '1',
         type: 'InputSignal',
         position: { x: 0, y: 150 },
-        data: { table: chartDataOriginal },
+        data: { table: chartDataOriginal, signalType, samplingRate, setMetricsOriginal },
       },
       {
         id: '2',
         type: 'OutputSignal',
         position: { x: 1100, y: 150 },
-        data: { setData: setChartDataProcessed }
+        data: { setChartDataProcessed, signalType, samplingRate, setMetricsProcessed }
       },
     ];
 
@@ -128,12 +158,7 @@ const Processing = () => {
       setEdges((eds) =>
         addEdge({
           ...params,
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
-            color: '#0d6dfd',
-          },
+          animated: true,
           style: {
             strokeWidth: 2,
             stroke: '#0d6dfd',
@@ -207,6 +232,7 @@ const Processing = () => {
                       nodes={nodes}
                       edges={edges}
                       edgeTypes={edgeTypes}
+                      connectionLineStyle={{ stroke: '#0d6dfd' }}
                       onNodesChange={onNodesChange}
                       onEdgesChange={onEdgesChange}
                       nodeTypes={nodeTypes}
@@ -450,6 +476,36 @@ const Processing = () => {
             </Row>
           </div>
         </div>
+        <Row className="d-flex justify-content-around gy-3 p-1">
+          <Col md={6} xs={12}>
+            <Card className="mt-2">
+              <Card.Body>
+                {metricsOriginal ? (
+                  <InfoMetrics metrics={metricsOriginal} />
+                ) : (
+                  <>
+                    <span className="loader"></span>
+                    <p className="mt-2">Calculating...</p>
+                  </>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={6} xs={12}>
+            <Card className="mt-2">
+              <Card.Body>
+                {metricsProcessed ? (
+                  <InfoMetrics metrics={metricsProcessed} />
+                ) : (
+                  <>
+                    <span className="loader"></span>
+                    <p className="mt-2">Waiting for request...</p>
+                  </>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     </>
   );

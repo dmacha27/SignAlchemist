@@ -134,9 +134,7 @@ async def filtering(
 
         new_data = np.stack((data[:, 0], new_values), axis=1)
 
-        return JSONResponse(content={"data": new_data.tolist(),
-                                     "original_quality": get_metrics(data[:, 1], fs=sampling_rate, signal_type=signal_type),
-                                     "filtered_quality": get_metrics(new_values, fs=sampling_rate, signal_type=signal_type)})
+        return JSONResponse(content={"data": new_data.tolist()})
 
     except Exception as e:
         return JSONResponse(
@@ -145,12 +143,29 @@ async def filtering(
         )
 
 
-def get_metrics(signal, fs, signal_type):
+@app.options("/metrics")
+async def options_metrics():
+    return {"message": "Preflight OPTIONS request handled"}
+
+@app.post("/metrics")
+def get_metrics(
+    signal: str = Form(...),
+    signal_type: str = Form(...),
+    sampling_rate: int = Form(...)
+):
+    try:
+        data = np.array(json.loads(signal))
+        values = data[:,1]
+    except Exception as e:
+        return {"error": f"Invalid signal format: {e}"}
 
     if signal_type == "EDA":
-        return {"Böttcher, S., Vieluf, S., Bruno, E., Joseph, B., Epitashvili, N., Biondi, A., ... & Loddenkemper, T. (2022). Data quality evaluation in wearable monitoring. Scientific reports, 12(1), 21412.": gsr_quality(signal, fs=fs),
-                "Kleckner, I. R., Jones, R. M., Wilder-Smith, O., Wormwood, J. B., Akcakaya, M., Quigley, K. S., ... & Goodwin, M. S. (2017). Simple, transparent, and flexible automated quality assessment procedures for ambulatory electrodermal activity data. IEEE Transactions on Biomedical Engineering, 65(7), 1460-1467.": gsr_automated_2secs(signal, fs=fs)}
-
+        return {
+            "Böttcher et al. (2022)": gsr_quality(values, fs=sampling_rate),
+            "Kleckner et al. (2017)": gsr_automated_2secs(values, fs=sampling_rate)
+        }
+    else:
+        return {"error": "Signal type not supported"}
 
 @app.post("/process")
 async def process(

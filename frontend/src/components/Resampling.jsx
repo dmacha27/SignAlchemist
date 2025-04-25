@@ -225,7 +225,7 @@ const Resampling = () => {
                   </Card.Header>
                   <Card.Body>
                     {chartDataOriginal ? (
-                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} parallel={false} />
                     ) : (
                       <div className="text-center">
                         <span className="loader"></span>
@@ -243,7 +243,7 @@ const Resampling = () => {
                   </Card.Header>
                   <Card.Body>
                     {chartDataResampled ? (
-                      <CustomChart table={chartDataResampled} setChartImage={setChartImageResampled} />
+                      <CustomChart table={chartDataResampled} setChartImage={setChartImageResampled} parallel={false} />
                     ) : (
                       <div className="text-center">
                         <span className="loader"></span>
