@@ -3,13 +3,13 @@ import { FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa
 const ExecutionIcon = ({ executionState }) => {
     switch (executionState) {
         case 'waiting':
-            return <FaClock title='Waiting' />;
+            return <FaClock />;
         case 'running':
-            return <FaSpinner className="spin" title='Running' />;
+            return <FaSpinner className="spin" />;
         case 'executed':
-            return <FaCheck title='Executed' />;
+            return <FaCheck />;
         case 'error':
-            return <FaExclamationCircle title='Error' />;
+            return <FaExclamationCircle />;
         default:
             return null;
     }

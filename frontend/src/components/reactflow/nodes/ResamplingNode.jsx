@@ -7,7 +7,7 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { Button, Form, Card } from 'react-bootstrap';
-import { FaChartLine } from 'react-icons/fa';
+import { FaChartLine, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 
 function ResamplingNode({ id, data }) {
@@ -30,6 +30,7 @@ function ResamplingNode({ id, data }) {
     setTargetNodeId(targetId);
   }, [connections]);
 
+  const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
   let table = sourceNodeData?.data?.table;
 
@@ -71,11 +72,18 @@ function ResamplingNode({ id, data }) {
       window.removeEventListener(`execute-node${id}`, handleExecute);
       window.removeEventListener(`delete-source-tables${id}`, handleDeleteTable);
     };
-  }, [targetNodeId, interpolationTechnique, targetSamplingRate]);
+  }, [targetNodeId, // Necessary to update event IDs accordingly
+    interpolationTechnique, targetSamplingRate]);
 
+  useEffect(() => {
+    const event = new CustomEvent(`delete-source-tables${id}`);
+    window.dispatchEvent(event);
+
+  }, [interpolationTechnique, targetSamplingRate]);
 
   const requestResample = async () => {
     if (!table) return;
+
     setExecutionState('running');
 
     const formData = new FormData();
@@ -120,10 +128,39 @@ function ResamplingNode({ id, data }) {
 
   return (
     <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
-      <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
-        <FaChartLine className="text-primary" size={20} />
-        <span className="fw-bold fs-5 text-dark">Resampling</span>
+      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+        <div className="d-flex align-items-center gap-2">
+          <FaChartLine className="text-primary" size={20} />
+          <span className="fw-bold fs-5 text-dark">Resampling</span>
+
+          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title={executionState}>
+            <ExecutionIcon executionState={executionState} />
+          </div>
+          <div
+            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title='See output'
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              console.log(currentNodeData.data.table)
+              if (currentNodeData?.data?.table) {
+                data.setChartDataProcessed(currentNodeData.data.table);
+              }
+            }}
+          >
+            <FaEye />
+          </div>
+          <div
+            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title='Delete node'
+            style={{ cursor: 'pointer' }}
+            onClick={() => { data.deleteNode(id) }}
+          >
+            <FaTrash className="text-danger" />
+          </div>
+        </div>
       </div>
+
       <Handle type="target" position={Position.Left} className="custom-handle" />
 
       <Form>
@@ -169,13 +206,8 @@ function ResamplingNode({ id, data }) {
       </div>
 
       <Handle type="source" position={Position.Right} className="custom-handle" />
-
-      <div className="position-absolute" style={{ top: 0, right: '2px' }}>
-        <div className="bg-light">
-          <ExecutionIcon executionState={executionState}></ExecutionIcon>
-        </div>
-      </div>
     </Card>
+
   );
 
 }

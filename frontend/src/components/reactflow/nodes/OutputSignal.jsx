@@ -10,33 +10,11 @@ function OutputSignal({ id, data }) {
   const sourceId = incomingConnections?.find(conn => conn.target === id)?.source;
   const sourceNodeData = useNodesData(sourceId);
   const table = sourceNodeData?.data?.table;
-  data.setChartDataProcessed(table);
+  //data.setChartDataProcessed(table);
 
   useEffect(() => {
-    if (table) {
-      const processedMetricsForm = new FormData();
-      processedMetricsForm.append("signal", JSON.stringify(table.slice(1)));
-      processedMetricsForm.append("signal_type", data.signalType);
-      processedMetricsForm.append("sampling_rate", data.samplingRate);
-
-      fetch('http://localhost:8000/metrics', {
-        method: 'POST',
-        body: processedMetricsForm,
-      })
-        .then(async (res) => {
-          const metricsProcessed = await res.json();
-          if (!res.ok) {
-            console.log(metricsProcessed.error);
-            toast.error(metricsProcessed.error);
-            return;
-          }
-          data.setMetricsProcessed(metricsProcessed);
-        });
-    } else {
-      data.setMetricsProcessed(null);
-    }
-  }, [table]);
-
+    data.setChartDataProcessed(table);
+  }, [sourceId, sourceNodeData]);
 
   return (
     <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative mt-2">

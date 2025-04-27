@@ -8,7 +8,7 @@ import {
 } from '@xyflow/react';
 import { Button, Form, Card } from 'react-bootstrap';
 import FilterFields from '../../common/FilterFields';
-import { FaFilter } from 'react-icons/fa';
+import { FaFilter, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 
 
@@ -59,6 +59,7 @@ function FilteringNode({ id, data }) {
     setTargetNodeId(targetId);
   }, [connections]);
 
+  const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
   let table = sourceNodeData?.data?.table;
 
@@ -100,11 +101,18 @@ function FilteringNode({ id, data }) {
       window.removeEventListener(`execute-node${id}`, handleExecute);
       window.removeEventListener(`delete-source-tables${id}`, handleDeleteTable);
     };
-  }, [targetNodeId, filter, fields]);
+  }, [targetNodeId, // Necessary to update event IDs accordingly
+    filter, fields]);
 
+  useEffect(() => {
+    const event = new CustomEvent(`delete-source-tables${id}`);
+    window.dispatchEvent(event);
+
+  }, [filter, fields]);
 
   const requestFilter = async () => {
     if (!table) return;
+
     setExecutionState('running');
 
     const formData = new FormData();
@@ -163,9 +171,37 @@ function FilteringNode({ id, data }) {
 
   return (
     <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
-      <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
-        <FaFilter className="text-success" size={20} />
-        <span className="fw-bold fs-5 text-dark">Filtering</span>
+      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+        <div className="d-flex align-items-center gap-2">
+          <FaFilter className="text-success" size={20} />
+          <span className="fw-bold fs-5 text-dark">Filtering</span>
+
+          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title={executionState}>
+            <ExecutionIcon executionState={executionState} />
+          </div>
+          <div
+            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title='See output'
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              console.log(currentNodeData.data.table)
+              if (currentNodeData?.data?.table) {
+                data.setChartDataProcessed(currentNodeData.data.table);
+              }
+            }}
+          >
+            <FaEye />
+          </div>
+          <div
+            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title='Delete node'
+            style={{ cursor: 'pointer' }}
+            onClick={() => { data.deleteNode(id) }}
+          >
+            <FaTrash className="text-danger" />
+          </div>
+        </div>
       </div>
 
       <Handle type="target" position={Position.Left} className="custom-handle" />
@@ -207,13 +243,8 @@ function FilteringNode({ id, data }) {
       </div>
 
       <Handle type="source" position={Position.Right} id="output" className="custom-handle" />
-
-      <div className="position-absolute" style={{ top: 0, right: '2px' }}>
-        <div className="bg-light">
-          <ExecutionIcon executionState={executionState}></ExecutionIcon>
-        </div>
-      </div>
     </Card>
+
   );
 
 }

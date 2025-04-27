@@ -33,6 +33,8 @@ import { useLocation } from "react-router-dom";
 import { ImgComparisonSlider } from '@img-comparison-slider/react';
 import { FaFilter, FaChartLine, FaBullseye, FaColumns, FaExchangeAlt, FaWaveSquare, FaProjectDiagram, FaBalanceScale, FaSquare, FaRocket, FaSignal, FaTrash, FaEye } from 'react-icons/fa';
 
+import toast from 'react-hot-toast';
+
 const InfoMetrics = ({ metrics }) => {
   return (
     <Row className="justify-content-around">
@@ -92,6 +94,26 @@ const Processing = () => {
           let data_original = generateDataOriginal(file_headers, rows, timestampColumn, signalValues, samplingRate);
 
           setChartDataOriginal(data_original);
+
+          const originalMetricsForm = new FormData();
+          originalMetricsForm.append("signal", JSON.stringify(data_original.slice(1)));
+          originalMetricsForm.append("signal_type", signalType);
+          originalMetricsForm.append("sampling_rate", samplingRate);
+
+          fetch('http://localhost:8000/metrics', {
+            method: 'POST',
+            body: originalMetricsForm,
+          })
+            .then(async (res) => {
+              const metricsOriginal = await res.json();
+              if (!res.ok) {
+                console.log(metricsOriginal.error);
+                toast.error(metricsOriginal.error);
+                return;
+              }
+              setMetricsOriginal(metricsOriginal);
+            });
+
         }
       });
     };
@@ -99,6 +121,30 @@ const Processing = () => {
 
   }, [file, signalType, timestampColumn, signalValues]);
 
+  useEffect(() => {
+    if (chartDataProcessed) {
+      const processedMetricsForm = new FormData();
+      processedMetricsForm.append("signal", JSON.stringify(chartDataProcessed.slice(1)));
+      processedMetricsForm.append("signal_type", signalType);
+      processedMetricsForm.append("sampling_rate", samplingRate);
+
+      fetch('http://localhost:8000/metrics', {
+        method: 'POST',
+        body: processedMetricsForm,
+      })
+        .then(async (res) => {
+          const metricsProcessed = await res.json();
+          if (!res.ok) {
+            console.log(metricsProcessed.error);
+            toast.error(metricsProcessed.error);
+            return;
+          }
+          setMetricsProcessed(metricsProcessed);
+        });
+    } else {
+      setMetricsProcessed(null);
+    }
+  }, [chartDataProcessed]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -124,13 +170,13 @@ const Processing = () => {
         id: '1',
         type: 'InputSignal',
         position: { x: 0, y: 150 },
-        data: { table: chartDataOriginal, signalType, samplingRate, setMetricsOriginal },
+        data: { table: chartDataOriginal },
       },
       {
         id: '2',
         type: 'OutputSignal',
         position: { x: 1100, y: 150 },
-        data: { setChartDataProcessed, signalType, samplingRate, setMetricsProcessed }
+        data: { setChartDataProcessed }
       },
     ];
 
@@ -151,6 +197,11 @@ const Processing = () => {
 
     setNodes((prevNodes) => [...prevNodes, newNode]);
     setLastId(last_id + 1);
+  };
+
+  const deleteNode = (id) => {
+    setNodes((nodes) => nodes.filter((node) => node.id !== id));
+    setEdges((edges) => edges.filter((edge) => (edge.source !== id && edge.target !== id)));
   };
 
   const onConnect = useCallback(
@@ -266,7 +317,7 @@ const Processing = () => {
                   title='Add resampling node'
                   variant="outline-primary"
                   size="sm"
-                  onClick={() => addNode('ResamplingNode', { samplingRate })}
+                  onClick={() => addNode('ResamplingNode', { samplingRate, deleteNode, setChartDataProcessed })}
                   className="d-flex align-items-center justify-content-center gap-2"
                 >
                   <FaChartLine />
@@ -277,7 +328,7 @@ const Processing = () => {
                   title='Add outlier detection node'
                   variant="outline-secondary"
                   size="sm"
-                  onClick={() => addNode('OutliersNode')}
+                  onClick={() => addNode('OutliersNode', { deleteNode, setChartDataProcessed })}
                   className="d-flex align-items-center justify-content-center gap-2"
                 >
                   <FaBullseye />
@@ -288,7 +339,7 @@ const Processing = () => {
                   title='Add filtering node'
                   variant="outline-success"
                   size="sm"
-                  onClick={() => addNode('FilteringNode', { signalType, samplingRate })}
+                  onClick={() => addNode('FilteringNode', { signalType, samplingRate, deleteNode, setChartDataProcessed })}
                   className="d-flex align-items-center justify-content-center gap-2"
                 >
                   <FaFilter />

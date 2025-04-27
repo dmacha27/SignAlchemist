@@ -7,30 +7,6 @@ function InputSignal({ id, data }) {
   const [headers, setHeaders] = useState(data.table[0]);
   const [table, setTable] = useState(data.table);
 
-  useEffect(() => {
-    if (table) {
-      const originalMetricsForm = new FormData();
-      originalMetricsForm.append("signal", JSON.stringify(table.slice(1)));
-      originalMetricsForm.append("signal_type", data.signalType);
-      originalMetricsForm.append("sampling_rate", data.samplingRate);
-
-      fetch('http://localhost:8000/metrics', {
-        method: 'POST',
-        body: originalMetricsForm,
-      })
-        .then(async (res) => {
-          const metricsOriginal = await res.json();
-          if (!res.ok) {
-            console.log(metricsOriginal.error);
-            toast.error(metricsOriginal.error);
-            return;
-          }
-          data.setMetricsOriginal(metricsOriginal);
-        });
-    }
-  }, [table]);
-
-
   const outgoingConnections = useNodeConnections({
     type: 'source',
   });
@@ -45,6 +21,7 @@ function InputSignal({ id, data }) {
     };
 
     const handleExecute = () => {
+      console.log(targetNodeId)
       const event = new CustomEvent(`execute-node${targetNodeId}`, {
         detail: { table: data.table },
       });

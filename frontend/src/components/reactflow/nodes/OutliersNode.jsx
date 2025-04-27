@@ -7,10 +7,10 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { Button, Form, Card } from 'react-bootstrap';
-import { FaBullseye } from 'react-icons/fa';
+import { FaBullseye, FaEye, FaTrash } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 
-function OutliersNode({ id }) {
+function OutliersNode({ id, data }) {
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
@@ -28,6 +28,7 @@ function OutliersNode({ id }) {
     setTargetNodeId(targetId);
   }, [connections]);
 
+  const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
   let table = sourceNodeData?.data?.table;
 
@@ -37,7 +38,7 @@ function OutliersNode({ id }) {
       updateNodeData(id, (prev) => ({
         ...prev,
         table: null,
-      }));
+      })); // Clear the table so the target node does not detect it
 
       setExecutionState('waiting');
 
@@ -70,11 +71,19 @@ function OutliersNode({ id }) {
       window.removeEventListener(`delete-source-tables${id}`, handleDeleteTable);
 
     };
-  }, [targetNodeId, outlierTechnique]);
+  }, [targetNodeId, // Necessary to update event IDs accordingly
+    outlierTechnique]);
 
+  useEffect(() => {
+    const event = new CustomEvent(`delete-source-tables${id}`);
+    window.dispatchEvent(event);
+
+  }, [outlierTechnique]);
 
   const requestOutliers = async () => {
     if (!table) return;
+
+    setExecutionState("running");
 
     const signalOnly = table.slice(1);
     const formData = new FormData();
@@ -118,9 +127,37 @@ function OutliersNode({ id }) {
 
   return (
     <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
-      <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
-        <FaBullseye className="text-secondary" size={20} />
-        <span className="fw-bold fs-5 text-dark">Outlier Detection</span>
+      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+        <div className="d-flex align-items-center gap-1">
+          <FaBullseye className="text-secondary" size={20} />
+          <span className="fw-bold fs-5 text-dark">Outlier Detection</span>
+
+          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title={executionState}>
+            <ExecutionIcon executionState={executionState} />
+          </div>
+          <div
+            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title='See output'
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              console.log(currentNodeData.data.table)
+              if (currentNodeData?.data?.table) {
+                data.setChartDataProcessed(currentNodeData.data.table);
+              }
+            }}
+          >
+            <FaEye />
+          </div>
+          <div
+            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
+            title='Delete node'
+            style={{ cursor: 'pointer' }}
+            onClick={() => { data.deleteNode(id) }}
+          >
+            <FaTrash className="text-danger" />
+          </div>
+        </div>
       </div>
 
       <Handle type="target" position={Position.Left} className="custom-handle" />
@@ -155,12 +192,6 @@ function OutliersNode({ id }) {
       </div>
 
       <Handle type="source" position={Position.Right} className="custom-handle" />
-
-      <div className="position-absolute" style={{ top: 0, right: '2px', zIndex: 10 }}>
-        <div className="bg-light">
-          <ExecutionIcon executionState={executionState}></ExecutionIcon>
-        </div>
-      </div>
     </Card>
 
   );
