@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Handle, Position, useNodeConnections, useNodesData } from '@xyflow/react';
 import { Table, Button, Card } from 'react-bootstrap';
+import DownloadSignal from '../../common/DownloadSignal';
 
 /**
  * OutputSignal component
@@ -51,7 +52,7 @@ function OutputSignal({ id, data }) {
         </div>
       ) : (
         <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '5px' }}>
-          <Table striped bordered hover size="sm" className="mb-0 table-sm">
+          <Table striped bordered hover size="sm" className="table-sm">
             <thead className="bg-light">
               <tr style={{ position: 'sticky', top: 0, zIndex: 1, backgroundColor: '#fff' }}>
                 <th>{""}</th>
@@ -74,18 +75,8 @@ function OutputSignal({ id, data }) {
 
       {/* If table exists, enable CSV download */}
       {table && (
-        <div className="p-2 border-top d-flex justify-content-center">
-          <Button
-            variant="success"
-            href={URL.createObjectURL(
-              new Blob([table.map(row => row.join(',')).join('\n')], {
-                type: 'text/csv',
-              })
-            )}
-            download="processed_signal.csv"
-          >
-            📥 Download CSV
-          </Button>
+        <div className="p-2 border-top d-flex justify-content-center" style={{ maxWidth: '300px'}}>
+          <DownloadSignal table={table} name='processed'></DownloadSignal>
         </div>
       )}
 

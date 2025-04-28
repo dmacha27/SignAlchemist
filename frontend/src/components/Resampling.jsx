@@ -43,7 +43,7 @@ const Resampling = () => {
 
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
-          setChartDataResampled(data_original);
+          //setChartDataResampled(data_original);
         },
       });
     };
@@ -171,7 +171,10 @@ const Resampling = () => {
                     <DownloadSignal table={chartDataResampled} name="resampled" />
                   </>
                 ) : (
-                  <div className="text-center text-muted">Awaiting output</div>
+                  <div className="text-center">
+                    <span className="loader"></span>
+                    <p className="mt-2">Waiting for request...</p>
+                  </div>
                 )}
               </Card.Body>
             </Card>
