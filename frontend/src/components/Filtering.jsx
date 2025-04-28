@@ -5,6 +5,7 @@ import { usePapaParse } from 'react-papaparse';
 import generateDataOriginal from '../utils';
 
 import CustomChart from './common/CustomChart';
+import SpectrumChart from './common/SpectrumChart';
 import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
 import FilterFields from './common/FilterFields';
@@ -75,7 +76,6 @@ const Filtering = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } = location.state || {};
 
-  const [fileRows, setFileRows] = useState(null);
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [chartDataFiltered, setChartDataFiltered] = useState(null);
@@ -106,7 +106,6 @@ const Filtering = () => {
 
           let data_original = generateDataOriginal(file_headers, rows, timestampColumn, signalValues, samplingRate);
 
-          setFileRows([...results.data[0].map(item => item[0]).join(',')].concat(rows.map(row => row.join(','))));
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
           //setChartDataFiltered(data_original);
@@ -342,6 +341,9 @@ const Filtering = () => {
             </ButtonGroup>
           </Col>
         </Row>
+        {chartDataOriginal && (
+          <SpectrumChart signal={chartDataOriginal.slice(1).map(row => row[1])} samplingRate={samplingRate}></SpectrumChart>
+        )}
 
         <div id="charts">
           <div

@@ -22,8 +22,6 @@ import ResamplingNode from './reactflow/nodes/ResamplingNode';
 import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
 
-import AnimatedEdge from './reactflow/edges/AnimatedEdge';
-
 import { usePapaParse } from 'react-papaparse';
 
 import { Button, Stack, Table, Container, Row, Col, Card, Accordion, ButtonGroup, ToggleButton, Badge, Alert, Popover, OverlayTrigger, Modal } from 'react-bootstrap';
