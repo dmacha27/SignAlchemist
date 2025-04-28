@@ -102,7 +102,7 @@ const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avo
 
   const shouldCaptureImage = useRef(true);
   useEffect(() => {
-    shouldCaptureImage.current = true;
+    shouldCaptureImage.current = true; // Allow setChartImage, this will avoid zoomed images
   }, [table]);
 
   const handleResetZoom = () => {
@@ -145,6 +145,10 @@ const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avo
 
         // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
         const dataset = chart.data.datasets[0];
+        
+        if (dataset.data.length > MAX_DATA_LENGTH) return; // No interaction to improve performance
+        if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return; // No point-to-point correspondence
+
         dataset.pointBackgroundColor = dataset.data.map((_, i) =>
           i === pointIndex ? highlightColor : defaultColor
         );
@@ -175,6 +179,7 @@ const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avo
       const charts = parallel ? Object.values(ChartJS.instances): [chartRef.current];
       charts.forEach(chart => {
         if (chartRef.current !== chart) {
+          if (chartRef.current.data.datasets[0].data.length !== chart.data.datasets[0].data.length) return; // No point-to-point correspondence
           chart.tooltip.setActiveElements(
             [{ datasetIndex: 0, index }],
             { x: event.native.x, y: event.native.y }

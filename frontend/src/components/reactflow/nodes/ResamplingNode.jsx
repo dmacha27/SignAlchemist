@@ -10,10 +10,20 @@ import { Button, Form, Card } from 'react-bootstrap';
 import { FaChartLine, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 
+/**
+ * ResamplingNode component
+ * This component represents a resampling operation node in a flow diagram.
+ *
+ * @component
+ * @param {Object} props - Component properties
+ * @param {string} props.id - The unique identifier for the current node
+ * @param {Object} props.data - Data for the node including functions for deleting the node and updating chart data
+ * @returns {JSX.Element} Visual representation of the resampling node with UI for setting parameters and executing the resampling operation
+ */
 function ResamplingNode({ id, data }) {
   const samplingRate = data.samplingRate;
   const { updateNodeData } = useReactFlow();
-  const [sourceNodeId, setSourceNodeId] = useState(null);
+  const [sourceNodeId, setSourceNodeId] = useState(null); 
   const [targetNodeId, setTargetNodeId] = useState(null);
   const [interpolationTechnique, setInterpolationTechnique] = useState('spline');
   const [targetSamplingRate, setTargetSamplingRate] = useState(samplingRate);
@@ -23,6 +33,7 @@ function ResamplingNode({ id, data }) {
     type: 'target',
   });
 
+  // Set source and target node IDs based on the current connections
   useEffect(() => {
     const sourceId = connections?.find(conn => conn.target === id)?.source;
     const targetId = connections?.find(conn => conn.source === id)?.target;
@@ -36,6 +47,9 @@ function ResamplingNode({ id, data }) {
 
   useEffect(() => {
 
+    /**
+     * Handler to delete the current node's table and propagate the event to the next node.
+     */
     const handleDeleteTable = () => {
       updateNodeData(id, (prev) => ({
         ...prev,
@@ -48,7 +62,10 @@ function ResamplingNode({ id, data }) {
       window.dispatchEvent(event);
     };
 
-
+    /**
+     * Handler to execute the resampling process when an event is triggered.
+     * @param {Event} e - The event containing the table data to be resampled.
+     */
     const handleExecute = async (e) => {
       const table_source = e.detail.table;
 
@@ -68,26 +85,32 @@ function ResamplingNode({ id, data }) {
     window.addEventListener(`execute-node${id}`, handleExecute);
     window.addEventListener(`delete-source-tables${id}`, handleDeleteTable);
 
-    return () => {
+    return () => { // Clean up events when dependencies change (avoid multiple listeners of the same type)
       window.removeEventListener(`execute-node${id}`, handleExecute);
       window.removeEventListener(`delete-source-tables${id}`, handleDeleteTable);
     };
-  }, [targetNodeId, // Necessary to update event IDs accordingly
-    interpolationTechnique, targetSamplingRate]);
+  }, [targetNodeId, interpolationTechnique, targetSamplingRate]);
 
+  /**
+   * Trigger a delete event when form is changed.
+   */
   useEffect(() => {
     const event = new CustomEvent(`delete-source-tables${id}`);
     window.dispatchEvent(event);
 
   }, [interpolationTechnique, targetSamplingRate]);
 
+  /**
+   * Makes a request to the server to resample the table data.
+   * @returns {Array} The new resampled table.
+   */
   const requestResample = async () => {
     if (!table) return;
 
     setExecutionState('running');
 
     const formData = new FormData();
-    formData.append('signal', JSON.stringify(table.slice(1)));
+    formData.append('signal', JSON.stringify(table.slice(1)));  // Append the table data (excluding the first row which is assumed to be headers)
     formData.append('interpolation_technique', interpolationTechnique);
     formData.append('source_sampling_rate', parseFloat(samplingRate));
     formData.append('target_sampling_rate', parseFloat(targetSamplingRate));
@@ -105,7 +128,7 @@ function ResamplingNode({ id, data }) {
 
       const result = await response.json();
 
-      const new_table = [table[0]].concat(result.data);
+      const new_table = [table[0]].concat(result.data);  // Combine the original header with the resampled data
 
       updateNodeData(id, (prev) => ({
         ...prev,
@@ -118,7 +141,7 @@ function ResamplingNode({ id, data }) {
       console.error('Failed to apply resampling:', error);
       updateNodeData(id, (prev) => ({
         ...prev,
-        table: table,
+        table: table,  // Reset to original table in case of error
       }));
 
       setExecutionState('error');
@@ -128,21 +151,23 @@ function ResamplingNode({ id, data }) {
 
   return (
     <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
+      {/* Header with control buttons */}
       <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
         <div className="d-flex align-items-center gap-2">
           <FaChartLine className="text-primary" size={20} />
           <span className="fw-bold fs-5 text-dark">Resampling</span>
 
-          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title={executionState}>
+          {/* Execution state icon */}
+          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}>
             <ExecutionIcon executionState={executionState} />
           </div>
+          
+          {/* Button to view the processed chart */}
           <div
             className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
             title='See output'
             style={{ cursor: 'pointer' }}
             onClick={() => {
-              console.log(currentNodeData.data.table)
               if (currentNodeData?.data?.table) {
                 data.setChartDataProcessed(currentNodeData.data.table);
               }
@@ -150,6 +175,8 @@ function ResamplingNode({ id, data }) {
           >
             <FaEye />
           </div>
+          
+          {/* Button to delete the node */}
           <div
             className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
             title='Delete node'
@@ -161,6 +188,7 @@ function ResamplingNode({ id, data }) {
         </div>
       </div>
 
+      {/* Input form to configure interpolation technique and target sampling rate */}
       <Handle type="target" position={Position.Left} className="custom-handle" />
 
       <Form>
@@ -193,6 +221,7 @@ function ResamplingNode({ id, data }) {
         </Form.Group>
       </Form>
 
+      {/* Button to trigger resampling */}
       <div className="d-grid">
         <Button
           variant="primary"
@@ -207,9 +236,7 @@ function ResamplingNode({ id, data }) {
 
       <Handle type="source" position={Position.Right} className="custom-handle" />
     </Card>
-
   );
-
 }
 
 export default ResamplingNode;

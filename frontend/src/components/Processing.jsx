@@ -232,7 +232,7 @@ const Processing = () => {
     const eventDelete = new CustomEvent('delete-source-tables0');
     window.dispatchEvent(eventDelete);
 
-    const updatedNodes = nodes.map(node => {
+    const updatedNodes = nodes.map(node => { // Manually clean nodes
       if (node.id !== '1' && node.id !== '2') {
         return { ...node, data: { ...node.data, table: null } };
       }
@@ -250,7 +250,7 @@ const Processing = () => {
 
     const eventGenerate = new CustomEvent('start-execute');
     window.dispatchEvent(eventGenerate);
-    console.log('All nodea clean. Executing all...');
+    console.log('All nodes clean. Executing all...');
   };
 
 

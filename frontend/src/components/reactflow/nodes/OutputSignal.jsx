@@ -2,26 +2,39 @@ import { useEffect } from 'react';
 import { Handle, Position, useNodeConnections, useNodesData } from '@xyflow/react';
 import { Table, Button, Card } from 'react-bootstrap';
 
+/**
+ * OutputSignal component
+ * 
+ * This component represents the final node displaying a processed signal.
+ *
+ * @component
+ * @param {Object} props - Component properties
+ * @param {string} props.id - Unique identifier for the node
+ * @param {Object} props.data - Additional data, including methods to update chart data
+ * @returns {JSX.Element} Visual representation of the processed signal
+ */
 function OutputSignal({ id, data }) {
-  const incomingConnections = useNodeConnections({
-    type: 'target',
-  });
+  const incomingConnections = useNodeConnections({ type: 'target' });
 
+  // Find the source node ID from connections
   const sourceId = incomingConnections?.find(conn => conn.target === id)?.source;
+
   const sourceNodeData = useNodesData(sourceId);
   const table = sourceNodeData?.data?.table;
-  //data.setChartDataProcessed(table);
 
+  // Update the global chart data when source data changes
   useEffect(() => {
     data.setChartDataProcessed(table);
   }, [sourceId, sourceNodeData]);
 
   return (
     <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative mt-2">
+      {/* Header Title */}
       <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
         <span className="fw-bold fs-5 text-dark">Processed Signal</span>
       </div>
 
+      {/* If no table yet, show loading message */}
       {!table ? (
         <div
           className="shadow-sm"
@@ -59,6 +72,7 @@ function OutputSignal({ id, data }) {
         </div>
       )}
 
+      {/* If table exists, enable CSV download */}
       {table && (
         <div className="p-2 border-top d-flex justify-content-center">
           <Button
@@ -75,11 +89,10 @@ function OutputSignal({ id, data }) {
         </div>
       )}
 
+      {/* Handle for incoming connections */}
       <Handle type="target" position={Position.Left} className="custom-handle" />
     </Card>
   );
-
-
 }
 
 export default OutputSignal;

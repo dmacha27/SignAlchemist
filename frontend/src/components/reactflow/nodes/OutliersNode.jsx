@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Handle,
   Position,
@@ -10,6 +10,17 @@ import { Button, Form, Card } from 'react-bootstrap';
 import { FaBullseye, FaEye, FaTrash } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 
+/**
+ * OutliersNode component
+ * 
+ * This component represents a node in a flow diagram responsible for detecting and managing outliers in signal data.
+ *
+ * @component
+ * @param {Object} props - Component properties
+ * @param {string} props.id - Unique identifier for the node
+ * @param {Object} props.data - Additional data, including methods to delete nodes and update chart data
+ * @returns {JSX.Element} Visual and functional representation of the outlier detection node
+ */
 function OutliersNode({ id, data }) {
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
@@ -17,10 +28,9 @@ function OutliersNode({ id, data }) {
   const [outlierTechnique, setOutlierTechnique] = useState('hampel');
   const [executionState, setExecutionState] = useState('waiting');
 
-  const connections = useNodeConnections({
-    type: 'target',
-  });
+  const connections = useNodeConnections({ type: 'target' });
 
+  // Update source and target node IDs when connections change
   useEffect(() => {
     const sourceId = connections?.find(conn => conn.target === id)?.source;
     const targetId = connections?.find(conn => conn.source === id)?.target;
@@ -33,12 +43,14 @@ function OutliersNode({ id, data }) {
   let table = sourceNodeData?.data?.table;
 
   useEffect(() => {
-
+    /**
+     * Deletes the current node's table and notifies the next node.
+     */
     const handleDeleteTable = () => {
       updateNodeData(id, (prev) => ({
         ...prev,
         table: null,
-      })); // Clear the table so the target node does not detect it
+      }));
 
       setExecutionState('waiting');
 
@@ -46,6 +58,10 @@ function OutliersNode({ id, data }) {
       window.dispatchEvent(event);
     };
 
+    /**
+     * Handles execution request: applies outlier detection to incoming table.
+     * @param {Event} e - The event containing the table data.
+     */
     const handleExecute = async (e) => {
       const table_source = e.detail.table;
 
@@ -65,27 +81,29 @@ function OutliersNode({ id, data }) {
     window.addEventListener(`execute-node${id}`, handleExecute);
     window.addEventListener(`delete-source-tables${id}`, handleDeleteTable);
 
-
-    return () => {
+    return () => { // Clean up events when dependencies change (avoid multiple listeners of the same type)
       window.removeEventListener(`execute-node${id}`, handleExecute);
       window.removeEventListener(`delete-source-tables${id}`, handleDeleteTable);
-
     };
-  }, [targetNodeId, // Necessary to update event IDs accordingly
-    outlierTechnique]);
+  }, [targetNodeId, outlierTechnique]);
 
-  useEffect(() => {
+  /**
+   * Trigger a delete event when filter configuration changes.
+   */  useEffect(() => {
     const event = new CustomEvent(`delete-source-tables${id}`);
     window.dispatchEvent(event);
-
   }, [outlierTechnique]);
 
+  /**
+   * Makes a request to apply the selected outlier detection technique.
+   * @returns {Array} New table after removing outliers
+   */
   const requestOutliers = async () => {
     if (!table) return;
 
     setExecutionState("running");
 
-    const signalOnly = table.slice(1);
+    const signalOnly = table.slice(1); // Exclude headers
     const formData = new FormData();
     formData.append('signal', JSON.stringify(signalOnly));
     formData.append('outlier_technique', outlierTechnique);
@@ -103,7 +121,7 @@ function OutliersNode({ id, data }) {
 
       const result = await response.json();
 
-      const new_table = [table[0]].concat(result.data);
+      const new_table = [table[0]].concat(result.data); // Add headers back
 
       updateNodeData(id, (prev) => ({
         ...prev,
@@ -116,7 +134,7 @@ function OutliersNode({ id, data }) {
       console.error('Failed to apply outliers:', error);
       updateNodeData(id, (prev) => ({
         ...prev,
-        table: table,
+        table: table, // Reset to original table on error
       }));
 
       setExecutionState('error');
@@ -124,24 +142,25 @@ function OutliersNode({ id, data }) {
     }
   };
 
-
   return (
     <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
+      {/* Header section with title, state icon, and action buttons */}
       <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
         <div className="d-flex align-items-center gap-1">
           <FaBullseye className="text-secondary" size={20} />
           <span className="fw-bold fs-5 text-dark">Outlier Detection</span>
 
-          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title={executionState}>
+          {/* Node execution state icon */}
+          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}>
             <ExecutionIcon executionState={executionState} />
           </div>
+
+          {/* Button to see the node output */}
           <div
             className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title='See output'
+            title="See output"
             style={{ cursor: 'pointer' }}
             onClick={() => {
-              console.log(currentNodeData.data.table)
               if (currentNodeData?.data?.table) {
                 data.setChartDataProcessed(currentNodeData.data.table);
               }
@@ -149,19 +168,23 @@ function OutliersNode({ id, data }) {
           >
             <FaEye />
           </div>
+
+          {/* Button to delete the node */}
           <div
             className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title='Delete node'
+            title="Delete node"
             style={{ cursor: 'pointer' }}
-            onClick={() => { data.deleteNode(id) }}
+            onClick={() => { data.deleteNode(id); }}
           >
             <FaTrash className="text-danger" />
           </div>
         </div>
       </div>
 
+      {/* Handle for incoming connections */}
       <Handle type="target" position={Position.Left} className="custom-handle" />
 
+      {/* Outlier detection configuration form */}
       <Form>
         <Form.Group className="mb-4" controlId="outlierTechnique">
           <Form.Label className="text-uppercase small fw-medium text-muted mb-2">
@@ -179,6 +202,7 @@ function OutliersNode({ id, data }) {
         </Form.Group>
       </Form>
 
+      {/* Button to apply the outlier detection */}
       <div className="d-grid">
         <Button
           variant="secondary"
@@ -191,9 +215,9 @@ function OutliersNode({ id, data }) {
         </Button>
       </div>
 
+      {/* Handle for outgoing connections */}
       <Handle type="source" position={Position.Right} className="custom-handle" />
     </Card>
-
   );
 }
 
