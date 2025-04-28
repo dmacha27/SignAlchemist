@@ -87,7 +87,7 @@ const baseChartOptions = {
  * @param {Array} props.table - A 2D array with headers in the first row and data points in subsequent rows.
  * @param {function} props.setChartImage - A function that sets the chart image as a base64 string when the animation completes.
  */
-const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avoid re-render on parent render if table and setChartImage do not change.
+const CustomChart = memo(({ table, setChartImage, parallel = true, defaultColor = '#2196f3' }) => { // Avoid re-render on parent render if table and setChartImage do not change.
   // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
 
   const chartRef = useRef(null);
@@ -96,7 +96,7 @@ const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avo
   const minValue = Math.min(...rows.map(row => row[0])); //seconds
   const maxValue = Math.max(...rows.map(row => row[0]));
 
-  const zoomRange = parseInt((maxValue*1000 - minValue*1000) * 0.02);
+  const zoomRange = parseInt((maxValue * 1000 - minValue * 1000) * 0.02);
 
   const isLargeDataset = rows.length > MAX_DATA_LENGTH;
 
@@ -118,9 +118,9 @@ const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avo
     if (chartRef.current) {
 
       const dataset = chartRef.current.data.datasets[0];
-      dataset.pointBackgroundColor = dataset.data.map((_, i) => '#2196f3');
+      dataset.pointBackgroundColor = dataset.data.map((_, i) => defaultColor);
 
-      dataset.pointBorderColor = dataset.data.map((_, i) => '#2196f3');
+      dataset.pointBorderColor = dataset.data.map((_, i) => defaultColor);
 
       dataset.pointRadius = dataset.data.map((_, i) => 2);
       chartRef.current.update();
@@ -138,23 +138,30 @@ const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avo
 
 
       const highlightColor = '#fa6400';
-      const defaultColor = '#2196f3';
-      const charts = parallel ? Object.values(ChartJS.instances): [chartRef.current];
+      const charts = parallel ? Object.values(ChartJS.instances) : [chartRef.current];
 
       charts.forEach(chart => {
 
         // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
         const dataset = chart.data.datasets[0];
-        
+
+        let actualColor;
+        if (typeof (dataset.pointBackgroundColor) === "string") {
+          actualColor = dataset.pointBackgroundColor;
+        } else {
+          actualColor = dataset.pointBackgroundColor[0] === '#fa6400'
+            ? dataset.pointBackgroundColor[1]
+            : dataset.pointBackgroundColor[0];
+        }
         if (dataset.data.length > MAX_DATA_LENGTH) return; // No interaction to improve performance
         if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return; // No point-to-point correspondence
 
         dataset.pointBackgroundColor = dataset.data.map((_, i) =>
-          i === pointIndex ? highlightColor : defaultColor
+          i === pointIndex ? highlightColor : actualColor
         );
 
         dataset.pointBorderColor = dataset.data.map((_, i) =>
-          i === pointIndex ? highlightColor : defaultColor
+          i === pointIndex ? highlightColor : actualColor
         );
 
         dataset.pointRadius = dataset.data.map((_, i) =>
@@ -176,7 +183,7 @@ const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avo
 
       // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
       const index = elements[0].index;
-      const charts = parallel ? Object.values(ChartJS.instances): [chartRef.current];
+      const charts = parallel ? Object.values(ChartJS.instances) : [chartRef.current];
       charts.forEach(chart => {
         if (chartRef.current !== chart) {
           if (chartRef.current.data.datasets[0].data.length !== chart.data.datasets[0].data.length) return; // No point-to-point correspondence
@@ -239,9 +246,9 @@ const CustomChart = memo(({ table, setChartImage, parallel = true }) => { // Avo
     datasets: [
       {
         data: rows.map(([x, y]) => ({ x: x * 1000, y })),
-        borderColor: 'rgba(33, 150, 243, 1)',
+        borderColor: defaultColor,
         pointRadius: isLargeDataset ? 0 : 2,
-        pointBackgroundColor: '#2196f3',
+        pointBackgroundColor: defaultColor,
         fill: false
       }
     ]

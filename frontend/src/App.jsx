@@ -37,7 +37,7 @@ const App = () => {
 
   return (
     <div className="App user-select-none" style={{ position: 'relative', minHeight: '100vh' }}>
-      <Toaster />
+      <Toaster/>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />

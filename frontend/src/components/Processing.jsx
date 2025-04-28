@@ -34,6 +34,7 @@ import { ImgComparisonSlider } from '@img-comparison-slider/react';
 import { FaFilter, FaChartLine, FaBullseye, FaColumns, FaExchangeAlt, FaWaveSquare, FaProjectDiagram, FaBalanceScale, FaSquare, FaRocket, FaSignal, FaTrash, FaEye } from 'react-icons/fa';
 
 import toast from 'react-hot-toast';
+import ButtonEdge from './reactflow/edges/ButtonEdge';
 
 const InfoMetrics = ({ metrics }) => {
   return (
@@ -159,7 +160,7 @@ const Processing = () => {
   };
 
   const edgeTypes = {
-    AnimatedEdge
+    ButtonEdge
   };
 
   useEffect(() => {
@@ -209,11 +210,8 @@ const Processing = () => {
       setEdges((eds) =>
         addEdge({
           ...params,
+          type: 'ButtonEdge',
           animated: true,
-          style: {
-            strokeWidth: 2,
-            stroke: '#0d6dfd',
-          }
         }, eds)
       );
     },
@@ -292,7 +290,7 @@ const Processing = () => {
                       minZoom={0.3}
                     >
                       <Background color="#ccc" variant={BackgroundVariant.Dots} />
-                      <MiniMap nodeStrokeWidth={2} />
+                      <MiniMap nodeStrokeWidth={2} pannable position='bottom-left'/>
                     </ReactFlow>
                   </div>
                 ) : (
@@ -480,7 +478,7 @@ const Processing = () => {
                   </Card.Header>
                   <Card.Body>
                     {chartDataProcessed ? (
-                      <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} />
+                      <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} defaultColor='#50C878' />
                     ) : (
                       <div className="text-center">
                         <span className="loader"></span>

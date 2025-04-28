@@ -9,6 +9,7 @@ import {
 import { Button, Form, Card } from 'react-bootstrap';
 import { FaChartLine, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
+import toast from 'react-hot-toast';
 
 /**
  * ResamplingNode component
@@ -23,7 +24,7 @@ import ExecutionIcon from '../../common/ExecutionIcon';
 function ResamplingNode({ id, data }) {
   const samplingRate = data.samplingRate;
   const { updateNodeData } = useReactFlow();
-  const [sourceNodeId, setSourceNodeId] = useState(null); 
+  const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
   const [interpolationTechnique, setInterpolationTechnique] = useState('spline');
   const [targetSamplingRate, setTargetSamplingRate] = useState(samplingRate);
@@ -124,7 +125,11 @@ function ResamplingNode({ id, data }) {
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Resampling API request failed.');
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.error);
+        throw new Error(errorData.error);
+      }
 
       const result = await response.json();
 
@@ -158,10 +163,20 @@ function ResamplingNode({ id, data }) {
           <span className="fw-bold fs-5 text-dark">Resampling</span>
 
           {/* Execution state icon */}
-          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}>
+          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}
+            onClick={() => {
+              toast.custom(
+                <div className='toast-status'>
+                  <div>Status:</div>
+                  <div><ExecutionIcon executionState={executionState} /></div>
+                  <div>{executionState}</div>
+                </div>
+              )
+            }
+            }>
             <ExecutionIcon executionState={executionState} />
           </div>
-          
+
           {/* Button to view the processed chart */}
           <div
             className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
@@ -170,12 +185,14 @@ function ResamplingNode({ id, data }) {
             onClick={() => {
               if (currentNodeData?.data?.table) {
                 data.setChartDataProcessed(currentNodeData.data.table);
+              } else {
+                toast.error("Execute node first");
               }
             }}
           >
             <FaEye />
           </div>
-          
+
           {/* Button to delete the node */}
           <div
             className="bg-light p-2 rounded-3 border border-secondary shadow-sm"

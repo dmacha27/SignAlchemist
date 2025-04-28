@@ -22,7 +22,7 @@ const DownloadSignal = ({ table, name }) => {
   };
 
   const handleDownload = () => {
-    if (separator === '.') return;
+    if (separator.includes('.')) return;
     const blob = new Blob([generateContent()], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -35,7 +35,7 @@ const DownloadSignal = ({ table, name }) => {
   const handleSeparatorChange = (e) => {
     const newSeparator = e.target.value;
     setSeparator(newSeparator);
-    setError(newSeparator === '.' ? 'The separator cannot be a dot (".")' : '');
+    setError(newSeparator.includes('.') ? 'The separator cannot be a dot (".")' : '');
   };
 
   return (
@@ -78,7 +78,7 @@ const DownloadSignal = ({ table, name }) => {
           variant="success"
           size="sm"
           onClick={handleDownload}
-          disabled={separator === '.'}
+          disabled={separator.includes('.')}
         >
           📥 Download
         </Button>

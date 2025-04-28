@@ -10,6 +10,7 @@ import { Button, Form, Card } from 'react-bootstrap';
 import FilterFields from '../../common/FilterFields';
 import { FaFilter, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
+import toast from 'react-hot-toast';
 
 
 const filtersFields = {
@@ -49,13 +50,13 @@ const filtersFields = {
  */
 function FilteringNode({ id, data }) {
   const { updateNodeData } = useReactFlow();
-    const [sourceNodeId, setSourceNodeId] = useState(null);
+  const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
-    const [filter, setFilter] = useState("butterworth");
+  const [filter, setFilter] = useState("butterworth");
   const [fields, setFields] = useState(filtersFields[filter]);
-    const signalType = data.signalType;
+  const signalType = data.signalType;
   const samplingRate = data.samplingRate;
-    const [executionState, setExecutionState] = useState('waiting');
+  const [executionState, setExecutionState] = useState('waiting');
 
   const connections = useNodeConnections({ type: 'target' });
 
@@ -157,7 +158,11 @@ function FilteringNode({ id, data }) {
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Filter API request failed.');
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.error);
+        throw new Error(errorData.error);
+      }
 
       const result = await response.json();
 
@@ -200,7 +205,17 @@ function FilteringNode({ id, data }) {
           <span className="fw-bold fs-5 text-dark">Filtering</span>
 
           {/* Execution state icon */}
-          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}>
+          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}
+            onClick={() => {
+              toast.custom(
+                <div className='toast-status'>
+                  <div>Status:</div>
+                  <div><ExecutionIcon executionState={executionState} /></div>
+                  <div>{executionState}</div>
+                </div>
+              )
+            }
+            }>
             <ExecutionIcon executionState={executionState} />
           </div>
 
@@ -212,6 +227,8 @@ function FilteringNode({ id, data }) {
             onClick={() => {
               if (currentNodeData?.data?.table) {
                 data.setChartDataProcessed(currentNodeData.data.table);
+              } else {
+                toast.error("Execute node first");
               }
             }}
           >

@@ -376,7 +376,7 @@ const Filtering = () => {
                   </Card.Header>
                   <Card.Body>
                     {chartDataFiltered ? (
-                      <CustomChart table={chartDataFiltered} setChartImage={setChartImageFiltered} />
+                      <CustomChart table={chartDataFiltered} setChartImage={setChartImageFiltered} defaultColor='#50C878' />
                     ) : (
                       <div className="text-center">
                         <span className="loader"></span>

@@ -9,6 +9,7 @@ import {
 import { Button, Form, Card } from 'react-bootstrap';
 import { FaBullseye, FaEye, FaTrash } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
+import toast from 'react-hot-toast';
 
 /**
  * OutliersNode component
@@ -117,7 +118,11 @@ function OutliersNode({ id, data }) {
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Outlier API request failed.');
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.error);
+        throw new Error(errorData.error);
+      }
 
       const result = await response.json();
 
@@ -151,7 +156,17 @@ function OutliersNode({ id, data }) {
           <span className="fw-bold fs-5 text-dark">Outlier Detection</span>
 
           {/* Node execution state icon */}
-          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}>
+          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}
+            onClick={() => {
+              toast.custom(
+                <div className='toast-status'>
+                  <div>Status:</div>
+                  <div><ExecutionIcon executionState={executionState} /></div>
+                  <div>{executionState}</div>
+                </div>
+              )
+            }
+            }>
             <ExecutionIcon executionState={executionState} />
           </div>
 
@@ -163,6 +178,8 @@ function OutliersNode({ id, data }) {
             onClick={() => {
               if (currentNodeData?.data?.table) {
                 data.setChartDataProcessed(currentNodeData.data.table);
+              } else {
+                toast.error("Execute node first");
               }
             }}
           >

@@ -246,7 +246,7 @@ const Resampling = () => {
                   </Card.Header>
                   <Card.Body>
                     {chartDataResampled ? (
-                      <CustomChart table={chartDataResampled} setChartImage={setChartImageResampled} parallel={false} />
+                      <CustomChart table={chartDataResampled} setChartImage={setChartImageResampled} parallel={false} defaultColor='#50C878' />
                     ) : (
                       <div className="text-center">
                         <span className="loader"></span>
