@@ -11,6 +11,8 @@ import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
 import FilterFields from './common/FilterFields';
 
+import { FloatingIndicator, Tabs } from '@mantine/core';
+
 import toast from 'react-hot-toast';
 
 import { FaFilter, FaSignal, FaTools, FaColumns, FaExchangeAlt, FaBalanceScale } from 'react-icons/fa';
@@ -60,7 +62,6 @@ const Filtering = () => {
 
   const [filter, setFilter] = useState("butterworth");
   const [fields, setFields] = useState(filtersFields[filter]);
-
 
   const { readString } = usePapaParse();
 
@@ -283,103 +284,206 @@ const Filtering = () => {
         </div>
       </div>
 
-      {/* View Toggle */}
-      <div className="flex justify-center py-4">
-        <div className="inline-flex rounded-md shadow-sm" role="group">
-          <button
-            onClick={() => setFlipped(false)}
-            className={`px-4 py-2 text-sm font-medium border rounded-l ${!flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
-              }`}
-          >
-            <FaColumns className="inline mr-2" />
-            Dual View
-          </button>
-          <button
-            onClick={() => setFlipped(true)}
-            className={`px-4 py-2 text-sm font-medium border rounded-r ${flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
-              }`}
-          >
-            <FaExchangeAlt className="inline mr-2" />
-            Comparison
-          </button>
-        </div>
-      </div>
+      <Tabs defaultValue="charts" className='mt-2'>
+        <Tabs.List>
+          <Tabs.Tab value="charts">Charts</Tabs.Tab>
+          <Tabs.Tab value="spectrum">Spectrum</Tabs.Tab>
+        </Tabs.List>
 
-      {/* Charts */}
-      <div id="charts">
-        {!flipped && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
-            <div className="bg-white shadow-md rounded-lg">
-              <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-                <FaSignal className="my-auto text-blue-500" />
-                Original Signal
-              </div>
-              <div className="p-4">
-                {chartDataOriginal ? (
-                  <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
-                ) : (
-                  <div className="text-center">
-                    <span className="loader"></span>
-                    <p className="mt-2 text-gray-600">Waiting for request...</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white shadow-md rounded-lg">
-              <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-                <FaFilter className="my-auto text-green-500" />
-                Filtered Signal
-              </div>
-              <div className="p-4">
-                {chartDataFiltered ? (
-                  <CustomChart
-                    table={chartDataFiltered}
-                    setChartImage={setChartImageFiltered}
-                    defaultColor="#50C878"
-                  />
-                ) : (
-                  <div className="text-center">
-                    <span className="loader"></span>
-                    <p className="mt-2 text-gray-600">Waiting for request...</p>
-                  </div>
-                )}
-              </div>
+        <Tabs.Panel value="charts">
+          {/* View Toggle */}
+          <div className="flex justify-center py-4">
+            <div className="inline-flex rounded-md shadow-sm" role="group">
+              <button
+                onClick={() => setFlipped(false)}
+                className={`px-4 py-2 text-sm font-medium border rounded-l ${!flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
+                  }`}
+              >
+                <FaColumns className="inline mr-2" />
+                Dual View
+              </button>
+              <button
+                onClick={() => setFlipped(true)}
+                className={`px-4 py-2 text-sm font-medium border rounded-r ${flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
+                  }`}
+              >
+                <FaExchangeAlt className="inline mr-2" />
+                Comparison
+              </button>
             </div>
           </div>
-        )}
 
-        {flipped && (
-          <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-6">
-            <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-              <FaBalanceScale className="my-auto text-cyan-500" />
-              Comparison View
-            </div>
-            <div className="p-4 text-center">
-              {chartImageOriginal && chartImageFiltered ? (
-                <ImgComparisonSlider>
-                  <img slot="first" src={chartImageOriginal} />
-                  <img slot="second" src={chartImageFiltered} />
-                  <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                    <path
-                      stroke="#000"
-                      d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
-                      strokeWidth="1"
-                      fill="#fff"
-                    />
-                  </svg>
-                </ImgComparisonSlider>
-              ) : (
-                <>
-                  <span className="loader"></span>
-                  <p className="mt-2 text-gray-600">Rendering comparison...</p>
-                </>
-              )}
+          {/* Charts */}
+          <div id="charts">
+            {!flipped && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
+                <div className="bg-white shadow-md rounded-lg">
+                  <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                    <FaSignal className="my-auto text-blue-500" />
+                    Original Signal
+                  </div>
+                  <div className="p-4">
+                    {chartDataOriginal ? (
+                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2 text-gray-600">Waiting for request...</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white shadow-md rounded-lg">
+                  <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                    <FaFilter className="my-auto text-green-500" />
+                    Filtered Signal
+                  </div>
+                  <div className="p-4">
+                    {chartDataFiltered ? (
+                      <CustomChart
+                        table={chartDataFiltered}
+                        setChartImage={setChartImageFiltered}
+                        defaultColor="#50C878"
+                      />
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2 text-gray-600">Waiting for request...</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {flipped && (
+              <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-6">
+                <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                  <FaBalanceScale className="my-auto text-cyan-500" />
+                  Comparison View
+                </div>
+                <div className="p-4 text-center">
+                  {chartImageOriginal && chartImageFiltered ? (
+                    <ImgComparisonSlider>
+                      <img slot="first" src={chartImageOriginal} />
+                      <img slot="second" src={chartImageFiltered} />
+                      <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                        <path
+                          stroke="#000"
+                          d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
+                          strokeWidth="1"
+                          fill="#fff"
+                        />
+                      </svg>
+                    </ImgComparisonSlider>
+                  ) : (
+                    <>
+                      <span className="loader"></span>
+                      <p className="mt-2 text-gray-600">Rendering comparison...</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </Tabs.Panel>
+        <Tabs.Panel value="spectrum">
+          {/* View Toggle */}
+          <div className="flex justify-center py-4">
+            <div className="inline-flex rounded-md shadow-sm" role="group">
+              <button
+                onClick={() => setFlipped(false)}
+                className={`px-4 py-2 text-sm font-medium border rounded-l ${!flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
+                  }`}
+              >
+                <FaColumns className="inline mr-2" />
+                Dual View
+              </button>
+              <button
+                onClick={() => setFlipped(true)}
+                className={`px-4 py-2 text-sm font-medium border rounded-r ${flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
+                  }`}
+              >
+                <FaExchangeAlt className="inline mr-2" />
+                Comparison
+              </button>
             </div>
           </div>
-        )}
-      </div>
 
+          {/* Charts */}
+          <div id="charts">
+            {!flipped && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
+                <div className="bg-white shadow-md rounded-lg">
+                  <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                    <FaSignal className="my-auto text-blue-500" />
+                    Original Signal
+                  </div>
+                  <div className="p-4">
+                    {chartDataOriginal ? (
+                      <SpectrumChart signal={chartDataOriginal.slice(1).map(row => row[1])} samplingRate={samplingRate}></SpectrumChart>
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2 text-gray-600">Waiting for request...</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white shadow-md rounded-lg">
+                  <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                    <FaFilter className="my-auto text-green-500" />
+                    Filtered Signal
+                  </div>
+                  <div className="p-4">
+                    {chartDataFiltered ? (
+                      <SpectrumChart signal={chartDataFiltered.slice(1).map(row => row[1])} samplingRate={samplingRate}></SpectrumChart>
+                    ) : (
+                      <div className="text-center">
+                        <span className="loader"></span>
+                        <p className="mt-2 text-gray-600">Waiting for request...</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {flipped && (
+              <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-6">
+                <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                  <FaBalanceScale className="my-auto text-cyan-500" />
+                  Comparison View
+                </div>
+                <div className="p-4 text-center">
+                  {chartImageOriginal && chartImageFiltered ? (
+                    <ImgComparisonSlider>
+                      <img slot="first" src={chartImageOriginal} />
+                      <img slot="second" src={chartImageFiltered} />
+                      <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                        <path
+                          stroke="#000"
+                          d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
+                          strokeWidth="1"
+                          fill="#fff"
+                        />
+                      </svg>
+                    </ImgComparisonSlider>
+                  ) : (
+                    <>
+                      <span className="loader"></span>
+                      <p className="mt-2 text-gray-600">Rendering comparison...</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+        </Tabs.Panel>
+      </Tabs>
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
         <div className="bg-white shadow-md rounded-lg p-4">
