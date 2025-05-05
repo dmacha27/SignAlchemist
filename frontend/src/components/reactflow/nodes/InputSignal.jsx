@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Handle, Position, useNodeConnections, useNodesData } from '@xyflow/react';
-import { Table, Card } from 'react-bootstrap';
+import { Card } from '@mantine/core';
 
 /**
  * InputSignal component
@@ -53,30 +53,30 @@ function InputSignal({ id, data }) {
   }, [targetNodeId]);
 
   return (
-    <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative mt-2">
-      <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
-        <span className="fw-bold fs-5 text-dark">Original Signal</span>
+    <Card className="bg-white border-0 shadow-lg rounded-lg p-4 mt-2 relative overflow-visible">
+      <div className="flex items-center justify-center gap-2 mb-3">
+        <span className="font-bold text-lg text-dark">Original Signal</span>
       </div>
 
-      <div className="shadow-sm" style={{ maxHeight: '230px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '5px' }}>
-        <Table striped bordered hover size="sm" className="table-sm">
-          <thead className="bg-light">
-            <tr style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-              <th>{""}</th>
-              <th className="fw-semibold text-dark">{headers[0]}</th>
-              <th className="fw-semibold text-dark">{headers[1]}</th>
+      <div className="shadow-sm max-h-[230px] overflow-y-auto border border-gray-300 rounded-lg">
+        <table className="min-w-full table-auto">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-2"></th>
+              <th className="font-semibold text-dark p-2">{headers[0]}</th>
+              <th className="font-semibold text-dark p-2">{headers[1]}</th>
             </tr>
           </thead>
           <tbody>
             {table.slice(1, 10).map((row, index) => (
-              <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{row[0].toFixed(4)}</td>
-                <td>{row[1].toFixed(4)}</td>
+              <tr key={index} className="border-b">
+                <td className="p-2">{index + 1}</td>
+                <td className="p-2">{row[0].toFixed(4)}</td>
+                <td className="p-2">{row[1].toFixed(4)}</td>
               </tr>
             ))}
           </tbody>
-        </Table>
+        </table>
       </div>
 
       <Handle type="source" position={Position.Right} className="custom-handle" />

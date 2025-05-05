@@ -6,7 +6,8 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react';
-import { Button, Form, Card } from 'react-bootstrap';
+import { Card, Button, Select, Tooltip } from '@mantine/core';
+import { Form } from 'react-bootstrap';
 import { FaChartLine, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 import toast from 'react-hot-toast';
@@ -155,97 +156,101 @@ function ResamplingNode({ id, data }) {
   };
 
   return (
-    <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
-      {/* Header with control buttons */}
-      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-        <div className="d-flex align-items-center gap-2">
-          <FaChartLine className="text-primary" size={20} />
-          <span className="fw-bold fs-5 text-dark">Resampling</span>
+    <Card className="bg-white shadow-lg rounded-lg p-4 mt-2 relative overflow-visible">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 pb-3 border-b">
+        <div className="flex items-center gap-2">
+          <FaChartLine className="text-blue-600" size={20} />
+          <span className="font-bold text-lg text-gray-800">Resampling</span>
 
-          {/* Execution state icon */}
-          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}
-            onClick={() => {
-              toast.custom(
-                <div className='toast-status'>
-                  <div>Status:</div>
-                  <div><ExecutionIcon executionState={executionState} /></div>
-                  <div>{executionState}</div>
-                </div>
-              )
-            }
-            }>
-            <ExecutionIcon executionState={executionState} />
-          </div>
+          {/* Node execution state icon */}
+          <Tooltip label={executionState} withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => {
+                toast.custom(
+                  <div className='toast-status'>
+                    <div>Status:</div>
+                    <div><ExecutionIcon executionState={executionState} /></div>
+                    <div>{executionState}</div>
+                  </div>
+                );
+              }}
+            >
+              <ExecutionIcon executionState={executionState} />
+            </div>
+          </Tooltip>
 
-          {/* Button to view the processed chart */}
-          <div
-            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title='See output'
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (currentNodeData?.data?.table) {
-                data.setChartDataProcessed(currentNodeData.data.table);
-              } else {
-                toast.error("Execute node first");
-              }
-            }}
-          >
-            <FaEye />
-          </div>
+          {/* Button to see the node output */}
+          <Tooltip label="See output" withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => {
+                if (currentNodeData?.data?.table) {
+                  data.setChartDataProcessed(currentNodeData.data.table);
+                } else {
+                  toast.error("Execute node first");
+                }
+              }}
+            >
+              <FaEye />
+            </div>
+          </Tooltip>
 
           {/* Button to delete the node */}
-          <div
-            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title='Delete node'
-            style={{ cursor: 'pointer' }}
-            onClick={() => { data.deleteNode(id) }}
-          >
-            <FaTrash className="text-danger" />
-          </div>
+          <Tooltip label="Delete node" withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => { data.deleteNode(id); }}
+            >
+              <FaTrash className="text-red-500" />
+            </div>
+          </Tooltip>
         </div>
       </div>
 
-      {/* Input form to configure interpolation technique and target sampling rate */}
       <Handle type="target" position={Position.Left} className="custom-handle" />
 
+      {/* Form */}
       <Form>
         <Form.Group className="mb-4" controlId="interpTechnique">
-          <Form.Label className="text-uppercase small fw-medium text-muted mb-2">
+          <Form.Label className="text-uppercase text-sm font-medium text-muted mb-2">
             Interpolation technique
           </Form.Label>
-          <Form.Select
+          <Select
             size="sm"
             value={interpolationTechnique}
-            onChange={(e) => setInterpolationTechnique(e.target.value)}
-            className="border-0 bg-light rounded-3 shadow-sm"
-          >
-            <option value="spline">Spline</option>
-            <option value="1d">Interp1d</option>
-          </Form.Select>
+            onChange={setInterpolationTechnique}
+            className="bg-light border-0 rounded-lg shadow-sm"
+            data={[
+              { value: 'spline', label: 'Spline' },
+              { value: '1d', label: 'Interp1d' }
+            ]}
+          />
         </Form.Group>
 
         <Form.Group className="mb-4" controlId="samplingRate">
-          <Form.Label className="text-uppercase small fw-medium text-muted mb-2">
+          <Form.Label className="text-uppercase text-sm font-medium text-muted mb-2">
             New rate (Hz)
           </Form.Label>
-          <Form.Control
+          <input
             type="number"
             placeholder="Enter Hz"
             value={targetSamplingRate}
             onChange={(e) => setTargetSamplingRate(e.target.value)}
-            className="border-0 bg-light rounded-3 shadow-sm"
+            className="w-full text-sm bg-gray-100 border border-gray-200 rounded-md shadow-sm px-3 py-2"
           />
         </Form.Group>
       </Form>
 
-      {/* Button to trigger resampling */}
-      <div className="d-grid">
+      {/* Button */}
+      <div className="w-full">
         <Button
-          variant="primary"
+          variant="subtle"
           size="sm"
           disabled={!table}
-          onClick={() => requestResample()}
-          className="rounded-2 fw-semibold"
+          onClick={requestResample}
+          className="rounded-lg font-semibold w-full"
         >
           Resample
         </Button>

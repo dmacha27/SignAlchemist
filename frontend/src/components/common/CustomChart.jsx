@@ -1,5 +1,4 @@
 import { memo, useRef, useEffect } from 'react';
-import { Button, Container, Alert } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 
@@ -87,7 +86,7 @@ const baseChartOptions = {
  * @param {Array} props.table - A 2D array with headers in the first row and data points in subsequent rows.
  * @param {function} props.setChartImage - A function that sets the chart image as a base64 string when the animation completes.
  */
-const CustomChart = memo(({ table, setChartImage, parallel = true, defaultColor = '#2196f3' }) => { // Avoid re-render on parent render if table and setChartImage do not change.
+const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) => { // Avoid re-render on parent render if table and setChartImage do not change.
   // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
 
   const chartRef = useRef(null);
@@ -138,7 +137,7 @@ const CustomChart = memo(({ table, setChartImage, parallel = true, defaultColor 
 
 
       const highlightColor = '#fa6400';
-      const charts = parallel ? Object.values(ChartJS.instances) : [chartRef.current];
+      const charts = Object.values(ChartJS.instances);
 
       charts.forEach(chart => {
 
@@ -183,7 +182,7 @@ const CustomChart = memo(({ table, setChartImage, parallel = true, defaultColor 
 
       // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
       const index = elements[0].index;
-      const charts = parallel ? Object.values(ChartJS.instances) : [chartRef.current];
+      const charts = Object.values(ChartJS.instances);
       charts.forEach(chart => {
         if (chartRef.current !== chart) {
           if (chartRef.current.data.datasets[0].data.length !== chart.data.datasets[0].data.length) return; // No point-to-point correspondence
@@ -255,42 +254,30 @@ const CustomChart = memo(({ table, setChartImage, parallel = true, defaultColor 
   };
 
   return (
-    <Container className="text-center py-4">
+    <div className="text-center py-4">
       <Line ref={chartRef} data={chartData} options={chartOptions} />
 
       {isLargeDataset ? (
-        <Alert variant="warning" className="w-75 m-auto mt-3" role="alert">
+        <div className="w-3/4 mx-auto mt-3 bg-yellow-100 text-yellow-800 p-4 rounded-md">
           <strong>Too much data</strong> – interaction is disabled to improve performance.
-        </Alert>
+        </div>
       ) : (
-        <div className='d-flex justify-content-center'>
-          <Button
-            variant="outline-primary"
-            className="mt-3 d-flex align-items-center gap-2 mx-auto"
+        <div className="flex justify-center gap-4 mt-3">
+          <button
             onClick={handleResetZoom}
-            style={{
-              borderRadius: '50px',
-              padding: '0.5rem 1.5rem',
-              fontWeight: '500'
-            }}
+            className="mt-3 flex items-center gap-2 mx-auto px-6 py-2 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium"
           >
             <FaSearch /> Reset Zoom
-          </Button>
-          <Button
-            variant="outline-primary"
-            className="mt-3 d-flex align-items-center gap-2 mx-auto"
+          </button>
+          <button
             onClick={handleResetStyle}
-            style={{
-              borderRadius: '50px',
-              padding: '0.5rem 1.5rem',
-              fontWeight: '500'
-            }}
+            className="mt-3 flex items-center gap-2 mx-auto px-6 py-2 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium"
           >
             <FaSearch /> Reset Style
-          </Button>
+          </button>
         </div>
       )}
-    </Container>
+    </div>
   );
 });
 

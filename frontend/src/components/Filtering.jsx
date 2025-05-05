@@ -5,46 +5,19 @@ import { usePapaParse } from 'react-papaparse';
 import generateDataOriginal from '../utils';
 
 import CustomChart from './common/CustomChart';
+import InfoMetrics from './common/InfoMetrics';
 import SpectrumChart from './common/SpectrumChart';
 import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
 import FilterFields from './common/FilterFields';
 
-import { Button, Form, Container, Row, Col, Card, Badge, Popover, OverlayTrigger, ButtonGroup, ToggleButton } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 
 import { FaFilter, FaSignal, FaTools, FaColumns, FaExchangeAlt, FaBalanceScale } from 'react-icons/fa';
 
 import { ImgComparisonSlider } from '@img-comparison-slider/react';
 
-const InfoMetrics = ({ metrics }) => {
-  return (
-    <Row className="justify-content-around">
-      {Object.keys(metrics).map((apa, index) => {
-        const popoverTop = (
-          <Popover id={`popover-${index}`} title="Reference">
-            <div className="fw-bold text-primary p-2 text-center">{apa}</div>
-          </Popover>
-        );
 
-        return (
-          <Col md={4} xs={12} key={index}>
-            <OverlayTrigger trigger="click" placement="top" overlay={popoverTop}>
-              <Card role="button" title="See reference!">
-                <Card.Body>
-                  <Card.Title>
-                    <Badge bg="secondary">{metrics[apa].toFixed(4)}</Badge>
-                  </Card.Title>
-                  <Card.Text>Metric {index + 1}</Card.Text>
-                </Card.Body>
-              </Card>
-            </OverlayTrigger>
-          </Col>
-        );
-      })}
-    </Row>
-  );
-};
 
 const filtersFields = {
   butterworth: {
@@ -215,248 +188,224 @@ const Filtering = () => {
   };
 
   return (
-    <>
-      <Container className="py-4 border-bottom">
-        <h1 className="text-center mb-2">
-          <FaFilter className="me-2 text-primary" />
+    <div className="container mx-auto px-10">
+      {/* Header */}
+      <header className="text-center py-4 border-b">
+        <h1 className="text-3xl font-bold flex justify-center items-center">
+          <FaFilter className="mr-2 text-blue-500" />
           Filtering
         </h1>
-        <p className="text-center text-muted">
+        <p className="text-gray-600">
           <strong>Signal type:</strong> {signalType}
         </p>
-      </Container>
+      </header>
 
-      <Container className="py-4 border-bottom">
-        <Row className="gy-4">
-          {/* Original Signal */}
-          <Col md={4}>
-            <Card className="shadow-sm rounded-4 border-1">
-              <Card.Header className="bg-light fw-bold">
-                <FaSignal className="me-2 text-primary" />
-                Original Signal
-              </Card.Header>
-              <Card.Body>
-                {chartDataOriginal ? (
-                  <InfoTable table={chartDataOriginal} onlyTable={true} />
-                ) : (
-                  <div className="text-center text-muted">No data available</div>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
+      {/* Panels */}
+      <div className="grid md:grid-cols-3 gap-6 py-4 border-b">
+        {/* Original Signal */}
+        <div className="max-w-full w-full mx-auto">
+          <div className="bg-white border shadow-md rounded-lg">
+            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
+              <FaSignal className="my-auto text-blue-500" />
+              Original Signal
+            </div>
+            <div className="p-4">
+              {chartDataOriginal ? (
+                <InfoTable table={chartDataOriginal} onlyTable={true} />
+              ) : (
+                <div className="text-center text-gray-500">No data available</div>
+              )}
+            </div>
+          </div>
+        </div>
 
-          {/* Filtering Controls */}
-          <Col md={4}>
-            <Card className="shadow-sm rounded-4 border-1">
-              <Card.Header className="bg-light fw-bold">
-                <FaTools className="me-2 text-secondary" />
-                Filtering Controls
-              </Card.Header>
-              <Card.Body>
-                <Form>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Filtering technique</Form.Label>
-                    <Form.Select
-                      id="filterTechnique"
-                      onChange={(event) => {
-                        setFilter(event.target.value);
-                        setFields(filtersFields[event.target.value]);
-                      }}
-                    >
-                      <option value="butterworth">Butterworth</option>
-                      <option value="bessel">Bessel</option>
-                      <option value="fir">Fir</option>
-                      <option value="savgol">Savgol</option>
-                    </Form.Select>
-                  </Form.Group>
+        {/* Filtering Controls */}
+        <div className="max-w-full w-full mx-auto">
+          <div className="bg-white border shadow-md rounded-lg sticky top-0">
+            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
+              <FaTools className="my-auto text-gray-500" />
+              Filtering Controls
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label htmlFor="filterTechnique" className="block mb-1 font-medium">
+                  Filtering technique
+                </label>
+                <select
+                  id="filterTechnique"
+                  onChange={(e) => {
+                    setFilter(e.target.value);
+                    setFields(filtersFields[e.target.value]);
+                  }}
+                  className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                >
+                  <option value="butterworth">Butterworth</option>
+                  <option value="bessel">Bessel</option>
+                  <option value="fir">FIR</option>
+                  <option value="savgol">Savgol</option>
+                </select>
+              </div>
 
-                  <FilterFields fields={fields} onFieldChange={handleFieldChange} />
-                </Form>
-                <div className="d-grid">
-                  <Button
-                    variant="primary"
-                    onClick={requestFilter}
-                  >
-                    <FaFilter className="me-2" />
-                    Execute filter
-                  </Button>
+              <FilterFields fields={fields} onFieldChange={handleFieldChange} />
+
+              <button
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center"
+                onClick={requestFilter}
+              >
+                <FaFilter className="mr-2" />
+                Execute filter
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtered Signal */}
+        <div className="max-w-full w-full mx-auto">
+          <div className="bg-white border shadow-md rounded-lg">
+            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
+              <FaFilter className="my-auto text-green-500" />
+              Filtered Signal
+            </div>
+            <div className="p-4">
+              {chartDataFiltered ? (
+                <>
+                  <InfoTable table={chartDataFiltered} onlyTable={true} />
+                  <DownloadSignal table={chartDataFiltered} name="filtered" />
+                </>
+              ) : (
+                <div className="text-center">
+                  <span className="loader"></span>
+                  <p className="mt-2 text-gray-600">Waiting for request...</p>
                 </div>
-              </Card.Body>
-            </Card>
-          </Col>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-          {/* Filtered Signal */}
-          <Col md={4}>
-            <Card className="shadow-sm rounded-4 border-1">
-              <Card.Header className="bg-light fw-bold">
-                <FaFilter className="me-2 text-success" />
-                Filtered Signal
-              </Card.Header>
-              <Card.Body>
-                {chartDataFiltered ? (
-                  <>
-                    <InfoTable table={chartDataFiltered} onlyTable={true} />
-                    <DownloadSignal table={chartDataFiltered} name="filtered" />
-                  </>
+      {/* View Toggle */}
+      <div className="flex justify-center py-4">
+        <div className="inline-flex rounded-md shadow-sm" role="group">
+          <button
+            onClick={() => setFlipped(false)}
+            className={`px-4 py-2 text-sm font-medium border rounded-l ${!flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
+              }`}
+          >
+            <FaColumns className="inline mr-2" />
+            Dual View
+          </button>
+          <button
+            onClick={() => setFlipped(true)}
+            className={`px-4 py-2 text-sm font-medium border rounded-r ${flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
+              }`}
+          >
+            <FaExchangeAlt className="inline mr-2" />
+            Comparison
+          </button>
+        </div>
+      </div>
+
+      {/* Charts */}
+      <div id="charts">
+        {!flipped && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
+            <div className="bg-white shadow-md rounded-lg">
+              <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                <FaSignal className="my-auto text-blue-500" />
+                Original Signal
+              </div>
+              <div className="p-4">
+                {chartDataOriginal ? (
+                  <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
                 ) : (
                   <div className="text-center">
                     <span className="loader"></span>
-                    <p className="mt-2">Waiting for request...</p>
+                    <p className="mt-2 text-gray-600">Waiting for request...</p>
                   </div>
                 )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+              </div>
+            </div>
 
-      <Container className="py-4">
-        <Row className="justify-content-center mb-4">
-          <Col md="auto">
-            <ButtonGroup>
-              <ToggleButton
-                id="toggle-original"
-                type="radio"
-                variant={!flipped ? 'primary' : 'outline-primary'}
-                name="view"
-                value="original"
-                checked={!flipped}
-                onChange={() => setFlipped(false)}
-              >
-                <FaColumns className="me-2" />
-                Dual View
-              </ToggleButton>
-              <ToggleButton
-                id="toggle-comparison"
-                type="radio"
-                variant={flipped ? 'primary' : 'outline-primary'}
-                name="view"
-                value="comparison"
-                checked={flipped}
-                onChange={() => setFlipped(true)}
-              >
-                <FaExchangeAlt className="me-2" />
-                Comparison
-              </ToggleButton>
-            </ButtonGroup>
-          </Col>
-        </Row>
-        {chartDataOriginal && (
-          <SpectrumChart signal={chartDataOriginal.slice(1).map(row => row[1])} samplingRate={samplingRate}></SpectrumChart>
+            <div className="bg-white shadow-md rounded-lg">
+              <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                <FaFilter className="my-auto text-green-500" />
+                Filtered Signal
+              </div>
+              <div className="p-4">
+                {chartDataFiltered ? (
+                  <CustomChart
+                    table={chartDataFiltered}
+                    setChartImage={setChartImageFiltered}
+                    defaultColor="#50C878"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <span className="loader"></span>
+                    <p className="mt-2 text-gray-600">Waiting for request...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
-        <div id="charts">
-          <div
-            id="charts-original"
-            className={`flip-container ${flipped ? 'flipped' : ''}`}
-            style={{ display: flipped ? 'none' : 'block' }} // Oculta cuando flipped es true
-          >
-            <Row className="d-flex justify-content-around gy-3 p-1">
-              <Col md={6} xs={12}>
-                <Card className="shadow-sm">
-                  <Card.Header className="bg-light fw-semibold">
-                    <FaSignal className="me-2 text-primary" />
-                    Original Signal
-                  </Card.Header>
-                  <Card.Body>
-                    {chartDataOriginal ? (
-                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
-                    ) : (
-                      <div className="text-center">
-                        <span className="loader"></span>
-                        <p className="mt-2">Waiting for request...</p>
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col md={6} xs={12}>
-                <Card className="shadow-sm">
-                  <Card.Header className="bg-light fw-semibold">
-                    <FaFilter className="me-2 text-success" />
-                    Filtered Signal
-                  </Card.Header>
-                  <Card.Body>
-                    {chartDataFiltered ? (
-                      <CustomChart table={chartDataFiltered} setChartImage={setChartImageFiltered} defaultColor='#50C878' />
-                    ) : (
-                      <div className="text-center">
-                        <span className="loader"></span>
-                        <p className="mt-2">Waiting for request...</p>
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
+        {flipped && (
+          <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-6">
+            <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+              <FaBalanceScale className="my-auto text-cyan-500" />
+              Comparison View
+            </div>
+            <div className="p-4 text-center">
+              {chartImageOriginal && chartImageFiltered ? (
+                <ImgComparisonSlider>
+                  <img slot="first" src={chartImageOriginal} />
+                  <img slot="second" src={chartImageFiltered} />
+                  <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                    <path
+                      stroke="#000"
+                      d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
+                      strokeWidth="1"
+                      fill="#fff"
+                    />
+                  </svg>
+                </ImgComparisonSlider>
+              ) : (
+                <>
+                  <span className="loader"></span>
+                  <p className="mt-2 text-gray-600">Rendering comparison...</p>
+                </>
+              )}
+            </div>
           </div>
+        )}
+      </div>
 
-          <div
-            id="charts-comparison"
-            className={`flip-container ${flipped ? 'flipped' : ''}`}
-            style={{ display: flipped ? 'block' : 'none' }} // Muestra cuando flipped es true
-          >
-            <Row className="d-flex justify-content-around gy-3 p-1">
-              <Col md={10}>
-                <Card className="shadow-sm">
-                  <Card.Header className="bg-light fw-semibold">
-                    <FaBalanceScale className="me-2 text-info" />
-                    Comparison View
-                  </Card.Header>
-                  <Card.Body>
-                    {(chartImageOriginal && chartImageFiltered) ? (
-                      <ImgComparisonSlider >
-                        <img slot="first" src={chartImageOriginal} />
-                        <img slot="second" src={chartImageFiltered} />
-                        <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                          <path stroke="#000" d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2" strokeWidth="1" fill="#fff" vectorEffect="non-scaling-stroke"></path>
-                        </svg>
-                      </ImgComparisonSlider>
-                    ) : (
-                      <>
-                        <span className="loader"></span>
-                        <p className="mt-2">Rendering comparison...</p>
-                      </>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </div>
+      {/* Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
+        <div className="bg-white shadow-md rounded-lg p-4">
+          {metricsOriginal ? (
+            <InfoMetrics metrics={metricsOriginal} />
+          ) : (
+            <>
+              <span className="loader"></span>
+              <p className="mt-2 text-gray-600">Waiting for request...</p>
+            </>
+          )}
         </div>
-        <Row className="d-flex justify-content-around gy-3 p-1">
-          <Col md={6} xs={12}>
-            <Card className="mt-2">
-              <Card.Body>
-                {metricsOriginal ? (
-                  <InfoMetrics metrics={metricsOriginal} />
-                ) : (
-                  <>
-                    <span className="loader"></span>
-                    <p className="mt-2">Waiting for request...</p>
-                  </>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6} xs={12}>
-            <Card className="mt-2">
-              <Card.Body>
-                {metricsFiltered ? (
-                  <InfoMetrics metrics={metricsFiltered} />
-                ) : (
-                  <>
-                    <span className="loader"></span>
-                    <p className="mt-2">Waiting for request...</p>
-                  </>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </>
+        <div className="bg-white shadow-md rounded-lg p-4">
+          {metricsFiltered ? (
+            <InfoMetrics metrics={metricsFiltered} />
+          ) : (
+            <>
+              <span className="loader"></span>
+              <p className="mt-2 text-gray-600">Waiting for request...</p>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
+
 
 };
 

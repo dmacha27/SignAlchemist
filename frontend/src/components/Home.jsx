@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { PrimeReactProvider } from 'primereact/api';
 import { FileUpload } from 'primereact/fileupload';
 import { usePapaParse } from 'react-papaparse';
-import { Button, Form, Modal, Container, Row, Col, Card, Badge, Table } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+
+import { Modal, Button, Card, Text, Image, Group } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 
 const max_length_lag = 5000;
 
@@ -26,76 +28,98 @@ const chartOptions = {
     },
 };
 
-
-const UtilityModal = ({ show, onHide, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => (
-    <Modal {...{ show, onHide }} size="lg" aria-labelledby="contained-modal-title-vcenter" centered>
-        <Modal.Header closeButton>
-            <Modal.Title id="contained-modal-title-vcenter">
-                Select SignaliX Utility
-            </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="d-flex justify-content-center gap-3">
-            <Card style={{ width: '18rem' }} className="text-center">
-                <Card.Img variant="top" src="resampling.gif" alt="Resampling GIF" />
-                <Card.Body>
-                    <Card.Title>Resampling</Card.Title>
-                    <Button
-                        variant="primary"
-                        onClick={() =>
-                            navigate("/resampling", { state: { file, signalType, timestampColumn, samplingRate, signalValues } })
-                        }
-                    >
-                        Go
-                    </Button>
-                </Card.Body>
+const UtilityModal = ({ opened, close, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => (
+    <Modal
+        opened={opened}
+        onClose={close}
+        title="Select SignaliX Utility"
+        size="xl"
+        centered
+    >
+        <Group gap="lg" justify="center" grow>
+            <Card shadow="sm" padding="lg" style={{ width: '300px' }}>
+                <Card.Section>
+                    <Image src="resampling.gif" alt="Resampling" />
+                </Card.Section>
+                <Text align="center" weight={500} size="lg" style={{ marginTop: 10 }}>
+                    Resampling
+                </Text>
+                <Text size="sm" color="dimmed" style={{ marginBottom: 15 }}>
+                    Generates data points with state-of-the-art techniques
+                </Text>
+                <Button
+                    fullWidth
+                    color="blue"
+                    onClick={() => {
+                        navigate("/resampling", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
+                    }}
+                >
+                    Go
+                </Button>
             </Card>
 
-            <Card style={{ width: '18rem' }} className="text-center">
-                <Card.Img variant="top" src="filtering.gif" alt="Filtering GIF" />
-                <Card.Body>
-                    <Card.Title>Filtering</Card.Title>
-                    <Button
-                        variant="primary"
-                        onClick={() =>
-                            navigate("/filtering", { state: { file, signalType, timestampColumn, samplingRate, signalValues } })
-                        }
-                    >
-                        Go
-                    </Button>
-                </Card.Body>
+            <Card shadow="sm" padding="lg" style={{ width: '300px' }}>
+                <Card.Section>
+                    <Image src="filtering.gif" alt="Filtering" />
+                </Card.Section>
+                <Text align="center" weight={500} size="lg" style={{ marginTop: 10 }}>
+                    Filtering
+                </Text>
+                <Text size="sm" color="dimmed" style={{ marginBottom: 15 }}>
+                    Applies multiple advanced filters, including custom ones, to efficiently process data.
+                </Text>
+                <Button
+                    fullWidth
+                    color="blue"
+                    onClick={() => {
+                        navigate("/filtering", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
+                    }}
+                >
+                    Go
+                </Button>
             </Card>
 
-            <Card style={{ width: '18rem' }} className="text-center">
-                <Card.Img variant="top" src="processing.gif" alt="Processing GIF" />
-                <Card.Body>
-                    <Card.Title>Processing</Card.Title>
-                    <Button
-                        variant="primary"
-                        onClick={() =>
-                            navigate("/processing", { state: { file, signalType, timestampColumn, samplingRate, signalValues } })
-                        }
-                    >
-                        Go
-                    </Button>
-                </Card.Body>
+            <Card shadow="sm" padding="lg" style={{ width: '300px' }}>
+                <Card.Section>
+                    <Image src="processing.gif" alt="Processing" />
+                </Card.Section>
+                <Text align="center" weight={500} size="lg" style={{ marginTop: 10 }}>
+                    Processing
+                </Text>
+                <Text size="sm" color="dimmed" style={{ marginBottom: 15 }}>
+                    Process signals using a node-based workflow with customizable processing nodes.
+                </Text>
+                <Button
+                    fullWidth
+                    color="blue"
+                    onClick={() => {
+                        navigate("/processing", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
+                    }}
+                >
+                    Go
+                </Button>
             </Card>
-        </Modal.Body>
-        <Modal.Footer>
-            <Button variant="secondary" onClick={onHide}>Close</Button>
-        </Modal.Footer>
+        </Group>
+
+        <Group justify="flex-end" className='mt-2'>
+            <Button variant="light" color="red" onClick={close}>
+                Close
+            </Button>
+        </Group>
     </Modal>
 );
+
 
 
 const CSVUploader = ({ file, setFile, setHeaders }) => {
     const fileUploader = useRef();
     const { readString } = usePapaParse();
     const navigate = useNavigate();
-    const [modalShow, setModalShow] = useState(false);
     const [signalType, setSignalType] = useState("");
     const [timestampColumn, setTimestampColumn] = useState("");
     const [samplingRate, setSamplingRate] = useState(0);
     const [signalValues, setSignalValues] = useState("");
+    const [opened, { open, close }] = useDisclosure(false);
 
     const handleUtilityModal = (event) => {
         const signalType_select = document.getElementById("signalType");
@@ -115,7 +139,7 @@ const CSVUploader = ({ file, setFile, setHeaders }) => {
         setSamplingRate(samplingRate_select.value);
         setSignalValues(signalValues_select.value);
 
-        setModalShow(true);
+        open();
     };
 
     const clearForm = (event) => {
@@ -200,8 +224,8 @@ const CSVUploader = ({ file, setFile, setHeaders }) => {
                 </div>
             </PrimeReactProvider>
             <UtilityModal
-                show={modalShow}
-                onHide={() => setModalShow(false)}
+                opened={opened}
+                close={close}
                 navigate={navigate}
                 file={file}
                 signalType={signalType}
@@ -215,48 +239,51 @@ const CSVUploader = ({ file, setFile, setHeaders }) => {
 
 const InfoTable = ({ table }) => {
     // table: [[header, header, header..], [x1, y1, ...], [x2, y2, ...], [x3, y3, ...]]
-
     const headers = table[0];
     const data = table.slice(1);
 
     return (
-        <div>
-            <div
-                className="shadow-sm"
-                style={{
-                    maxHeight: '230px',
-                    overflowY: 'auto',
-                    marginTop: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                }}
-            >
-                <Table striped bordered hover size="sm">
-                    <thead>
-                        <tr style={{ position: 'sticky', top: 0 }}>
-                            <th>{(data.length > max_length_lag) ? "Truncated" : ""}</th>
+        <div className="mt-2">
+            <div className="max-h-[230px] overflow-y-auto border border-gray-300 rounded shadow-sm">
+                <table className="min-w-full text-sm text-left border-collapse">
+                    <thead className="bg-gray-100 sticky top-0 z-10">
+                        <tr>
+                            <th className="px-3 py-2 border border-gray-300 font-medium bg-gray-200">
+                                {data.length > max_length_lag ? "Truncated" : ""}
+                            </th>
                             {headers.map((header, idx) => (
-                                <th key={idx}>{header}</th>
+                                <th
+                                    key={idx}
+                                    className="px-3 py-2 border border-gray-300 font-medium bg-gray-200"
+                                >
+                                    {header}
+                                </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {data.slice(0, max_length_lag).map((row, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
+                            <tr
+                                key={index}
+                                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                            >
+                                <td className="px-3 py-1 border border-gray-200 font-medium text-gray-700">
+                                    {index + 1}
+                                </td>
                                 {row.map((cell, i) => (
-                                    <td key={i}>
-                                        {typeof cell === 'number' ? cell.toFixed(4) : cell}
+                                    <td key={i} className="px-3 py-1 border border-gray-200 text-gray-700">
+                                        {typeof cell === "number" ? cell.toFixed(4) : cell}
                                     </td>
                                 ))}
                             </tr>
                         ))}
                     </tbody>
-                </Table>
+                </table>
             </div>
         </div>
     );
 };
+
 
 
 const CustomChart = ({ table }) => {
@@ -444,80 +471,100 @@ const Home = () => {
     };
 
     return (
-        <Container>
-            <header className="App-header text-center py-2">
-                <h1>SignaliX</h1>
-                <p>Physiological signal processing.</p>
-                <Button variant="light" size="lg" as={Link} to="/about">
+        <div className="container mx-auto px-4">
+            <header className="text-center py-2">
+                <h1 className="text-3xl font-bold">SignaliX</h1>
+                <p className="text-gray-600">Physiological signal processing.</p>
+                <Link
+                    to="/about"
+                    className="inline-block mt-2 px-6 py-2 bg-gray-100 text-gray-800 text-lg rounded hover:bg-gray-200"
+                >
                     About this project
-                </Button>
+                </Link>
             </header>
 
-            <Container>
-                <Row className="justify-content-center p-2">
-                    <Col md={6}>
-                        <CSVUploader file={file} setFile={setFile} setHeaders={setHeaders} />
-                    </Col>
-                </Row>
+            <div className="flex justify-center p-2">
+                <div className="w-full max-w-xl border-slate-400 shadow-md rounded-lgd">
+                    <CSVUploader file={file} setFile={setFile} setHeaders={setHeaders} />
+                </div>
+            </div>
 
-                <Row className="justify-content-center p-2">
+            <div className="flex flex-wrap justify-center gap-4 p-2">
+                <div className="w-full max-w-xl">
+                    <div className="bg-white border-slate-400 shadow-md rounded-lg p-4">
+                        <form className="space-y-4">
+                            <div>
+                                <label htmlFor="signalType">
+                                    Signal type
+                                </label>
+                                <select id="signalType" className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 bg-white" />
+                            </div>
 
-                    <Col md={6}>
-                        <Card>
-                            <Card.Body>
-                                <Form>
-                                    <Form.Group>
-                                        <Form.Label>Signal type</Form.Label>
-                                        <Form.Select id="signalType" />
-                                    </Form.Group>
+                            <div>
+                                <label htmlFor="timestampColumn">
+                                    Timestamp Column
+                                </label>
+                                <select
+                                    id="timestampColumn"
+                                    onChange={handleTimestampChange}
+                                    className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                                />
+                            </div>
 
-                                    <Form.Group>
-                                        <Form.Label>Timestamp Column</Form.Label>
-                                        <Form.Select id="timestampColumn" onChange={handleTimestampChange} />
-                                    </Form.Group>
+                            <div>
+                                <label htmlFor="samplingRate">
+                                    Sampling rate (Hz)
+                                </label>
+                                <input
+                                    type="number"
+                                    step={1}
+                                    placeholder="Enter Hz"
+                                    id="samplingRate"
+                                    onChange={handleSamplingRateChange}
+                                    disabled={headers === null || timestampColumn !== headers.length - 1}
+                                    className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 disabled:opacity-50 bg-white"
+                                />
+                            </div>
 
-                                    <Form.Group>
-                                        <Form.Label>Sampling rate (Hz)</Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            placeholder="Enter Hz"
-                                            id="samplingRate"
-                                            onChange={handleSamplingRateChange}
-                                            disabled={headers === null || timestampColumn != headers.length - 1}
-                                        />
-                                    </Form.Group>
+                            <div>
+                                <label htmlFor="signalValues">
+                                    Signal Values
+                                </label>
+                                <select
+                                    id="signalValues"
+                                    onChange={handleSignalValuesChange}
+                                    className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                                />
+                            </div>
+                        </form>
 
-                                    <Form.Group>
-                                        <Form.Label>Signal Values</Form.Label>
-                                        <Form.Select id="signalValues" onChange={handleSignalValuesChange} />
-                                    </Form.Group>
-                                </Form>
-                                {(fileRows) && <InfoTable table={fileRows} />}
-                            </Card.Body>
-                        </Card>
-                    </Col>
+                        {fileRows && <InfoTable table={fileRows} />}
+                    </div>
+                </div>
 
-                    <Col md={6}>
-                        <Card className="text-center">
-                            <Card.Body>
-                                <Badge bg="primary" className="mx-auto w-50" id="samplingRateBadge" style={{ display: "none" }}>
-                                    Detected sampling rate of {samplingRate} Hz
-                                </Badge>
+                <div className="w-full max-w-xl">
+                    <div className="bg-white border-slate-400 shadow-md rounded-lg p-4 text-center">
+                        <div
+                            id="samplingRateBadge"
+                            className="bg-blue-500 text-white rounded px-4 py-1 mx-auto w-1/2 mb-4 hidden"
+                        >
+                            Detected sampling rate of {samplingRate} Hz
+                        </div>
 
-                                {chartDataOriginal ? (
-                                    <CustomChart table={chartDataOriginal} />
-                                ) : (
-                                    <>
-                                        <span className="loader"></span>
-                                        <p className="mt-2">Waiting for file...</p>
-                                    </>
-                                )}
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
-            </Container>
-        </Container>
+                        {chartDataOriginal ? (
+                            <CustomChart table={chartDataOriginal} />
+                        ) : (
+                            <>
+                                <span className="loader"></span>
+                                <p className="mt-2 text-gray-600">Waiting for file...</p>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     );
 };
 

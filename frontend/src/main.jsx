@@ -1,12 +1,19 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-import 'bootstrap/dist/css/bootstrap.min.css'; 
-import { BrowserRouter } from 'react-router-dom';  // Importamos BrowserRouter
+import { BrowserRouter } from 'react-router-dom';
+import { MantineProvider } from "@mantine/core";
 import App from './App';
+import '@mantine/core/styles.css'; // Mandatory order (first mantine, then local css)
+import "./styles/globals.css";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
+  <React.StrictMode>
+    <BrowserRouter>
+      <MantineProvider>
+        <App />
+      </MantineProvider>
+    </BrowserRouter>
+  </React.StrictMode>,
+
 );

@@ -6,7 +6,8 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react';
-import { Button, Form, Card } from 'react-bootstrap';
+import { Card, Button, Select, Tooltip } from '@mantine/core';
+import { Form } from 'react-bootstrap';
 import { FaBullseye, FaEye, FaTrash } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 import toast from 'react-hot-toast';
@@ -148,90 +149,95 @@ function OutliersNode({ id, data }) {
   };
 
   return (
-    <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
+    <Card className="bg-white border-0 shadow-lg rounded-lg p-4 relative overflow-visible">
       {/* Header section with title, state icon, and action buttons */}
-      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-        <div className="d-flex align-items-center gap-1">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b">
+        <div className="flex items-center gap-2">
           <FaBullseye className="text-secondary" size={20} />
-          <span className="fw-bold fs-5 text-dark">Outlier Detection</span>
-
+          <span className="font-bold text-lg text-dark">Outlier Detection</span>
+  
           {/* Node execution state icon */}
-          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}
-            onClick={() => {
-              toast.custom(
-                <div className='toast-status'>
-                  <div>Status:</div>
-                  <div><ExecutionIcon executionState={executionState} /></div>
-                  <div>{executionState}</div>
-                </div>
-              )
-            }
-            }>
-            <ExecutionIcon executionState={executionState} />
-          </div>
-
+          <Tooltip label={executionState} withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => {
+                toast.custom(
+                  <div className='toast-status'>
+                    <div>Status:</div>
+                    <div><ExecutionIcon executionState={executionState} /></div>
+                    <div>{executionState}</div>
+                  </div>
+                );
+              }}
+            >
+              <ExecutionIcon executionState={executionState} />
+            </div>
+          </Tooltip>
+  
           {/* Button to see the node output */}
-          <div
-            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title="See output"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (currentNodeData?.data?.table) {
-                data.setChartDataProcessed(currentNodeData.data.table);
-              } else {
-                toast.error("Execute node first");
-              }
-            }}
-          >
-            <FaEye />
-          </div>
-
+          <Tooltip label="See output" withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => {
+                if (currentNodeData?.data?.table) {
+                  data.setChartDataProcessed(currentNodeData.data.table);
+                } else {
+                  toast.error("Execute node first");
+                }
+              }}
+            >
+              <FaEye />
+            </div>
+          </Tooltip>
+  
           {/* Button to delete the node */}
-          <div
-            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title="Delete node"
-            style={{ cursor: 'pointer' }}
-            onClick={() => { data.deleteNode(id); }}
-          >
-            <FaTrash className="text-danger" />
-          </div>
+          <Tooltip label="Delete node" withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => { data.deleteNode(id); }}
+            >
+              <FaTrash className="text-red-500" />
+            </div>
+          </Tooltip>
         </div>
       </div>
-
+  
       {/* Handle for incoming connections */}
       <Handle type="target" position={Position.Left} className="custom-handle" />
-
+  
       {/* Outlier detection configuration form */}
       <Form>
         <Form.Group className="mb-4" controlId="outlierTechnique">
-          <Form.Label className="text-uppercase small fw-medium text-muted mb-2">
+          <Form.Label className="text-uppercase text-sm font-medium text-muted mb-2">
             Select Outlier Technique
           </Form.Label>
-          <Form.Select
+          <Select
             size="sm"
             value={outlierTechnique}
-            onChange={(e) => setOutlierTechnique(e.target.value)}
-            className="border-0 bg-light rounded-3 shadow-sm"
-          >
-            <option value="hampel">Hampel</option>
-            <option value="iqr">IQR</option>
-          </Form.Select>
+            onChange={(e) => setOutlierTechnique(e)}
+            className="bg-light border-0 rounded-lg shadow-sm"
+            data={[
+              { value: 'hampel', label: 'Hampel' },
+              { value: 'iqr', label: 'IQR' }
+            ]}
+          />
         </Form.Group>
       </Form>
-
+  
       {/* Button to apply the outlier detection */}
-      <div className="d-grid">
+      <div className="w-full">
         <Button
-          variant="secondary"
+          variant="subtle"
           size="sm"
+          color='grey'
           disabled={!table}
           onClick={requestOutliers}
-          className="rounded-2 fw-semibold"
+          className="rounded-lg font-semibold w-full"
         >
           Apply Outliers
         </Button>
       </div>
-
+  
       {/* Handle for outgoing connections */}
       <Handle type="source" position={Position.Right} className="custom-handle" />
     </Card>

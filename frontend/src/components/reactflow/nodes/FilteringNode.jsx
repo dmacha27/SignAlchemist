@@ -6,7 +6,8 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react';
-import { Button, Form, Card } from 'react-bootstrap';
+import { Card, Button, Select, Tooltip } from '@mantine/core';
+import { Form } from 'react-bootstrap';
 import FilterFields from '../../common/FilterFields';
 import { FaFilter, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
@@ -197,101 +198,104 @@ function FilteringNode({ id, data }) {
   };
 
   return (
-    <Card className="bg-white border-0 shadow-lg rounded-3 p-4 position-relative">
-      {/* Header section with title and action buttons */}
-      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-        <div className="d-flex align-items-center gap-2">
-          <FaFilter className="text-success" size={20} />
-          <span className="fw-bold fs-5 text-dark">Filtering</span>
+    <Card className="bg-white shadow-lg rounded-lg p-4 mt-2 relative overflow-visible">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 pb-3 border-b">
+        <div className="flex items-center gap-2">
+          <FaFilter className="text-green-600" size={20} />
+          <span className="font-bold text-lg text-gray-800">Filtering</span>
 
-          {/* Execution state icon */}
-          <div className="bg-light p-2 rounded-3 border border-secondary shadow-sm" title={executionState}
-            onClick={() => {
-              toast.custom(
-                <div className='toast-status'>
-                  <div>Status:</div>
-                  <div><ExecutionIcon executionState={executionState} /></div>
-                  <div>{executionState}</div>
-                </div>
-              )
-            }
-            }>
-            <ExecutionIcon executionState={executionState} />
-          </div>
+          {/* Node execution state icon */}
+          <Tooltip label={executionState} withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => {
+                toast.custom(
+                  <div className='toast-status'>
+                    <div>Status:</div>
+                    <div><ExecutionIcon executionState={executionState} /></div>
+                    <div>{executionState}</div>
+                  </div>
+                );
+              }}
+            >
+              <ExecutionIcon executionState={executionState} />
+            </div>
+          </Tooltip>
 
-          {/* Button to view the processed chart */}
-          <div
-            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title='See output'
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (currentNodeData?.data?.table) {
-                data.setChartDataProcessed(currentNodeData.data.table);
-              } else {
-                toast.error("Execute node first");
-              }
-            }}
-          >
-            <FaEye />
-          </div>
+          {/* Button to see the node output */}
+          <Tooltip label="See output" withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => {
+                if (currentNodeData?.data?.table) {
+                  data.setChartDataProcessed(currentNodeData.data.table);
+                } else {
+                  toast.error("Execute node first");
+                }
+              }}
+            >
+              <FaEye />
+            </div>
+          </Tooltip>
 
           {/* Button to delete the node */}
-          <div
-            className="bg-light p-2 rounded-3 border border-secondary shadow-sm"
-            title='Delete node'
-            style={{ cursor: 'pointer' }}
-            onClick={() => { data.deleteNode(id) }}
-          >
-            <FaTrash className="text-danger" />
-          </div>
+          <Tooltip label="Delete node" withArrow position="bottom">
+            <div
+              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              onClick={() => { data.deleteNode(id); }}
+            >
+              <FaTrash className="text-red-500" />
+            </div>
+          </Tooltip>
         </div>
       </div>
 
-      {/* Handle for incoming connections */}
       <Handle type="target" position={Position.Left} className="custom-handle" />
 
-      {/* Form to configure the filter */}
+      {/* Form */}
       <Form>
         <Form.Group className="mb-4" controlId="filterTechnique">
-          <Form.Label className="text-uppercase small fw-medium text-muted mb-2">
+          <Form.Label className="text-uppercase text-sm font-medium text-muted mb-2">
             Filtering technique
           </Form.Label>
-          <Form.Select
+          <Select
             size="sm"
             value={filter}
-            onChange={(e) => {
-              setFilter(e.target.value);
-              setFields(filtersFields[e.target.value]);
+            onChange={(value) => {
+              setFilter(value);
+              setFields(filtersFields[value]);
             }}
-            className="border-0 bg-light rounded-3 shadow-sm"
-          >
-            <option value="butterworth">Butterworth</option>
-            <option value="bessel">Bessel</option>
-            <option value="fir">FIR</option>
-            <option value="savgol">Savgol</option>
-          </Form.Select>
+            className="bg-light border-0 rounded-lg shadow-sm"
+            data={[
+              { value: 'butterworth', label: 'Butterworth' },
+              { value: 'bessel', label: 'Bessel' },
+              { value: 'fir', label: 'FIR' },
+              { value: 'savgol', label: 'Savgol' }
+            ]}
+          />
         </Form.Group>
 
         <FilterFields fields={fields} onFieldChange={handleFieldChange} />
       </Form>
 
-      {/* Button to trigger filtering */}
-      <div className="d-grid">
+      {/* Button */}
+      <div className="w-full">
         <Button
-          variant="success"
+          variant="subtle"
           size="sm"
-          onClick={() => requestFilter()}
           disabled={!table}
-          className="rounded-2 fw-semibold"
+          onClick={requestFilter}
+          className="rounded-lg font-semibold w-full"
         >
           Filter
         </Button>
       </div>
 
-      {/* Handle for outgoing connections */}
       <Handle type="source" position={Position.Right} id="output" className="custom-handle" />
     </Card>
   );
+
 }
 
 export default FilteringNode;

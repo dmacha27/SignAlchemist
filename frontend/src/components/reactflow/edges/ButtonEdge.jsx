@@ -45,7 +45,7 @@ function ButtonEdge({
             />
             <EdgeLabelRenderer>
                 <div
-                    className="position-absolute"
+                    className="absolute"
                     style={{
                         pointerEvents: 'all',
                         transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
@@ -54,19 +54,15 @@ function ButtonEdge({
                 >
                     <div
                         onClick={onEdgeClick}
-                        className="d-flex align-items-center justify-content-center bg-light border rounded"
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            cursor: 'pointer',
-                        }}
+                        className="flex items-center justify-center bg-gray-100 border rounded w-8 h-8 cursor-pointer"
                     >
-                        <FaTrash className="text-danger" />
+                        <FaTrash className="text-red-500" />
                     </div>
                 </div>
             </EdgeLabelRenderer>
         </>
     );
+
 }
 
 export default ButtonEdge;

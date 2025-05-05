@@ -8,23 +8,22 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  MarkerType,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import generateDataOriginal from '../utils';
 
 import CustomChart from './common/CustomChart';
-
+import InfoMetrics from './common/InfoMetrics';
 import InputSignal from './reactflow/nodes/InputSignal';
 import OutputSignal from './reactflow/nodes/OutputSignal';
 import ResamplingNode from './reactflow/nodes/ResamplingNode';
 import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
 
-import { usePapaParse } from 'react-papaparse';
+import { Popover, Button, Text, Group } from '@mantine/core';
 
-import { Button, Stack, Table, Container, Row, Col, Card, Accordion, ButtonGroup, ToggleButton, Badge, Alert, Popover, OverlayTrigger, Modal } from 'react-bootstrap';
+import { usePapaParse } from 'react-papaparse';
 
 import { useLocation } from "react-router-dom";
 
@@ -33,35 +32,6 @@ import { FaFilter, FaChartLine, FaBullseye, FaColumns, FaExchangeAlt, FaWaveSqua
 
 import toast from 'react-hot-toast';
 import ButtonEdge from './reactflow/edges/ButtonEdge';
-
-const InfoMetrics = ({ metrics }) => {
-  return (
-    <Row className="justify-content-around">
-      {Object.keys(metrics).map((apa, index) => {
-        const popoverTop = (
-          <Popover id={`popover-${index}`} title="Reference">
-            <div className="fw-bold text-primary p-2 text-center">{apa}</div>
-          </Popover>
-        );
-
-        return (
-          <Col md={4} xs={12} key={index}>
-            <OverlayTrigger trigger="click" placement="top" overlay={popoverTop}>
-              <Card role="button" title="See reference!">
-                <Card.Body>
-                  <Card.Title>
-                    <Badge bg="secondary">{metrics[apa].toFixed(4)}</Badge>
-                  </Card.Title>
-                  <Card.Text>Metric {index + 1}</Card.Text>
-                </Card.Body>
-              </Card>
-            </OverlayTrigger>
-          </Col>
-        );
-      })}
-    </Row>
-  );
-};
 
 const Processing = () => {
   const location = useLocation();
@@ -75,7 +45,7 @@ const Processing = () => {
   const [flipped, setFlipped] = useState(false);
   const [metricsOriginal, setMetricsOriginal] = useState(null);
   const [metricsProcessed, setMetricsProcessed] = useState(null);
-  const [showPopover, setShowPopover] = useState(false);
+  const [opened, setOpened] = useState(false);
 
   useEffect(() => {
     if (!file) return;
@@ -253,309 +223,285 @@ const Processing = () => {
 
   return (
     <>
-      <Container className="py-4 border-bottom">
-        <h1 className="text-center mb-2">
-          <FaWaveSquare className="me-2 text-primary" />
+      {/* Header */}
+      <div className="container mx-auto py-4 border-b">
+        <h1 className="text-2xl font-bold text-center mb-2 flex justify-center items-center gap-2">
+          <FaWaveSquare className="text-blue-600" />
           Signal Processing
         </h1>
-        <p className="text-center text-muted">
+        <p className="text-center text-gray-500">
           <strong>Signal type:</strong> {signalType}
         </p>
-      </Container>
+      </div>
 
-      <Container className="py-4 border-bottom">
-        <Row>
-          {/* Main Flow Area */}
-          <Col md={9} className="mb-4">
-            <Card className="shadow-sm rounded-4 border-1">
-              <Card.Header className="bg-light fw-bold">
-                <FaProjectDiagram className="me-2 text-primary" />
-                Pipeline Flow
-              </Card.Header>
-              <Card.Body className="p-0">
-                {chartDataOriginal ? (
-                  <div style={{ height: 500 }} className="overflow-hidden">
-                    <ReactFlow
-                      nodes={nodes}
-                      edges={edges}
-                      edgeTypes={edgeTypes}
-                      connectionLineStyle={{ stroke: '#0d6dfd' }}
-                      onNodesChange={onNodesChange}
-                      onEdgesChange={onEdgesChange}
-                      nodeTypes={nodeTypes}
-                      onConnect={onConnect}
-                      fitView
-                      minZoom={0.3}
-                    >
-                      <Background color="#ccc" variant={BackgroundVariant.Dots} />
-                      <MiniMap nodeStrokeWidth={2} pannable position='bottom-left'/>
-                    </ReactFlow>
-                  </div>
-                ) : (
-                  <div className="text-center py-5 text-muted">
-                    <span className="loader"></span>
-                    <p className="mt-2">Loading flow...</p>
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
+      {/* Flow & Sidebar */}
+      <div className="container mx-auto py-4 border-b grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Flow */}
+        <div className="md:col-span-10">
+          <div className="bg-white border shadow-sm rounded-xl">
+            <div className="bg-gray-100 px-4 py-2 font-bold flex items-center gap-2">
+              <FaProjectDiagram className="text-blue-600" />
+              Pipeline Flow
+            </div>
+            <div className="p-0">
+              {chartDataOriginal ? (
+                <div className="h-[500px] overflow-hidden">
+                  <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    edgeTypes={edgeTypes}
+                    connectionLineStyle={{ stroke: '#0d6dfd' }}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    nodeTypes={nodeTypes}
+                    onConnect={onConnect}
+                    fitView
+                    minZoom={0.3}
+                  >
+                    <Background color="#ccc" variant={BackgroundVariant.Dots} />
+                    <MiniMap nodeStrokeWidth={2} pannable position="bottom-left" />
+                  </ReactFlow>
+                </div>
+              ) : (
+                <div className="text-center py-5 text-gray-500">
+                  <span className="loader"></span>
+                  <p className="mt-2">Loading flow...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-          {/* Sidebar Buttons */}
-          <Col md={3}>
-            <Card className="shadow-sm rounded-4 border-1 sticky-top">
-              <Card.Header className="bg-light fw-bold">
-                <FaSquare className="me-2 text-primary" />
-                Pipeline Nodes
-              </Card.Header>
-              <Card.Body className="d-flex flex-column gap-3">
-                <Button
-                  title='Add resampling node'
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={() => addNode('ResamplingNode', { samplingRate, deleteNode, setChartDataProcessed })}
-                  className="d-flex align-items-center justify-content-center gap-2"
-                >
-                  <FaChartLine />
-                  Resampling
-                </Button>
+        {/* Sidebar */}
+        <div className="md:col-span-2">
+          <div className="bg-white border shadow-sm rounded-xl sticky top-4">
+            <div className="bg-gray-100 px-4 py-2 font-bold flex items-center gap-2">
+              <FaSquare className="text-blue-600" />
+              Pipeline Nodes
+            </div>
+            <div className="p-4 flex flex-col gap-3">
+              <button
+                title="Add resampling node"
+                onClick={() => addNode('ResamplingNode', { samplingRate, deleteNode, setChartDataProcessed })}
+                className="border border-blue-600 text-blue-600 text-sm px-3 py-2 rounded hover:bg-blue-50 flex items-center justify-center gap-2"
+              >
+                <FaChartLine />
+                Resampling
+              </button>
 
-                <Button
-                  title='Add outlier detection node'
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => addNode('OutliersNode', { deleteNode, setChartDataProcessed })}
-                  className="d-flex align-items-center justify-content-center gap-2"
-                >
-                  <FaBullseye />
-                  Outliers
-                </Button>
+              <button
+                title="Add outlier detection node"
+                onClick={() => addNode('OutliersNode', { deleteNode, setChartDataProcessed })}
+                className="border border-gray-500 text-gray-700 text-sm px-3 py-2 rounded hover:bg-gray-50 flex items-center justify-center gap-2"
+              >
+                <FaBullseye />
+                Outliers
+              </button>
 
-                <Button
-                  title='Add filtering node'
-                  variant="outline-success"
-                  size="sm"
-                  onClick={() => addNode('FilteringNode', { signalType, samplingRate, deleteNode, setChartDataProcessed })}
-                  className="d-flex align-items-center justify-content-center gap-2"
-                >
-                  <FaFilter />
-                  Filtering
-                </Button>
+              <button
+                title="Add filtering node"
+                onClick={() => addNode('FilteringNode', { signalType, samplingRate, deleteNode, setChartDataProcessed })}
+                className="border border-green-600 text-green-600 text-sm px-3 py-2 rounded hover:bg-green-50 flex items-center justify-center gap-2"
+              >
+                <FaFilter />
+                Filtering
+              </button>
 
-                <hr className="my-2" />
+              <hr className="my-2" />
 
-                <Button
-                  title='Start-end execution'
-                  variant="danger"
-                  size="sm"
-                  onClick={deleteSourceTablesAndExecute}
-                  className="d-flex align-items-center justify-content-center gap-2"
-                >
-                  <FaRocket />
-                  Run Pipeline
-                </Button>
+              <button
+                title="Start-end execution"
+                onClick={deleteSourceTablesAndExecute}
+                className="bg-red-600 text-white text-sm px-3 py-2 rounded hover:bg-red-700 flex items-center justify-center gap-2"
+              >
+                <FaRocket />
+                Run Pipeline
+              </button>
 
-                <OverlayTrigger
-                  trigger="click"
-                  placement="top"
-                  show={showPopover}
-                  onToggle={() => setShowPopover(!showPopover)}
-                  overlay={
-                    <Popover>
-                      <Popover.Header as="h3">Confirm reset</Popover.Header>
-                      <Popover.Body>
-                        <div className="d-flex flex-column gap-2">
-                          <span>Are you sure you want to clean the pipeline?</span>
-                          <div className="d-flex justify-content-end gap-2">
-                            <Button variant="secondary" size="sm" onClick={() => setShowPopover(false)}>Cancel</Button>
-                            <Button variant="danger" size="sm" onClick={() => {
-                              cleanFlow();
-                              setShowPopover(false);
-                            }}>
-                              Yes, clean
-                            </Button>
-                          </div>
-                        </div>
-                      </Popover.Body>
-                    </Popover>
-                  }
-                >
+              <Popover
+                opened={opened}
+                onClose={() => setOpened(false)}
+                position="bottom-end"
+                withArrow
+                shadow="md"
+              >
+                <Popover.Target>
                   <Button
+                    onClick={() => setOpened((o) => !o)}
                     title="Restart flow"
-                    variant="info"
-                    size="sm"
-                    className="d-flex align-items-center justify-content-center gap-2 text-white"
+                    className="bg-cyan-600 text-white text-sm px-3 py-2 rounded flex items-center justify-center gap-2 hover:bg-cyan-700"
                   >
                     <FaTrash />
                     Clean Pipeline
                   </Button>
-                </OverlayTrigger>
-                <Button
-                  title='Go to charts'
-                  variant="primary"
-                  size="sm"
-                  onClick={() => {
-                    document.getElementById("charts").scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="m-auto rounded-circle d-flex align-items-center justify-content-center"
-                  style={{ width: '40px', height: '40px' }}
-                >
-                  <FaEye />
-                </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+                </Popover.Target>
 
-      {/* Toggle View */}
-      <Container className="py-4">
-        <Row className="justify-content-center mb-4">
-          <Col md="auto">
-            <ButtonGroup>
-              <ToggleButton
-                id="toggle-original"
-                type="radio"
-                variant={!flipped ? 'primary' : 'outline-primary'}
-                name="view"
-                value="original"
-                checked={!flipped}
-                onChange={() => setFlipped(false)}
+                <Popover.Dropdown className="w-64 bg-white border rounded shadow-md p-4">
+                  <Text className="font-semibold mb-2">Confirm reset</Text>
+                  <Text className="text-sm mb-3">
+                    Are you sure you want to clean the pipeline?
+                  </Text>
+                  <Group position="right" spacing="sm">
+                    <Button
+                      variant="default"
+                      size="xs"
+                      onClick={() => setOpened(false)}
+                      className="text-sm px-2 py-1 border rounded text-gray-600 hover:bg-gray-100"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      color="red"
+                      size="xs"
+                      onClick={() => {
+                        cleanFlow();
+                        setOpened(false);
+                      }}
+                      className="text-sm px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      Yes, clean
+                    </Button>
+                  </Group>
+                </Popover.Dropdown>
+              </Popover>
+
+              <button
+                title="Go to charts"
+                onClick={() => document.getElementById('charts').scrollIntoView({ behavior: 'smooth' })}
+                className="mx-auto w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700"
               >
-                <FaColumns className="me-2" />
-                Dual View
-              </ToggleButton>
-              <ToggleButton
-                id="toggle-comparison"
-                type="radio"
-                variant={flipped ? 'primary' : 'outline-primary'}
-                name="view"
-                value="comparison"
-                checked={flipped}
-                onChange={() => setFlipped(true)}
-              >
-                <FaExchangeAlt className="me-2" />
-                Comparison
-              </ToggleButton>
-            </ButtonGroup>
-          </Col>
-        </Row>
-
-        {/* Dual View */}
-        <div id="charts">
-          <div
-            id="charts-original"
-            className={`flip-container ${flipped ? 'flipped' : ''}`}
-            style={{ display: flipped ? 'none' : 'block' }}
-          >
-            <Row className="gy-4">
-              <Col md={6}>
-                <Card className="shadow-sm">
-                  <Card.Header className="bg-light fw-semibold">
-                    <FaSignal className="me-2 text-primary" />
-                    Original Signal
-                  </Card.Header>
-                  <Card.Body>
-                    {chartDataOriginal ? (
-                      <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
-                    ) : (
-                      <div className="text-center">
-                        <span className="loader"></span>
-                        <p className="mt-2">Waiting for request...</p>
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={6}>
-                <Card className="shadow-sm">
-                  <Card.Header className="bg-light fw-semibold">
-                    <FaWaveSquare className="me-2 text-success" />
-                    Processed Signal
-                  </Card.Header>
-                  <Card.Body>
-                    {chartDataProcessed ? (
-                      <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} defaultColor='#50C878' />
-                    ) : (
-                      <div className="text-center">
-                        <span className="loader"></span>
-                        <p className="mt-2">Waiting for pipeline execution...</p>
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Comparison View */}
-          <div
-            id="charts-comparison"
-            className={`flip-container ${flipped ? 'flipped' : ''}`}
-            style={{ display: flipped ? 'block' : 'none' }}
-          >
-            <Row className="justify-content-center">
-              <Col md={10}>
-                <Card className="shadow-sm">
-                  <Card.Header className="bg-light fw-semibold">
-                    <FaBalanceScale className="me-2 text-info" />
-                    Comparison View
-                  </Card.Header>
-                  <Card.Body>
-                    {(chartImageOriginal && chartImageProcessed) ? (
-                      <ImgComparisonSlider >
-                        <img slot="first" src={chartImageOriginal} />
-                        <img slot="second" src={chartImageProcessed} />
-                        <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                          <path stroke="#000" d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2" strokeWidth="1" fill="#fff" vectorEffect="non-scaling-stroke"></path>
-                        </svg>
-                      </ImgComparisonSlider>
-                    ) : (
-                      <div className="text-center">
-                        <span className="loader"></span>
-                        <p className="mt-2">Rendering comparison...</p>
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
+                <FaEye />
+              </button>
+            </div>
           </div>
         </div>
-        <Row className="d-flex justify-content-around gy-3 p-1">
-          <Col md={6} xs={12}>
-            <Card className="mt-2">
-              <Card.Body>
-                {metricsOriginal ? (
-                  <InfoMetrics metrics={metricsOriginal} />
+      </div>
+
+      {/* View Toggle */}
+      <div className="container mx-auto py-4">
+        <div className="flex justify-center mb-4">
+          <div className="inline-flex rounded-md shadow-sm" role="group">
+            <button
+              onClick={() => setFlipped(false)}
+              className={`px-4 py-2 text-sm font-medium border rounded-l ${!flipped
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-blue-600 border-blue-600'
+                }`}
+            >
+              <FaColumns className="inline mr-2" />
+              Dual View
+            </button>
+            <button
+              onClick={() => setFlipped(true)}
+              className={`px-4 py-2 text-sm font-medium border rounded-r ${flipped
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-blue-600 border-blue-600'
+                }`}
+            >
+              <FaExchangeAlt className="inline mr-2" />
+              Comparison
+            </button>
+          </div>
+        </div>
+
+        {/* Charts */}
+        <div id="charts">
+          {!flipped && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white shadow-md rounded-lg">
+                <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                  <FaSignal className="text-blue-600" />
+                  Original Signal
+                </div>
+                <div className="p-4">
+                  {chartDataOriginal ? (
+                    <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+                  ) : (
+                    <div className="text-center">
+                      <span className="loader"></span>
+                      <p className="mt-2 text-gray-600">Waiting for request...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white shadow-md rounded-lg">
+                <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                  <FaWaveSquare className="text-green-500" />
+                  Processed Signal
+                </div>
+                <div className="p-4">
+                  {chartDataProcessed ? (
+                    <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} defaultColor="#50C878" />
+                  ) : (
+                    <div className="text-center">
+                      <span className="loader"></span>
+                      <p className="mt-2 text-gray-600">Waiting for pipeline execution...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {flipped && (
+            <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-6">
+              <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                <FaBalanceScale className="text-cyan-500" />
+                Comparison View
+              </div>
+              <div className="p-4 text-center">
+                {chartImageOriginal && chartImageProcessed ? (
+                  <ImgComparisonSlider>
+                    <img slot="first" src={chartImageOriginal} />
+                    <img slot="second" src={chartImageProcessed} />
+                    <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                      <path
+                        stroke="#000"
+                        d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
+                        strokeWidth="1"
+                        fill="#fff"
+                      />
+                    </svg>
+                  </ImgComparisonSlider>
                 ) : (
-                  <>
+                  <div className="text-center">
                     <span className="loader"></span>
-                    <p className="mt-2">Calculating...</p>
-                  </>
+                    <p className="mt-2 text-gray-600">Rendering comparison...</p>
+                  </div>
                 )}
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6} xs={12}>
-            <Card className="mt-2">
-              <Card.Body>
-                {metricsProcessed ? (
-                  <InfoMetrics metrics={metricsProcessed} />
-                ) : (
-                  <>
-                    <span className="loader"></span>
-                    <p className="mt-2">Waiting for request...</p>
-                  </>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div className="bg-white shadow-md rounded-lg p-4">
+            {metricsOriginal ? (
+              <InfoMetrics metrics={metricsOriginal} />
+            ) : (
+              <>
+                <span className="loader"></span>
+                <p className="mt-2 text-gray-600">Calculating...</p>
+              </>
+            )}
+          </div>
+          <div className="bg-white shadow-md rounded-lg p-4">
+            {metricsProcessed ? (
+              <InfoMetrics metrics={metricsProcessed} />
+            ) : (
+              <>
+                <span className="loader"></span>
+                <p className="mt-2 text-gray-600">Waiting for request...</p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     </>
   );
+
 
 };
 

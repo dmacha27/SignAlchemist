@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Button, Form, InputGroup, Alert } from 'react-bootstrap';
 
 /**
  * DownloadSignal component generates a downloadable file from the provided table.
@@ -39,50 +38,60 @@ const DownloadSignal = ({ table, name }) => {
   };
 
   return (
-    <div className="mt-2 p-2 border rounded bg-light text-center">
-      <div className="d-inline-flex flex-wrap align-items-center justify-content-center gap-2 mb-2">
-        <Form.Check
-          type="switch"
-          label="Only signal"
-          checked={onlySignal}
-          onChange={e => setOnlySignal(e.target.checked)}
-          className="m-0"
-        />
-        <Form.Check
-          type="switch"
-          label="Include header"
-          checked={withHeader}
-          onChange={e => setWithHeader(e.target.checked)}
-          className="m-0"
-        />
-        <InputGroup size="sm" className="w-auto">
-          <InputGroup.Text>Sep</InputGroup.Text>
-          <Form.Control
-            size="sm"
+    <div className="mt-2 p-4 border rounded bg-gray-100 text-center">
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={onlySignal}
+              onChange={e => setOnlySignal(e.target.checked)}
+              className="form-checkbox"
+            />
+            <span>Only signal</span>
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={withHeader}
+              onChange={e => setWithHeader(e.target.checked)}
+              className="form-checkbox"
+            />
+            <span>Include header</span>
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Sep</span>
+          <input
+            type="text"
             value={separator}
             onChange={handleSeparatorChange}
-            className="text-center w-auto"
-            style={{ maxWidth: '30px', fontSize: '0.8rem', display: 'inline-block' }}
+            className="w-12 text-center text-sm font-medium border rounded-md p-1"
+            style={{ maxWidth: '40px' }}
           />
-        </InputGroup>
-        <Form.Select
-          size="sm"
-          value={extension}
-          onChange={e => setExtension(e.target.value)}
-          className="w-auto"
-        >
-          <option value="csv">csv</option>
-          <option value="txt">txt</option>
-        </Form.Select>
-        <Button
-          variant="success"
-          size="sm"
-          onClick={handleDownload}
-          disabled={separator.includes('.')}
-        >
-          📥 Download
-        </Button>
-        {error && <Alert variant="danger" className="h6 small mt-1">{error}</Alert>}
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={extension}
+            onChange={e => setExtension(e.target.value)}
+            className="w-auto text-sm font-medium border rounded-md p-1"
+          >
+            <option value="csv">csv</option>
+            <option value="txt">txt</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownload}
+            disabled={separator.includes('.')}
+            className="bg-green-500 text-white text-sm py-2 px-4 rounded disabled:bg-gray-300"
+          >
+            📥 Download
+          </button>
+        </div>
+        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
       </div>
     </div>
   );
