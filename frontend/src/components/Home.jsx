@@ -296,27 +296,8 @@ const CustomChart = ({ table }) => {
 
     const isLargeDataset = data.length > max_length_lag;
 
-    const resetZoom = () => {
-        if (chartRef.current) {
-            chartRef.current.resetZoom();
-        }
-    };
-
     const specificOptions = {
         ...chartOptions,
-        plugins: {
-            zoom: {
-                pan: {
-                    enabled: !isLargeDataset,
-                    mode: "x"
-                },
-                zoom: {
-                    wheel: { enabled: !isLargeDataset },
-                    pinch: { enabled: !isLargeDataset },
-                    mode: "x"
-                },
-            },
-        }
     }
 
     specificOptions.scales.x.title = { display: true, text: headers[0] + " (s)" };
@@ -331,8 +312,8 @@ const CustomChart = ({ table }) => {
                 x: parseFloat(row[0]),
                 y: parseFloat(row[1]),
             })),
-            borderColor: "rgb(75, 192, 192)",
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
+            borderColor: '#2196f3',
+            backgroundColor: '#2196f3',
             fill: false,
         },
     ];
@@ -340,19 +321,6 @@ const CustomChart = ({ table }) => {
     return (
         <div className="text-center">
             <Line ref={chartRef} data={{ datasets }} options={specificOptions} />
-
-            {
-                (isLargeDataset) ?
-                    <><div className="alert alert-warning w-75 m-auto" role="alert">
-                        Data is too large to interact.
-                    </div>
-                    </> :
-                    <button className="btn btn-secondary mt-3" onClick={resetZoom}>
-                        Reset Zoom
-                    </button>
-            }
-
-
         </div>
     );
 };
