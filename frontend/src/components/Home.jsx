@@ -427,7 +427,7 @@ const Home = () => {
     };
 
     const handleTimestampChange = (event) => {
-        setTimestampColumn(event.target.value);
+        setTimestampColumn(parseInt(event.target.value));
     };
 
     const handleSamplingRateChange = (event) => {
