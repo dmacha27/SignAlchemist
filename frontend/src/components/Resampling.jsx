@@ -7,6 +7,8 @@ import generateDataOriginal from '../utils';
 import CustomChart from './common/CustomChart';
 import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
+import SignalPanel from './common/SignalPanel';
+import LoaderMessage from './common/LoaderMessage';
 
 import { FaChartLine, FaSignal, FaTools, FaColumns, FaBalanceScale, FaExchangeAlt, FaExpandAlt } from 'react-icons/fa';
 
@@ -21,7 +23,6 @@ const Resampling = () => {
   const [chartDataResampled, setChartDataResampled] = useState(null);
   const [chartImageOriginal, setChartImageOriginal] = useState(null);
   const [chartImageResampled, setChartImageResampled] = useState(null);
-  const [flipped, setFlipped] = useState(false);
   const { readString } = usePapaParse();
 
   useEffect(() => {
@@ -90,7 +91,7 @@ const Resampling = () => {
           <strong>Signal type:</strong> {signalType}
         </p>
       </header>
-  
+
       {/* Panels */}
       <div className="grid md:grid-cols-3 gap-6 py-4 border-b">
         {/* Original Signal */}
@@ -109,7 +110,7 @@ const Resampling = () => {
             </div>
           </div>
         </div>
-  
+
         {/* Resampling Controls */}
         <div className="max-w-full w-full mx-auto">
           <div className="bg-white border shadow-md rounded-lg sticky top-0">
@@ -130,7 +131,7 @@ const Resampling = () => {
                   <option value="1d">Interp1d</option>
                 </select>
               </div>
-  
+
               <div>
                 <label htmlFor="samplingRate" className="block mb-1 font-medium">
                   New rate (Hz)
@@ -144,7 +145,7 @@ const Resampling = () => {
                   className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
                 />
               </div>
-  
+
               <button
                 className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center"
                 onClick={() =>
@@ -160,7 +161,7 @@ const Resampling = () => {
             </div>
           </div>
         </div>
-  
+
         {/* Resampled Signal */}
         <div className="max-w-full w-full mx-auto">
           <div className="bg-white border shadow-md rounded-lg">
@@ -184,99 +185,51 @@ const Resampling = () => {
           </div>
         </div>
       </div>
-  
-      {/* View Toggle */}
-      <div className="flex justify-center py-4">
-        <div className="inline-flex rounded-md shadow-sm" role="group">
-          <button
-            onClick={() => setFlipped(false)}
-            className={`px-4 py-2 text-sm font-medium border rounded-l ${
-              !flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
-            }`}
-          >
-            <FaColumns className="inline mr-2" />
-            Dual View
-          </button>
-          <button
-            onClick={() => setFlipped(true)}
-            className={`px-4 py-2 text-sm font-medium border rounded-r ${
-              flipped ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'
-            }`}
-          >
-            <FaExchangeAlt className="inline mr-2" />
-            Comparison
-          </button>
-        </div>
-      </div>
-  
-      {/* Chart View */}
-      <div id="charts">
-        <div className={`transition-opacity ${flipped ? 'hidden' : 'block'}`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
-            <div className="bg-white shadow-md rounded-lg">
-              <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-                <FaSignal className="my-auto text-blue-500" />
-                Original Signal
-              </div>
-              <div className="p-4">
-                {chartDataOriginal ? (
-                  <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
-                ) : (
-                  <div className="text-center">
-                    <span className="loader"></span>
-                    <p className="mt-2 text-gray-600">Waiting for request...</p>
-                  </div>
-                )}
-              </div>
-            </div>
-  
-            <div className="bg-white shadow-md rounded-lg">
-              <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-                <FaChartLine className="my-auto text-green-500" />
-                Resampled Signal
-              </div>
-              <div className="p-4">
-                {chartDataResampled ? (
-                  <CustomChart table={chartDataResampled} setChartImage={setChartImageResampled} defaultColor="#50C878" />
-                ) : (
-                  <div className="text-center">
-                    <span className="loader"></span>
-                    <p className="mt-2 text-gray-600">Waiting for request...</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-  
-        <div className={`transition-opacity ${flipped ? 'block' : 'hidden'} px-2 mt-6`}>
-          <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg">
-            <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-              <FaBalanceScale className="my-auto text-cyan-500" />
-              Comparison View
-            </div>
-            <div className="p-4 text-center">
-              {chartImageOriginal && chartImageResampled ? (
-                <ImgComparisonSlider>
-                  <img slot="first" src={chartImageOriginal} />
-                  <img slot="second" src={chartImageResampled} />
-                  <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                    <path stroke="#000" d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2" strokeWidth="1" fill="#fff" />
-                  </svg>
-                </ImgComparisonSlider>
-              ) : (
-                <>
-                  <span className="loader"></span>
-                  <p className="mt-2 text-gray-600">Rendering comparison...</p>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+
+      <SignalPanel
+        rightTitle="Filtered Signal"
+        rightIcon={<FaExpandAlt className="my-auto text-green-500" />}
+        leftContent={
+          chartDataOriginal ? (
+            <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+          ) : (
+            <LoaderMessage message="Waiting for request..." />
+          )
+        }
+        rightContent={
+          chartDataResampled ? (
+            <CustomChart
+              table={chartDataResampled}
+              setChartImage={setChartImageResampled}
+              defaultColor="#50C878"
+            />
+          ) : (
+            <LoaderMessage message="Waiting for request..." />
+          )
+        }
+        comparisonContent={
+          chartImageOriginal && chartImageResampled ? (
+            <ImgComparisonSlider>
+              <img slot="first" src={chartImageOriginal} />
+              <img slot="second" src={chartImageResampled} />
+              <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                <path
+                  stroke="#000"
+                  d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
+                  strokeWidth="1"
+                  fill="#fff"
+                />
+              </svg>
+            </ImgComparisonSlider>
+          ) : (
+            <LoaderMessage message="Rendering comparison..." />
+          )
+        }
+      />
+
     </div>
   );
-  
+
 
 };
 

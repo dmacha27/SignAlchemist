@@ -1,5 +1,4 @@
-import { memo, useRef, useEffect } from 'react';
-import { Button, Container, Alert } from 'react-bootstrap';
+import { memo, useRef, useEffect, useState } from 'react';
 
 import { fft, util as fftUtil } from 'fft-js';
 
@@ -18,7 +17,7 @@ import {
     TimeScale
 } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaUndo } from 'react-icons/fa';
 
 ChartJS.register(
     zoomPlugin,
@@ -29,10 +28,14 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend,
-    TimeScale
+    TimeScale,
 );
+import { NumberInput, Button, Group } from '@mantine/core';
+
+const MAX_DATA_LENGTH = 5000;
 
 const baseChartOptions = {
+    label: "spectrum",
     responsive: true,
     plugins: {
         legend: {
@@ -46,23 +49,6 @@ const baseChartOptions = {
             bodyColor: '#333',
             borderColor: '#ccc',
             borderWidth: 1,
-        },
-        zoom: {
-            pan: {
-                enabled: true,
-                mode: 'x'
-            },
-            zoom: {
-                wheel: {
-                    enabled: true,
-                    mode: 'x'
-                },
-                pinch: {
-                    enabled: true,
-                    mode: 'x'
-                },
-                mode: 'x'
-            }
         }
     },
     scales: {
@@ -71,7 +57,7 @@ const baseChartOptions = {
             position: 'bottom',
             title: {
                 display: true,
-                text: 'Freq',
+                text: 'Frequence (Hz)',
                 color: '#111',
                 font: { size: 14, weight: 'bold' }
             }
@@ -81,7 +67,7 @@ const baseChartOptions = {
             ticks: { color: '#444' },
             title: {
                 display: true,
-                text: 'Mag',
+                text: 'Amplitude',
                 color: '#111',
                 font: { size: 14, weight: 'bold' }
             }
@@ -100,22 +86,152 @@ function padToPowerOfTwo(signal) {
     return paddedSignal;
 }
 
-const SpectrumChart = memo(({ signal, samplingRate, setChartImage, parallel = true, defaultColor = '#2196f3' }) => {
+const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor = '#2196f3' }) => {
     const chartRef = useRef(null);
+    const [goToX, setGoToX] = useState(null);
+    const [yMin, setYMin] = useState(null);
+    const [yMax, setYMax] = useState(null);
 
     var phasors = fft(padToPowerOfTwo(signal));
     var frequencies = fftUtil.fftFreq(phasors, samplingRate);
     var magnitudes = fftUtil.fftMag(phasors);
 
-    var both = frequencies.map(function (f, ix) {
+    const minXValue = Math.min(...frequencies); // Hz
+    const maxXValue = Math.max(...frequencies);
+
+    const minYValue = Math.min(...magnitudes);
+    const maxYValue = Math.max(...magnitudes);
+
+    const zoomRangeX = (maxXValue - minXValue) * 0.02;
+    const zoomRangeY = (maxYValue - minYValue) * 0.02;
+
+
+    var both_data = frequencies.map(function (f, ix) {
         return { frequency: f, magnitude: magnitudes[ix] };
     });
 
+    const isLargeDataset = signal.length > MAX_DATA_LENGTH;
+
+    const handleResetZoom = () => {
+        if (chartRef.current) {
+            chartRef.current.options.scales.x.min = minXValue;
+            chartRef.current.options.scales.x.max = maxXValue;
+
+            chartRef.current.options.scales.y.min = minYValue;
+            chartRef.current.options.scales.y.max = Math.ceil(maxYValue / 1000) * 1000; // Better appearance
+            chartRef.current.update();
+        }
+    };
+
+    const handleResetStyle = () => {
+        if (chartRef.current) {
+
+            const dataset = chartRef.current.data.datasets[0];
+            dataset.pointBackgroundColor = dataset.data.map((_, i) => defaultColor);
+
+            dataset.pointBorderColor = dataset.data.map((_, i) => defaultColor);
+
+            dataset.pointRadius = dataset.data.map((_, i) => 2);
+
+            dataset.segment = {
+                borderColor: ({ p0, p1 }) => {
+                    return defaultColor;
+                },
+                backgroundColor: ({ p0, p1 }) => {
+                    return defaultColor;
+                }
+            };
+            chartRef.current.update();
+        }
+    };
+
+    const chartOptions = {
+        ...baseChartOptions,
+        onClick: function (evt) {
+            const elements = chartRef.current.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+            if (elements.length === 0) return;
+
+            const pointIndex = elements[0].index;
+            const frequence = chartRef.current.data.datasets[0].data[pointIndex].x;
+
+            const highlightColor = '#fa6400';
+            const charts = Object.values(ChartJS.instances);
+
+            charts.forEach(chart => {
+
+                // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
+                const dataset = chart.data.datasets[0];
+
+                let actualColor;
+                if (typeof (dataset.pointBackgroundColor) === "string") {
+                    actualColor = dataset.pointBackgroundColor;
+                } else {
+                    actualColor = dataset.pointBackgroundColor[0] === '#fa6400'
+                        ? dataset.pointBackgroundColor[1]
+                        : dataset.pointBackgroundColor[0];
+                }
+                if (dataset.data.length > MAX_DATA_LENGTH) return; // No interaction to improve performance
+                if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return; // No point-to-point correspondence
+
+                dataset.pointBackgroundColor = dataset.data.map((_, i) =>
+                    i === pointIndex ? highlightColor : actualColor
+                );
+
+                dataset.pointBorderColor = dataset.data.map((_, i) =>
+                    i === pointIndex ? highlightColor : actualColor
+                );
+
+                dataset.pointRadius = dataset.data.map((_, i) =>
+                    i === pointIndex ? 6 : 2
+                );
+                chart.options.scales.x.min = frequence - zoomRangeX;
+                chart.options.scales.x.max = frequence + zoomRangeX;
+
+                chart.update();
+
+            });
+
+        },
+        onHover: (event, chartElements) => {
+            if (chartElements.length === 0) return;
+
+            const elements = chartRef.current.getElementsAtEventForMode(event.native, 'nearest', { intersect: true }, false);
+            if (elements.length === 0) return;
+
+            // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
+            const index = elements[0].index;
+            const charts = Object.values(ChartJS.instances);
+            charts.forEach(chart => {
+                if (chartRef.current !== chart) {
+                    if (chartRef.current.data.datasets[0].data.length !== chart.data.datasets[0].data.length) return; // No point-to-point correspondence
+                    chart.tooltip.setActiveElements(
+                        [{ datasetIndex: 0, index }],
+                        { x: event.native.x, y: event.native.y }
+                    );
+                    chart.update();
+                }
+            });
+        },
+        plugins: {
+            ...baseChartOptions.plugins,
+            zoom: {
+                pan: {
+                    enabled: !isLargeDataset,
+                    mode: 'xy'
+                },
+                zoom: {
+                    wheel: { enabled: !isLargeDataset },
+                    pinch: { enabled: !isLargeDataset },
+                    mode: 'x'
+                }
+            }
+        }
+    }
 
     const chartData = {
         datasets: [
             {
-                data: both.map(({ frequency, magnitude }) => ({
+                data: both_data.map(({ frequency, magnitude }) => ({
                     x: frequency,
                     y: magnitude
                 })),
@@ -127,10 +243,151 @@ const SpectrumChart = memo(({ signal, samplingRate, setChartImage, parallel = tr
         ]
     };
 
+    /*
+    TODO:
+
+    Color maximum data. 
+    Placeholder to concrete frequence.
+    Placholder to filter between amplitudes.
+    
+    */
+
+
+    const handleGoToX = (both = false) => {
+        if (chartRef.current && goToX !== null) {
+            if (minXValue <= goToX <= maxXValue) {
+                const charts = both ? Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "spectrum") : [chartRef.current];
+
+                charts.forEach(chart => {
+                    chart.options.scales.x.min = goToX - zoomRangeX;
+                    chart.options.scales.x.max = goToX + zoomRangeX;
+                    chart.update();
+                });
+            }
+        }
+    };
+
+    const handleYMinMax = (both = false) => {
+        if (chartRef.current && yMin !== null && yMax !== null) {
+            if ((minYValue <= yMin <= maxYValue) && (minYValue <= yMax <= maxYValue) && (yMin <= yMax)) {
+
+                const charts = both ? Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "spectrum") : [chartRef.current];
+                charts.forEach(chart => {
+                    const dataset = chart.data.datasets[0];
+
+                    dataset.pointBackgroundColor = dataset.data.map(({ y }) => {
+                        return y >= yMin && y <= yMax ? defaultColor : 'gray'
+                    }
+                    );
+
+                    dataset.pointBorderColor = dataset.data.map(({ y }) => {
+                        return y >= yMin && y <= yMax ? defaultColor : 'gray'
+                    });
+
+
+                    dataset.segment = {
+                        borderColor: ({ p0, p1 }) => {
+                            const y0 = p0.parsed.y;
+                            const y1 = p1.parsed.y;
+                            return (y0 >= yMin && y0 <= yMax && y1 >= yMin && y1 <= yMax)
+                                ? defaultColor
+                                : 'gray';
+                        },
+                        backgroundColor: ({ p0, p1 }) => {
+                            const y0 = p0.parsed.y;
+                            const y1 = p1.parsed.y;
+                            return (y0 >= yMin && y0 <= yMax && y1 >= yMin && y1 <= yMax)
+                                ? defaultColor
+                                : 'gray';
+                        }
+                    };
+
+                    chart.options.scales.y.min = yMin - zoomRangeY;
+                    chart.options.scales.y.max = yMax + zoomRangeX;
+                    chart.update();
+
+                });
+
+            }
+        }
+    };
+
     return (
-        <Container className="text-center py-4">
-            <Line ref={chartRef} data={chartData} options={baseChartOptions} />
-        </Container>
+        <div className="text-center py-4">
+            <Line ref={chartRef} data={chartData} options={chartOptions} />
+
+            {isLargeDataset ? (
+                <div className="w-3/4 mx-auto mt-3 bg-yellow-100 text-yellow-800 p-4 rounded-md">
+                    <strong>Too much data</strong> – interaction is disabled to improve performance.
+                </div>
+            ) : (
+                <div className="flex justify-center items-center gap-4 mt-4">
+                    <button
+                        onClick={handleResetZoom}
+                        className="flex items-center gap-2 px-4 py-1 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm"
+                    >
+                        <FaSearch /> Reset Zoom
+                    </button>
+
+                    <div className="flex flex-col items-center gap-3">
+                        <Group spacing="xs">
+                            <NumberInput
+                                placeholder="Go to X..."
+                                size="xs"
+                                style={{ width: 100 }}
+                                hideControls
+                                step={0.001}
+                                precision={3}
+                                min={minXValue}
+                                max={maxXValue}
+                                onChange={(value) => setGoToX(value)}
+                            />
+                            <div className="flex gap-1">
+                                <Button size="xs" onClick={() => handleGoToX(false)}>Go</Button>
+                                <Button size="xs" onClick={() => handleGoToX(true)}>Both</Button>
+                            </div>
+                        </Group>
+
+                        <Group spacing="xs">
+                            <NumberInput
+                                placeholder="Y min"
+                                size="xs"
+                                style={{ width: 80 }}
+                                hideControls
+                                precision={3}
+                                step={0.001}
+                                min={-Infinity}
+                                max={Infinity}
+                                onChange={(value) => setYMin(value)}
+                            />
+
+                            <NumberInput
+                                placeholder="Y max"
+                                size="xs"
+                                style={{ width: 80 }}
+                                hideControls
+                                precision={3}
+                                step={0.001}
+                                min={-Infinity}
+                                max={Infinity}
+                                onChange={(value) => setYMax(value)}
+                            />
+                            <div className="flex gap-1">
+                                <Button size="xs" onClick={() => handleYMinMax(false)}>Go</Button>
+                                <Button size="xs" onClick={() => handleYMinMax(true)}>Both</Button>
+                            </div>
+                        </Group>
+                    </div>
+
+                    <button
+                        onClick={handleResetStyle}
+                        className="flex items-center gap-2 px-4 py-1 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm"
+                    >
+                        <FaSearch /> Reset Style
+                    </button>
+                </div>
+            )}
+        </div>
     );
 });
 
