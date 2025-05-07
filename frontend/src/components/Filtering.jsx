@@ -58,6 +58,8 @@ const Filtering = () => {
   const [chartDataFiltered, setChartDataFiltered] = useState(null);
   const [chartImageOriginal, setChartImageOriginal] = useState(null);
   const [chartImageFiltered, setChartImageFiltered] = useState(null);
+  const [spectrumChartImageOriginal, setSpectrumChartImageOriginal] = useState(null);
+  const [spectrumChartImageFIltered, setSpectrumChartImageFIltered] = useState(null);
   const [flipped, setFlipped] = useState(false);
   const [metricsOriginal, setMetricsOriginal] = useState(null);
   const [metricsFiltered, setMetricsFiltered] = useState(null);
@@ -339,8 +341,9 @@ const Filtering = () => {
             leftContent={
               chartDataOriginal ? (
                 <SpectrumChart
-                  signal={chartDataOriginal.slice(1).map(row => row[1])}
+                  table={chartDataOriginal}
                   samplingRate={samplingRate}
+                  setChartImage={setSpectrumChartImageOriginal}
                 />
               ) : (
                 <LoaderMessage message="Waiting for request..." />
@@ -349,8 +352,9 @@ const Filtering = () => {
             rightContent={
               chartDataFiltered ? (
                 <SpectrumChart
-                  signal={chartDataFiltered.slice(1).map(row => row[1])}
+                  table={chartDataFiltered}
                   samplingRate={samplingRate}
+                  setChartImage={setSpectrumChartImageFIltered}
                   defaultColor="#50C878"
                 />
               ) : (
@@ -358,10 +362,10 @@ const Filtering = () => {
               )
             }
             comparisonContent={
-              chartImageOriginal && chartImageFiltered ? (
+              spectrumChartImageOriginal && spectrumChartImageFIltered ? (
                 <ImgComparisonSlider>
-                  <img slot="first" src={chartImageOriginal} />
-                  <img slot="second" src={chartImageFiltered} />
+                  <img slot="first" src={spectrumChartImageOriginal} />
+                  <img slot="second" src={spectrumChartImageFIltered} />
                   <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
                     <path
                       stroke="#000"

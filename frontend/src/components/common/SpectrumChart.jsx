@@ -75,6 +75,20 @@ const baseChartOptions = {
     }
 };
 
+function getActualColor(pointBackgroundColor) {
+    if (typeof pointBackgroundColor === 'string') {
+        return pointBackgroundColor;
+    }
+
+    for (let i = 0; i < pointBackgroundColor.length; i++) {
+        const color = pointBackgroundColor[i];
+        if (color !== '#fa6400' && color !== 'gray') { // Exlude orange (highlight) and gray
+            return color;
+        }
+    }
+    return pointBackgroundColor[0] || null;
+}
+
 function nextPowerOfTwo(n) {
     return Math.pow(2, Math.ceil(Math.log2(n)));
 }
@@ -86,11 +100,19 @@ function padToPowerOfTwo(signal) {
     return paddedSignal;
 }
 
-const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor = '#2196f3' }) => {
+const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor = '#2196f3' }) => {
+
+    const [signal, setSignal] = useState(table.slice(1).map(row => row[1]))
+
     const chartRef = useRef(null);
     const [goToX, setGoToX] = useState(null);
     const [yMin, setYMin] = useState(null);
     const [yMax, setYMax] = useState(null);
+    const shouldCaptureImage = useRef(true);
+    useEffect(() => {
+        shouldCaptureImage.current = true; // Allow setChartImage, this will avoid zoomed images
+    }, [signal]);
+
 
     var phasors = fft(padToPowerOfTwo(signal));
     var frequencies = fftUtil.fftFreq(phasors, samplingRate);
@@ -114,11 +136,11 @@ const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor 
 
     const handleResetZoom = () => {
         if (chartRef.current) {
-            chartRef.current.options.scales.x.min = minXValue;
-            chartRef.current.options.scales.x.max = maxXValue;
+            chartRef.current.options.scales.x.min = undefined;
+            chartRef.current.options.scales.x.max = undefined;
 
-            chartRef.current.options.scales.y.min = minYValue;
-            chartRef.current.options.scales.y.max = Math.ceil(maxYValue / 1000) * 1000; // Better appearance
+            chartRef.current.options.scales.y.min = undefined;
+            chartRef.current.options.scales.y.max = undefined; // Better appearance
             chartRef.current.update();
         }
     };
@@ -148,6 +170,7 @@ const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor 
     const chartOptions = {
         ...baseChartOptions,
         onClick: function (evt) {
+            console.log(chartRef.current.options.scales.y.min)
             const elements = chartRef.current.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
             if (elements.length === 0) return;
 
@@ -155,21 +178,15 @@ const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor 
             const frequence = chartRef.current.data.datasets[0].data[pointIndex].x;
 
             const highlightColor = '#fa6400';
-            const charts = Object.values(ChartJS.instances);
+            const charts = Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "spectrum");
 
             charts.forEach(chart => {
 
                 // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
                 const dataset = chart.data.datasets[0];
 
-                let actualColor;
-                if (typeof (dataset.pointBackgroundColor) === "string") {
-                    actualColor = dataset.pointBackgroundColor;
-                } else {
-                    actualColor = dataset.pointBackgroundColor[0] === '#fa6400'
-                        ? dataset.pointBackgroundColor[1]
-                        : dataset.pointBackgroundColor[0];
-                }
+                let actualColor = getActualColor(dataset.pointBackgroundColor);
+
                 if (dataset.data.length > MAX_DATA_LENGTH) return; // No interaction to improve performance
                 if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return; // No point-to-point correspondence
 
@@ -212,6 +229,15 @@ const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor 
                 }
             });
         },
+        animation: {
+            onComplete: () => {
+                if (shouldCaptureImage.current && chartRef.current) {
+                    const imageUrl = chartRef.current.toBase64Image();
+                    setChartImage(imageUrl);
+                    shouldCaptureImage.current = false;
+                }
+            }
+        },
         plugins: {
             ...baseChartOptions.plugins,
             zoom: {
@@ -243,15 +269,6 @@ const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor 
         ]
     };
 
-    /*
-    TODO:
-
-    Color maximum data. 
-    Placeholder to concrete frequence.
-    Placholder to filter between amplitudes.
-    
-    */
-
 
     const handleGoToX = (both = false) => {
         if (chartRef.current && goToX !== null) {
@@ -274,14 +291,15 @@ const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor 
                 const charts = both ? Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "spectrum") : [chartRef.current];
                 charts.forEach(chart => {
                     const dataset = chart.data.datasets[0];
+                    let actualColor = getActualColor(dataset.pointBackgroundColor);
 
                     dataset.pointBackgroundColor = dataset.data.map(({ y }) => {
-                        return y >= yMin && y <= yMax ? defaultColor : 'gray'
+                        return y >= yMin && y <= yMax ? actualColor : 'gray'
                     }
                     );
 
                     dataset.pointBorderColor = dataset.data.map(({ y }) => {
-                        return y >= yMin && y <= yMax ? defaultColor : 'gray'
+                        return y >= yMin && y <= yMax ? actualColor : 'gray'
                     });
 
 
@@ -290,14 +308,14 @@ const SpectrumChart = memo(({ signal, samplingRate, setChartImage, defaultColor 
                             const y0 = p0.parsed.y;
                             const y1 = p1.parsed.y;
                             return (y0 >= yMin && y0 <= yMax && y1 >= yMin && y1 <= yMax)
-                                ? defaultColor
+                                ? actualColor
                                 : 'gray';
                         },
                         backgroundColor: ({ p0, p1 }) => {
                             const y0 = p0.parsed.y;
                             const y1 = p1.parsed.y;
                             return (y0 >= yMin && y0 <= yMax && y1 >= yMin && y1 <= yMax)
-                                ? defaultColor
+                                ? actualColor
                                 : 'gray';
                         }
                     };

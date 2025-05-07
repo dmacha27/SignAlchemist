@@ -20,6 +20,7 @@ import OutputSignal from './reactflow/nodes/OutputSignal';
 import ResamplingNode from './reactflow/nodes/ResamplingNode';
 import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
+import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
 
 import { Popover, Button, Text, Group } from '@mantine/core';
@@ -29,7 +30,7 @@ import { usePapaParse } from 'react-papaparse';
 import { useLocation } from "react-router-dom";
 
 import { ImgComparisonSlider } from '@img-comparison-slider/react';
-import { FaFilter, FaChartLine, FaBullseye, FaColumns, FaExchangeAlt, FaWaveSquare, FaProjectDiagram, FaBalanceScale, FaSquare, FaRocket, FaSignal, FaTrash, FaEye } from 'react-icons/fa';
+import { FaFilter, FaChartLine, FaBullseye, FaWaveSquare, FaProjectDiagram, FaSquare, FaRocket, FaSignal, FaTrash, FaEye } from 'react-icons/fa';
 
 import toast from 'react-hot-toast';
 import ButtonEdge from './reactflow/edges/ButtonEdge';
@@ -223,17 +224,17 @@ const Processing = () => {
 
 
   return (
-    <>
+    <div className="container mx-auto px-10">
       {/* Header */}
-      <div className="container mx-auto py-4 border-b">
-        <h1 className="text-2xl font-bold text-center mb-2 flex justify-center items-center gap-2">
-          <FaWaveSquare className="text-blue-600" />
+      <header className="text-center py-4 border-b">
+        <h1 className="text-3xl font-bold flex justify-center items-center">
+          <FaWaveSquare className="mr-2 text-blue-500" />
           Signal Processing
         </h1>
-        <p className="text-center text-gray-500">
+        <p className="text-gray-600">
           <strong>Signal type:</strong> {signalType}
         </p>
-      </div>
+      </header>
 
       {/* Flow & Sidebar */}
       <div className="container mx-auto py-4 border-b grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -375,117 +376,64 @@ const Processing = () => {
         </div>
       </div>
 
-      {/* View Toggle */}
-      <div className="container mx-auto py-4">
-        <div className="flex justify-center mb-4">
-          <div className="inline-flex rounded-md shadow-sm" role="group">
-            <button
-              onClick={() => setFlipped(false)}
-              className={`px-4 py-2 text-sm font-medium border rounded-l ${!flipped
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-blue-600 border-blue-600'
-                }`}
-            >
-              <FaColumns className="inline mr-2" />
-              Dual View
-            </button>
-            <button
-              onClick={() => setFlipped(true)}
-              className={`px-4 py-2 text-sm font-medium border rounded-r ${flipped
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-blue-600 border-blue-600'
-                }`}
-            >
-              <FaExchangeAlt className="inline mr-2" />
-              Comparison
-            </button>
-          </div>
-        </div>
-
-        {/* Charts */}
-        <div id="charts">
-          {!flipped && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white shadow-md rounded-lg">
-                <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-                  <FaSignal className="text-blue-600" />
-                  Original Signal
-                </div>
-                <div className="p-4">
-                  {chartDataOriginal ? (
-                    <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
-                  ) : (
-                    <LoaderMessage message="Waiting for request..." />
-                  )}
-                </div>
-              </div>
-
-              <div className="bg-white shadow-md rounded-lg">
-                <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-                  <FaWaveSquare className="text-green-500" />
-                  Processed Signal
-                </div>
-                <div className="p-4">
-                  {chartDataProcessed ? (
-                    <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} defaultColor="#50C878" />
-                  ) : (
-                    <LoaderMessage message="Waiting for pipeline execution..." />
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {flipped && (
-            <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-6">
-              <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
-                <FaBalanceScale className="text-cyan-500" />
-                Comparison View
-              </div>
-              <div className="p-4 text-center">
-                {chartImageOriginal && chartImageProcessed ? (
-                  <ImgComparisonSlider>
-                    <img slot="first" src={chartImageOriginal} />
-                    <img slot="second" src={chartImageProcessed} />
-                    <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                      <path
-                        stroke="#000"
-                        d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
-                        strokeWidth="1"
-                        fill="#fff"
-                      />
-                    </svg>
-                  </ImgComparisonSlider>
-                ) : (
-                  <LoaderMessage message="Rendering comparison..." />
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <div className="bg-white shadow-md rounded-lg p-4">
-            {metricsOriginal ? (
-              <InfoMetrics metrics={metricsOriginal} />
-            ) : (
-              <LoaderMessage message="Calculating..." />
-            )}
-          </div>
-          <div className="bg-white shadow-md rounded-lg p-4">
-            {metricsProcessed ? (
-              <InfoMetrics metrics={metricsProcessed} />
+      <div id='charts'>
+        <SignalPanel
+          rightTitle="Processed Signal"
+          rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
+          leftContent={
+            chartDataOriginal ? (
+              <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
             ) : (
               <LoaderMessage message="Waiting for request..." />
-            )}
-          </div>
+            )
+          }
+          rightContent={
+            chartDataProcessed ? (
+              <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} defaultColor="#50C878" />
+            ) : (
+              <LoaderMessage message="Waiting for pipeline execution..." />
+            )
+          }
+          comparisonContent={
+            chartImageOriginal && chartImageProcessed ? (
+              <ImgComparisonSlider>
+                <img slot="first" src={chartImageOriginal} />
+                <img slot="second" src={chartImageProcessed} />
+                <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
+                  <path
+                    stroke="#000"
+                    d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
+                    strokeWidth="1"
+                    fill="#fff"
+                  />
+                </svg>
+              </ImgComparisonSlider>
+            ) : (
+              <LoaderMessage message="Rendering comparison..." />
+            )
+          }
+        />
+      </div>
+      {/* Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div className="bg-white shadow-md rounded-lg p-4">
+          {metricsOriginal ? (
+            <InfoMetrics metrics={metricsOriginal} />
+          ) : (
+            <LoaderMessage message="Calculating..." />
+          )}
+        </div>
+        <div className="bg-white shadow-md rounded-lg p-4">
+          {metricsProcessed ? (
+            <InfoMetrics metrics={metricsProcessed} />
+          ) : (
+            <LoaderMessage message="Waiting for request..." />
+          )}
         </div>
       </div>
-    </>
+    </div >
+
   );
-
-
 };
 
 export default Processing;

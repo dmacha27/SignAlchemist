@@ -107,8 +107,8 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
   const handleResetZoom = () => {
     if (chartRef.current) {
 
-      chartRef.current.options.scales.x.min = minValue * 1000;
-      chartRef.current.options.scales.x.max = maxValue * 1000;
+      chartRef.current.options.scales.x.min = undefined;
+      chartRef.current.options.scales.x.max = undefined;
       chartRef.current.update();
     }
   };
