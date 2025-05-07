@@ -170,7 +170,6 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
     const chartOptions = {
         ...baseChartOptions,
         onClick: function (evt) {
-            console.log(chartRef.current.options.scales.y.min)
             const elements = chartRef.current.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
             if (elements.length === 0) return;
 

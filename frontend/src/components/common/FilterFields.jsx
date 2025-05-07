@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { FaInfo, FaCheck, FaClipboard } from "react-icons/fa";
 
@@ -104,7 +104,7 @@ const InfoModal = ({ opened, close }) => {
  * @param {Object} props.fields - An object containing the filter fields and their configuration.
  * @param {function} props.onFieldChange - A callback function to handle field value changes.
  */
-const FilterFields = ({ fields, onFieldChange }) => {
+const FilterFields = memo(({ fields, onFieldChange }) => {
   const [opened, { open, close }] = useDisclosure(false);
 
   return (
@@ -156,6 +156,7 @@ const FilterFields = ({ fields, onFieldChange }) => {
     </>
   );
 
-};
+}
+);
 
 export default FilterFields;
