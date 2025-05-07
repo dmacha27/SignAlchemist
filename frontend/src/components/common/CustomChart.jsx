@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect } from 'react';
+import { memo, useRef, useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 
@@ -14,7 +14,9 @@ import {
   TimeScale
 } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaDownload, FaImage } from 'react-icons/fa';
+import { Menu, Button } from '@mantine/core';
+import Draggable from 'react-draggable';
 
 ChartJS.register(
   zoomPlugin,
@@ -90,6 +92,7 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
   // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
 
   const chartRef = useRef(null);
+  const draggableRef = useRef(null);
   const [headers, ...rows] = table;
 
   const minValue = Math.min(...rows.map(row => row[0])); //seconds
@@ -123,6 +126,16 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
 
       dataset.pointRadius = dataset.data.map((_, i) => 2);
       chartRef.current.update();
+    }
+  };
+
+  const exportToPNG = () => {
+    if (chartRef.current) {
+      const imageUrl = chartRef.current.toBase64Image();
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = 'chart.png';
+      link.click();
     }
   };
 
@@ -255,7 +268,28 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
 
   return (
     <div className="text-center py-4">
-      <Line ref={chartRef} data={chartData} options={chartOptions} />
+      <div className="relative">
+        <Line ref={chartRef} data={chartData} options={chartOptions} />
+
+        <Draggable bounds="parent" nodeRef={draggableRef} handle=".drag-handle">
+          <div ref={draggableRef} className="absolute top-0 right-0 z-10">
+            <div className="drag-handle w-9 h-2 bg-gray-300 rounded-t-md cursor-move mx-auto" />
+
+            <Menu shadow="md" width={80}>
+              <Menu.Target>
+                <Button><FaDownload /></Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>Export as</Menu.Label>
+                <Menu.Item leftSection={<FaImage size={12} />} onClick={exportToPNG}>
+                  PNG
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </div>
+        </Draggable>
+
+      </div>
 
       {isLargeDataset ? (
         <div className="w-3/4 mx-auto mt-3 bg-yellow-100 text-yellow-800 p-4 rounded-md">

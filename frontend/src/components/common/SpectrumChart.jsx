@@ -17,7 +17,9 @@ import {
     TimeScale
 } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { FaSearch, FaUndo } from 'react-icons/fa';
+import { Menu, NumberInput, Button, Group } from '@mantine/core';
+import { FaSearch, FaDownload, FaImage } from 'react-icons/fa';
+import Draggable from 'react-draggable';
 
 ChartJS.register(
     zoomPlugin,
@@ -30,7 +32,6 @@ ChartJS.register(
     Legend,
     TimeScale,
 );
-import { NumberInput, Button, Group } from '@mantine/core';
 
 const MAX_DATA_LENGTH = 5000;
 
@@ -105,6 +106,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
     const [signal, setSignal] = useState(table.slice(1).map(row => row[1]))
 
     const chartRef = useRef(null);
+    const draggableRef = useRef(null);
     const [goToX, setGoToX] = useState(null);
     const [yMin, setYMin] = useState(null);
     const [yMax, setYMax] = useState(null);
@@ -140,7 +142,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
             chartRef.current.options.scales.x.max = undefined;
 
             chartRef.current.options.scales.y.min = undefined;
-            chartRef.current.options.scales.y.max = undefined; // Better appearance
+            chartRef.current.options.scales.y.max = undefined;
             chartRef.current.update();
         }
     };
@@ -164,6 +166,16 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                 }
             };
             chartRef.current.update();
+        }
+    };
+
+    const exportToPNG = () => {
+        if (chartRef.current) {
+            const imageUrl = chartRef.current.toBase64Image();
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'chart.png';
+            link.click();
         }
     };
 
@@ -331,8 +343,28 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
 
     return (
         <div className="text-center py-4">
-            <Line ref={chartRef} data={chartData} options={chartOptions} />
+            <div className="relative">
+                <Line ref={chartRef} data={chartData} options={chartOptions} />
 
+                <Draggable bounds="parent" nodeRef={draggableRef} handle=".drag-handle">
+                    <div ref={draggableRef} className="absolute top-0 right-0 z-10">
+                        <div className="drag-handle w-9 h-2 bg-gray-300 rounded-t-md cursor-move mx-auto" />
+
+                        <Menu shadow="md" width={80}>
+                            <Menu.Target>
+                                <Button><FaDownload /></Button>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                                <Menu.Label>Export as</Menu.Label>
+                                <Menu.Item leftSection={<FaImage size={12} />} onClick={exportToPNG}>
+                                    PNG
+                                </Menu.Item>
+                            </Menu.Dropdown>
+                        </Menu>
+                    </div>
+                </Draggable>
+
+            </div>
             {isLargeDataset ? (
                 <div className="w-3/4 mx-auto mt-3 bg-yellow-100 text-yellow-800 p-4 rounded-md">
                     <strong>Too much data</strong> – interaction is disabled to improve performance.
