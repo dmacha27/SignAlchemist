@@ -6,6 +6,8 @@ import { usePapaParse } from 'react-papaparse';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
+import LoaderMessage from './common/LoaderMessage';
+
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 import { Modal, Button, Card, Text, Image, Group } from '@mantine/core';
@@ -522,10 +524,7 @@ const Home = () => {
                         {chartDataOriginal ? (
                             <CustomChart table={chartDataOriginal} />
                         ) : (
-                            <>
-                                <span className="loader"></span>
-                                <p className="mt-2 text-gray-600">Waiting for file...</p>
-                            </>
+                            <LoaderMessage message="Waiting for file..."/>
                         )}
                     </div>
                 </div>

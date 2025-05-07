@@ -20,6 +20,7 @@ import OutputSignal from './reactflow/nodes/OutputSignal';
 import ResamplingNode from './reactflow/nodes/ResamplingNode';
 import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
+import LoaderMessage from './common/LoaderMessage';
 
 import { Popover, Button, Text, Group } from '@mantine/core';
 
@@ -263,10 +264,7 @@ const Processing = () => {
                   </ReactFlow>
                 </div>
               ) : (
-                <div className="text-center py-5 text-gray-500">
-                  <span className="loader"></span>
-                  <p className="mt-2">Loading flow...</p>
-                </div>
+                <LoaderMessage message="Loading flow..." />
               )}
             </div>
           </div>
@@ -417,10 +415,7 @@ const Processing = () => {
                   {chartDataOriginal ? (
                     <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
                   ) : (
-                    <div className="text-center">
-                      <span className="loader"></span>
-                      <p className="mt-2 text-gray-600">Waiting for request...</p>
-                    </div>
+                    <LoaderMessage message="Waiting for request..." />
                   )}
                 </div>
               </div>
@@ -434,10 +429,7 @@ const Processing = () => {
                   {chartDataProcessed ? (
                     <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} defaultColor="#50C878" />
                   ) : (
-                    <div className="text-center">
-                      <span className="loader"></span>
-                      <p className="mt-2 text-gray-600">Waiting for pipeline execution...</p>
-                    </div>
+                    <LoaderMessage message="Waiting for pipeline execution..." />
                   )}
                 </div>
               </div>
@@ -465,10 +457,7 @@ const Processing = () => {
                     </svg>
                   </ImgComparisonSlider>
                 ) : (
-                  <div className="text-center">
-                    <span className="loader"></span>
-                    <p className="mt-2 text-gray-600">Rendering comparison...</p>
-                  </div>
+                  <LoaderMessage message="Rendering comparison..." />
                 )}
               </div>
             </div>
@@ -481,20 +470,14 @@ const Processing = () => {
             {metricsOriginal ? (
               <InfoMetrics metrics={metricsOriginal} />
             ) : (
-              <>
-                <span className="loader"></span>
-                <p className="mt-2 text-gray-600">Calculating...</p>
-              </>
+              <LoaderMessage message="Calculating..." />
             )}
           </div>
           <div className="bg-white shadow-md rounded-lg p-4">
             {metricsProcessed ? (
               <InfoMetrics metrics={metricsProcessed} />
             ) : (
-              <>
-                <span className="loader"></span>
-                <p className="mt-2 text-gray-600">Waiting for request...</p>
-              </>
+              <LoaderMessage message="Waiting for request..." />
             )}
           </div>
         </div>

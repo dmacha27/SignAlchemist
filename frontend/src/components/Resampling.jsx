@@ -176,10 +176,7 @@ const Resampling = () => {
                   <DownloadSignal table={chartDataResampled} name="resampled" />
                 </>
               ) : (
-                <div className="text-center">
-                  <span className="loader"></span>
-                  <p className="mt-2 text-gray-600">Waiting for request...</p>
-                </div>
+                <LoaderMessage message="Waiting for request..."/>
               )}
             </div>
           </div>
