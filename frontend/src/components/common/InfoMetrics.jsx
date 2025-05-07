@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Popover, Text } from '@mantine/core';
 
 /**
@@ -11,7 +12,7 @@ import { Popover, Text } from '@mantine/core';
  * @param {Object.<string, { value: number, description: string }>} props.metrics
  * @returns {JSX.Element} A grid of metric cards with popover tooltips.
  */
-const InfoMetrics = ({ metrics }) => {
+const InfoMetrics = memo(({ metrics }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
             {Object.entries(metrics).map(([name, { value, description }], index) => {
@@ -40,6 +41,7 @@ const InfoMetrics = ({ metrics }) => {
             })}
         </div>
     );
-};
+}
+);
 
 export default InfoMetrics;
