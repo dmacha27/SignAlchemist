@@ -12,6 +12,7 @@ import InfoTable from './common/InfoTable';
 import FilterFields from './common/FilterFields';
 import LoaderMessage from './common/LoaderMessage';
 import SignalPanel from './common/SignalPanel';
+import ImageComparison from './common/ImageComparison';
 
 import { Tabs } from '@mantine/core';
 
@@ -315,18 +316,7 @@ const Filtering = () => {
             }
             comparisonContent={
               chartImageOriginal && chartImageFiltered ? (
-                <ImgComparisonSlider>
-                  <img slot="first" src={chartImageOriginal} />
-                  <img slot="second" src={chartImageFiltered} />
-                  <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                    <path
-                      stroke="#000"
-                      d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
-                      strokeWidth="1"
-                      fill="#fff"
-                    />
-                  </svg>
-                </ImgComparisonSlider>
+                <ImageComparison firstImage={chartImageOriginal} secondImage={chartImageFiltered} />
               ) : (
                 <LoaderMessage message="Rendering comparison..." />
               )
@@ -363,18 +353,7 @@ const Filtering = () => {
             }
             comparisonContent={
               spectrumChartImageOriginal && spectrumChartImageFIltered ? (
-                <ImgComparisonSlider>
-                  <img slot="first" src={spectrumChartImageOriginal} />
-                  <img slot="second" src={spectrumChartImageFIltered} />
-                  <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                    <path
-                      stroke="#000"
-                      d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
-                      strokeWidth="1"
-                      fill="#fff"
-                    />
-                  </svg>
-                </ImgComparisonSlider>
+                <ImageComparison firstImage={spectrumChartImageOriginal} secondImage={spectrumChartImageFIltered} />
               ) : (
                 <LoaderMessage message="Rendering comparison..." />
               )

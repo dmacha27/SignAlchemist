@@ -1,5 +1,5 @@
-
-import { Table } from '@mantine/core';
+import { memo, useState } from 'react';
+import { Table, Pagination } from '@mantine/core';
 
 /**
  * InfoTable component renders a table displaying signal data and additional information like duration and sampling rate.
@@ -8,8 +8,7 @@ import { Table } from '@mantine/core';
  * @param {Array} props.table - A 2D array where the first row contains headers and subsequent rows contain data points.
  * @param {boolean} props.onlyTable - A flag indicating whether to display only the table without additional info.
  */
-const InfoTable = ({ table, onlyTable }) => {
-    // table: [[header1, header2], [x1, y1], [x2, y2], ...]
+const InfoTable = memo(({ table, onlyTable }) => {
     const headers = table[0];
     const data = table.slice(1);
 
@@ -23,9 +22,18 @@ const InfoTable = ({ table, onlyTable }) => {
         return `${mins} mins ${secs}`;
     };
 
-    const rows = data.map((row, index) => (
+    const [page, setPage] = useState(1);
+    const rowsPerPage = 5;
+    const totalPages = Math.ceil(data.length / rowsPerPage);
+
+    const paginatedData = data.slice(
+        (page - 1) * rowsPerPage,
+        page * rowsPerPage
+    );
+
+    const rows = paginatedData.map((row, index) => (
         <Table.Tr key={index}>
-            <Table.Td>{index + 1}</Table.Td> {/* Posición iniciando en 1 */}
+            <Table.Td>{(page - 1) * rowsPerPage + index + 1}</Table.Td>
             <Table.Td>{row[0].toFixed(4)}</Table.Td>
             <Table.Td>{row[1].toFixed(4)}</Table.Td>
         </Table.Tr>
@@ -41,22 +49,29 @@ const InfoTable = ({ table, onlyTable }) => {
                 </div>
             )}
             <div className="shadow-md rounded-xl border p-2">
+                <Table striped withColumnBorders withRowBorders={false}>
+                    <Table.Thead>
+                        <Table.Tr>
+                            <Table.Th>#</Table.Th>
+                            <Table.Th>{headers[0]}</Table.Th>
+                            <Table.Th>{headers[1]}</Table.Th>
+                        </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>{rows}</Table.Tbody>
+                </Table>
 
-                <Table.ScrollContainer maxHeight={250}>
-                    <Table striped withColumnBorders withRowBorders={false}>
-                        <Table.Thead>
-                            <Table.Tr>
-                                <Table.Th>#</Table.Th>
-                                <Table.Th>{headers[0]}</Table.Th>
-                                <Table.Th>{headers[1]}</Table.Th>
-                            </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>{rows}</Table.Tbody>
-                    </Table>
-                </Table.ScrollContainer>
+                {totalPages > 1 && (
+                    <div className="flex justify-center mt-4">
+                        <Pagination
+                            value={page}
+                            onChange={setPage}
+                            total={totalPages}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
-};
+});
 
 export default InfoTable;

@@ -22,6 +22,7 @@ import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
+import ImageComparison from './common/ImageComparison';
 
 import { Popover, Button, Text, Group } from '@mantine/core';
 
@@ -396,18 +397,7 @@ const Processing = () => {
           }
           comparisonContent={
             chartImageOriginal && chartImageProcessed ? (
-              <ImgComparisonSlider>
-                <img slot="first" src={chartImageOriginal} />
-                <img slot="second" src={chartImageProcessed} />
-                <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                  <path
-                    stroke="#000"
-                    d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
-                    strokeWidth="1"
-                    fill="#fff"
-                  />
-                </svg>
-              </ImgComparisonSlider>
+              <ImageComparison firstImage={chartImageOriginal} secondImage={chartImageProcessed} />
             ) : (
               <LoaderMessage message="Rendering comparison..." />
             )

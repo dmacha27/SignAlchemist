@@ -9,21 +9,22 @@ import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
+import ImageComparison from './common/ImageComparison';
 
-import { FaChartLine, FaSignal, FaTools, FaColumns, FaBalanceScale, FaExchangeAlt, FaExpandAlt } from 'react-icons/fa';
-
-import { ImgComparisonSlider } from '@img-comparison-slider/react';
+import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from 'react-icons/fa';
 
 const Resampling = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } = location.state || {};
+  const { readString } = usePapaParse();
 
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [chartDataResampled, setChartDataResampled] = useState(null);
   const [chartImageOriginal, setChartImageOriginal] = useState(null);
   const [chartImageResampled, setChartImageResampled] = useState(null);
-  const { readString } = usePapaParse();
+  const [interpolation, setInterpolation] = useState("spline");
+  const [newSamplingRate, setNewSamplingRate] = useState(samplingRate);
 
   useEffect(() => {
     if (!file) return;
@@ -51,15 +52,15 @@ const Resampling = () => {
   }, [file]);
 
 
-  const requestResample = (interpolation_technique, target_sampling_rate) => {
+  const requestResample = () => {
     const formData = new FormData();
 
     const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
 
     formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
-    formData.append('interpolation_technique', interpolation_technique);
+    formData.append('interpolation_technique', interpolation);
     formData.append('source_sampling_rate', parseFloat(samplingRate));
-    formData.append('target_sampling_rate', parseFloat(target_sampling_rate));
+    formData.append('target_sampling_rate', parseFloat(newSamplingRate));
 
     setTimeout(() => {
       // Realizar la petición POST a la API de resampling
@@ -126,6 +127,7 @@ const Resampling = () => {
                 <select
                   id="interpTechnique"
                   className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                  onChange={(value) => {setInterpolation(value)}}
                 >
                   <option value="spline">Spline</option>
                   <option value="1d">Interp1d</option>
@@ -134,13 +136,14 @@ const Resampling = () => {
 
               <div>
                 <label htmlFor="samplingRate" className="block mb-1 font-medium">
-                  New rate (Hz)
+                  New sampling rate (Hz)
                 </label>
                 <input
                   type="number"
                   step={1}
                   id="samplingRate"
                   defaultValue={samplingRate}
+                  onChange={(value) => {setNewSamplingRate(value)}}
                   placeholder="Enter Hz"
                   className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
                 />
@@ -148,12 +151,7 @@ const Resampling = () => {
 
               <button
                 className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center"
-                onClick={() =>
-                  requestResample(
-                    document.getElementById("interpTechnique").value,
-                    document.getElementById("samplingRate").value
-                  )
-                }
+                onClick={requestResample}
               >
                 <FaExpandAlt className="mr-2" />
                 Resample
@@ -176,7 +174,7 @@ const Resampling = () => {
                   <DownloadSignal table={chartDataResampled} name="resampled" />
                 </>
               ) : (
-                <LoaderMessage message="Waiting for request..."/>
+                <LoaderMessage message="Waiting for request..." />
               )}
             </div>
           </div>
@@ -206,18 +204,7 @@ const Resampling = () => {
         }
         comparisonContent={
           chartImageOriginal && chartImageResampled ? (
-            <ImgComparisonSlider>
-              <img slot="first" src={chartImageOriginal} />
-              <img slot="second" src={chartImageResampled} />
-              <svg slot="handle" xmlns="http://www.w3.org/2000/svg" width="100" viewBox="-8 -3 16 6">
-                <path
-                  stroke="#000"
-                  d="M -5 -2 L -7 0 L -5 2 M -5 -2 L -5 2 M 5 -2 L 7 0 L 5 2 M 5 -2 L 5 2"
-                  strokeWidth="1"
-                  fill="#fff"
-                />
-              </svg>
-            </ImgComparisonSlider>
+            <ImageComparison firstImage={chartImageOriginal} secondImage={chartImageResampled} />
           ) : (
             <LoaderMessage message="Rendering comparison..." />
           )

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { PrimeReactProvider } from 'primereact/api';
 import { FileUpload } from 'primereact/fileupload';
@@ -17,7 +17,11 @@ const max_length_lag = 5000;
 
 const chartOptions = {
     responsive: true,
-    plugins: {},
+    plugins: {
+        legend: {
+            onClick: () => {}, // Avoid signal hiding
+        }
+    },
     scales: {
         x: {
             type: 'linear', position: 'bottom',
@@ -28,9 +32,10 @@ const chartOptions = {
         },
         y: { beginAtZero: true },
     },
+
 };
 
-const UtilityModal = ({ opened, close, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => (
+const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => (
     <Modal
         opened={opened}
         onClose={close}
@@ -39,7 +44,7 @@ const UtilityModal = ({ opened, close, navigate, file, signalType, timestampColu
         centered
     >
         <Group gap="lg" justify="center" grow>
-            <Card shadow="sm" padding="lg" style={{ width: '300px' }}>
+            <Card shadow="lg" padding="lg" style={{ width: '300px' }}>
                 <Card.Section>
                     <Image src="resampling.gif" alt="Resampling" />
                 </Card.Section>
@@ -60,7 +65,7 @@ const UtilityModal = ({ opened, close, navigate, file, signalType, timestampColu
                 </Button>
             </Card>
 
-            <Card shadow="sm" padding="lg" style={{ width: '300px' }}>
+            <Card shadow="lg" padding="lg" style={{ width: '300px' }}>
                 <Card.Section>
                     <Image src="filtering.gif" alt="Filtering" />
                 </Card.Section>
@@ -81,7 +86,7 @@ const UtilityModal = ({ opened, close, navigate, file, signalType, timestampColu
                 </Button>
             </Card>
 
-            <Card shadow="sm" padding="lg" style={{ width: '300px' }}>
+            <Card shadow="lg" padding="lg" style={{ width: '300px' }}>
                 <Card.Section>
                     <Image src="processing.gif" alt="Processing" />
                 </Card.Section>
@@ -109,11 +114,12 @@ const UtilityModal = ({ opened, close, navigate, file, signalType, timestampColu
             </Button>
         </Group>
     </Modal>
+)
 );
 
 
 
-const CSVUploader = ({ file, setFile, setHeaders }) => {
+const CSVUploader = memo(({ file, setFile, setHeaders }) => {
     const fileUploader = useRef();
     const { readString } = usePapaParse();
     const navigate = useNavigate();
@@ -237,7 +243,8 @@ const CSVUploader = ({ file, setFile, setHeaders }) => {
             />
         </>
     );
-};
+}
+);
 
 const InfoTable = ({ table }) => {
     // table: [[header, header, header..], [x1, y1, ...], [x2, y2, ...], [x3, y3, ...]]
@@ -524,7 +531,7 @@ const Home = () => {
                         {chartDataOriginal ? (
                             <CustomChart table={chartDataOriginal} />
                         ) : (
-                            <LoaderMessage message="Waiting for file..."/>
+                            <LoaderMessage message="Waiting for file..." />
                         )}
                     </div>
                 </div>

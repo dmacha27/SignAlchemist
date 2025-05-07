@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
 /**
  * DownloadSignal component generates a downloadable file from the provided table.
@@ -7,7 +7,7 @@ import { useState } from 'react';
  * @param {Array} props.table - A 2D array containing the data to be included in the CSV.
  * @param {string} props.name - The name to be used for the downloaded file.
  */
-const DownloadSignal = ({ table, name }) => {
+const DownloadSignal = memo(({ table, name }) => {
   const [onlySignal, setOnlySignal] = useState(false);
   const [withHeader, setWithHeader] = useState(true);
   const [separator, setSeparator] = useState(',');
@@ -95,6 +95,7 @@ const DownloadSignal = ({ table, name }) => {
       </div>
     </div>
   );
-};
+}
+);
 
 export default DownloadSignal;
