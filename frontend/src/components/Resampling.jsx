@@ -12,6 +12,7 @@ import LoaderMessage from './common/LoaderMessage';
 import ImageComparison from './common/ImageComparison';
 
 import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from 'react-icons/fa';
+import ComparisonChart from './common/ComparisonChart';
 
 const Resampling = () => {
   const location = useLocation();
@@ -127,7 +128,7 @@ const Resampling = () => {
                 <select
                   id="interpTechnique"
                   className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
-                  onChange={(value) => {setInterpolation(value)}}
+                  onChange={(value) => { setInterpolation(value) }}
                 >
                   <option value="spline">Spline</option>
                   <option value="1d">Interp1d</option>
@@ -143,7 +144,7 @@ const Resampling = () => {
                   step={1}
                   id="samplingRate"
                   defaultValue={samplingRate}
-                  onChange={(value) => {setNewSamplingRate(value)}}
+                  onChange={(event) => { setNewSamplingRate(event.target.value) }}
                   placeholder="Enter Hz"
                   className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
                 />
@@ -182,7 +183,7 @@ const Resampling = () => {
       </div>
 
       <SignalPanel
-        rightTitle="Filtered Signal"
+        rightTitle="Resampled Signal"
         rightIcon={<FaExpandAlt className="my-auto text-green-500" />}
         leftContent={
           chartDataOriginal ? (
@@ -203,8 +204,8 @@ const Resampling = () => {
           )
         }
         comparisonContent={
-          chartImageOriginal && chartImageResampled ? (
-            <ImageComparison firstImage={chartImageOriginal} secondImage={chartImageResampled} />
+          chartDataOriginal && chartDataResampled ? (
+            <ComparisonChart table1={chartDataOriginal} table2={chartDataResampled} name2="Resampled" />
           ) : (
             <LoaderMessage message="Rendering comparison..." />
           )

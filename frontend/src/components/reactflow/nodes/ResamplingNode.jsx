@@ -235,9 +235,10 @@ function ResamplingNode({ id, data }) {
           </Form.Label>
           <input
             type="number"
+            step={1}
             placeholder="Enter Hz"
             value={targetSamplingRate}
-            onChange={(e) => setTargetSamplingRate(e.target.value)}
+            onChange={(event) => setTargetSamplingRate(event.target.value)}
             className="w-full text-sm bg-gray-100 border border-gray-200 rounded-md shadow-sm px-3 py-2"
           />
         </Form.Group>

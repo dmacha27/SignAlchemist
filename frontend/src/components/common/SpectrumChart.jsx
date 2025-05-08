@@ -315,8 +315,6 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                     let actualColor = getActualColor(dataset.pointBackgroundColor);
                     handleResetStyle(chart, actualColor);
 
-                    console.log(dataset.pointBackgroundColor)
-
                     dataset.pointBackgroundColor = dataset.data.map(({ y }) => {
                         return y >= yMin && y <= yMax ? actualColor : 'gray'
                     }

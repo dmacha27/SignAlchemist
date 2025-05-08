@@ -13,6 +13,7 @@ import FilterFields from './common/FilterFields';
 import LoaderMessage from './common/LoaderMessage';
 import SignalPanel from './common/SignalPanel';
 import ImageComparison from './common/ImageComparison';
+import ComparisonChart from './common/ComparisonChart';
 
 import { Tabs } from '@mantine/core';
 
@@ -287,9 +288,9 @@ const Filtering = () => {
       </div>
 
       <Tabs color="violet" variant="pills" defaultValue="charts" className='mt-2'>
-        <Tabs.List grow justify="center">
-          <Tabs.Tab value="charts">Charts</Tabs.Tab>
-          <Tabs.Tab value="spectrum">Spectrum</Tabs.Tab>
+        <Tabs.List justify="center">
+          <Tabs.Tab value="charts" className="flex-1">Charts</Tabs.Tab>
+          <Tabs.Tab value="spectrum" className="flex-1 text-center">Spectrum</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="charts">
@@ -315,8 +316,8 @@ const Filtering = () => {
               )
             }
             comparisonContent={
-              chartImageOriginal && chartImageFiltered ? (
-                <ImageComparison firstImage={chartImageOriginal} secondImage={chartImageFiltered} />
+              chartDataOriginal && chartDataFiltered ? (
+                <ComparisonChart table1={chartDataOriginal} table2={chartDataFiltered} name2="Filtered" />
               ) : (
                 <LoaderMessage message="Rendering comparison..." />
               )
@@ -326,7 +327,7 @@ const Filtering = () => {
 
         <Tabs.Panel value="spectrum">
           <SignalPanel
-            rightTitle="Filtered Spectrum"
+            rightTitle="Filtered Signal"
             rightIcon={<FaFilter className="my-auto text-green-500" />}
             leftContent={
               chartDataOriginal ? (

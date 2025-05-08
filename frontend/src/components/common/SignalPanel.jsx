@@ -11,10 +11,10 @@ const SignalPanel = ({
     return (
         <Tabs color="indigo" variant="pills" defaultValue="dual" className='mt-2'>
             <Tabs.List justify="center">
-                <Tabs.Tab value="dual" leftSection={<FaColumns size={14} />}>
+                <Tabs.Tab value="dual" className='w-[140px]' leftSection={<FaColumns size={14} />}>
                     Dual View
                 </Tabs.Tab>
-                <Tabs.Tab value="comparison" leftSection={<FaExchangeAlt size={14} />}>
+                <Tabs.Tab value="comparison" className='w-[140px]'leftSection={<FaExchangeAlt size={14} />}>
                     Comparison
                 </Tabs.Tab>
             </Tabs.List>
@@ -34,18 +34,18 @@ const SignalPanel = ({
                             {rightIcon}
                             {rightTitle}
                         </div>
-                        <div className="p-4">{rightContent}</div>
+                        <div>{rightContent}</div>
                     </div>
                 </div>
             </Tabs.Panel>
 
             <Tabs.Panel value="comparison" pt="md">
-                <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg mt-6">
+                <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg">
                     <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
                         <FaBalanceScale className="my-auto text-cyan-500" />
                         Comparison View
                     </div>
-                    <div className="p-4 text-center">{comparisonContent}</div>
+                    <div>{comparisonContent}</div>
                 </div>
             </Tabs.Panel>
         </Tabs>
