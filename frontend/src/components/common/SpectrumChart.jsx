@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect, useState } from 'react';
+import { useMemo, memo, useRef, useEffect, useState } from 'react';
 
 import { fft, util as fftUtil } from 'fft-js';
 
@@ -103,7 +103,7 @@ function padToPowerOfTwo(signal) {
 
 const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor = '#2196f3' }) => {
 
-    const [signal, setSignal] = useState(table.slice(1).map(row => row[1]))
+    const signal = useMemo(() => table.slice(1).map(row => row[1]), [table]);
 
     const chartRef = useRef(null);
     const draggableRef = useRef(null);
@@ -115,57 +115,55 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
         shouldCaptureImage.current = true; // Allow setChartImage, this will avoid zoomed images
     }, [signal]);
 
+    const { both_data, minXValue, maxXValue, minYValue, maxYValue, zoomRangeX, zoomRangeY } = useMemo(() => {
+        const paddedSignal = padToPowerOfTwo(signal);
+        const phasors = fft(paddedSignal);
+        const frequencies = fftUtil.fftFreq(phasors, samplingRate);
+        const magnitudes = fftUtil.fftMag(phasors);
 
-    var phasors = fft(padToPowerOfTwo(signal));
-    var frequencies = fftUtil.fftFreq(phasors, samplingRate);
-    var magnitudes = fftUtil.fftMag(phasors);
+        const both_data = frequencies.map((f, ix) => ({
+            frequency: f,
+            magnitude: magnitudes[ix]
+        }));
 
-    const minXValue = Math.min(...frequencies); // Hz
-    const maxXValue = Math.max(...frequencies);
+        const minXValue = Math.min(...frequencies);
+        const maxXValue = Math.max(...frequencies);
+        const minYValue = Math.min(...magnitudes);
+        const maxYValue = Math.max(...magnitudes);
 
-    const minYValue = Math.min(...magnitudes);
-    const maxYValue = Math.max(...magnitudes);
+        const zoomRangeX = (maxXValue - minXValue) * 0.02;
+        const zoomRangeY = (maxYValue - minYValue) * 0.02;
 
-    const zoomRangeX = (maxXValue - minXValue) * 0.02;
-    const zoomRangeY = (maxYValue - minYValue) * 0.02;
-
-
-    var both_data = frequencies.map(function (f, ix) {
-        return { frequency: f, magnitude: magnitudes[ix] };
-    });
+        return { both_data, minXValue, maxXValue, minYValue, maxYValue, zoomRangeX, zoomRangeY };
+    }, [signal, samplingRate]);
 
     const isLargeDataset = signal.length > MAX_DATA_LENGTH;
 
-    const handleResetZoom = () => {
-        if (chartRef.current) {
-            chartRef.current.options.scales.x.min = undefined;
-            chartRef.current.options.scales.x.max = undefined;
+    const handleResetZoom = (ref) => {
+        if (ref) {
+            ref.options.scales.x.min = undefined;
+            ref.options.scales.x.max = undefined;
 
-            chartRef.current.options.scales.y.min = undefined;
-            chartRef.current.options.scales.y.max = undefined;
-            chartRef.current.update();
+            ref.options.scales.y.min = undefined;
+            ref.options.scales.y.max = undefined;
+            ref.update();
         }
     };
 
-    const handleResetStyle = () => {
-        if (chartRef.current) {
+    const handleResetStyle = (ref, color = defaultColor) => {
+        if (ref) {
+            const dataset = ref.data.datasets[0];
 
-            const dataset = chartRef.current.data.datasets[0];
-            dataset.pointBackgroundColor = dataset.data.map((_, i) => defaultColor);
-
-            dataset.pointBorderColor = dataset.data.map((_, i) => defaultColor);
-
-            dataset.pointRadius = dataset.data.map((_, i) => 2);
+            dataset.pointBackgroundColor = dataset.data.map(() => color);
+            dataset.pointBorderColor = dataset.data.map(() => color);
+            dataset.pointRadius = dataset.data.map(() => 2);
 
             dataset.segment = {
-                borderColor: ({ p0, p1 }) => {
-                    return defaultColor;
-                },
-                backgroundColor: ({ p0, p1 }) => {
-                    return defaultColor;
-                }
+                borderColor: () => color,
+                backgroundColor: () => color
             };
-            chartRef.current.update();
+
+            ref.update();
         }
     };
 
@@ -179,7 +177,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
         }
     };
 
-    const chartOptions = {
+    const chartOptions = useMemo(() => ({
         ...baseChartOptions,
         onClick: function (evt) {
             const elements = chartRef.current.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
@@ -254,18 +252,24 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
             zoom: {
                 pan: {
                     enabled: !isLargeDataset,
-                    mode: 'xy'
+                    mode: 'x'
                 },
                 zoom: {
                     wheel: { enabled: !isLargeDataset },
                     pinch: { enabled: !isLargeDataset },
-                    mode: 'x'
-                }
+                    mode: 'x',
+                    onZoomComplete: ({ chart }) => {
+                        chart.options.scales.y.min = undefined;
+                        chart.options.scales.y.max = undefined;
+                        chart.update();
+                    }
+                },
+
             }
         }
-    }
+    }), [isLargeDataset, setChartImage])
 
-    const chartData = {
+    const chartData = useMemo(() => ({
         datasets: [
             {
                 data: both_data.map(({ frequency, magnitude }) => ({
@@ -278,7 +282,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                 fill: false
             }
         ]
-    };
+    }), [both_data, defaultColor])
 
 
     const handleGoToX = (both = false) => {
@@ -287,6 +291,11 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                 const charts = both ? Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "spectrum") : [chartRef.current];
 
                 charts.forEach(chart => {
+                    handleResetZoom(chart);
+                    const dataset = chart.data.datasets[0];
+                    let actualColor = getActualColor(dataset.pointBackgroundColor);
+                    handleResetStyle(chart, actualColor);
+
                     chart.options.scales.x.min = goToX - zoomRangeX;
                     chart.options.scales.x.max = goToX + zoomRangeX;
                     chart.update();
@@ -301,8 +310,12 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
 
                 const charts = both ? Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "spectrum") : [chartRef.current];
                 charts.forEach(chart => {
+                    handleResetZoom(chart);
                     const dataset = chart.data.datasets[0];
                     let actualColor = getActualColor(dataset.pointBackgroundColor);
+                    handleResetStyle(chart, actualColor);
+
+                    console.log(dataset.pointBackgroundColor)
 
                     dataset.pointBackgroundColor = dataset.data.map(({ y }) => {
                         return y >= yMin && y <= yMax ? actualColor : 'gray'
@@ -350,7 +363,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                     <div ref={draggableRef} className="absolute top-0 right-0 z-10">
                         <div className="drag-handle w-9 h-2 bg-gray-300 rounded-t-md cursor-move mx-auto" />
 
-                        <Menu shadow="md" width={80}>
+                        <Menu shadow="md" width={100}>
                             <Menu.Target>
                                 <Button><FaDownload /></Button>
                             </Menu.Target>
@@ -372,7 +385,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
             ) : (
                 <div className="flex justify-center items-center gap-4 mt-4">
                     <button
-                        onClick={handleResetZoom}
+                        onClick={() => handleResetZoom(chartRef.current)}
                         className="flex items-center gap-2 px-4 py-1 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm"
                     >
                         <FaSearch /> Reset Zoom
@@ -429,7 +442,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                     </div>
 
                     <button
-                        onClick={handleResetStyle}
+                        onClick={() => handleResetStyle(chartRef.current)}
                         className="flex items-center gap-2 px-4 py-1 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm"
                     >
                         <FaSearch /> Reset Style

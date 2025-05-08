@@ -33,6 +33,7 @@ ChartJS.register(
 const MAX_DATA_LENGTH = 5000;
 
 const baseChartOptions = {
+  label: "signal",
   responsive: true,
   plugins: {
     legend: {
@@ -150,7 +151,7 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
 
 
       const highlightColor = '#fa6400';
-      const charts = Object.values(ChartJS.instances);
+      const charts = Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "signal");
 
       charts.forEach(chart => {
 
@@ -195,7 +196,8 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
 
       // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
       const index = elements[0].index;
-      const charts = Object.values(ChartJS.instances);
+      const charts = Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "signal");
+
       charts.forEach(chart => {
         if (chartRef.current !== chart) {
           if (chartRef.current.data.datasets[0].data.length !== chart.data.datasets[0].data.length) return; // No point-to-point correspondence
@@ -275,7 +277,7 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
           <div ref={draggableRef} className="absolute top-0 right-0 z-10">
             <div className="drag-handle w-9 h-2 bg-gray-300 rounded-t-md cursor-move mx-auto" />
 
-            <Menu shadow="md" width={80}>
+            <Menu shadow="md" width={100}>
               <Menu.Target>
                 <Button><FaDownload /></Button>
               </Menu.Target>
