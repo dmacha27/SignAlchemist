@@ -1,14 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { Card, Text, Group } from '@mantine/core';
 import Tilt from 'react-parallax-tilt';
 
 const About = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="container mx-auto px-4">
-      <header className="text-center py-2">
-        <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
+    <div className="max-w-7xl mx-auto px-4">
+      <header className="text-center py-6">
+        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
           About this Project
         </h1>
         <p className="text-gray-600">
@@ -16,63 +15,58 @@ const About = () => {
         </p>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-12 rounded-lg shadow-lg">
-        <div className="flex flex-col md:flex-row items-center gap-8">
-          <div className="flex-1 text-center md:text-left">
-            <h2 className="text-3xl font-semibold">Revolutionizing Signal Processing</h2>
-            <p className="mt-4 text-lg">
-              Our platform offers advanced techniques for the processing of physiological signals, including resampling, filtering, and outlier detection, with state-of-the-art metrics to ensure accurate and reliable results.
+      <section className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-10 rounded-lg shadow">
+        <div className="grid md:grid-cols-12 gap-8 items-center">
+          <div className="md:col-span-8 text-left">
+            <h1 className="text-lg font-semibold mb-2">Signal Processing Toolkit</h1>
+            <p>
+              This application, developed by researchers, offers a set of advanced tools for processing physiological signals such as PPG, EDA, and other time-series data. It includes modules for resampling, filtering, and outlier detection, which can be combined in flexible workflows.
             </p>
-            <p className="mt-4 text-lg">
-              The system allows users to apply various signal processing techniques through a user-friendly interface with interactive visualizations.
+            <p className="mt-2">
+              Users can build custom processing pipelines by selecting and connecting different operations through a straightforward, visual interface. The system offers real-time updates, allowing you to monitor the results as you apply each step.
+            </p>
+            <p className="mt-2">
+              All processing techniques are based on the latest research, ensuring state-of-the-art methods for signal handling. The platform also provides comprehensive metrics to evaluate the quality and reliability of your data at each step.
+            </p>
+            <p className="mt-2">
+              Whether you're working with simple or complex signals, this toolkit gives you the flexibility and precision needed for reliable data processing, with a focus on usability and reproducibility.
             </p>
             <button
               onClick={() => navigate('/')}
-              className="mt-6 px-6 py-3 text-lg font-semibold text-indigo-600 bg-white rounded-lg shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-4 p-3 bg-white text-indigo-600 rounded"
             >
-              Try out
+              Try it out
             </button>
           </div>
 
-          <Tilt
-            className="flex-1 overflow-hidden rounded-lg shadow-lg"
-            glareEnable={true}
-            glareMaxOpacity={0.5}
-            glareColor="white"
-            glarePosition="all"
-            scale={1}
-            transitionSpeed={400}
-          >
-            <img
-              src="/processing.gif"
-              alt="Signal Processing"
-              className="w-full h-full"
-            />
-          </Tilt>
+          <div className="md:col-span-4">
+            <Tilt
+              className="rounded-lg overflow-hidden shadow-lg"
+              tiltReverse={true}
+              tiltMaxAngleX={5}
+              tiltMaxAngleY={5}
+              perspective={600}
+            >
+              <img
+                src="/processing.gif"
+                alt="Signal Processing"
+                className="w-full h-full object-cover"
+                style={{ pointerEvents: 'none' }} // Prevent image from being dragged
+              />
+            </Tilt>
+          </div>
         </div>
       </section>
 
-      {/* Funding Section */}
-      <div className="shadow-lg rounded-lg my-12" id="logos">
-        <p className="text-center p-4 text-lg text-gray-700">
-          The research for this software was partially funded by the Junta de Castilla y León (project BU055P20), the Ministry of Science and Innovation of Spain (projects PID2020-119894GB-I00 and TED 2021-129485B-C43).
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+      <section className=" rounded-lg shadow p-6 bg-white" id="logos">
+        <p className="text-center text-gray-700 mb-6">
+          This software is part of the R&D project PID2023-150694OA-I00, funded by the Agencia Estatal de Investigación (AEI), under the Ministerio de Ciencia, Innovación y Universidades (MICIU), co-financed by the Fondo Europeo de Desarrollo Regional (FEDER) under the program “Una manera de hacer Europa”, and by the “Unión Europea NextGenerationEU/PRTR” funds</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <a href="https://ec.europa.eu/regional_policy/en/funding/erdf/" target="_blank" rel="noopener noreferrer">
-            <img className="w-full" alt="FEDER" src="/FEDER.svg" />
-          </a>
-          <a href="http://www.mineco.gob.es/portal/site/mineco/" target="_blank" rel="noopener noreferrer">
-            <img className="w-full" alt="MEC" src="/MEC.svg" />
-          </a>
-          <a href="https://www.jcyl.es/" target="_blank" rel="noopener noreferrer">
-            <img className="w-full" alt="JCYL" src="/JCYL.svg" />
-          </a>
-          <a href="https://www.educa.jcyl.es/universidad/es/fondos-europeos/fondo-europeo-desarrollo-regional-feder/" target="_blank" rel="noopener noreferrer">
-            <img className="w-full" alt="JCYL_impulsa" src="/JCYL_impulsa.svg" />
+            <img src="/FEDER.svg" alt="FEDER" className="w-full" />
           </a>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

@@ -33,7 +33,7 @@ const App = () => {
     }
   };
 
-  const isHome = location.pathname === '/';
+  const isHome = location.pathname === '/' || location.pathname === '/about';
 
   return (
     <div className="App user-select-none" style={{ position: 'relative', minHeight: '100vh' }}>
