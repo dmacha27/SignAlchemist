@@ -2,12 +2,20 @@ services:
   backend:
     build:
       context: ./backend
+    volumes:
+      - ./backend:/app
     ports:
       - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --reload
+
   frontend:
     build:
       context: ./frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     ports:
       - "5173:5173"
     environment:
-      - WATCHPACK_POLLIN=true
+      - WATCHPACK_POLLING=true
+    command: npm run dev
