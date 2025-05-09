@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, memo } from 'react';
+import PropTypes from 'prop-types';
 import { Link, useNavigate } from "react-router-dom";
 import { PrimeReactProvider } from 'primereact/api';
 import { FileUpload } from 'primereact/fileupload';
@@ -15,26 +16,20 @@ import { useDisclosure } from '@mantine/hooks';
 
 const max_length_lag = 5000;
 
-const chartOptions = {
-    responsive: true,
-    plugins: {
-        legend: {
-            onClick: () => {}, // Avoid signal hiding
-        }
-    },
-    scales: {
-        x: {
-            type: 'linear', position: 'bottom',
-            title: {
-                display: true,
-                text: "(s)"
-            }
-        },
-        y: { beginAtZero: true },
-    },
 
-};
-
+/**
+ * UtilityModal component renders a modal with options for different signal processing utilities.
+ *
+ * @param {Object} props
+ * @param {boolean} props.opened - Whether the modal is currently open.
+ * @param {Function} props.close - Function to close the modal.
+ * @param {Function} props.navigate - Function to navigate to other routes.
+ * @param {Blob} props.file - The uploaded CSV file to be processed.
+ * @param {string} props.signalType - The type of signal selected (e.g., EDA, PPG).
+ * @param {number} props.timestampColumn - Index of the column representing timestamps.
+ * @param {number} props.samplingRate - Sampling rate of the signal in Hz.
+ * @param {number|string} props.signalValues - Index of the signal values column.
+ */
 const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => (
     <Modal
         opened={opened}
@@ -118,7 +113,14 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
 );
 
 
-
+/**
+ * CSVUploader component allows users to upload a CSV file.
+ *
+ * @param {Object} props
+ * @param {Blob|null} props.file - The currently uploaded CSV file.
+ * @param {Function} props.setFile - Function to update the uploaded file.
+ * @param {Function} props.setHeaders - Function to update extracted CSV headers.
+ */
 const CSVUploader = memo(({ file, setFile, setHeaders }) => {
     const fileUploader = useRef();
     const { readString } = usePapaParse();
@@ -126,7 +128,7 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
     const [signalType, setSignalType] = useState("");
     const [timestampColumn, setTimestampColumn] = useState("");
     const [samplingRate, setSamplingRate] = useState(0);
-    const [signalValues, setSignalValues] = useState("");
+    const [signalValues, setSignalValues] = useState(-1);
     const [opened, { open, close }] = useDisclosure(false);
 
     const handleUtilityModal = (event) => {
@@ -246,6 +248,12 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
 }
 );
 
+/**
+ * InfoTable component renders a table displaying signal data.
+ *
+ * @param {Object} props
+ * @param {Array} props.table - A 2D array where the first row contains headers, and subsequent rows contain data.
+ */
 const InfoTable = ({ table }) => {
     // table: [[header, header, header..], [x1, y1, ...], [x2, y2, ...], [x3, y3, ...]]
     const headers = table[0];
@@ -305,12 +313,27 @@ const CustomChart = ({ table }) => {
 
     const isLargeDataset = data.length > max_length_lag;
 
-    const specificOptions = {
-        ...chartOptions,
-    }
+    const options = {
+        responsive: true,
+        plugins: {
+            legend: {
+                onClick: () => { }, // Avoid signal hiding
+            }
+        },
+        scales: {
+            x: {
+                type: 'linear', position: 'bottom',
+                title: {
+                    display: true,
+                    text: "(s)"
+                }
+            },
+            y: { beginAtZero: true },
+        },
 
-    specificOptions.scales.x.title = { display: true, text: headers[0] + " (s)" };
-    specificOptions.scales.y.title = { display: true, text: headers[1] };
+    };
+    options.scales.x.title = { display: true, text: headers[0] + " (s)" };
+    options.scales.y.title = { display: true, text: headers[1] };
 
 
     const datasets = [
@@ -329,7 +352,7 @@ const CustomChart = ({ table }) => {
 
     return (
         <div className="text-center">
-            <Line ref={chartRef} data={{ datasets }} options={specificOptions} />
+            <Line ref={chartRef} data={{ datasets }} options={options} />
         </div>
     );
 };
@@ -444,7 +467,7 @@ const Home = () => {
     };
 
     const handleSignalValuesChange = (event) => {
-        setSignalValues(event.target.value);
+        setSignalValues(parseInt(event.target.value));
     };
 
     return (
@@ -540,6 +563,32 @@ const Home = () => {
 
 
     );
+};
+
+
+UtilityModal.propTypes = {
+    opened: PropTypes.bool.isRequired,
+    close: PropTypes.func.isRequired,
+    navigate: PropTypes.func.isRequired,
+    file: PropTypes.instanceOf(Blob),
+    signalType: PropTypes.string.isRequired,
+    timestampColumn: PropTypes.number.isRequired,
+    samplingRate: PropTypes.number.isRequired,
+    signalValues: PropTypes.number.isRequired,
+};
+
+CSVUploader.propTypes = {
+    file: PropTypes.instanceOf(Blob),
+    setFile: PropTypes.func.isRequired,
+    setHeaders: PropTypes.func.isRequired,
+};
+
+InfoTable.propTypes = {
+    table: PropTypes.arrayOf(
+        PropTypes.arrayOf(
+            PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        )
+    ).isRequired,
 };
 
 export default Home;

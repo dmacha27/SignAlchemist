@@ -1,4 +1,5 @@
 import { useState, memo } from 'react';
+import PropTypes from 'prop-types';
 
 /**
  * DownloadSignal component generates a downloadable file from the provided table.
@@ -97,5 +98,15 @@ const DownloadSignal = memo(({ table, name }) => {
   );
 }
 );
+
+
+DownloadSignal.propTypes = {
+  table: PropTypes.arrayOf(
+    PropTypes.arrayOf(
+      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    )
+  ).isRequired,
+  name: PropTypes.string.isRequired,
+};
 
 export default DownloadSignal;

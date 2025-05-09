@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { usePapaParse } from 'react-papaparse';
 
-import generateDataOriginal from '../utils';
+import generateDataOriginal from './utils/dataUtils';
 
 import CustomChart from './common/CustomChart';
 import InfoMetrics from './common/InfoMetrics';
@@ -12,17 +12,13 @@ import InfoTable from './common/InfoTable';
 import FilterFields from './common/FilterFields';
 import LoaderMessage from './common/LoaderMessage';
 import SignalPanel from './common/SignalPanel';
-import ImageComparison from './common/ImageComparison';
 import ComparisonChart from './common/ComparisonChart';
 
 import { Tabs } from '@mantine/core';
 
 import toast from 'react-hot-toast';
 
-import { FaFilter, FaSignal, FaTools, FaColumns, FaExchangeAlt, FaBalanceScale } from 'react-icons/fa';
-
-import { ImgComparisonSlider } from '@img-comparison-slider/react';
-
+import { FaFilter, FaSignal, FaTools } from 'react-icons/fa';
 
 
 const filtersFields = {
@@ -58,11 +54,6 @@ const Filtering = () => {
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [chartDataFiltered, setChartDataFiltered] = useState(null);
-  const [chartImageOriginal, setChartImageOriginal] = useState(null);
-  const [chartImageFiltered, setChartImageFiltered] = useState(null);
-  const [spectrumChartImageOriginal, setSpectrumChartImageOriginal] = useState(null);
-  const [spectrumChartImageFIltered, setSpectrumChartImageFIltered] = useState(null);
-  const [flipped, setFlipped] = useState(false);
   const [metricsOriginal, setMetricsOriginal] = useState(null);
   const [metricsFiltered, setMetricsFiltered] = useState(null);
 
@@ -88,7 +79,6 @@ const Filtering = () => {
 
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
-          //setChartDataFiltered(data_original);
 
           const originalMetricsForm = new FormData();
           originalMetricsForm.append("signal", JSON.stringify(data_original.slice(1)));
@@ -290,7 +280,7 @@ const Filtering = () => {
       <Tabs color="violet" variant="pills" defaultValue="charts" className='mt-2'>
         <Tabs.List justify="center">
           <Tabs.Tab value="charts" className="flex-1">Charts</Tabs.Tab>
-          <Tabs.Tab value="spectrum" className="flex-1 text-center">Spectrum</Tabs.Tab>
+          <Tabs.Tab value="spectrum" className="flex-1">Spectrum</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="charts">
@@ -299,7 +289,7 @@ const Filtering = () => {
             rightIcon={<FaFilter className="my-auto text-green-500" />}
             leftContent={
               chartDataOriginal ? (
-                <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+                <CustomChart table={chartDataOriginal} />
               ) : (
                 <LoaderMessage message="Waiting for request..." />
               )
@@ -308,7 +298,6 @@ const Filtering = () => {
               chartDataFiltered ? (
                 <CustomChart
                   table={chartDataFiltered}
-                  setChartImage={setChartImageFiltered}
                   defaultColor="#50C878"
                 />
               ) : (
@@ -334,7 +323,6 @@ const Filtering = () => {
                 <SpectrumChart
                   table={chartDataOriginal}
                   samplingRate={samplingRate}
-                  setChartImage={setSpectrumChartImageOriginal}
                 />
               ) : (
                 <LoaderMessage message="Waiting for request..." />
@@ -345,7 +333,6 @@ const Filtering = () => {
                 <SpectrumChart
                   table={chartDataFiltered}
                   samplingRate={samplingRate}
-                  setChartImage={setSpectrumChartImageFIltered}
                   defaultColor="#50C878"
                 />
               ) : (
@@ -353,8 +340,8 @@ const Filtering = () => {
               )
             }
             comparisonContent={
-              spectrumChartImageOriginal && spectrumChartImageFIltered ? (
-                <ImageComparison firstImage={spectrumChartImageOriginal} secondImage={spectrumChartImageFIltered} />
+              chartDataOriginal && chartDataFiltered ? (
+                <LoaderMessage message="Waiting development..." />
               ) : (
                 <LoaderMessage message="Rendering comparison..." />
               )

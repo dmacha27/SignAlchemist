@@ -1,6 +1,17 @@
+import PropTypes from 'prop-types';
 import { Tabs } from '@mantine/core';
 import { FaColumns, FaExchangeAlt, FaBalanceScale, FaSignal } from 'react-icons/fa';
 
+/**
+ * SignalPanel component displays a tabbed panel with two views: Dual View and Comparison.
+ * 
+ * @param {Object} props - The props for the component.
+ * @param {string} props.rightTitle - The title displayed for the right panel.
+ * @param {JSX.Element} props.rightIcon - The icon displayed in the right panel header.
+ * @param {JSX.Element} props.leftContent - The content to display in the left panel of the dual view.
+ * @param {JSX.Element} props.rightContent - The content to display in the right panel of the dual view.
+ * @param {JSX.Element} props.comparisonContent - The content to display in the comparison view.
+ */
 const SignalPanel = ({
     rightTitle,
     rightIcon,
@@ -14,7 +25,7 @@ const SignalPanel = ({
                 <Tabs.Tab value="dual" className='w-[140px]' leftSection={<FaColumns size={14} />}>
                     Dual View
                 </Tabs.Tab>
-                <Tabs.Tab value="comparison" className='w-[140px]'leftSection={<FaExchangeAlt size={14} />}>
+                <Tabs.Tab value="comparison" className='w-[140px]' leftSection={<FaExchangeAlt size={14} />}>
                     Comparison
                 </Tabs.Tab>
             </Tabs.List>
@@ -50,6 +61,14 @@ const SignalPanel = ({
             </Tabs.Panel>
         </Tabs>
     );
+};
+
+SignalPanel.propTypes = {
+    rightTitle: PropTypes.string.isRequired,
+    rightIcon: PropTypes.element.isRequired,
+    leftContent: PropTypes.element.isRequired,
+    rightContent: PropTypes.element.isRequired,
+    comparisonContent: PropTypes.element.isRequired,
 };
 
 export default SignalPanel;

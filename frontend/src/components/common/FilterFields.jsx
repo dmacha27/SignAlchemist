@@ -1,4 +1,5 @@
 import { useState, memo } from "react";
+import PropTypes from 'prop-types';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { FaInfo, FaCheck, FaClipboard } from "react-icons/fa";
 
@@ -158,5 +159,20 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
 
 }
 );
+
+
+InfoModal.propTypes = {
+  opened: PropTypes.bool.isRequired,
+  close: PropTypes.func.isRequired,
+};
+
+FilterFields.propTypes = {
+  fields: PropTypes.objectOf(
+    PropTypes.shape({
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    })
+  ).isRequired,
+  onFieldChange: PropTypes.func.isRequired,
+};
 
 export default FilterFields;

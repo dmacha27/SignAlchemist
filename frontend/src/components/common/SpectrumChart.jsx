@@ -1,4 +1,5 @@
 import { useMemo, memo, useRef, useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import { fft, util as fftUtil } from 'fft-js';
 
@@ -32,6 +33,13 @@ ChartJS.register(
     Legend,
     TimeScale,
 );
+
+import {
+    getActualColor,
+    handleResetZoom,
+    handleResetStyle,
+    exportToPNG,
+} from '../utils/chartUtils';
 
 const MAX_DATA_LENGTH = 5000;
 
@@ -76,20 +84,6 @@ const baseChartOptions = {
     }
 };
 
-function getActualColor(pointBackgroundColor) {
-    if (typeof pointBackgroundColor === 'string') {
-        return pointBackgroundColor;
-    }
-
-    for (let i = 0; i < pointBackgroundColor.length; i++) {
-        const color = pointBackgroundColor[i];
-        if (color !== '#fa6400' && color !== 'gray') { // Exlude orange (highlight) and gray
-            return color;
-        }
-    }
-    return pointBackgroundColor[0] || null;
-}
-
 function nextPowerOfTwo(n) {
     return Math.pow(2, Math.ceil(Math.log2(n)));
 }
@@ -101,7 +95,15 @@ function padToPowerOfTwo(signal) {
     return paddedSignal;
 }
 
-const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor = '#2196f3' }) => {
+/**
+ * SpectrumChart component renders a frequency spectrum chart using FFT (Fast Fourier Transform)
+ * 
+ * @param {Object} props - The props for the component.
+ * @param {Array} props.table - A 2D array of data where the first row contains headers and the rest contains signal data.
+ * @param {number} props.samplingRate - The sampling rate of the signal in Hz.
+ * @param {string} [props.defaultColor='#2196f3'] - The default color for the chart's line and points.
+ */
+const SpectrumChart = memo(({ table, samplingRate, defaultColor = '#2196f3' }) => {
 
     const signal = useMemo(() => table.slice(1).map(row => row[1]), [table]);
 
@@ -110,10 +112,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
     const [goToX, setGoToX] = useState(null);
     const [yMin, setYMin] = useState(null);
     const [yMax, setYMax] = useState(null);
-    const shouldCaptureImage = useRef(true);
-    useEffect(() => {
-        shouldCaptureImage.current = true; // Allow setChartImage, this will avoid zoomed images
-    }, [signal]);
+
 
     const { both_data, minXValue, maxXValue, minYValue, maxYValue, zoomRangeX, zoomRangeY } = useMemo(() => {
         const paddedSignal = padToPowerOfTwo(signal);
@@ -138,44 +137,6 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
     }, [signal, samplingRate]);
 
     const isLargeDataset = signal.length > MAX_DATA_LENGTH;
-
-    const handleResetZoom = (ref) => {
-        if (ref) {
-            ref.options.scales.x.min = undefined;
-            ref.options.scales.x.max = undefined;
-
-            ref.options.scales.y.min = undefined;
-            ref.options.scales.y.max = undefined;
-            ref.update();
-        }
-    };
-
-    const handleResetStyle = (ref, color = defaultColor) => {
-        if (ref) {
-            const dataset = ref.data.datasets[0];
-
-            dataset.pointBackgroundColor = dataset.data.map(() => color);
-            dataset.pointBorderColor = dataset.data.map(() => color);
-            dataset.pointRadius = dataset.data.map(() => 2);
-
-            dataset.segment = {
-                borderColor: () => color,
-                backgroundColor: () => color
-            };
-
-            ref.update();
-        }
-    };
-
-    const exportToPNG = () => {
-        if (chartRef.current) {
-            const imageUrl = chartRef.current.toBase64Image();
-            const link = document.createElement('a');
-            link.href = imageUrl;
-            link.download = 'chart.png';
-            link.click();
-        }
-    };
 
     const chartOptions = useMemo(() => ({
         ...baseChartOptions,
@@ -238,15 +199,6 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                 }
             });
         },
-        animation: {
-            onComplete: () => {
-                if (shouldCaptureImage.current && chartRef.current) {
-                    const imageUrl = chartRef.current.toBase64Image();
-                    setChartImage(imageUrl);
-                    shouldCaptureImage.current = false;
-                }
-            }
-        },
         plugins: {
             ...baseChartOptions.plugins,
             zoom: {
@@ -267,7 +219,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
 
             }
         }
-    }), [isLargeDataset, setChartImage])
+    }), [isLargeDataset])
 
     const chartData = useMemo(() => ({
         datasets: [
@@ -367,7 +319,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                             </Menu.Target>
                             <Menu.Dropdown>
                                 <Menu.Label>Export as</Menu.Label>
-                                <Menu.Item leftSection={<FaImage size={12} />} onClick={exportToPNG}>
+                                <Menu.Item leftSection={<FaImage size={12} />} onClick={() => exportToPNG(chartRef.current)}>
                                     PNG
                                 </Menu.Item>
                             </Menu.Dropdown>
@@ -440,7 +392,7 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
                     </div>
 
                     <button
-                        onClick={() => handleResetStyle(chartRef.current)}
+                        onClick={() => handleResetStyle(chartRef.current, defaultColor)}
                         className="flex items-center gap-2 px-4 py-1 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm"
                     >
                         <FaSearch /> Reset Style
@@ -450,5 +402,15 @@ const SpectrumChart = memo(({ table, samplingRate, setChartImage, defaultColor =
         </div>
     );
 });
+
+SpectrumChart.propTypes = {
+    table: PropTypes.arrayOf(
+        PropTypes.arrayOf(
+            PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        )
+    ).isRequired,
+    samplingRate: PropTypes.number.isRequired,
+    defaultColor: PropTypes.string,
+};
 
 export default SpectrumChart;

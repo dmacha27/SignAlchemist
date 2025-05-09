@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import {
   ReactFlow,
@@ -11,9 +11,10 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import generateDataOriginal from '../utils';
+import generateDataOriginal from './utils/dataUtils';
 
 import CustomChart from './common/CustomChart';
+import ComparisonChart from './common/ComparisonChart';
 import InfoMetrics from './common/InfoMetrics';
 import InputSignal from './reactflow/nodes/InputSignal';
 import OutputSignal from './reactflow/nodes/OutputSignal';
@@ -22,7 +23,6 @@ import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
-import ImageComparison from './common/ImageComparison';
 
 import { Popover, Button, Text, Group } from '@mantine/core';
 
@@ -30,8 +30,7 @@ import { usePapaParse } from 'react-papaparse';
 
 import { useLocation } from "react-router-dom";
 
-import { ImgComparisonSlider } from '@img-comparison-slider/react';
-import { FaFilter, FaChartLine, FaBullseye, FaWaveSquare, FaProjectDiagram, FaSquare, FaRocket, FaSignal, FaTrash, FaEye } from 'react-icons/fa';
+import { FaFilter, FaChartLine, FaBullseye, FaWaveSquare, FaProjectDiagram, FaSquare, FaRocket, FaTrash, FaEye } from 'react-icons/fa';
 
 import toast from 'react-hot-toast';
 import ButtonEdge from './reactflow/edges/ButtonEdge';
@@ -42,10 +41,7 @@ const Processing = () => {
 
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [chartDataProcessed, setChartDataProcessed] = useState(null);
-  const [chartImageOriginal, setChartImageOriginal] = useState(null);
-  const [chartImageProcessed, setChartImageProcessed] = useState(null);
   const { readString } = usePapaParse();
-  const [flipped, setFlipped] = useState(false);
   const [metricsOriginal, setMetricsOriginal] = useState(null);
   const [metricsProcessed, setMetricsProcessed] = useState(null);
   const [opened, setOpened] = useState(false);
@@ -120,7 +116,7 @@ const Processing = () => {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [last_id, setLastId] = useState(0);
+  const [lastId, setLastId] = useState(0);
 
   const nodeTypes = {
     InputSignal,
@@ -159,7 +155,7 @@ const Processing = () => {
 
   const addNode = (type, options = {}) => {
     const newNode = {
-      id: String(last_id + 1),
+      id: String(lastId + 1),
       type: type,
       position: { x: 500, y: 120 },
       data: {
@@ -168,7 +164,7 @@ const Processing = () => {
     };
 
     setNodes((prevNodes) => [...prevNodes, newNode]);
-    setLastId(last_id + 1);
+    setLastId(lastId + 1);
   };
 
   const deleteNode = (id) => {
@@ -193,7 +189,6 @@ const Processing = () => {
     setNodes((prevNodes) => prevNodes.slice(0, 2));
     setEdges([]);
     setLastId(2);
-    setChartImageProcessed(null);
   }
 
   const deleteSourceTablesAndExecute = async () => {
@@ -383,21 +378,21 @@ const Processing = () => {
           rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
           leftContent={
             chartDataOriginal ? (
-              <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+              <CustomChart table={chartDataOriginal} />
             ) : (
               <LoaderMessage message="Waiting for request..." />
             )
           }
           rightContent={
             chartDataProcessed ? (
-              <CustomChart table={chartDataProcessed} setChartImage={setChartImageProcessed} defaultColor="#50C878" />
+              <CustomChart table={chartDataProcessed} defaultColor="#50C878" />
             ) : (
               <LoaderMessage message="Waiting for pipeline execution..." />
             )
           }
           comparisonContent={
-            chartImageOriginal && chartImageProcessed ? (
-              <ImageComparison firstImage={chartImageOriginal} secondImage={chartImageProcessed} />
+            chartDataOriginal && chartDataProcessed ? (
+              <ComparisonChart table1={chartDataOriginal} table2={chartDataProcessed} name2="Porcessed" />
             ) : (
               <LoaderMessage message="Rendering comparison..." />
             )

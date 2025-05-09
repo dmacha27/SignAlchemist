@@ -1,4 +1,5 @@
 import { memo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Table, Pagination } from '@mantine/core';
 
 /**
@@ -73,5 +74,14 @@ const InfoTable = memo(({ table, onlyTable }) => {
         </div>
     );
 });
+
+InfoTable.propTypes = {
+    table: PropTypes.arrayOf(
+        PropTypes.arrayOf(
+            PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        )
+    ).isRequired,
+    onlyTable: PropTypes.bool.isRequired,
+};
 
 export default InfoTable;

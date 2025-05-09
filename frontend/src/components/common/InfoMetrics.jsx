@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import PropTypes from 'prop-types';
 import { Popover, Text } from '@mantine/core';
 
 /**
@@ -18,7 +19,7 @@ const InfoMetrics = memo(({ metrics }) => {
             {Object.entries(metrics).map(([name, { value, description }], index) => {
                 const metricValue = value.toFixed(4);
                 return (
-                    <div key={index} className="flex justify-center items-center">
+                    <div key={name} className="flex justify-center items-center">
                         <Popover position="top" withArrow shadow="md" width={220} arrowSize={12} arrowRadius={3}>
                             <Popover.Target>
                                 <div className="bg-white shadow-xl rounded-lg p-6 cursor-pointer hover:scale-105 transform transition-all ease-in-out">
@@ -43,5 +44,14 @@ const InfoMetrics = memo(({ metrics }) => {
     );
 }
 );
+
+InfoMetrics.propTypes = {
+    metrics: PropTypes.objectOf(
+        PropTypes.shape({
+            value: PropTypes.number.isRequired,
+            description: PropTypes.string.isRequired,
+        })
+    ).isRequired,
+};
 
 export default InfoMetrics;

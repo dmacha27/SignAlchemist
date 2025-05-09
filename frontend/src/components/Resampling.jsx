@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { usePapaParse } from 'react-papaparse';
 
-import generateDataOriginal from '../utils';
+import generateDataOriginal from './utils/dataUtils';
 
 import CustomChart from './common/CustomChart';
 import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
-import ImageComparison from './common/ImageComparison';
 
 import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from 'react-icons/fa';
 import ComparisonChart from './common/ComparisonChart';
@@ -22,8 +21,6 @@ const Resampling = () => {
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [chartDataResampled, setChartDataResampled] = useState(null);
-  const [chartImageOriginal, setChartImageOriginal] = useState(null);
-  const [chartImageResampled, setChartImageResampled] = useState(null);
   const [interpolation, setInterpolation] = useState("spline");
   const [newSamplingRate, setNewSamplingRate] = useState(samplingRate);
 
@@ -44,7 +41,6 @@ const Resampling = () => {
 
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
-          //setChartDataResampled(data_original);
         },
       });
     };
@@ -187,7 +183,7 @@ const Resampling = () => {
         rightIcon={<FaExpandAlt className="my-auto text-green-500" />}
         leftContent={
           chartDataOriginal ? (
-            <CustomChart table={chartDataOriginal} setChartImage={setChartImageOriginal} />
+            <CustomChart table={chartDataOriginal} />
           ) : (
             <LoaderMessage message="Waiting for request..." />
           )
@@ -196,7 +192,6 @@ const Resampling = () => {
           chartDataResampled ? (
             <CustomChart
               table={chartDataResampled}
-              setChartImage={setChartImageResampled}
               defaultColor="#50C878"
             />
           ) : (

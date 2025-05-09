@@ -1,4 +1,5 @@
 import { memo, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 
@@ -30,10 +31,15 @@ ChartJS.register(
   TimeScale
 );
 
+import {
+  handleResetZoom,
+  exportToPNG,
+} from '../utils/chartUtils';
+
 const MAX_DATA_LENGTH = 5000;
 
 const baseChartOptions = {
-  label: "comparison-signal",
+  label: "comparison",
   responsive: true,
   plugins: {
     legend: {
@@ -82,6 +88,16 @@ const baseChartOptions = {
   }
 };
 
+/**
+ * ComparisonChart component renders a line chart that compares two datasets over time or values.
+ * 
+ * @param {Object} props - The props for the component.
+ * @param {Array} props.table1 - The first dataset, a 2D array where each sub-array represents a pair of x and y values.
+ * @param {Array} props.table2 - The second dataset, a 2D array where each sub-array represents a pair of x and y values.
+ * @param {string} [props.name1="Original"] - The label for the first dataset.
+ * @param {string} props.name2 - The label for the second dataset.
+ * 
+ */
 const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => {
   const chartRef = useRef(null);
   const draggableRef = useRef(null);
@@ -89,39 +105,12 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
   const [headers1, ...rows1] = table1;
   const [headers2, ...rows2] = table2;
 
-  const minX = Math.min(
-    ...rows1.map(row => row[0]),
-    ...rows2.map(row => row[0])
-  );
-  const maxX = Math.max(
-    ...rows1.map(row => row[0]),
-    ...rows2.map(row => row[0])
-  );
-
   const isLargeDataset = rows1.length > MAX_DATA_LENGTH || rows2.length > MAX_DATA_LENGTH;
 
   const shouldCaptureImage = useRef(true);
   useEffect(() => {
     shouldCaptureImage.current = true;
   }, [table1, table2]);
-
-  const handleResetZoom = () => {
-    if (chartRef.current) {
-      chartRef.current.options.scales.x.min = undefined;
-      chartRef.current.options.scales.x.max = undefined;
-      chartRef.current.update();
-    }
-  };
-
-  const exportToPNG = () => {
-    if (chartRef.current) {
-      const imageUrl = chartRef.current.toBase64Image();
-      const link = document.createElement('a');
-      link.href = imageUrl;
-      link.download = 'comparison-chart.png';
-      link.click();
-    }
-  };
 
   const chartOptions = {
     ...baseChartOptions,
@@ -194,7 +183,7 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Label>Export as</Menu.Label>
-                <Menu.Item leftSection={<FaImage size={12} />} onClick={exportToPNG}>
+                <Menu.Item leftSection={<FaImage size={12} />} onClick={() => exportToPNG(chartRef.current)}>
                   PNG
                 </Menu.Item>
               </Menu.Dropdown>
@@ -210,7 +199,7 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
       ) : (
         <div className="flex justify-center gap-4 mt-3">
           <button
-            onClick={handleResetZoom}
+            onClick={() => handleResetZoom(chartRef.current)}
             className="mt-3 flex items-center gap-2 mx-auto px-6 py-2 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium"
           >
             <FaSearch /> Reset Zoom
@@ -220,5 +209,21 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
     </div>
   );
 });
+
+ComparisonChart.propTypes = {
+  table1: PropTypes.arrayOf(
+    PropTypes.arrayOf(
+      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    )
+  ).isRequired,
+  table2: PropTypes.arrayOf(
+    PropTypes.arrayOf(
+      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    )
+  ).isRequired,
+  name1: PropTypes.string,
+  name2: PropTypes.string.isRequired,
+};
+
 
 export default ComparisonChart;

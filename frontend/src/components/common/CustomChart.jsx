@@ -1,4 +1,5 @@
-import { memo, useRef, useEffect, useState } from 'react';
+import { memo, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 
@@ -29,6 +30,13 @@ ChartJS.register(
   Legend,
   TimeScale
 );
+
+import {
+  getActualColor,
+  handleResetZoom,
+  handleResetStyle,
+  exportToPNG,
+} from '../utils/chartUtils';
 
 const MAX_DATA_LENGTH = 5000;
 
@@ -87,9 +95,9 @@ const baseChartOptions = {
  * 
  * @param {Object} props
  * @param {Array} props.table - A 2D array with headers in the first row and data points in subsequent rows.
- * @param {function} props.setChartImage - A function that sets the chart image as a base64 string when the animation completes.
+ * @param {string} [props.defaultColor='#2196f3'] - The default color for the chart's line and points.
  */
-const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) => { // Avoid re-render on parent render if table and setChartImage do not change.
+const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-render on parent render if table and setChartImage do not change.
   // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
 
   const chartRef = useRef(null);
@@ -108,38 +116,6 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
     shouldCaptureImage.current = true; // Allow setChartImage, this will avoid zoomed images
   }, [table]);
 
-  const handleResetZoom = () => {
-    if (chartRef.current) {
-
-      chartRef.current.options.scales.x.min = undefined;
-      chartRef.current.options.scales.x.max = undefined;
-      chartRef.current.update();
-    }
-  };
-
-  const handleResetStyle = () => {
-    if (chartRef.current) {
-
-      const dataset = chartRef.current.data.datasets[0];
-      dataset.pointBackgroundColor = dataset.data.map((_, i) => defaultColor);
-
-      dataset.pointBorderColor = dataset.data.map((_, i) => defaultColor);
-
-      dataset.pointRadius = dataset.data.map((_, i) => 2);
-      chartRef.current.update();
-    }
-  };
-
-  const exportToPNG = () => {
-    if (chartRef.current) {
-      const imageUrl = chartRef.current.toBase64Image();
-      const link = document.createElement('a');
-      link.href = imageUrl;
-      link.download = 'chart.png';
-      link.click();
-    }
-  };
-
   const chartOptions = {
     ...baseChartOptions,
     onClick: function (evt) {
@@ -154,18 +130,12 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
       const charts = Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "signal");
 
       charts.forEach(chart => {
-
+        console.log(chart)
         // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
         const dataset = chart.data.datasets[0];
 
-        let actualColor;
-        if (typeof (dataset.pointBackgroundColor) === "string") {
-          actualColor = dataset.pointBackgroundColor;
-        } else {
-          actualColor = dataset.pointBackgroundColor[0] === '#fa6400'
-            ? dataset.pointBackgroundColor[1]
-            : dataset.pointBackgroundColor[0];
-        }
+        let actualColor = getActualColor(dataset.pointBackgroundColor);
+
         if (dataset.data.length > MAX_DATA_LENGTH) return; // No interaction to improve performance
         if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return; // No point-to-point correspondence
 
@@ -223,15 +193,6 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
         }
       }
     },
-    animation: {
-      onComplete: () => {
-        if (shouldCaptureImage.current && chartRef.current) {
-          const imageUrl = chartRef.current.toBase64Image();
-          setChartImage(imageUrl);
-          shouldCaptureImage.current = false;
-        }
-      }
-    },
     scales: {
       ...baseChartOptions.scales,
       x: {
@@ -283,7 +244,7 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Label>Export as</Menu.Label>
-                <Menu.Item leftSection={<FaImage size={12} />} onClick={exportToPNG}>
+                <Menu.Item leftSection={<FaImage size={12} />} onClick={() => exportToPNG(chartRef.current)}>
                   PNG
                 </Menu.Item>
               </Menu.Dropdown>
@@ -300,13 +261,13 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
       ) : (
         <div className="flex justify-center gap-4 mt-3">
           <button
-            onClick={handleResetZoom}
+            onClick={() => handleResetZoom(chartRef.current)}
             className="mt-3 flex items-center gap-2 mx-auto px-6 py-2 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium"
           >
             <FaSearch /> Reset Zoom
           </button>
           <button
-            onClick={handleResetStyle}
+            onClick={() => handleResetStyle(chartRef.current, defaultColor)}
             className="mt-3 flex items-center gap-2 mx-auto px-6 py-2 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium"
           >
             <FaSearch /> Reset Style
@@ -316,5 +277,14 @@ const CustomChart = memo(({ table, setChartImage, defaultColor = '#2196f3' }) =>
     </div>
   );
 });
+
+CustomChart.propTypes = {
+  table: PropTypes.arrayOf(
+    PropTypes.arrayOf(
+      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    )
+  ).isRequired,
+  defaultColor: PropTypes.string,
+};
 
 export default CustomChart;
