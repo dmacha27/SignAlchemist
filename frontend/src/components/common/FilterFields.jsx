@@ -71,9 +71,14 @@ const InfoModal = ({ opened, close }) => {
               </SyntaxHighlighter>
 
               <Tooltip label={copied ? 'Copied!' : 'Copy'} position="top-end" withArrow>
-                <div
+                <button
                   className="absolute top-2 right-2 cursor-pointer"
                   onClick={handleCopy}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleCopy();
+                    }
+                  }}
                   title="Copy"
                 >
                   {copied ? (
@@ -81,7 +86,7 @@ const InfoModal = ({ opened, close }) => {
                   ) : (
                     <FaClipboard className="text-gray-500" />
                   )}
-                </div>
+                </button>
               </Tooltip>
             </div>
           </li>
@@ -134,7 +139,7 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
           return (
             <div key={field}>
               <div className="flex items-center justify-between mb-1">
-                <label className="font-medium text-gray-700">Python code</label>
+                <span className="font-medium text-gray-700">Python code</span >
                 <button
                   type="button"
                   onClick={open}

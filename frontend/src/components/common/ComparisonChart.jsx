@@ -103,7 +103,7 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
   const draggableRef = useRef(null);
 
   const [headers1, ...rows1] = table1;
-  const [headers2, ...rows2] = table2;
+  const rows2 = table2.slice(1);
 
   const isLargeDataset = rows1.length > MAX_DATA_LENGTH || rows2.length > MAX_DATA_LENGTH;
 

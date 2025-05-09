@@ -33,7 +33,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
     );
 
     const rows = paginatedData.map((row, index) => (
-        <Table.Tr key={index}>
+        <Table.Tr key={`${index + 1}`}>
             <Table.Td>{(page - 1) * rowsPerPage + index + 1}</Table.Td>
             <Table.Td>{row[0].toFixed(4)}</Table.Td>
             <Table.Td>{row[1].toFixed(4)}</Table.Td>
