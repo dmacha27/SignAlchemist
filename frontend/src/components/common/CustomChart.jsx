@@ -15,7 +15,7 @@ import {
   TimeScale
 } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { FaSearch, FaDownload, FaImage } from 'react-icons/fa';
+import { FaSearch, FaDownload, FaImage, FaHandPaper } from 'react-icons/fa';
 import { Menu, Button } from '@mantine/core';
 import Draggable from 'react-draggable';
 
@@ -236,19 +236,28 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
 
         <Draggable bounds="parent" nodeRef={draggableRef} handle=".drag-handle">
           <div ref={draggableRef} className="absolute top-0 right-0 z-10">
-            <div className="drag-handle w-9 h-2 bg-gray-300 rounded-t-md cursor-move mx-auto" />
+            <div className="relative inline-block group">
+              <Menu shadow="md" width={100}>
+                <Menu.Target>
+                  <Button size="xs" variant="light">
+                    <FaDownload />
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>Export as</Menu.Label>
+                  <Menu.Item
+                    leftSection={<FaImage size={12} />}
+                    onClick={() => exportToPNG(chartRef.current)}
+                  >
+                    PNG
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
 
-            <Menu shadow="md" width={100}>
-              <Menu.Target>
-                <Button><FaDownload /></Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>Export as</Menu.Label>
-                <Menu.Item leftSection={<FaImage size={12} />} onClick={() => exportToPNG(chartRef.current)}>
-                  PNG
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+              <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 bg-white rounded-full w-6 h-6 shadow-md border border-gray-300">
+                <FaHandPaper size={12} />
+              </div>
+            </div>
           </div>
         </Draggable>
 
