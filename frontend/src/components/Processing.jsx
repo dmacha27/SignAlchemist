@@ -14,7 +14,9 @@ import '@xyflow/react/dist/style.css';
 import generateDataOriginal from './utils/dataUtils';
 
 import CustomChart from './common/CustomChart';
+import SpectrumChart from './common/SpectrumChart';
 import ComparisonChart from './common/ComparisonChart';
+import ComparisonSpectrumChart from './common/ComparisonSpectrumChart';
 import InfoMetrics from './common/InfoMetrics';
 import InputSignal from './reactflow/nodes/InputSignal';
 import OutputSignal from './reactflow/nodes/OutputSignal';
@@ -24,7 +26,7 @@ import FilteringNode from './reactflow/nodes/FilteringNode';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
 
-import { Popover, Button, Text, Group } from '@mantine/core';
+import { Popover, Button, Text, Group, Tabs } from '@mantine/core';
 
 import { usePapaParse } from 'react-papaparse';
 
@@ -373,31 +375,80 @@ const Processing = () => {
       </div>
 
       <div id='charts'>
-        <SignalPanel
-          rightTitle="Processed Signal"
-          rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
-          leftContent={
-            chartDataOriginal ? (
-              <CustomChart table={chartDataOriginal} />
-            ) : (
-              <LoaderMessage message="Waiting for request..." />
-            )
-          }
-          rightContent={
-            chartDataProcessed ? (
-              <CustomChart table={chartDataProcessed} defaultColor="#50C878" />
-            ) : (
-              <LoaderMessage message="Waiting for pipeline execution..." />
-            )
-          }
-          comparisonContent={
-            chartDataOriginal && chartDataProcessed ? (
-              <ComparisonChart table1={chartDataOriginal} table2={chartDataProcessed} name2="Porcessed" />
-            ) : (
-              <LoaderMessage message="Rendering comparison..." />
-            )
-          }
-        />
+        <Tabs color="violet" variant="pills" defaultValue="charts" className='mt-2'>
+          <Tabs.List justify="center">
+            <Tabs.Tab value="charts" className="flex-1">Charts</Tabs.Tab>
+            <Tabs.Tab value="spectrum" className="flex-1">Spectrum</Tabs.Tab>
+          </Tabs.List>
+
+          <Tabs.Panel value="charts">
+            <SignalPanel
+              rightTitle="Processed Signal"
+              rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
+              leftContent={
+                chartDataOriginal ? (
+                  <CustomChart table={chartDataOriginal} />
+                ) : (
+                  <LoaderMessage message="Waiting for request..." />
+                )
+              }
+              rightContent={
+                chartDataProcessed ? (
+                  <CustomChart table={chartDataProcessed} defaultColor="#50C878" />
+                ) : (
+                  <LoaderMessage message="Waiting for pipeline execution..." />
+                )
+              }
+              comparisonContent={
+                chartDataOriginal && chartDataProcessed ? (
+                  <ComparisonChart table1={chartDataOriginal} table2={chartDataProcessed} name2="Porcessed" />
+                ) : (
+                  <LoaderMessage message="Rendering comparison..." />
+                )
+              }
+            />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="spectrum">
+            <SignalPanel
+              rightTitle="Filtered Signal"
+              rightIcon={<FaFilter className="my-auto text-green-500" />}
+              leftContent={
+                chartDataOriginal ? (
+                  <SpectrumChart
+                    table={chartDataOriginal}
+                    samplingRate={samplingRate}
+                  />
+                ) : (
+                  <LoaderMessage message="Waiting for request..." />
+                )
+              }
+              rightContent={
+                chartDataProcessed ? (
+                  <SpectrumChart
+                    table={chartDataProcessed}
+                    samplingRate={samplingRate}
+                    defaultColor="#50C878"
+                  />
+                ) : (
+                  <LoaderMessage message="Waiting for request..." />
+                )
+              }
+              comparisonContent={
+                chartDataOriginal && chartDataProcessed ? (
+                <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataProcessed} samplingRate={samplingRate} name2="Processed"/>
+                ) : (
+                  <LoaderMessage message="Rendering comparison..." />
+                )
+              }
+            />
+          </Tabs.Panel>
+        </Tabs>
+
+
+
+
+
       </div>
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">

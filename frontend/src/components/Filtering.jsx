@@ -13,6 +13,7 @@ import FilterFields from './common/FilterFields';
 import LoaderMessage from './common/LoaderMessage';
 import SignalPanel from './common/SignalPanel';
 import ComparisonChart from './common/ComparisonChart';
+import ComparisonSpectrumChart from './common/ComparisonSpectrumChart';
 
 import { Tabs } from '@mantine/core';
 
@@ -341,7 +342,7 @@ const Filtering = () => {
             }
             comparisonContent={
               chartDataOriginal && chartDataFiltered ? (
-                <LoaderMessage message="Waiting development..." />
+                <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataFiltered} samplingRate={samplingRate} name2="Filtered"/>
               ) : (
                 <LoaderMessage message="Rendering comparison..." />
               )
