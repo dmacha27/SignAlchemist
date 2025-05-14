@@ -26,11 +26,6 @@ def bvp_skewness(signal, fs=64, W=2):
 
 
 def bvp_quality(data, fs=64, MinPeakDistance=None, MinPeakHeight=0):
-    # Originalmente: MinPeakDistance = 60 / 240
-    print(f"\n\t\tMetric: bvp_quality")
-    print(f"\t\tFreq: {fs}")
-
-    # MinPeakDistance debe ser al menos 1 y entero
     if MinPeakDistance is None:
         MinPeakDistance = max(1, round(fs / 240))
 
@@ -46,25 +41,6 @@ def bvp_quality(data, fs=64, MinPeakDistance=None, MinPeakHeight=0):
     return Q_PHV
 
 
-def bvp_neurokit(bvp, fs=1000):
-    print(f"\n\t\tMetric: bvp_neurokit")
-    print(f"\t\tFreq: {fs}")
-    # print(bvp)
-    # fs = 1000
-    # print(nk.ppg.ppg_peaks(bvp, fs)[1])
-    # ppg_quality = nk.ppg.ppg_quality(bvp)
-    # result = np.mean(ppg_quality)
-    # print(f"Longitud: {len(bvp)}")
-    result = 0
-    try:
-        result = np.mean(nk.ppg.ppg_quality(bvp), sampling_rate=fs)
-    except Warning:
-        print(f"\t\t[W] MÉTRICA BVP NO CALCULADA CORRECTAMENTE")
-    except Exception:
-        print(f"\t\t[E] MÉTRICA BVP NO CALCULADA CORRECTAMENTE")
-    return result
-
-
 def gsr_quality(eda, fs=4):
     """
     Python implementation of Matlab code in Github.
@@ -73,8 +49,6 @@ def gsr_quality(eda, fs=4):
     Epitashvili, N., Biondi, A., ... & Loddenkemper, T. (2022).
     Data quality evaluation in wearable monitoring. Scientific reports, 12(1), 21412.
     """
-    print(f"\n\t\tMetric: gsr_quality")
-    print(f"\t\tFreq: {fs}")
 
     quality = {}
 

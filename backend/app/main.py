@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -6,20 +6,20 @@ import pandas as pd
 import neurokit2
 import numpy as np
 import scipy
-from scipy.signal import cheby2, sosfiltfilt, resample
-from scipy.ndimage import gaussian_filter1d
 
 from app.metrics import *
-
-# from scipy.signal import cheby2, sosfiltfilt, resample
-# from scipy.interpolate import interp1d, UnivariateSpline
-# from scipy.ndimage import gaussian_filter1d
 
 import json
 
 app = FastAPI(
-    title="Signalis API",
-    description="API for preprocessing (filtering, resampling and outlier detection), and metrics extraction from physiological signals",
+    title="SignAlchemist",
+    description="""
+### 🧪 SignAlchemist API
+
+The SignAlchemist API provides tools for **preprocessing** and **quality assessment** of physiological signals, including EDA (Electrodermal Activity) and PPG/BVP (Photoplethysmography). Can be used for other signals too.
+
+---
+""",
     version="1.0.0",
 )
 
@@ -32,92 +32,109 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/", tags=["System"])
 def read_root():
-    return {"message": "Welcome to the Signalis API"}
+    return {"message": "Welcome to the SignAlchemist API"}
 
 
-@app.options("/resampling")
+@app.options("/resampling", include_in_schema=False)
 async def options_resampling():
     return {"message": "Preflight OPTIONS request handled"}
 
 
-@app.post("/resampling")
+@app.post("/resampling", summary="Resample a signal", tags=["Preprocessing"])
 async def resampling(
-    signal: str = Form(...),
-    interpolation_technique: str = Form(...),
-    source_sampling_rate: float = Form(...),
-    target_sampling_rate: float = Form(...),
+    signal: str = Form(...,
+                       description="JSON-encoded list of `[timestamp, value]` pairs representing the input signal."),
+    interpolation_technique: str = Form(
+        ..., description="Interpolation method to use: `'linear'` or `'spline'`."),
+    source_sampling_rate: float = Form(
+        ..., description="Original sampling rate of the signal, in Hz."),
+    target_sampling_rate: float = Form(...,
+                                       description="Desired target sampling rate, in Hz."),
 ):
-    """Resample signal using given interpolation technique."""
+    """
+    Resample a signal with state-of-art interpolation techniques.
+    """
     signal = np.array(json.loads(signal))
-
     min_timestamp = min(signal[:, 0])
     max_timestamp = max(signal[:, 0])
-
-    num_samples = int(len(signal[:, 1]) * (target_sampling_rate / source_sampling_rate))
-
+    num_samples = int(len(signal[:, 1]) *
+                      (target_sampling_rate / source_sampling_rate))
     new_time = np.linspace(min_timestamp, max_timestamp, num_samples)
 
     if interpolation_technique == "spline":
-        interp_func = scipy.interpolate.UnivariateSpline(signal[:, 0], signal[:, 1])
+        interp_func = scipy.interpolate.UnivariateSpline(
+            signal[:, 0], signal[:, 1])
     else:
         interp_func = scipy.interpolate.interp1d(signal[:, 0], signal[:, 1])
 
     new_values = interp_func(new_time)
-
     new_data = np.stack((new_time, new_values), axis=1)
 
     return JSONResponse(content={"data": new_data.tolist()})
 
 
-@app.options("/outliers")
+@app.options("/outliers", include_in_schema=False)
 async def options_outliers():
     return {"message": "Preflight OPTIONS request handled"}
 
 
-@app.post("/outliers")
+@app.post("/outliers", summary="Remove outliers from signal", tags=["Preprocessing"])
 async def outliers(
-    signal: str = Form(...),
-    outlier_technique: str = Form(...),
+    signal: str = Form(...,
+                       description="JSON-encoded list of `[timestamp, value]` pairs."),
+    outlier_technique: str = Form(
+        ..., description="Outlier detection method: `'hampel'` or `'iqr'`."),
 ):
-    """Remove outliers using the specified method."""
+    """
+    Remove statistical outliers from a signal using the selected method.
+    """
     signal = np.array(json.loads(signal))
     values = signal[:, 1]
 
     if outlier_technique == "hampel":
-        new_values = hampel_IQR_GSR(values)
+        new_values = hampel(values)
     elif outlier_technique == "iqr":
         new_values = IQR(values)
     else:
         return JSONResponse(content={"error": "Invalid technique"}, status_code=400)
 
     new_data = np.stack((signal[:, 0], new_values), axis=1)
-
     return JSONResponse(content={"data": new_data.tolist()})
 
 
-@app.options("/filtering")
+@app.options("/filtering", include_in_schema=False)
 async def options_filtering():
     return {"message": "Preflight OPTIONS request handled"}
 
 
-@app.post("/filtering")
+@app.post("/filtering", summary="Apply filter to signal", tags=["Preprocessing"])
 async def filtering(
-    signal: str = Form(...),
-    signal_type: str = Form(...),
-    sampling_rate: int = Form(...),
-    method: str = Form(...),
-    lowcut: float = Form(None),
-    highcut: float = Form(None),
-    order: int = Form(None),
-    python: str = Form(None),
+    signal: str = Form(...,
+                       description="JSON-encoded list of `[timestamp, value]` pairs."),
+    signal_type: str = Form(...,
+                            description="Signal type, e.g., `'EDA'`, `'PPG'`."),
+    sampling_rate: int = Form(...,
+                              description="Sampling rate of the input signal in Hz."),
+    method: str = Form(...,
+                       description="Filtering method (e.g., `'butterworth'`, `'bessel'`)."),
+    lowcut: float = Form(
+        None, description="Lower frequency bound for bandpass filters."),
+    highcut: float = Form(
+        None, description="Upper frequency bound for bandpass filters."),
+    order: int = Form(None, description="Filter order (default is 2)."),
+    python: str = Form(
+        None, description="Optional custom Python code defining a `filter_signal` function."),
 ):
-    """Filter signal using built-in or custom method."""
+    """
+    Filter a signal using a predefined or custom method.
+
+    Supports NeuroKit2 filters or custom inline Python code for full control.
+    """
     try:
         order = order or 2
         python = python or ""
-
         data = np.array(json.loads(signal))
 
         if python:
@@ -125,9 +142,7 @@ async def filtering(
                 namespace = globals().copy()
                 exec(python, namespace)
                 filter_signal = namespace["filter_signal"]
-
                 new_values = filter_signal(data[:, 1])
-
             except Exception as e:
                 return JSONResponse(content={"error": str(e)}, status_code=400)
         else:
@@ -141,25 +156,29 @@ async def filtering(
             )
 
         new_data = np.stack((data[:, 0], new_values), axis=1)
-
         return JSONResponse(content={"data": new_data.tolist()})
-
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=400)
 
 
-@app.options("/metrics")
+@app.options("/metrics", include_in_schema=False)
 async def options_metrics():
     return {"message": "Preflight OPTIONS request handled"}
 
 
-@app.post("/metrics")
+@app.post("/metrics", summary="Extract signal quality metrics", tags=["Metrics"])
 def get_metrics(
-    signal: str = Form(...),
-    signal_type: str = Form(...),
-    sampling_rate: int = Form(...),
+    signal: str = Form(...,
+                       description="JSON-encoded list of `[timestamp, value]` pairs."),
+    signal_type: str = Form(...,
+                            description="Signal type: `'EDA'` or `'PPG'`."),
+    sampling_rate: int = Form(..., description="Sampling rate in Hz."),
 ):
-    """Compute quality metrics for EDA signals."""
+    """
+    Compute quality metrics for EDA or PPG signals based on literature.
+
+    Returns a dictionary with multiple metric values and their descriptions.
+    """
     try:
         data = np.array(json.loads(signal))
         values = data[:, 1]
@@ -170,52 +189,30 @@ def get_metrics(
         return {
             "Böttcher et al. (2022)": {
                 "value": gsr_quality(values, fs=sampling_rate),
-                "description": "Evaluates EDA signal quality using amplitude thresholding and RAC (range of absolute change) stability over 2-second windows, as per Böttcher et al. (2022).",
+                "description": "Evaluates EDA signal quality using amplitude thresholding and RAC (range of absolute change) stability over 2-second windows, as per Böttcher et al. (2022)."
+                ,
             },
             "Kleckner et al. (2017)": {
                 "value": gsr_automated_2secs(values, fs=sampling_rate),
-                "description": "Assesses EDA signal quality using automated heuristics described by Kleckner et al. (2017), typically over short 2-second windows.",
+                "description": "Assesses EDA signal quality using automated heuristics described by Kleckner et al. (2017), typically over short 2-second windows."
+                ,
             },
+        }
+    elif signal_type == "PPG":
+        return {
+            "Mohamed Elgendi (2016)": {
+                "value": bvp_skewness(values, fs=sampling_rate, W=2),
+                "description": "Skewness is a measure of the symmetry (or the lack of it) of a probability distribution."
+                ,
+            },
+            "Maki et al. (2020)": {
+                "value": bvp_quality(values, fs=sampling_rate),
+                "description": "Quantifies the consistency of peak amplitudes in a BVP/PPG signal, with lower PHV values indicating higher signal reliability."
+                ,
+            }
         }
     else:
         return {"error": "Signal type not supported"}
-
-
-@app.post("/process")
-async def process(signal: str = Form(...), signalType: str = Form(...)):
-    """Process signal with multiple outlier and filter pipelines, return quality metric."""
-    data = np.array(json.loads(signal))
-
-    signal_data = data[:, 1]
-
-    outliers_functions_names = ["IQR", "HAMPEL"]
-    filter_functions_names = ["Butterworth", "Gaussian"]
-
-    outliers_functions = [IQR, hampel_IQR_GSR]
-    filter_functions = [butterworth_gsr_bvp, gaussian1_gsr]
-
-    pipelines = []
-
-    for i, outlier_func in enumerate(outliers_functions):
-        signal_no_outliers = outlier_func(signal_data)
-
-        for j, filter_func in enumerate(filter_functions):
-            filtered_signal = filter_func(signal_no_outliers)
-
-            data_processed = data.copy()
-            data_processed[:, 1] = filtered_signal
-
-            quality = gsr_quality(np.array(filtered_signal))
-
-            pipelines.append(
-                {
-                    "title": f"Pipeline {outliers_functions_names[i]}-{filter_functions_names[j]}",
-                    "signal": data_processed.tolist(),
-                    "qualityMetric": quality,
-                }
-            )
-
-    return JSONResponse(content={"pipelines": pipelines})
 
 
 def IQR(signal):
@@ -237,8 +234,8 @@ def IQR(signal):
     nans = np.isnan(clean_signal)
     if any(nans):
         clean_signal[nans] = np.interp(
-            np.where(nans)[0],  # Índices de los NaN
-            np.where(~nans)[0],  # Índices de los valores válidos
+            np.nonzero(nans)[0],  # Índices de los NaN
+            np.nonzero(~nans)[0],  # Índices de los valores válidos
             clean_signal[~nans],  # Valores válidos
         )
 
@@ -247,9 +244,10 @@ def IQR(signal):
     return clean_signal.tolist()
 
 
-def hampel_IQR_GSR(gsr):
+def hampel(gsr):
     """Remove outliers from GSR signal using Hampel method and IQR logic."""
-    gsr_filtered = np.array(neurokit2.rsp_clean(gsr, sampling_rate=4, method="hampel"))
+    gsr_filtered = np.array(neurokit2.rsp_clean(
+        gsr, sampling_rate=4, method="hampel"))
 
     Q1 = np.percentile(gsr_filtered, 25)
     Q3 = np.percentile(gsr_filtered, 75)
@@ -267,78 +265,3 @@ def hampel_IQR_GSR(gsr):
     gsr_clean_series = gsr_clean_series.fillna(gsr_clean_series.mean())
 
     return gsr_clean_series.to_numpy()
-
-
-def butterworth_gsr_bvp(signal, sampling_rate=64):
-    """Apply a Butterworth low-pass filter to the GSR or BVP signal."""
-    signal_filtered = nk.signal.signal_filter(
-        signal, sampling_rate=sampling_rate, highcut=1
-    )
-
-    return list(signal_filtered)
-
-
-def gaussian1_gsr(signal):
-    """Apply Gaussian smoothing filter to the signal."""
-    new_values = scipy.ndimage.gaussian_filter1d(signal, sigma=300)
-    return new_values
-
-
-def gsr_quality(eda, fs=4):
-    """Python implementation of Matlab code in Github.
-    Quality metric based on:
-    - Böttcher, S., Vieluf, S., Bruno, E., Joseph, B.,
-    - Epitashvili, N., Biondi, A., ... & Loddenkemper, T. (2022).
-    - Data quality evaluation in wearable monitoring. Scientific reports, 12(1), 21412.
-    """
-
-    quality = {"metric1": eda, "values1": eda >= 0.05}
-
-    def getRAC(signal, T=2):
-        intervals = range(0, len(signal), T * fs)
-        rac = np.full(len(signal), np.nan)
-
-        for ix in intervals:
-            if (ix + T * fs - 1) >= len(signal):
-                continue
-
-            windowdata = signal[ix : ix + T * fs]
-            imin = np.argmin(windowdata)
-            vmin = windowdata[imin]
-
-            imax = np.argmax(windowdata)
-            vmax = windowdata[imax]
-
-            if imin < imax:
-                # Avoid zero division
-                rac[ix] = (vmax - vmin) / (abs(vmin) + 1e-10)
-            elif imin > imax:
-                rac[ix] = (vmin - vmax) / (abs(vmax) + 1e-10)
-
-        last = np.nan
-
-        # Fill missing with previous
-        for i in range(len(rac)):
-            if not np.isnan(rac[i]):
-                last = rac[i]
-            else:
-                rac[i] = last
-
-        return rac
-
-    quality["metric2"] = getRAC(eda)
-    quality["values2"] = abs(quality["metric2"]) < 0.2
-    quality["values"] = quality["values1"] & quality["values2"]
-
-    # Moving/Rolling mean
-    moving_window = 60 * fs
-
-    w_real = moving_window + 1
-    cumsum = np.cumsum(np.insert(quality["values"], 0, 0))
-    rolling_mean = (cumsum[w_real:] - cumsum[:-w_real]) / float(w_real)
-    for i in range(moving_window, 0, -1):
-        rolling_mean = np.append(rolling_mean, np.mean(quality["values"][-i:]))
-
-    mean_score = np.mean(rolling_mean)
-
-    return mean_score
