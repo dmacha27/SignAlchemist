@@ -78,7 +78,6 @@ const baseChartOptions = {
       }
     },
     y: {
-      beginAtZero: true,
       ticks: { color: '#444' },
       title: {
         display: true,

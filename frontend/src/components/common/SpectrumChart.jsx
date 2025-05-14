@@ -74,7 +74,6 @@ const baseChartOptions = {
             }
         },
         y: {
-            beginAtZero: true,
             ticks: { color: '#444' },
             title: {
                 display: true,
@@ -237,8 +236,8 @@ const SpectrumChart = memo(({ table, samplingRate, defaultColor = '#2196f3' }) =
                 ticks: { color: isDark ? '#ffffff' : '#000000' },
                 grid: { color: isDark ? '#444444' : '#e5e5e5' },
                 title: {
-                ...baseChartOptions.scales.x.title,
-                color: isDark ? '#ffffff' : '#000000',
+                    ...baseChartOptions.scales.x.title,
+                    color: isDark ? '#ffffff' : '#000000',
                 }
             },
             y: {
@@ -246,8 +245,8 @@ const SpectrumChart = memo(({ table, samplingRate, defaultColor = '#2196f3' }) =
                 ticks: { color: isDark ? '#ffffff' : '#444444' },
                 grid: { color: isDark ? '#444444' : '#e5e5e5' },
                 title: {
-                ...baseChartOptions.scales.y.title,
-                color: isDark ? '#ffffff' : '#000000',
+                    ...baseChartOptions.scales.y.title,
+                    color: isDark ? '#ffffff' : '#000000',
                 }
             }
         }
@@ -369,7 +368,7 @@ const SpectrumChart = memo(({ table, samplingRate, defaultColor = '#2196f3' }) =
                             </Menu>
 
                             <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full w-6 h-6 shadow-md border border-gray-300 dark:border-gray-600">
-                               <FaHandPaper size={12} />
+                                <FaHandPaper size={12} />
                             </div>
                         </div>
                     </div>

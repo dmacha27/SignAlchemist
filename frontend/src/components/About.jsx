@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import Tilt from 'react-parallax-tilt';
-import { useContext} from 'react';
-import { ThemeContext } from '../App'; 
+import { useContext } from 'react';
+import { ThemeContext } from '../App';
 
 const About = () => {
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ const About = () => {
               Whether you're working with simple or complex signals, this toolkit gives you the flexibility and precision needed for reliable data processing, with a focus on usability and reproducibility.
             </p>
             <button
-              onClick={() => navigate('/')}                    
+              onClick={() => navigate('/')}
               className="mt-4 p-3 bg-white text-indigo-600 dark:bg-gray-800 dark:text-gray-100 text-lg rounded about-button"
             >
               Try it out
@@ -57,7 +57,7 @@ const About = () => {
                 alt="Signal Processing"
                 className="w-full h-full object-cover"
                 style={{ pointerEvents: 'none' }} // Prevent image from being dragged
-              /> 
+              />
 
             </Tilt>
           </div>

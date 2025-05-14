@@ -32,7 +32,7 @@ const InfoMetrics = memo(({ metrics }) => {
                                     </div>
                                 </div>
                             </Popover.Target>
-                            <Popover.Dropdown className="bg-blue-50 dark:bg-[#1e3a8a] text-blue-600 dark:text-white rounded-lg shadow-lg text-sm p-4 border-0"> 
+                            <Popover.Dropdown className="bg-blue-50 dark:bg-[#1e3a8a] text-blue-600 dark:text-white rounded-lg shadow-lg text-sm p-4 border-0">
                                 <Text size="sm" className="font-bold text-lg dark:text-white">{name}</Text>
                                 <Text size="xs" className="ttext-gray-500 dark:text-gray-400 mb-2">{description}</Text>
                             </Popover.Dropdown>

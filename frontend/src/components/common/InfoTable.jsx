@@ -34,24 +34,23 @@ const InfoTable = memo(({ table, onlyTable }) => {
 
     const rows = paginatedData.map((row, index) => (
         <Table.Tr
-          key={`${index + 1}`}
-          className={`border border-gray-200 dark:border-gray-600 ${
-            index % 2 === 0
-              ? 'bg-white dark:bg-gray-800'
-              : 'bg-gray-100 dark:bg-gray-700'
-          }`}
+            key={`${index + 1}`}
+            className={`border border-gray-200 dark:border-gray-600 ${index % 2 === 0
+                ? 'bg-white dark:bg-gray-800'
+                : 'bg-gray-100 dark:bg-gray-700'
+                }`}
         >
-          <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
-            {(page - 1) * rowsPerPage + index + 1}
-          </Table.Td>
-          <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
-            {row[0].toFixed(4)}
-          </Table.Td>
-          <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
-            {row[1].toFixed(4)}
-          </Table.Td>
+            <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+                {(page - 1) * rowsPerPage + index + 1}
+            </Table.Td>
+            <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+                {row[0].toFixed(4)}
+            </Table.Td>
+            <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+                {row[1].toFixed(4)}
+            </Table.Td>
         </Table.Tr>
-      ));
+    ));
 
     return (
         <div className="text-black dark:text-white">
@@ -77,15 +76,15 @@ const InfoTable = memo(({ table, onlyTable }) => {
                 {totalPages > 1 && (
                     <div className="flex justify-center mt-4">
                         <Pagination
-                        value={page}
-                        onChange={setPage}
-                        total={totalPages}
-                        classNames={{
-                            control: ({ active }) =>
-                            active
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
-                        }}
+                            value={page}
+                            onChange={setPage}
+                            total={totalPages}
+                            classNames={{
+                                control: ({ active }) =>
+                                    active
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+                            }}
                         />
 
                     </div>

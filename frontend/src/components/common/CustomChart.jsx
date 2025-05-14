@@ -80,7 +80,6 @@ const baseChartOptions = {
       }
     },
     y: {
-      beginAtZero: true,
       ticks: { color: '#444' },
       title: {
         display: true,
@@ -101,7 +100,7 @@ const baseChartOptions = {
  */
 const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-render on parent render if table and setChartImage do not change.
   // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-  
+
   const chartRef = useRef(null);
   const draggableRef = useRef(null);
   const [headers, ...rows] = table;
@@ -185,7 +184,7 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
     },
     plugins: {
       ...baseChartOptions.plugins,
-        tooltip: {
+      tooltip: {
         ...baseChartOptions.plugins.tooltip,
         backgroundColor: isDark ? '#333' : '#fff',
         titleColor: isDark ? '#fff' : '#222',
