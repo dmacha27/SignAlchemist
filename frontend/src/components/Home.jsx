@@ -25,7 +25,7 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
         <Modal
             opened={opened}
             onClose={close}
-            title="Select SignaliX Utility"
+            title="Select SignAlchemist Utility"
             size="xl"
             centered
             classNames={{
@@ -510,8 +510,8 @@ const Home = () => {
     return (
         <div className="container mx-auto px-4">
             <header className="text-center py-2">
-                <h1 className="text-3xl font-bold">SignaliX</h1>
-                <p className="text-gray-600">Physiological signal processing.</p>
+                <h1 className="text-3xl font-bold">SignAlchemist</h1>
+                <p className="text-gray-600 dark:text-gray-300">Physiological signal processing</p>
                 <Link
                     to="/about"
                     className="inline-block mt-2 px-6 py-2 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 text-lg rounded hover:bg-gray-200 dark:hover:bg-gray-700">
