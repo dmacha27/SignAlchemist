@@ -29,12 +29,12 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
             size="xl"
             centered
             classNames={{
-                body: 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white',
-                header: 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700',
+                body: 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white',
+                header: 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700',
             }}
         >
             <Group gap="lg" justify="center" grow>
-                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-900 dark:text-white">
                     <Card.Section>
                         <Image src={isDark ? 'resampling_dark.gif' : 'resampling.gif'} alt="Resampling" />
                     </Card.Section>
@@ -55,7 +55,7 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
                     </Button>
                 </Card>
 
-                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-900 dark:text-white">
                     <Card.Section>
                         <Image src={isDark ? 'filtering_dark.gif' : 'filtering.gif'} alt="Filtering" />
                     </Card.Section>
@@ -76,7 +76,7 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
                     </Button>
                 </Card>
 
-                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-900 dark:text-white">
                     <Card.Section>
                         <Image src={isDark ? 'processing_dark.gif' : 'processing.gif'} alt="Processing" />
                     </Card.Section>
