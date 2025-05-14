@@ -37,88 +37,95 @@ const chartOptions = {
 
 };
 
-const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => (
-    <Modal
-        opened={opened}
-        onClose={close}
-        title="Select SignaliX Utility"
-        size="xl"
-        centered
-    >
-        <Group gap="lg" justify="center" grow>
-            <Card shadow="lg" padding="lg" style={{ width: '300px' }}>
-                <Card.Section>
-                    <Image src="resampling.gif" alt="Resampling" />
-                </Card.Section>
-                <Text align="center" weight={500} size="lg" style={{ marginTop: 10 }}>
-                    Resampling
-                </Text>
-                <Text size="sm" color="dimmed" style={{ marginBottom: 15 }}>
-                    Generates data points with state-of-the-art techniques
-                </Text>
-                <Button
-                    fullWidth
-                    color="blue"
-                    onClick={() => {
-                        navigate("/resampling", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
-                    }}
-                >
-                    Go
+const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => {
+    // Detect dark mode
+    const { isDarkMode: isDark } = useContext(ThemeContext);
+    
+    return (
+        <Modal
+            opened={opened}
+            onClose={close}
+            title="Select SignaliX Utility"
+            size="xl"
+            centered
+            classNames={{
+                body: 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white',
+                header: 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700',
+            }}
+        >
+            <Group gap="lg" justify="center" grow>
+                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                    <Card.Section>
+                        <Image src={isDark ? 'resampling_dark.gif' : 'resampling.gif'} alt="Resampling" />
+                    </Card.Section>
+                    <Text align="center" weight={500} size="lg" className="dark:text-white" style={{ marginTop: 10 }}>
+                        Resampling
+                    </Text>
+                    <Text size="sm" color="dimmed" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
+                        Generates data points with state-of-the-art interpolation techniques
+                    </Text>
+                    <Button
+                        fullWidth
+                        color="blue"
+                        onClick={() => {
+                            navigate("/resampling", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
+                        }}
+                    >
+                        Go
+                    </Button>
+                </Card>
+
+                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                    <Card.Section>
+                        <Image src={isDark ? 'filtering_dark.gif' : 'filtering.gif'} alt="Filtering" />
+                    </Card.Section>
+                    <Text align="center" weight={500} size="lg" className="dark:text-white" style={{ marginTop: 10 }}>
+                        Filtering
+                    </Text>
+                    <Text size="sm" color="dimmed" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
+                        Applies multiple advanced filters, including custom ones, to efficiently process data.
+                    </Text>
+                    <Button
+                        fullWidth
+                        color="blue"
+                        onClick={() => {
+                            navigate("/filtering", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
+                        }}
+                    >
+                        Go
+                    </Button>
+                </Card>
+
+                <Card shadow="lg" padding="lg" style={{ width: '300px' }} className="dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                    <Card.Section>
+                        <Image src={isDark ? 'processing_dark.gif' : 'processing.gif'} alt="Processing" />
+                    </Card.Section>
+                    <Text align="center" weight={500} size="lg" className="dark:text-white" style={{ marginTop: 10 }}>
+                        Processing
+                    </Text>
+                    <Text size="sm" color="dimmed" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
+                        Process signals using a node-based workflow with customizable processing nodes.
+                    </Text>
+                    <Button
+                        fullWidth
+                        color="blue"
+                        onClick={() => {
+                            navigate("/processing", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
+                        }}
+                    >
+                        Go
+                    </Button>
+                </Card>
+            </Group>
+
+            <Group justify="flex-end" className='mt-2'>
+                <Button variant="light" color="red" onClick={close}>
+                    Close
                 </Button>
-            </Card>
-
-            <Card shadow="lg" padding="lg" style={{ width: '300px' }}>
-                <Card.Section>
-                    <Image src="filtering.gif" alt="Filtering" />
-                </Card.Section>
-                <Text align="center" weight={500} size="lg" style={{ marginTop: 10 }}>
-                    Filtering
-                </Text>
-                <Text size="sm" color="dimmed" style={{ marginBottom: 15 }}>
-                    Applies multiple advanced filters, including custom ones, to efficiently process data.
-                </Text>
-                <Button
-                    fullWidth
-                    color="blue"
-                    onClick={() => {
-                        navigate("/filtering", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
-                    }}
-                >
-                    Go
-                </Button>
-            </Card>
-
-            <Card shadow="lg" padding="lg" style={{ width: '300px' }}>
-                <Card.Section>
-                    <Image src="processing.gif" alt="Processing" />
-                </Card.Section>
-                <Text align="center" weight={500} size="lg" style={{ marginTop: 10 }}>
-                    Processing
-                </Text>
-                <Text size="sm" color="dimmed" style={{ marginBottom: 15 }}>
-                    Process signals using a node-based workflow with customizable processing nodes.
-                </Text>
-                <Button
-                    fullWidth
-                    color="blue"
-                    onClick={() => {
-                        navigate("/processing", { state: { file, signalType, timestampColumn, samplingRate, signalValues } });
-                    }}
-                >
-                    Go
-                </Button>
-            </Card>
-        </Group>
-
-        <Group justify="flex-end" className='mt-2'>
-            <Button variant="light" color="red" onClick={close}>
-                Close
-            </Button>
-        </Group>
-    </Modal>
-)
-);
-
+            </Group>
+        </Modal>
+    );
+});
 
 
 const CSVUploader = memo(({ file, setFile, setHeaders }) => {

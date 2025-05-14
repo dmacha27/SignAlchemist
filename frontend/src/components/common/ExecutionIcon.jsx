@@ -13,10 +13,10 @@ import { FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa
  */
 const ExecutionIcon = ({ executionState }) => {
   const icons = {
-    waiting: <FaClock className="text-muted" />,
-    running: <FaSpinner className="spin text-primary" />,
-    executed: <FaCheck className="text-success" />,
-    error: <FaExclamationCircle className="text-danger" />
+    waiting: <FaClock className="text-muted dark:text-white" />,
+    running: <FaSpinner className="spin text-primary dark:text-white" />,
+    executed: <FaCheck className="text-success dark:text-white" />,
+    error: <FaExclamationCircle className="text-danger dark:text-white" />
   };
 
   return icons[executionState] || null;
