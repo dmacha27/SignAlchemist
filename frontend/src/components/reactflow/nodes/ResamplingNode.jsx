@@ -156,17 +156,17 @@ function ResamplingNode({ id, data }) {
   };
 
   return (
-    <Card className="bg-white shadow-lg rounded-lg p-4 mt-2 relative overflow-visible">
+    <Card className="bg-white dark:bg-gray-900 shadow-lg dark:shadow-xl rounded-lg p-4 mt-2 relative overflow-visible border-0 dark:border dark:border-gray-700">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b dark:border-gray-700">
         <div className="flex items-center gap-2">
           <FaChartLine className="text-blue-600" size={20} />
-          <span className="font-bold text-lg text-gray-800">Resampling</span>
+          <span className="font-bold text-lg text-gray-800 dark:text-white">Resampling</span>
 
           {/* Node execution state icon */}
           <Tooltip label={executionState} withArrow position="bottom">
             <div
-              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 toast.custom(
                   <div className='toast-status'>
@@ -184,7 +184,7 @@ function ResamplingNode({ id, data }) {
           {/* Button to see the node output */}
           <Tooltip label="See output" withArrow position="bottom">
             <div
-              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 if (currentNodeData?.data?.table) {
                   data.setChartDataProcessed(currentNodeData.data.table);
@@ -193,14 +193,14 @@ function ResamplingNode({ id, data }) {
                 }
               }}
             >
-              <FaEye />
+              <FaEye className="text-black dark:text-white" />
             </div>
           </Tooltip>
 
           {/* Button to delete the node */}
           <Tooltip label="Delete node" withArrow position="bottom">
             <div
-              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => { data.deleteNode(id); }}
             >
               <FaTrash className="text-red-500" />
@@ -214,23 +214,32 @@ function ResamplingNode({ id, data }) {
       {/* Form */}
       <Form>
         <Form.Group className="mb-4" controlId="interpTechnique">
-          <Form.Label className="text-uppercase text-sm font-medium text-muted mb-2">
+          <Form.Label className="text-uppercase text-sm font-medium text-muted dark:text-gray-300 mb-2">
             Interpolation technique
           </Form.Label>
           <Select
             size="sm"
             value={interpolationTechnique}
             onChange={setInterpolationTechnique}
-            className="bg-light border-0 rounded-lg shadow-sm"
             data={[
               { value: 'spline', label: 'Spline' },
               { value: '1d', label: 'Interp1d' }
             ]}
+            className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
+            classNames={{
+              input: 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
+              dropdown: 'dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
+               item: `
+                  dark:data-[hover]:bg-gray-700 !important
+                  data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
+                  data-[selected]:text-black dark:data-[selected]:text-white
+                `
+            }}
           />
         </Form.Group>
 
         <Form.Group className="mb-4" controlId="samplingRate">
-          <Form.Label className="text-uppercase text-sm font-medium text-muted mb-2">
+          <Form.Label className="text-uppercase text-sm font-medium text-muted dark:text-gray-300 mb-2">
             New rate (Hz)
           </Form.Label>
           <input
@@ -239,7 +248,7 @@ function ResamplingNode({ id, data }) {
             placeholder="Enter Hz"
             value={targetSamplingRate}
             onChange={(event) => setTargetSamplingRate(event.target.value)}
-            className="w-full text-sm bg-gray-100 border border-gray-200 rounded-md shadow-sm px-3 py-2"
+            className="w-full text-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 text-black dark:text-white"
           />
         </Form.Group>
       </Form>
@@ -251,7 +260,7 @@ function ResamplingNode({ id, data }) {
           size="sm"
           disabled={!table}
           onClick={requestResample}
-          className="rounded-lg font-semibold w-full"
+          className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${!table ? '' : 'dark:text-white'}`}
         >
           Resample
         </Button>

@@ -1,6 +1,5 @@
 import { memo } from "react";
 import PropTypes from 'prop-types';
-
 /**
  * LoaderMessage component displays a loading spinner and a custom message.
  * 
@@ -10,7 +9,7 @@ import PropTypes from 'prop-types';
 const LoaderMessage = memo(({ message }) => (
   <div className="text-center">
     <span className="loader"></span>
-    <p className="mt-2 text-gray-600">{message}</p>
+    <p className="mt-2 text-gray-600 dark:text-gray-300">{message}</p>
   </div>
 ));
 

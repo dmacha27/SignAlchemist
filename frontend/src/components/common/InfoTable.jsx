@@ -33,29 +33,42 @@ const InfoTable = memo(({ table, onlyTable }) => {
     );
 
     const rows = paginatedData.map((row, index) => (
-        <Table.Tr key={`${index + 1}`}>
-            <Table.Td>{(page - 1) * rowsPerPage + index + 1}</Table.Td>
-            <Table.Td>{row[0].toFixed(4)}</Table.Td>
-            <Table.Td>{row[1].toFixed(4)}</Table.Td>
+        <Table.Tr
+          key={`${index + 1}`}
+          className={`border border-gray-200 dark:border-gray-600 ${
+            index % 2 === 0
+              ? 'bg-white dark:bg-gray-800'
+              : 'bg-gray-100 dark:bg-gray-700'
+          }`}
+        >
+          <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+            {(page - 1) * rowsPerPage + index + 1}
+          </Table.Td>
+          <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+            {row[0].toFixed(4)}
+          </Table.Td>
+          <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+            {row[1].toFixed(4)}
+          </Table.Td>
         </Table.Tr>
-    ));
+      ));
 
     return (
-        <div>
+        <div className="text-black dark:text-white">
             {!onlyTable && (
-                <div className="shadow-sm rounded-xl border p-2 mb-2">
+                <div className="shadow-sm rounded-xl border border-gray-200 dark:border dark:border-gray-600 p-2 mb-2 bg-white dark:bg-gray-900">
                     <p><strong>Duration:</strong> {seconds_to_minutes(duration)} s</p>
                     <p><strong>Sampling rate:</strong> {samplingRateCalculated.toFixed(1)} Hz</p>
                     <p><strong>Signal length:</strong> {signalLength} samples</p>
                 </div>
             )}
-            <div className="shadow-md rounded-xl border p-2">
-                <Table striped withColumnBorders withRowBorders={false}>
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>#</Table.Th>
-                            <Table.Th>{headers[0]}</Table.Th>
-                            <Table.Th>{headers[1]}</Table.Th>
+            <div className="shadow-md rounded-xl border border-gray-200 dark:border dark:border-gray-600 p-2 bg-white dark:bg-gray-900">
+                <Table highlightOnHover withColumnBorders={false} withRowBorders={false}>
+                    <Table.Thead className="bg-white dark:bg-gray-800">
+                        <Table.Tr className="border border-gray-200 dark:border-gray-600">
+                            <Table.Th className="border border-gray-200 dark:border-r dark:border-gray-600 text-black dark:text-white">#</Table.Th>
+                            <Table.Th className="border border-gray-200 dark:border-r dark:border-gray-600 text-black dark:text-white">{headers[0]}</Table.Th>
+                            <Table.Th className="border border-gray-200 dark:border-gray-600 text-black dark:text-white">{headers[1]}</Table.Th>
                         </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>{rows}</Table.Tbody>
@@ -64,10 +77,17 @@ const InfoTable = memo(({ table, onlyTable }) => {
                 {totalPages > 1 && (
                     <div className="flex justify-center mt-4">
                         <Pagination
-                            value={page}
-                            onChange={setPage}
-                            total={totalPages}
+                        value={page}
+                        onChange={setPage}
+                        total={totalPages}
+                        classNames={{
+                            control: ({ active }) =>
+                            active
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+                        }}
                         />
+
                     </div>
                 )}
             </div>

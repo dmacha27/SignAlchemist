@@ -149,17 +149,17 @@ function OutliersNode({ id, data }) {
   };
 
   return (
-    <Card className="bg-white border-0 shadow-lg rounded-lg p-4 relative overflow-visible">
+    <Card className="bg-white dark:bg-gray-900 border border-transparent dark:border-gray-600 shadow-lg dark:shadow-xl rounded-lg p-4 relative overflow-visible">
       {/* Header section with title, state icon, and action buttons */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <FaBullseye className="text-secondary" size={20} />
-          <span className="font-bold text-lg text-dark">Outlier Detection</span>
+          <FaBullseye className="text-secondary dark:text-white" size={20} />
+          <span className="font-bold text-lg text-dark dark:text-white">Outlier Detection</span>
   
           {/* Node execution state icon */}
           <Tooltip label={executionState} withArrow position="bottom">
             <div
-              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 toast.custom(
                   <div className='toast-status'>
@@ -177,7 +177,7 @@ function OutliersNode({ id, data }) {
           {/* Button to see the node output */}
           <Tooltip label="See output" withArrow position="bottom">
             <div
-              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 if (currentNodeData?.data?.table) {
                   data.setChartDataProcessed(currentNodeData.data.table);
@@ -186,14 +186,14 @@ function OutliersNode({ id, data }) {
                 }
               }}
             >
-              <FaEye />
+              <FaEye className="text-black dark:text-white" />
             </div>
           </Tooltip>
   
           {/* Button to delete the node */}
           <Tooltip label="Delete node" withArrow position="bottom">
             <div
-              className="bg-light p-2 rounded-lg border border-gray-300 shadow-sm cursor-pointer"
+              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => { data.deleteNode(id); }}
             >
               <FaTrash className="text-red-500" />
@@ -208,18 +208,28 @@ function OutliersNode({ id, data }) {
       {/* Outlier detection configuration form */}
       <Form>
         <Form.Group className="mb-4" controlId="outlierTechnique">
-          <Form.Label className="text-uppercase text-sm font-medium text-muted mb-2">
+          <Form.Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Outlier Technique
           </Form.Label>
           <Select
             size="sm"
             value={outlierTechnique}
             onChange={(e) => setOutlierTechnique(e)}
-            className="bg-light border-0 rounded-lg shadow-sm"
             data={[
               { value: 'hampel', label: 'Hampel' },
               { value: 'iqr', label: 'IQR' }
             ]}
+            className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
+            classNames={{
+              input: 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
+              dropdown: 'dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
+               item: `
+                  dark:data-[hover]:bg-gray-700 !important
+                  data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
+                  data-[selected]:text-black dark:data-[selected]:text-white
+                `
+            }}
+          
           />
         </Form.Group>
       </Form>
@@ -232,7 +242,8 @@ function OutliersNode({ id, data }) {
           color='grey'
           disabled={!table}
           onClick={requestOutliers}
-          className="rounded-lg font-semibold w-full"
+          className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${!table ? '' : 'dark:text-white'}`}
+
         >
           Apply Outliers
         </Button>

@@ -54,7 +54,7 @@ function ButtonEdge({
                 >
                     <div
                         onClick={onEdgeClick}
-                        className="flex items-center justify-center bg-gray-100 border rounded w-8 h-8 cursor-pointer"
+                        className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded w-8 h-8 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
                         <FaTrash className="text-red-500" />
                     </div>

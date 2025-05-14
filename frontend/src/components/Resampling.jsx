@@ -80,22 +80,22 @@ const Resampling = () => {
   return (
     <div className="container mx-auto px-10">
       {/* Header */}
-      <header className="text-center py-4 border-b">
-        <h1 className="text-3xl font-bold flex justify-center items-center">
+      <header className="text-center py-4 border-b border-gray-300 dark:border-gray-600">
+        <h1 className="text-3xl font-bold flex justify-center items-center text-black dark:text-white">
           <FaChartLine className="mr-2 text-blue-500" />
           Resampling
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           <strong>Signal type:</strong> {signalType}
         </p>
       </header>
 
       {/* Panels */}
-      <div className="grid md:grid-cols-3 gap-6 py-4 border-b">
+      <div className="grid md:grid-cols-3 gap-6 py-4 border-b border-gray-300 dark:border-b dark:border-gray-600">
         {/* Original Signal */}
         <div className="max-w-full w-full mx-auto">
-          <div className="bg-white border shadow-md rounded-lg">
-            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
+          <div className="bg-white dark:bg-gray-900 border dark:border dark:border-gray-600 shadow-md rounded-lg">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
               <FaSignal className="my-auto text-blue-500" />
               Original Signal
             </div>
@@ -103,7 +103,7 @@ const Resampling = () => {
               {chartDataOriginal ? (
                 <InfoTable table={chartDataOriginal} onlyTable={false} />
               ) : (
-                <div className="text-center text-gray-500">No data available</div>
+                <div className="text-center text-gray-500 dark:text-gray-400">No data available</div>
               )}
             </div>
           </div>
@@ -111,19 +111,19 @@ const Resampling = () => {
 
         {/* Resampling Controls */}
         <div className="max-w-full w-full mx-auto">
-          <div className="bg-white border shadow-md rounded-lg sticky top-0">
-            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
+          <div className="bg-white dark:bg-gray-900 border dark:border dark:border-gray-600 shadow-md rounded-lg sticky top-0">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
               <FaTools className="my-auto text-gray-500" />
               Resampling Controls
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label htmlFor="interpTechnique" className="block mb-1 font-medium">
+                <label htmlFor="interpTechnique" className="block mb-1 font-medium text-black dark:text-white">
                   Interpolation technique
                 </label>
                 <select
                   id="interpTechnique"
-                  className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                  className="block w-full border border-gray-300 dark:border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
                   onChange={(value) => { setInterpolation(value) }}
                 >
                   <option value="spline">Spline</option>
@@ -142,7 +142,7 @@ const Resampling = () => {
                   defaultValue={samplingRate}
                   onChange={(event) => { setNewSamplingRate(event.target.value) }}
                   placeholder="Enter Hz"
-                  className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                  className="block w-full border border-gray-300 dark:border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
               </div>
 
@@ -159,12 +159,12 @@ const Resampling = () => {
 
         {/* Resampled Signal */}
         <div className="max-w-full w-full mx-auto">
-          <div className="bg-white border shadow-md rounded-lg">
-            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
+          <div className="bg-white dark:bg-gray-900 border dark:border dark:border-gray-600 shadow-md rounded-lg">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
               <FaChartLine className="my-auto text-green-500" />
               Resampled Signal
             </div>
-            <div className="p-4">
+            <div className="p-4 text-black dark:text-white">
               {chartDataResampled ? (
                 <>
                   <InfoTable table={chartDataResampled} onlyTable={false} />

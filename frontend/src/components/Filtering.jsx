@@ -188,22 +188,22 @@ const Filtering = () => {
   return (
     <div className="container mx-auto px-10">
       {/* Header */}
-      <header className="text-center py-4 border-b">
-        <h1 className="text-3xl font-bold flex justify-center items-center">
+      <header className="text-center py-4 border-b border-gray-300 dark:border-gray-600">
+        <h1 className="text-3xl font-bold flex justify-center items-center text-black dark:text-white">
           <FaFilter className="mr-2 text-blue-500" />
           Filtering
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           <strong>Signal type:</strong> {signalType}
         </p>
       </header>
 
       {/* Panels */}
-      <div className="grid md:grid-cols-3 gap-6 py-4 border-b">
+      <div className="grid md:grid-cols-3 gap-6 py-4 border-b border-gray-300 dark:border-b dark:border-gray-600">
         {/* Original Signal */}
         <div className="max-w-full w-full mx-auto">
-          <div className="bg-white border shadow-md rounded-lg">
-            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
+          <div className="bg-white dark:bg-gray-900 border dark:border dark:border-gray-600 shadow-md rounded-lg">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
               <FaSignal className="my-auto text-blue-500" />
               Original Signal
             </div>
@@ -211,7 +211,7 @@ const Filtering = () => {
               {chartDataOriginal ? (
                 <InfoTable table={chartDataOriginal} onlyTable={true} />
               ) : (
-                <div className="text-center text-gray-500">No data available</div>
+                <div className="text-center text-gray-500 dark:text-gray-400">No data available</div>
               )}
             </div>
           </div>
@@ -219,14 +219,14 @@ const Filtering = () => {
 
         {/* Filtering Controls */}
         <div className="max-w-full w-full mx-auto">
-          <div className="bg-white border shadow-md rounded-lg sticky top-0">
-            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
-              <FaTools className="my-auto text-gray-500" />
+          <div className="bg-white dark:bg-gray-900 border dark:border dark:border-gray-600 shadow-md rounded-lg sticky top-0">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
+              <FaTools className="my-auto text-gray-500 dark:text-gray-400" />
               Filtering Controls
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label htmlFor="filterTechnique" className="block mb-1 font-medium">
+                <label htmlFor="filterTechnique" className="block mb-1 font-medium text-black dark:text-white">
                   Filtering technique
                 </label>
                 <select
@@ -235,7 +235,7 @@ const Filtering = () => {
                     setFilter(e.target.value);
                     setFields(filtersFields[e.target.value]);
                   }}
-                  className="block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                  className="block w-full border border-gray-300 dark:border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
                 >
                   <option value="butterworth">Butterworth</option>
                   <option value="bessel">Bessel</option>
@@ -259,12 +259,12 @@ const Filtering = () => {
 
         {/* Filtered Signal */}
         <div className="max-w-full w-full mx-auto">
-          <div className="bg-white border shadow-md rounded-lg">
-            <div className="bg-gray-100 px-4 py-2 font-bold flex justify-center gap-2">
+          <div className="bg-white dark:bg-gray-900 border dark:border dark:border-gray-600 shadow-md rounded-lg">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
               <FaFilter className="my-auto text-green-500" />
               Filtered Signal
             </div>
-            <div className="p-4">
+            <div className="p-4 text-black dark:text-white">
               {chartDataFiltered ? (
                 <>
                   <InfoTable table={chartDataFiltered} onlyTable={true} />
@@ -350,16 +350,17 @@ const Filtering = () => {
           />
         </Tabs.Panel>
       </Tabs>
+
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
-        <div className="bg-white shadow-md rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
           {metricsOriginal ? (
             <InfoMetrics metrics={metricsOriginal} />
           ) : (
             <LoaderMessage message="Waiting for request..." />
           )}
         </div>
-        <div className="bg-white shadow-md rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
           {metricsFiltered ? (
             <InfoMetrics metrics={metricsFiltered} />
           ) : (

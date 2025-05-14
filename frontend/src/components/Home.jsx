@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect, memo } from 'react';
-import PropTypes from 'prop-types';
+import { useState, useRef, useEffect, memo, useMemo, useContext } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { PrimeReactProvider } from 'primereact/api';
 import { FileUpload } from 'primereact/fileupload';
@@ -7,6 +6,8 @@ import { usePapaParse } from 'react-papaparse';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
+
+import { ThemeContext } from '../App'; 
 import LoaderMessage from './common/LoaderMessage';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -16,20 +17,26 @@ import { useDisclosure } from '@mantine/hooks';
 
 const max_length_lag = 5000;
 
+const chartOptions = {
+    responsive: true,
+    plugins: {
+        legend: {
+            onClick: () => {}, // Avoid signal hiding
+        }
+    },
+    scales: {
+        x: {
+            type: 'linear', position: 'bottom',
+            title: {
+                display: true,
+                text: "(s)"
+            }
+        },
+        y: { beginAtZero: true },
+    },
 
-/**
- * UtilityModal component renders a modal with options for different signal processing utilities.
- *
- * @param {Object} props
- * @param {boolean} props.opened - Whether the modal is currently open.
- * @param {Function} props.close - Function to close the modal.
- * @param {Function} props.navigate - Function to navigate to other routes.
- * @param {Blob} props.file - The uploaded CSV file to be processed.
- * @param {string} props.signalType - The type of signal selected (e.g., EDA, PPG).
- * @param {number} props.timestampColumn - Index of the column representing timestamps.
- * @param {number} props.samplingRate - Sampling rate of the signal in Hz.
- * @param {number|string} props.signalValues - Index of the signal values column.
- */
+};
+
 const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => (
     <Modal
         opened={opened}
@@ -113,14 +120,7 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
 );
 
 
-/**
- * CSVUploader component allows users to upload a CSV file.
- *
- * @param {Object} props
- * @param {Blob|null} props.file - The currently uploaded CSV file.
- * @param {Function} props.setFile - Function to update the uploaded file.
- * @param {Function} props.setHeaders - Function to update extracted CSV headers.
- */
+
 const CSVUploader = memo(({ file, setFile, setHeaders }) => {
     const fileUploader = useRef();
     const { readString } = usePapaParse();
@@ -128,7 +128,7 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
     const [signalType, setSignalType] = useState("");
     const [timestampColumn, setTimestampColumn] = useState("");
     const [samplingRate, setSamplingRate] = useState(0);
-    const [signalValues, setSignalValues] = useState(-1);
+    const [signalValues, setSignalValues] = useState("");
     const [opened, { open, close }] = useDisclosure(false);
 
     const handleUtilityModal = (event) => {
@@ -216,8 +216,9 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
 
     return (
         <>
-            <PrimeReactProvider>
-                <div className="card">
+            <PrimeReactProvider> 
+                {/* dark:bg-gray-800 to unify the background of the card */}
+                <div className="card bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow rounded p-4"> 
                     <p id="error-message" style={{ color: "red" }}></p>
                     <FileUpload
                         ref={fileUploader}
@@ -229,9 +230,14 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
                         onRemove={clearForm}
                         accept=".csv"
                         maxFileSize={52428868} // 50 MB
-                        emptyTemplate={<p className="m-0">Drag and drop files here to upload.</p>}
+                        emptyTemplate={
+                            <p className="m-0 text-gray-800 dark:text-gray-100">
+                              Drag and drop files here to upload.
+                            </p>
+                          }
                     />
                 </div>
+
             </PrimeReactProvider>
             <UtilityModal
                 opened={opened}
@@ -248,60 +254,59 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
 }
 );
 
-/**
- * InfoTable component renders a table displaying signal data.
- *
- * @param {Object} props
- * @param {Array} props.table - A 2D array where the first row contains headers, and subsequent rows contain data.
- */
 const InfoTable = ({ table }) => {
-    // table: [[header, header, header..], [x1, y1, ...], [x2, y2, ...], [x3, y3, ...]]
-    const headers = table[0];
-    const data = table.slice(1);
+  // table: [[header, header, header..], [x1, y1, ...], [x2, y2, ...], [x3, y3, ...]]
+  const headers = table[0];
+  const data = table.slice(1);
 
-    return (
-        <div className="mt-2">
-            <div className="max-h-[230px] overflow-y-auto border border-gray-300 rounded shadow-sm">
-                <table className="min-w-full text-sm text-left border-collapse">
-                    <thead className="bg-gray-100 sticky top-0 z-10">
-                        <tr>
-                            <th className="px-3 py-2 border border-gray-300 font-medium bg-gray-200">
-                                {data.length > max_length_lag ? "Truncated" : ""}
-                            </th>
-                            {headers.map((header, idx) => (
-                                <th
-                                    key={idx}
-                                    className="px-3 py-2 border border-gray-300 font-medium bg-gray-200"
-                                >
-                                    {header}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.slice(0, max_length_lag).map((row, index) => (
-                            <tr
-                                key={index}
-                                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                            >
-                                <td className="px-3 py-1 border border-gray-200 font-medium text-gray-700">
-                                    {index + 1}
-                                </td>
-                                {row.map((cell, i) => (
-                                    <td key={i} className="px-3 py-1 border border-gray-200 text-gray-700">
-                                        {typeof cell === "number" ? cell.toFixed(4) : cell}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
+  return (
+    <div className="mt-2">
+      <div className="max-h-[230px] overflow-y-auto border border-gray-300 dark:border-gray-600 rounded shadow-sm">
+        <table className="min-w-full text-sm text-left border-collapse">
+          <thead className="bg-gray-100 dark:bg-gray-900 sticky top-0 z-10">
+            <tr>
+              <th className="px-3 py-2 border border-gray-300 dark:border-gray-600 font-medium bg-gray-200 dark:bg-gray-800 text-black dark:text-white">
+                {data.length > max_length_lag ? "Truncated" : ""}
+              </th>
+              {headers.map((header, idx) => (
+                <th
+                  key={idx}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 font-medium bg-gray-200 dark:bg-gray-800 text-black dark:text-white"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.slice(0, max_length_lag).map((row, index) => (
+              <tr
+                key={index}
+                className={
+                  index % 2 === 0
+                    ? "bg-white dark:bg-gray-800"
+                    : "bg-gray-50 dark:bg-gray-700"
+                }
+              >
+                <td className="px-3 py-1 border border-gray-200 dark:border-gray-600 font-medium text-gray-700 dark:text-gray-100">
+                  {index + 1}
+                </td>
+                {row.map((cell, i) => (
+                  <td
+                    key={i}
+                    className="px-3 py-1 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-100"
+                  >
+                    {typeof cell === "number" ? cell.toFixed(4) : cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 };
-
-
 
 const CustomChart = ({ table }) => {
     // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
@@ -310,31 +315,77 @@ const CustomChart = ({ table }) => {
     const data = table.slice(1);
 
     const chartRef = useRef(null);
-
     const isLargeDataset = data.length > max_length_lag;
 
-    const options = {
+    // Detect dark mode
+    const { isDarkMode: isDark } = useContext(ThemeContext);
+    
+    const options = useMemo(() => ({
         responsive: true,
         plugins: {
-            legend: {
-                onClick: () => { }, // Avoid signal hiding
-            }
+          legend: {
+            onClick: () => {},
+            labels: {
+              color: isDark ? '#ffffff' : '#000000',
+            },
+          },
+          title: {
+            display: false,
+          },
         },
         scales: {
-            x: {
-                type: 'linear', position: 'bottom',
-                title: {
-                    display: true,
-                    text: "(s)"
-                }
+          x: {
+            type: 'linear',
+            position: 'bottom',
+            title: {
+              display: true,
+              text: headers[0] + " (s)",
+              color: isDark ? '#ffffff' : '#000000',
             },
-            y: { beginAtZero: true },
+            ticks: {
+              color: isDark ? '#ffffff' : '#000000',
+            },
+            grid: {
+              color: isDark ? '#444444' : '#e5e5e5',
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: headers[1],
+              color: isDark ? '#ffffff' : '#000000',
+            },
+            ticks: {
+              color: isDark ? '#ffffff' : '#000000',
+            },
+            grid: {
+              color: isDark ? '#444444' : '#e5e5e5',
+            },
+            beginAtZero: true,
+          },
         },
+    }), [isDark, headers]);
 
-    };
-    options.scales.x.title = { display: true, text: headers[0] + " (s)" };
-    options.scales.y.title = { display: true, text: headers[1] };
+    useEffect(() => {
+    if (!chartRef.current) return;
 
+    const chart = chartRef.current;
+
+    const color = isDark ? '#ffffff' : '#000000';
+    const gridColor = isDark ? '#444444' : '#e5e5e5';
+
+    chart.options.scales.x.ticks.color = color;
+    chart.options.scales.x.title.color = color;
+    chart.options.scales.x.grid.color = gridColor;
+
+    chart.options.scales.y.ticks.color = color;
+    chart.options.scales.y.title.color = color;
+    chart.options.scales.y.grid.color = gridColor;
+
+    chart.options.plugins.legend.labels.color = color;
+
+    chart.update();
+  }, [isDark]);
 
     const datasets = [
         {
@@ -467,7 +518,7 @@ const Home = () => {
     };
 
     const handleSignalValuesChange = (event) => {
-        setSignalValues(parseInt(event.target.value));
+        setSignalValues(event.target.value);
     };
 
     return (
@@ -477,8 +528,7 @@ const Home = () => {
                 <p className="text-gray-600">Physiological signal processing.</p>
                 <Link
                     to="/about"
-                    className="inline-block mt-2 px-6 py-2 bg-gray-100 text-gray-800 text-lg rounded hover:bg-gray-200"
-                >
+                    className="inline-block mt-2 px-6 py-2 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 text-lg rounded hover:bg-gray-200 dark:hover:bg-gray-700">
                     About this project
                 </Link>
             </header>
@@ -491,49 +541,52 @@ const Home = () => {
 
             <div className="flex flex-wrap justify-center gap-4 p-2">
                 <div className="w-full max-w-xl">
-                    <div className="bg-white border-slate-400 shadow-md rounded-lg p-4">
+                    <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
                         <form className="space-y-4">
                             <div>
-                                <label htmlFor="signalType">
-                                    Signal type
-                                </label>
-                                <select id="signalType" className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 bg-white" />
-                            </div>
-
-                            <div>
-                                <label htmlFor="timestampColumn">
-                                    Timestamp Column
+                                <label htmlFor="signalType" className="text-black dark:text-white">
+                                Signal type
                                 </label>
                                 <select
-                                    id="timestampColumn"
-                                    onChange={handleTimestampChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                                id="signalType"
+                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="samplingRate">
-                                    Sampling rate (Hz)
+                                <label htmlFor="timestampColumn" className="text-black dark:text-white">
+                                Timestamp Column
+                                </label>
+                                <select
+                                id="timestampColumn"
+                                onChange={handleTimestampChange}
+                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="samplingRate" className="text-black dark:text-white">
+                                Sampling rate (Hz)
                                 </label>
                                 <input
-                                    type="number"
-                                    step={1}
-                                    placeholder="Enter Hz"
-                                    id="samplingRate"
-                                    onChange={handleSamplingRateChange}
-                                    disabled={headers === null || timestampColumn !== headers.length - 1}
-                                    className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 disabled:opacity-50 bg-white"
+                                type="number"
+                                step={1}
+                                placeholder="Enter Hz"
+                                id="samplingRate"
+                                onChange={handleSamplingRateChange}
+                                disabled={headers === null || timestampColumn !== headers.length - 1}
+                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 disabled:opacity-50 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="signalValues">
-                                    Signal Values
+                                <label htmlFor="signalValues" className="text-black dark:text-white">
+                                Signal Values
                                 </label>
                                 <select
-                                    id="signalValues"
-                                    onChange={handleSignalValuesChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                                id="signalValues"
+                                onChange={handleSignalValuesChange}
+                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
                                 />
                             </div>
                         </form>
@@ -543,7 +596,7 @@ const Home = () => {
                 </div>
 
                 <div className="w-full max-w-xl">
-                    <div className="bg-white border-slate-400 shadow-md rounded-lg p-4 text-center">
+                    <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4 text-center">
                         <div
                             id="samplingRateBadge"
                             className="bg-blue-500 text-white rounded px-4 py-1 mx-auto w-1/2 mb-4 hidden"
@@ -563,32 +616,6 @@ const Home = () => {
 
 
     );
-};
-
-
-UtilityModal.propTypes = {
-    opened: PropTypes.bool.isRequired,
-    close: PropTypes.func.isRequired,
-    navigate: PropTypes.func.isRequired,
-    file: PropTypes.instanceOf(Blob),
-    signalType: PropTypes.string.isRequired,
-    timestampColumn: PropTypes.number.isRequired,
-    samplingRate: PropTypes.number.isRequired,
-    signalValues: PropTypes.number.isRequired,
-};
-
-CSVUploader.propTypes = {
-    file: PropTypes.instanceOf(Blob),
-    setFile: PropTypes.func.isRequired,
-    setHeaders: PropTypes.func.isRequired,
-};
-
-InfoTable.propTypes = {
-    table: PropTypes.arrayOf(
-        PropTypes.arrayOf(
-            PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-        )
-    ).isRequired,
 };
 
 export default Home;

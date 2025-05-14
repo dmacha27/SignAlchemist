@@ -1,8 +1,7 @@
-import { memo, useRef, useEffect } from 'react';
+import { memo, useRef, useEffect, useMemo, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -38,7 +37,10 @@ import {
   exportToPNG,
 } from '../utils/chartUtils';
 
+import { ThemeContext } from '../../App';
+
 const MAX_DATA_LENGTH = 5000;
+
 
 const baseChartOptions = {
   label: "signal",
@@ -99,7 +101,7 @@ const baseChartOptions = {
  */
 const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-render on parent render if table and setChartImage do not change.
   // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-
+  
   const chartRef = useRef(null);
   const draggableRef = useRef(null);
   const [headers, ...rows] = table;
@@ -116,7 +118,9 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
     shouldCaptureImage.current = true; // Allow setChartImage, this will avoid zoomed images
   }, [table]);
 
-  const chartOptions = {
+  const { isDarkMode: isDark } = useContext(ThemeContext);
+
+  const chartOptions = useMemo(() => ({
     ...baseChartOptions,
     onClick: function (evt) {
       const elements = chartRef.current.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
@@ -181,6 +185,13 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
     },
     plugins: {
       ...baseChartOptions.plugins,
+        tooltip: {
+        ...baseChartOptions.plugins.tooltip,
+        backgroundColor: isDark ? '#333' : '#fff',
+        titleColor: isDark ? '#fff' : '#222',
+        bodyColor: isDark ? '#ddd' : '#333',
+        borderColor: isDark ? '#555' : '#ccc',
+      },
       zoom: {
         pan: {
           enabled: !isLargeDataset,
@@ -198,9 +209,12 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
       x: {
         ...baseChartOptions.scales.x,
         type: rows[0][0] == 0.0 ? 'linear' : 'time',
+        ticks: { color: isDark ? '#ffffff' : '#000000' },
+        grid: { color: isDark ? '#444444' : '#e5e5e5' },
         title: {
           ...baseChartOptions.scales.x.title,
-          text: rows[0][0] == 0.0 ? `${headers[0]} (ms)` : `${headers[0]} (date)`
+          text: rows[0][0] == 0.0 ? `${headers[0]} (ms)` : `${headers[0]} (date)`,
+          color: isDark ? '#ffffff' : '#000000',
         },
 
         ...(rows[0][0] == 0.0 ? {} : {
@@ -209,13 +223,21 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
       },
       y: {
         ...baseChartOptions.scales.y,
+        ticks: { color: isDark ? '#ffffff' : '#444444' },
+        grid: { color: isDark ? '#444444' : '#e5e5e5' },
         title: {
           ...baseChartOptions.scales.y.title,
-          text: headers[1]
+          text: headers[1],
+          color: isDark ? '#ffffff' : '#000000',
         }
       }
     }
-  };
+  }), [isDark, headers, isLargeDataset, rows]);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+    chartRef.current.update();
+  }, [isDark]);
 
   const chartData = {
     datasets: [
@@ -239,22 +261,26 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
             <div className="relative inline-block group">
               <Menu shadow="md" width={100}>
                 <Menu.Target>
-                  <Button size="xs" variant="light">
+                  <Button
+                    size="xs"
+                    variant="light"
+                  >
                     <FaDownload />
                   </Button>
                 </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Label>Export as</Menu.Label>
+                <Menu.Dropdown className="bg-white dark:bg-gray-900 dark:border-gray-600">
+                  <Menu.Label className="text-black dark:text-white">Export as</Menu.Label>
                   <Menu.Item
                     leftSection={<FaImage size={12} />}
                     onClick={() => exportToPNG(chartRef.current)}
+                    className="text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     PNG
                   </Menu.Item>
                 </Menu.Dropdown>
               </Menu>
 
-              <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 bg-white rounded-full w-6 h-6 shadow-md border border-gray-300">
+              <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full w-6 h-6 shadow-md border border-gray-300 dark:border-gray-600">
                 <FaHandPaper size={12} />
               </div>
             </div>

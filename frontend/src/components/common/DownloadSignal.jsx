@@ -39,7 +39,7 @@ const DownloadSignal = memo(({ table, name }) => {
   };
 
   return (
-    <div className="mt-2 p-4 border rounded bg-gray-100 text-center">
+    <div className="mt-2 p-4 border-0 dark:border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-900 text-center text-black dark:text-white">
       <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
         <div className="flex items-center gap-2">
           <label className="flex items-center space-x-2">
@@ -47,7 +47,7 @@ const DownloadSignal = memo(({ table, name }) => {
               type="checkbox"
               checked={onlySignal}
               onChange={e => setOnlySignal(e.target.checked)}
-              className="form-checkbox"
+              className="form-checkbox text-green-500 dark:bg-gray-800 dark:border-gray-600"
             />
             <span>Only signal</span>
           </label>
@@ -58,7 +58,7 @@ const DownloadSignal = memo(({ table, name }) => {
               type="checkbox"
               checked={withHeader}
               onChange={e => setWithHeader(e.target.checked)}
-              className="form-checkbox"
+              className="form-checkbox text-green-500 dark:bg-gray-800 dark:border-gray-600"
             />
             <span>Include header</span>
           </label>
@@ -69,7 +69,7 @@ const DownloadSignal = memo(({ table, name }) => {
             type="text"
             value={separator}
             onChange={handleSeparatorChange}
-            className="w-12 text-center text-sm font-medium border rounded-md p-1"
+            className="w-12 text-center text-sm font-medium border-0 dark:border dark:border-gray-600 rounded-md p-1 bg-white dark:bg-gray-800 text-black dark:text-white"
             style={{ maxWidth: '40px' }}
           />
         </div>
@@ -77,7 +77,7 @@ const DownloadSignal = memo(({ table, name }) => {
           <select
             value={extension}
             onChange={e => setExtension(e.target.value)}
-            className="w-auto text-sm font-medium border rounded-md p-1"
+            className="w-auto text-sm font-medium border-0 dark:border dark:border-gray-600 rounded-md p-1 bg-white dark:bg-gray-800 text-black dark:text-white"
           >
             <option value="csv">csv</option>
             <option value="txt">txt</option>
@@ -87,7 +87,7 @@ const DownloadSignal = memo(({ table, name }) => {
           <button
             onClick={handleDownload}
             disabled={separator.includes('.')}
-            className="bg-green-500 text-white text-sm py-2 px-4 rounded disabled:bg-gray-300"
+            className="bg-green-500 text-white text-sm py-2 px-4 rounded disabled:bg-gray-300 dark:disabled:bg-gray-700"
           >
             📥 Download
           </button>

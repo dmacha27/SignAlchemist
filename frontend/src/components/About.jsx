@@ -1,8 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import Tilt from 'react-parallax-tilt';
+import { useContext} from 'react';
+import { ThemeContext } from '../App'; 
 
 const About = () => {
   const navigate = useNavigate();
+
+  // Detect dark mode
+  const { isDarkMode: isDark } = useContext(ThemeContext);
 
   return (
     <div className="max-w-7xl mx-auto px-4">
@@ -32,8 +37,8 @@ const About = () => {
               Whether you're working with simple or complex signals, this toolkit gives you the flexibility and precision needed for reliable data processing, with a focus on usability and reproducibility.
             </p>
             <button
-              onClick={() => navigate('/')}
-              className="mt-4 p-3 bg-white text-indigo-600 rounded"
+              onClick={() => navigate('/')}                    
+              className="mt-4 p-3 bg-white text-indigo-600 dark:bg-gray-800 dark:text-gray-100 text-lg rounded about-button"
             >
               Try it out
             </button>
@@ -48,25 +53,28 @@ const About = () => {
               perspective={600}
             >
               <img
-                src="/processing.gif"
+                src={isDark ? '/processing_dark.gif' : '/processing.gif'}
                 alt="Signal Processing"
                 className="w-full h-full object-cover"
                 style={{ pointerEvents: 'none' }} // Prevent image from being dragged
-              />
+              /> 
+
             </Tilt>
           </div>
         </div>
       </section>
 
-      <section className=" rounded-lg shadow p-6 bg-white" id="logos">
-        <p className="text-center text-gray-700 mb-6">
-          This software is part of the R&D project PID2023-150694OA-I00, funded by the Agencia Estatal de Investigación (AEI), under the Ministerio de Ciencia, Innovación y Universidades (MICIU), co-financed by the Fondo Europeo de Desarrollo Regional (FEDER) under the program “Una manera de hacer Europa”, and by the “Unión Europea NextGenerationEU/PRTR” funds</p>
+      <section className="rounded-lg shadow p-6 bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600" id="logos">
+        <p className="text-center text-gray-700 dark:text-gray-300 mb-6">
+          This software is part of the R&D project PID2023-150694OA-I00, funded by the Agencia Estatal de Investigación (AEI), under the Ministerio de Ciencia, Innovación y Universidades (MICIU), co-financed by the Fondo Europeo de Desarrollo Regional (FEDER) under the program “Una manera de hacer Europa”, and by the “Unión Europea NextGenerationEU/PRTR” funds
+        </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <a href="https://ec.europa.eu/regional_policy/en/funding/erdf/" target="_blank" rel="noopener noreferrer">
             <img src="/FEDER.svg" alt="FEDER" className="w-full" />
           </a>
         </div>
       </section>
+
     </div>
   );
 };

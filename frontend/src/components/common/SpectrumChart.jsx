@@ -1,4 +1,4 @@
-import { useMemo, memo, useRef, useEffect, useState } from 'react';
+import { useMemo, memo, useRef, useEffect, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import { fft, util as fftUtil } from 'fft-js';
@@ -40,6 +40,8 @@ import {
     handleResetStyle,
     exportToPNG,
 } from '../utils/chartUtils';
+
+import { ThemeContext } from '../../App';
 
 const MAX_DATA_LENGTH = 5000;
 
@@ -138,6 +140,8 @@ const SpectrumChart = memo(({ table, samplingRate, defaultColor = '#2196f3' }) =
 
     const isLargeDataset = signal.length > MAX_DATA_LENGTH;
 
+    const { isDarkMode: isDark } = useContext(ThemeContext);
+
     const chartOptions = useMemo(() => ({
         ...baseChartOptions,
         onClick: function (evt) {
@@ -201,6 +205,13 @@ const SpectrumChart = memo(({ table, samplingRate, defaultColor = '#2196f3' }) =
         },
         plugins: {
             ...baseChartOptions.plugins,
+            tooltip: {
+                ...baseChartOptions.plugins.tooltip,
+                backgroundColor: isDark ? '#333' : '#fff',
+                titleColor: isDark ? '#fff' : '#222',
+                bodyColor: isDark ? '#ddd' : '#333',
+                borderColor: isDark ? '#555' : '#ccc',
+            },
             zoom: {
                 pan: {
                     enabled: !isLargeDataset,
@@ -218,8 +229,35 @@ const SpectrumChart = memo(({ table, samplingRate, defaultColor = '#2196f3' }) =
                 },
 
             }
+        },
+        scales: {
+            ...baseChartOptions.scales,
+            x: {
+                ...baseChartOptions.scales.x,
+                ticks: { color: isDark ? '#ffffff' : '#000000' },
+                grid: { color: isDark ? '#444444' : '#e5e5e5' },
+                title: {
+                ...baseChartOptions.scales.x.title,
+                color: isDark ? '#ffffff' : '#000000',
+                }
+            },
+            y: {
+                ...baseChartOptions.scales.y,
+                ticks: { color: isDark ? '#ffffff' : '#444444' },
+                grid: { color: isDark ? '#444444' : '#e5e5e5' },
+                title: {
+                ...baseChartOptions.scales.y.title,
+                color: isDark ? '#ffffff' : '#000000',
+                }
+            }
         }
-    }), [isLargeDataset])
+    }), [isDark, isLargeDataset])
+
+    useEffect(() => {
+        if (!chartRef.current) return;
+        chartRef.current.update();
+    }, [isDark]);
+
 
     const chartData = useMemo(() => ({
         datasets: [
@@ -318,19 +356,20 @@ const SpectrumChart = memo(({ table, samplingRate, defaultColor = '#2196f3' }) =
                                         <FaDownload />
                                     </Button>
                                 </Menu.Target>
-                                <Menu.Dropdown>
-                                    <Menu.Label>Export as</Menu.Label>
+                                <Menu.Dropdown className="bg-white dark:bg-gray-900 dark:border-gray-600">
+                                    <Menu.Label className="text-black dark:text-white">Export as</Menu.Label>
                                     <Menu.Item
                                         leftSection={<FaImage size={12} />}
                                         onClick={() => exportToPNG(chartRef.current)}
+                                        className="text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                                     >
                                         PNG
                                     </Menu.Item>
                                 </Menu.Dropdown>
                             </Menu>
 
-                            <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 bg-white rounded-full w-6 h-6 shadow-md border border-gray-300">
-                                <FaHandPaper size={12} />
+                            <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full w-6 h-6 shadow-md border border-gray-300 dark:border-gray-600">
+                               <FaHandPaper size={12} />
                             </div>
                         </div>
                     </div>

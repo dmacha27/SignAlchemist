@@ -32,16 +32,16 @@ const SignalPanel = ({
 
             <Tabs.Panel value="dual" pt="md">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
-                    <div className="bg-white shadow-md rounded-lg">
-                        <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                    <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg">
+                        <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-semibold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
                             <FaSignal className="my-auto text-blue-500" />
                             Original Signal
                         </div>
                         <div className="p-4">{leftContent}</div>
                     </div>
 
-                    <div className="bg-white shadow-md rounded-lg">
-                        <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                    <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg">
+                        <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-semibold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
                             {rightIcon}
                             {rightTitle}
                         </div>
@@ -51,8 +51,8 @@ const SignalPanel = ({
             </Tabs.Panel>
 
             <Tabs.Panel value="comparison" pt="md">
-                <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg">
-                    <div className="bg-gray-100 px-4 py-2 font-semibold flex justify-center gap-2">
+                <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg">
+                    <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-semibold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
                         <FaBalanceScale className="my-auto text-cyan-500" />
                         Comparison View
                     </div>

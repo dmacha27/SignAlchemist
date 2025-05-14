@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 
 import {
   ReactFlow,
@@ -25,6 +25,8 @@ import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
+
+import { ThemeContext } from '../App'; 
 
 import { Popover, Button, Text, Group, Tabs } from '@mantine/core';
 
@@ -219,28 +221,31 @@ const Processing = () => {
     console.log('All nodes clean. Executing all...');
   };
 
+  // Detect dark mode
+  const { isDarkMode: isDark } = useContext(ThemeContext);
+
 
 
   return (
     <div className="container mx-auto px-10">
       {/* Header */}
-      <header className="text-center py-4 border-b">
-        <h1 className="text-3xl font-bold flex justify-center items-center">
+      <header className="text-center py-4 border-b border-gray-200 dark:border-gray-700">
+        <h1 className="text-3xl font-bold flex justify-center items-center text-black dark:text-white">
           <FaWaveSquare className="mr-2 text-blue-500" />
           Signal Processing
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           <strong>Signal type:</strong> {signalType}
         </p>
       </header>
 
       {/* Flow & Sidebar */}
-      <div className="container mx-auto py-4 border-b grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Flow */}
-        <div className="md:col-span-10">
-          <div className="bg-white border shadow-sm rounded-xl">
-            <div className="bg-gray-100 px-4 py-2 font-bold flex items-center gap-2">
-              <FaProjectDiagram className="text-blue-600" />
+      <div className="container mx-auto py-4 border-b border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-12 gap-6">
+      {/* Flow */}
+      <div className="md:col-span-10">
+        <div className="bg-white dark:bg-gray-900 border dark:border-gray-600 shadow-sm rounded-xl">
+          <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex items-center gap-2 text-black dark:text-white card-hdr-border">
+          <FaProjectDiagram className="text-blue-600 " />
               Pipeline Flow
             </div>
             <div className="p-0">
@@ -259,7 +264,14 @@ const Processing = () => {
                     minZoom={0.3}
                   >
                     <Background color="#ccc" variant={BackgroundVariant.Dots} />
-                    <MiniMap nodeStrokeWidth={2} pannable position="bottom-left" />
+                    <MiniMap
+                      nodeStrokeWidth={2}
+                      pannable
+                      position="bottom-left"
+                      nodeColor={(node) => isDark ? '#dbdbdb' : '#e2e2e2'}
+                      maskColor={isDark ? '#666666' : '#f6f6f6'}
+                      backgroundColor='#ffffff'
+                    />
                   </ReactFlow>
                 </div>
               ) : (
@@ -271,8 +283,8 @@ const Processing = () => {
 
         {/* Sidebar */}
         <div className="md:col-span-2">
-          <div className="bg-white border shadow-sm rounded-xl sticky top-4">
-            <div className="bg-gray-100 px-4 py-2 font-bold flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-900 border dark:border-gray-600 shadow-sm rounded-xl sticky top-4">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex items-center gap-2 text-black dark:text-white card-hdr-border">
               <FaSquare className="text-blue-600" />
               Pipeline Nodes
             </div>
@@ -289,7 +301,7 @@ const Processing = () => {
               <button
                 title="Add outlier detection node"
                 onClick={() => addNode('OutliersNode', { deleteNode, setChartDataProcessed })}
-                className="border border-gray-500 text-gray-700 text-sm px-3 py-2 rounded hover:bg-gray-50 flex items-center justify-center gap-2"
+                className="border border-gray-500 text-gray-700 dark:text-white text-sm px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
               >
                 <FaBullseye />
                 Outliers
@@ -298,8 +310,8 @@ const Processing = () => {
               <button
                 title="Add filtering node"
                 onClick={() => addNode('FilteringNode', { signalType, samplingRate, deleteNode, setChartDataProcessed })}
-                className="border border-green-600 text-green-600 text-sm px-3 py-2 rounded hover:bg-green-50 flex items-center justify-center gap-2"
-              >
+                className="border border-green-600 text-green-600 text-sm px-3 py-2 rounded hover:bg-green-50 dark:hover:bg-green-900 flex items-center justify-center gap-2"
+                >
                 <FaFilter />
                 Filtering
               </button>
@@ -332,10 +344,10 @@ const Processing = () => {
                     Clean Pipeline
                   </Button>
                 </Popover.Target>
-
-                <Popover.Dropdown className="w-64 bg-white border rounded shadow-md p-4">
-                  <Text className="font-semibold mb-2">Confirm reset</Text>
-                  <Text className="text-sm mb-3">
+                
+                <Popover.Dropdown className="w-64 bg-white dark:bg-gray-900 text-gray-800 dark:text-white border rounded shadow-md p-4">
+                  <Text className="font-semibold mb-2 dark:text-white">Confirm reset</Text>
+                  <Text className="text-sm mb-3 text-gray-600 dark:text-gray-300">
                     Are you sure you want to clean the pipeline?
                   </Text>
                   <Group position="right" spacing="sm">
@@ -343,8 +355,8 @@ const Processing = () => {
                       variant="default"
                       size="xs"
                       onClick={() => setOpened(false)}
-                      className="text-sm px-2 py-1 border rounded text-gray-600 hover:bg-gray-100"
-                    >
+                      className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                    > 
                       Cancel
                     </Button>
                     <Button
@@ -452,14 +464,14 @@ const Processing = () => {
       </div>
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <div className="bg-white shadow-md rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
           {metricsOriginal ? (
             <InfoMetrics metrics={metricsOriginal} />
           ) : (
             <LoaderMessage message="Calculating..." />
           )}
         </div>
-        <div className="bg-white shadow-md rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
           {metricsProcessed ? (
             <InfoMetrics metrics={metricsProcessed} />
           ) : (
