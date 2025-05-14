@@ -29,7 +29,7 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
             size="xl"
             centered
             classNames={{
-                body: 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white',
+                body: 'pt-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white',
                 header: 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700',
             }}
         >
@@ -41,7 +41,7 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
                     <Text align="center" weight={500} size="lg" className="dark:text-white" style={{ marginTop: 10 }}>
                         Resampling
                     </Text>
-                    <Text size="sm" color="dimmed" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
+                    <Text size="sm" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
                         Generates data points with state-of-the-art interpolation techniques
                     </Text>
                     <Button
@@ -62,7 +62,7 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
                     <Text align="center" weight={500} size="lg" className="dark:text-white" style={{ marginTop: 10 }}>
                         Filtering
                     </Text>
-                    <Text size="sm" color="dimmed" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
+                    <Text size="sm" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
                         Applies multiple advanced filters, including custom ones, to efficiently process data.
                     </Text>
                     <Button
@@ -83,7 +83,7 @@ const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestam
                     <Text align="center" weight={500} size="lg" className="dark:text-white" style={{ marginTop: 10 }}>
                         Processing
                     </Text>
-                    <Text size="sm" color="dimmed" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
+                    <Text size="sm" className="dark:text-gray-300" style={{ marginBottom: 15 }}>
                         Process signals using a node-based workflow with customizable processing nodes.
                     </Text>
                     <Button
