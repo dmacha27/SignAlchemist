@@ -7,7 +7,7 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
 
-import { ThemeContext } from '../App'; 
+import { ThemeContext } from '../contexts/ThemeContext';
 import LoaderMessage from './common/LoaderMessage';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);

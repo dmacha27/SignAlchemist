@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import Tilt from 'react-parallax-tilt';
 import { useContext } from 'react';
-import { ThemeContext } from '../App';
+
+import { ThemeContext } from '../contexts/ThemeContext';
+
 
 const About = () => {
   const navigate = useNavigate();

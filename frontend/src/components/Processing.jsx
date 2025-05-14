@@ -26,7 +26,7 @@ import FilteringNode from './reactflow/nodes/FilteringNode';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
 
-import { ThemeContext } from '../App';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 import { Popover, Button, Text, Group, Tabs } from '@mantine/core';
 

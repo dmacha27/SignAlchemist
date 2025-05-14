@@ -7,7 +7,7 @@ import { FaInfo, FaCheck, FaClipboard } from "react-icons/fa";
 import { Modal, Button, Group, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 
-import { ThemeContext } from '../../App';
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 /**
  * InfoModal component displays a modal with Python function information and example code.

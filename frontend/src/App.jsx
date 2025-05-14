@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate , useNavigate } from "react-router-dom";
 import { useEffect, useState, createContext } from 'react';
 import { MantineProvider } from '@mantine/core';
 
@@ -13,6 +13,8 @@ import Processing from './components/Processing';
 import Resampling from './components/Resampling';
 import Filtering from './components/Filtering';
 
+import { ThemeContext } from './contexts/ThemeContext';
+
 import { Toaster, toast } from 'react-hot-toast';
 
 import {
@@ -23,8 +25,7 @@ import {
 
 import { FaFilter, FaChartLine, FaProjectDiagram, FaHome } from 'react-icons/fa';
 
-// Theme will be saved in the cintext
-export const ThemeContext = createContext();
+
 // Get default system or prefered theme
 const getInitialTheme = () => {
   if (typeof window !== 'undefined' && window.localStorage) {
@@ -36,6 +37,16 @@ const getInitialTheme = () => {
     return userMedia.matches;
   }
   return false;
+};
+
+// Redirect invalid routes to /home if no data is loaded
+const ProtectedRoute = ({ children }) => {
+  const location = useLocation();
+  // Check if there is data loaded
+  if (!location.state) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
 };
 
 const App = () => {
@@ -88,9 +99,24 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-          <Route path="/processing" element={<Processing />} />
-          <Route path="/resampling" element={<Resampling />} />
-          <Route path="/filtering" element={<Filtering />} />
+
+          <Route path="/processing" element={
+            <ProtectedRoute>
+              <Processing />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/resampling" element={
+            <ProtectedRoute>
+              <Resampling />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/filtering" element={
+            <ProtectedRoute>
+              <Filtering />
+            </ProtectedRoute>
+          } />
         </Routes>
         
         {!isHome && (

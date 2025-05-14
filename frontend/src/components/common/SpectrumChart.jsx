@@ -41,7 +41,7 @@ import {
     exportToPNG,
 } from '../utils/chartUtils';
 
-import { ThemeContext } from '../../App';
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 const MAX_DATA_LENGTH = 5000;
 

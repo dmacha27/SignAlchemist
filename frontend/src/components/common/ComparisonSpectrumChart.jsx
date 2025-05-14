@@ -39,7 +39,7 @@ ChartJS.register(
 
 const MAX_DATA_LENGTH = 5000;
 
-import { ThemeContext } from '../../App';
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 const baseChartOptions = {
     label: 'comparison-spectrum',
