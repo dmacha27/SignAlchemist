@@ -342,7 +342,7 @@ const Filtering = () => {
             }
             comparisonContent={
               chartDataOriginal && chartDataFiltered ? (
-                <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataFiltered} samplingRate={samplingRate} name2="Filtered"/>
+                <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataFiltered} samplingRate={samplingRate} name2="Filtered" />
               ) : (
                 <LoaderMessage message="Rendering comparison..." />
               )

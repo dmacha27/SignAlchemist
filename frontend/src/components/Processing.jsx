@@ -26,7 +26,7 @@ import FilteringNode from './reactflow/nodes/FilteringNode';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
 
-import { ThemeContext } from '../App'; 
+import { ThemeContext } from '../App';
 
 import { Popover, Button, Text, Group, Tabs } from '@mantine/core';
 
@@ -241,11 +241,11 @@ const Processing = () => {
 
       {/* Flow & Sidebar */}
       <div className="container mx-auto py-4 border-b border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-12 gap-6">
-      {/* Flow */}
-      <div className="md:col-span-10">
-        <div className="bg-white dark:bg-gray-900 border dark:border-gray-600 shadow-sm rounded-xl">
-          <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex items-center gap-2 text-black dark:text-white card-hdr-border">
-          <FaProjectDiagram className="text-blue-600 " />
+        {/* Flow */}
+        <div className="md:col-span-10">
+          <div className="bg-white dark:bg-gray-900 border dark:border-gray-600 shadow-sm rounded-xl">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex items-center gap-2 text-black dark:text-white card-hdr-border">
+              <FaProjectDiagram className="text-blue-600 " />
               Pipeline Flow
             </div>
             <div className="p-0">
@@ -311,7 +311,7 @@ const Processing = () => {
                 title="Add filtering node"
                 onClick={() => addNode('FilteringNode', { signalType, samplingRate, deleteNode, setChartDataProcessed })}
                 className="border border-green-600 text-green-600 text-sm px-3 py-2 rounded hover:bg-green-50 dark:hover:bg-green-900 flex items-center justify-center gap-2"
-                >
+              >
                 <FaFilter />
                 Filtering
               </button>
@@ -344,7 +344,7 @@ const Processing = () => {
                     Clean Pipeline
                   </Button>
                 </Popover.Target>
-                
+
                 <Popover.Dropdown className="w-64 bg-white dark:bg-gray-900 text-gray-800 dark:text-white border rounded shadow-md p-4">
                   <Text className="font-semibold mb-2 dark:text-white">Confirm reset</Text>
                   <Text className="text-sm mb-3 text-gray-600 dark:text-gray-300">
@@ -356,7 +356,7 @@ const Processing = () => {
                       size="xs"
                       onClick={() => setOpened(false)}
                       className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                    > 
+                    >
                       Cancel
                     </Button>
                     <Button
@@ -448,7 +448,7 @@ const Processing = () => {
               }
               comparisonContent={
                 chartDataOriginal && chartDataProcessed ? (
-                <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataProcessed} samplingRate={samplingRate} name2="Processed"/>
+                  <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataProcessed} samplingRate={samplingRate} name2="Processed" />
                 ) : (
                   <LoaderMessage message="Rendering comparison..." />
                 )

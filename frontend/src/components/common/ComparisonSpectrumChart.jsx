@@ -70,7 +70,6 @@ const baseChartOptions = {
             }
         },
         y: {
-            beginAtZero: true,
             title: {
                 display: true,
                 text: 'Amplitude',
@@ -139,7 +138,7 @@ const ComparisonSpectrumChart = memo(({ table1, table2, samplingRate, name2, nam
             legend: {
                 display: true,
                 labels: {
-                color: isDark ? '#ffffff' : '#000000',
+                    color: isDark ? '#ffffff' : '#000000',
                 },
             },
             tooltip: {
@@ -173,8 +172,8 @@ const ComparisonSpectrumChart = memo(({ table1, table2, samplingRate, name2, nam
                 ticks: { color: isDark ? '#ffffff' : '#000000' },
                 grid: { color: isDark ? '#444444' : '#e5e5e5' },
                 title: {
-                ...baseChartOptions.scales.x.title,
-                color: isDark ? '#ffffff' : '#000000',
+                    ...baseChartOptions.scales.x.title,
+                    color: isDark ? '#ffffff' : '#000000',
                 }
             },
             y: {
@@ -182,8 +181,8 @@ const ComparisonSpectrumChart = memo(({ table1, table2, samplingRate, name2, nam
                 ticks: { color: isDark ? '#ffffff' : '#444444' },
                 grid: { color: isDark ? '#444444' : '#e5e5e5' },
                 title: {
-                ...baseChartOptions.scales.y.title,
-                color: isDark ? '#ffffff' : '#000000',
+                    ...baseChartOptions.scales.y.title,
+                    color: isDark ? '#ffffff' : '#000000',
                 }
             }
         }

@@ -17,26 +17,6 @@ import { useDisclosure } from '@mantine/hooks';
 
 const max_length_lag = 5000;
 
-const chartOptions = {
-    responsive: true,
-    plugins: {
-        legend: {
-            onClick: () => {}, // Avoid signal hiding
-        }
-    },
-    scales: {
-        x: {
-            type: 'linear', position: 'bottom',
-            title: {
-                display: true,
-                text: "(s)"
-            }
-        },
-        y: { beginAtZero: true },
-    },
-
-};
-
 const UtilityModal = memo(({ opened, close, navigate, file, signalType, timestampColumn, samplingRate, signalValues }) => (
     <Modal
         opened={opened}
@@ -361,7 +341,6 @@ const CustomChart = ({ table }) => {
             grid: {
               color: isDark ? '#444444' : '#e5e5e5',
             },
-            beginAtZero: true,
           },
         },
     }), [isDark, headers]);
