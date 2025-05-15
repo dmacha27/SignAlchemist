@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation, Navigate , useNavigate } from "react-router-dom";
-import { useEffect, useState, createContext } from 'react';
+import { useEffect, useState } from 'react';
 import { MantineProvider } from '@mantine/core';
+import PropTypes from 'prop-types';
 
 import './App.css';
 import 'primereact/resources/primereact.min.css';
@@ -48,6 +49,12 @@ const ProtectedRoute = ({ children }) => {
   }
   return children;
 };
+
+// Props validation
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 
 const App = () => {
 

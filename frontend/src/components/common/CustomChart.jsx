@@ -91,6 +91,51 @@ const baseChartOptions = {
   }
 };
 
+
+// Auxiliary functions for CustomChart
+
+/**
+ * Updates the dataset's styles to highlight a specific data point.
+ *
+ * @param {Object} dataset - The dataset to update.
+ * @param {number} pointIndex - The index of the point to highlight.
+ * @param {string} highlightColor - The color used to highlight the selected point.
+ * @param {string} actualColor - The color used for the non-selected points.
+ */
+const updateDatasetStyles = (dataset, pointIndex, highlightColor, actualColor) => {
+  dataset.pointBackgroundColor = dataset.data.map((_, i) => i === pointIndex ? highlightColor : actualColor);
+  dataset.pointBorderColor = dataset.data.map((_, i) => i === pointIndex ? highlightColor : actualColor);
+  dataset.pointRadius = dataset.data.map((_, i) => i === pointIndex ? 6 : 2);
+};
+
+/**
+ * Processes a Chart.js chart instance to highlight a selected data point and adjust the X axis range.
+ *
+ * @param {Object} chart - The Chart.js instance to update.
+ * @param {number} pointIndex - The index of the selected point.
+ * @param {number} timestamp - The X-axis value of the selected point (timestamp).
+ * @param {string} highlightColor - The color used to highlight the selected point.
+ * @param {number} zoomRange - The range used to zoom the X-axis around the selected point.
+ * @param {Object} chartRef - A ref to the main chart for data correspondence validation.
+ */
+const processChartHighlight = (chart, pointIndex, timestamp, highlightColor, zoomRange, chartRef) => {
+  const dataset = chart.data.datasets[0];
+  const actualColor = getActualColor(dataset.pointBackgroundColor);
+
+  // Skip if dataset is too large or data length mismatch (to optimize performance)
+  if (dataset.data.length > MAX_DATA_LENGTH) return;
+  if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return;
+
+  // Update dataset styles to highlight the selected point
+  updateDatasetStyles(dataset, pointIndex, highlightColor, actualColor);
+
+  // Adjust X axis range to center around the selected timestamp
+  chart.options.scales.x.min = timestamp - zoomRange;
+  chart.options.scales.x.max = timestamp + zoomRange;
+
+  chart.update();
+};
+
 /**
  * CustomChart component renders a chart based on the given table data.
  * 
@@ -107,9 +152,7 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
 
   const minValue = Math.min(...rows.map(row => row[0])); //seconds
   const maxValue = Math.max(...rows.map(row => row[0]));
-
   const zoomRange = parseInt((maxValue * 1000 - minValue * 1000) * 0.02);
-
   const isLargeDataset = rows.length > MAX_DATA_LENGTH;
 
   const shouldCaptureImage = useRef(true);
@@ -127,38 +170,11 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
 
       const pointIndex = elements[0].index;
       const timestamp = chartRef.current.data.datasets[0].data[pointIndex].x;
-
-
       const highlightColor = '#fa6400';
-      const charts = Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "signal");
 
-      charts.forEach(chart => {
-        console.log(chart)
-        // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
-        const dataset = chart.data.datasets[0];
-
-        let actualColor = getActualColor(dataset.pointBackgroundColor);
-
-        if (dataset.data.length > MAX_DATA_LENGTH) return; // No interaction to improve performance
-        if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return; // No point-to-point correspondence
-
-        dataset.pointBackgroundColor = dataset.data.map((_, i) =>
-          i === pointIndex ? highlightColor : actualColor
-        );
-
-        dataset.pointBorderColor = dataset.data.map((_, i) =>
-          i === pointIndex ? highlightColor : actualColor
-        );
-
-        dataset.pointRadius = dataset.data.map((_, i) =>
-          i === pointIndex ? 6 : 2
-        );
-        chart.options.scales.x.min = timestamp - zoomRange;
-        chart.options.scales.x.max = timestamp + zoomRange;
-
-        chart.update();
-
-      });
+      Object.values(ChartJS.instances)
+        .filter(chart => chart?.config?.options?.label === "signal")
+        .forEach(chart => processChartHighlight(chart, pointIndex, timestamp, highlightColor, zoomRange, chartRef));
 
     },
     onHover: (event, chartElements) => {
