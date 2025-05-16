@@ -22,6 +22,7 @@ function InputSignal({ id, data }) {
 
   // Find the target node ID from the outgoing connection
   const targetNodeId = outgoingConnections?.find(conn => conn.source === id)?.target;
+  data["target"] = targetNodeId;
 
   useEffect(() => {
 

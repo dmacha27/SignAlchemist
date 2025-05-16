@@ -32,6 +32,12 @@ function OutliersNode({ id, data }) {
 
   const connections = useNodeConnections({ type: 'target' });
 
+  data["technique"] = JSON.stringify(
+    {
+    "name": outlierTechnique,
+  });
+  data["target"] = targetNodeId;
+
   // Update source and target node IDs when connections change
   useEffect(() => {
     const sourceId = connections?.find(conn => conn.target === id)?.source;
@@ -45,6 +51,7 @@ function OutliersNode({ id, data }) {
   let table = sourceNodeData?.data?.table;
 
   useEffect(() => {
+
     /**
      * Deletes the current node's table and notifies the next node.
      */
@@ -91,7 +98,8 @@ function OutliersNode({ id, data }) {
 
   /**
    * Trigger a delete event when filter configuration changes.
-   */  useEffect(() => {
+   */
+  useEffect(() => {
     const event = new CustomEvent(`delete-source-tables${id}`);
     window.dispatchEvent(event);
   }, [outlierTechnique]);
@@ -155,7 +163,7 @@ function OutliersNode({ id, data }) {
         <div className="flex items-center gap-2">
           <FaBullseye className="text-secondary dark:text-white" size={20} />
           <span className="font-bold text-lg text-dark dark:text-white">Outlier Detection</span>
-  
+
           {/* Node execution state icon */}
           <Tooltip label={executionState} withArrow position="bottom">
             <div
@@ -173,7 +181,7 @@ function OutliersNode({ id, data }) {
               <ExecutionIcon executionState={executionState} />
             </div>
           </Tooltip>
-  
+
           {/* Button to see the node output */}
           <Tooltip label="See output" withArrow position="bottom">
             <div
@@ -189,7 +197,7 @@ function OutliersNode({ id, data }) {
               <FaEye className="text-black dark:text-white" />
             </div>
           </Tooltip>
-  
+
           {/* Button to delete the node */}
           <Tooltip label="Delete node" withArrow position="bottom">
             <div
@@ -201,10 +209,10 @@ function OutliersNode({ id, data }) {
           </Tooltip>
         </div>
       </div>
-  
+
       {/* Handle for incoming connections */}
       <Handle type="target" position={Position.Left} className="custom-handle" />
-  
+
       {/* Outlier detection configuration form */}
       <Form>
         <Form.Group className="mb-4" controlId="outlierTechnique">
@@ -223,17 +231,17 @@ function OutliersNode({ id, data }) {
             classNames={{
               input: 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
               dropdown: 'dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
-               item: `
+              item: `
                   dark:data-[hover]:bg-gray-700 !important
                   data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
                   data-[selected]:text-black dark:data-[selected]:text-white
                 `
             }}
-          
+
           />
         </Form.Group>
       </Form>
-  
+
       {/* Button to apply the outlier detection */}
       <div className="w-full">
         <Button
@@ -248,7 +256,7 @@ function OutliersNode({ id, data }) {
           Apply Outliers
         </Button>
       </div>
-  
+
       {/* Handle for outgoing connections */}
       <Handle type="source" position={Position.Right} className="custom-handle" />
     </Card>

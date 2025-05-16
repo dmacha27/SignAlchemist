@@ -8,6 +8,7 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
+  ReactFlowProvider
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -25,16 +26,18 @@ import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
 import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
+import PipelineSteps from './common/PipelineSteps';
 
 import { ThemeContext } from '../contexts/ThemeContext';
 
-import { Popover, Button, Text, Group, Tabs } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { Popover, Button, Text, Group, Tabs, Collapse, ActionIcon } from '@mantine/core';
 
 import { usePapaParse } from 'react-papaparse';
 
 import { useLocation } from "react-router-dom";
 
-import { FaFilter, FaChartLine, FaBullseye, FaWaveSquare, FaProjectDiagram, FaSquare, FaRocket, FaTrash, FaEye } from 'react-icons/fa';
+import { FaFilter, FaChevronDown, FaChartLine, FaBullseye, FaWaveSquare, FaProjectDiagram, FaSquare, FaRocket, FaTrash, FaEye } from 'react-icons/fa';
 
 import toast from 'react-hot-toast';
 import ButtonEdge from './reactflow/edges/ButtonEdge';
@@ -48,7 +51,8 @@ const Processing = () => {
   const { readString } = usePapaParse();
   const [metricsOriginal, setMetricsOriginal] = useState(null);
   const [metricsProcessed, setMetricsProcessed] = useState(null);
-  const [opened, setOpened] = useState(false);
+  const [confirmationOpened, setConfirmationOpened] = useState(false);
+  const [opened, { toggle }] = useDisclosure(false);
 
   useEffect(() => {
     if (!file) return;
@@ -227,260 +231,276 @@ const Processing = () => {
 
 
   return (
-    <div className="container mx-auto px-10">
-      {/* Header */}
-      <header className="text-center py-4 border-b border-gray-200 dark:border-gray-700">
-        <h1 className="text-3xl font-bold flex justify-center items-center text-black dark:text-white">
-          <FaWaveSquare className="mr-2 text-blue-500" />
-          Signal Processing
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          <strong>Signal type:</strong> {signalType}
-        </p>
-      </header>
+    <ReactFlowProvider>
+      <div className="container mx-auto px-10">
+        {/* Header */}
+        <header className="text-center py-4 border-b border-gray-200 dark:border-gray-700">
+          <h1 className="text-3xl font-bold flex justify-center items-center text-black dark:text-white">
+            <FaWaveSquare className="mr-2 text-blue-500" />
+            Signal Processing
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            <strong>Signal type:</strong> {signalType}
+          </p>
+        </header>
 
-      {/* Flow & Sidebar */}
-      <div className="container mx-auto py-4 border-b border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Flow */}
-        <div className="md:col-span-10">
-          <div className="bg-white dark:bg-gray-900 border dark:border-gray-600 shadow-sm rounded-xl">
-            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex items-center gap-2 text-black dark:text-white card-hdr-border">
-              <FaProjectDiagram className="text-blue-600 " />
-              Pipeline Flow
+        {/* Flow & Sidebar */}
+        <div className="container mx-auto py-4 border-b border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Flow */}
+          <div className="md:col-span-10">
+            <div className="bg-white dark:bg-gray-900 border dark:border-gray-600 shadow-sm rounded-xl">
+              <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex items-center gap-2 text-black dark:text-white card-hdr-border">
+                <FaProjectDiagram className="text-blue-600 " />
+                Pipeline Flow
+              </div>
+              <div className="p-0">
+                {chartDataOriginal ? (
+                  <div className="h-[500px] overflow-hidden">
+                    <ReactFlow
+                      nodes={nodes}
+                      edges={edges}
+                      edgeTypes={edgeTypes}
+                      connectionLineStyle={{ stroke: '#0d6dfd' }}
+                      onNodesChange={onNodesChange}
+                      onEdgesChange={onEdgesChange}
+                      nodeTypes={nodeTypes}
+                      onConnect={onConnect}
+                      fitView
+                      minZoom={0.3}
+                    >
+                      <Background color="#ccc" variant={BackgroundVariant.Dots} />
+                      <MiniMap
+                        nodeStrokeWidth={2}
+                        pannable
+                        position="bottom-left"
+                        nodeColor={(node) => isDark ? '#dbdbdb' : '#e2e2e2'}
+                        maskColor={isDark ? '#666666' : '#f6f6f6'}
+                        backgroundColor='#ffffff'
+                      />
+                    </ReactFlow>
+                  </div>
+                ) : (
+                  <LoaderMessage message="Loading flow..." />
+                )}
+              </div>
             </div>
-            <div className="p-0">
-              {chartDataOriginal ? (
-                <div className="h-[500px] overflow-hidden">
-                  <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    edgeTypes={edgeTypes}
-                    connectionLineStyle={{ stroke: '#0d6dfd' }}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    nodeTypes={nodeTypes}
-                    onConnect={onConnect}
-                    fitView
-                    minZoom={0.3}
-                  >
-                    <Background color="#ccc" variant={BackgroundVariant.Dots} />
-                    <MiniMap
-                      nodeStrokeWidth={2}
-                      pannable
-                      position="bottom-left"
-                      nodeColor={(node) => isDark ? '#dbdbdb' : '#e2e2e2'}
-                      maskColor={isDark ? '#666666' : '#f6f6f6'}
-                      backgroundColor='#ffffff'
+          </div>
+
+          {/* Sidebar */}
+          <div className="md:col-span-2">
+            <div className="bg-white dark:bg-gray-900 border dark:border-gray-600 shadow-sm rounded-xl sticky top-4">
+              <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex items-center gap-2 text-black dark:text-white card-hdr-border">
+                <FaSquare className="text-blue-600" />
+                Pipeline Nodes
+              </div>
+              <div className="p-4 flex flex-col gap-3">
+                <button
+                  title="Add resampling node"
+                  onClick={() => addNode('ResamplingNode', { samplingRate, deleteNode, setChartDataProcessed })}
+                  className="border border-blue-600 text-blue-600 text-sm px-3 py-2 rounded hover:bg-blue-50 flex items-center justify-center gap-2"
+                >
+                  <FaChartLine />
+                  Resampling
+                </button>
+
+                <button
+                  title="Add outlier detection node"
+                  onClick={() => addNode('OutliersNode', { deleteNode, setChartDataProcessed })}
+                  className="border border-gray-500 text-gray-700 dark:text-white text-sm px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
+                >
+                  <FaBullseye />
+                  Outliers
+                </button>
+
+                <button
+                  title="Add filtering node"
+                  onClick={() => addNode('FilteringNode', { signalType, samplingRate, deleteNode, setChartDataProcessed })}
+                  className="border border-green-600 text-green-600 text-sm px-3 py-2 rounded hover:bg-green-50 dark:hover:bg-green-900 flex items-center justify-center gap-2"
+                >
+                  <FaFilter />
+                  Filtering
+                </button>
+
+                <hr className="my-2" />
+
+                <button
+                  title="Start-end execution"
+                  onClick={deleteSourceTablesAndExecute}
+                  className="bg-red-600 text-white text-sm px-3 py-2 rounded hover:bg-red-700 flex items-center justify-center gap-2"
+                >
+                  <FaRocket />
+                  Run Pipeline
+                </button>
+
+                <Popover
+                  opened={confirmationOpened}
+                  onClose={() => setConfirmationOpened(false)}
+                  position="bottom-end"
+                  withArrow
+                  shadow="md"
+                >
+                  <Popover.Target>
+                    <Button
+                      onClick={() => setConfirmationOpened((o) => !o)}
+                      title="Restart flow"
+                      className="bg-cyan-600 text-white text-sm px-3 py-2 rounded flex items-center justify-center gap-2 hover:bg-cyan-700"
+                    >
+                      <FaTrash />
+                      Clean Pipeline
+                    </Button>
+                  </Popover.Target>
+
+                  <Popover.Dropdown className="w-64 bg-white dark:bg-gray-900 text-gray-800 dark:text-white border rounded shadow-md p-4">
+                    <Text className="font-semibold mb-2 dark:text-white">Confirm reset</Text>
+                    <Text className="text-sm mb-3 text-gray-600 dark:text-gray-300">
+                      Are you sure you want to clean the pipeline?
+                    </Text>
+                    <Group position="right" spacing="sm">
+                      <Button
+                        variant="default"
+                        size="xs"
+                        onClick={() => setConfirmationOpened(false)}
+                        className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        color="red"
+                        size="xs"
+                        onClick={() => {
+                          cleanFlow();
+                          setConfirmationOpened(false);
+                        }}
+                        className="text-sm px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                      >
+                        Yes, clean
+                      </Button>
+                    </Group>
+                  </Popover.Dropdown>
+                </Popover>
+
+                <button
+                  title="Go to charts"
+                  onClick={() => document.getElementById('charts').scrollIntoView({ behavior: 'smooth' })}
+                  className="mx-auto w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700"
+                >
+                  <FaEye />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id='charts'>
+          <Tabs color="violet" variant="pills" defaultValue="charts" className='mt-2'>
+            <Tabs.List justify="center">
+              <Tabs.Tab value="charts" className="flex-1">Charts</Tabs.Tab>
+              <Tabs.Tab value="spectrum" className="flex-1">Spectrum</Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="charts">
+              <SignalPanel
+                rightTitle="Processed Signal"
+                rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
+                leftContent={
+                  chartDataOriginal ? (
+                    <CustomChart table={chartDataOriginal} />
+                  ) : (
+                    <LoaderMessage message="Waiting for request..." />
+                  )
+                }
+                rightContent={
+                  chartDataProcessed ? (
+                    <CustomChart table={chartDataProcessed} defaultColor="#50C878" />
+                  ) : (
+                    <LoaderMessage message="Waiting for pipeline execution..." />
+                  )
+                }
+                comparisonContent={
+                  chartDataOriginal && chartDataProcessed ? (
+                    <ComparisonChart table1={chartDataOriginal} table2={chartDataProcessed} name2="Porcessed" />
+                  ) : (
+                    <LoaderMessage message="Rendering comparison..." />
+                  )
+                }
+              />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="spectrum">
+              <SignalPanel
+                rightTitle="Filtered Signal"
+                rightIcon={<FaFilter className="my-auto text-green-500" />}
+                leftContent={
+                  chartDataOriginal ? (
+                    <SpectrumChart
+                      table={chartDataOriginal}
+                      samplingRate={samplingRate}
                     />
-                  </ReactFlow>
-                </div>
-              ) : (
-                <LoaderMessage message="Loading flow..." />
-              )}
-            </div>
+                  ) : (
+                    <LoaderMessage message="Waiting for request..." />
+                  )
+                }
+                rightContent={
+                  chartDataProcessed ? (
+                    <SpectrumChart
+                      table={chartDataProcessed}
+                      samplingRate={samplingRate}
+                      defaultColor="#50C878"
+                    />
+                  ) : (
+                    <LoaderMessage message="Waiting for request..." />
+                  )
+                }
+                comparisonContent={
+                  chartDataOriginal && chartDataProcessed ? (
+                    <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataProcessed} samplingRate={samplingRate} name2="Processed" />
+                  ) : (
+                    <LoaderMessage message="Rendering comparison..." />
+                  )
+                }
+              />
+            </Tabs.Panel>
+          </Tabs>
+
+        </div>
+
+        <div className='mt-6'>
+          <Collapse in={opened} transitionDuration={300} transitionTimingFunction="linear" className='py-2 border-t border-gray-200 dark:border-gray-700'>
+            {nodes.length > 0 && <PipelineSteps nodes={nodes} />}
+          </Collapse>
+
+          <Group justify="center" mb={5} className='border-t border-gray-200 dark:border-gray-700'>
+            <ActionIcon
+              onClick={toggle}
+              variant="default"
+              radius="xl"
+              size="lg"
+            >
+              <FaChevronDown />
+            </ActionIcon>
+          </Group>
+
+        </div>
+
+        {/* Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+          <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
+            {metricsOriginal ? (
+              <InfoMetrics metrics={metricsOriginal} />
+            ) : (
+              <LoaderMessage message="Calculating..." />
+            )}
+          </div>
+          <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
+            {metricsProcessed ? (
+              <InfoMetrics metrics={metricsProcessed} />
+            ) : (
+              <LoaderMessage message="Waiting for request..." />
+            )}
           </div>
         </div>
-
-        {/* Sidebar */}
-        <div className="md:col-span-2">
-          <div className="bg-white dark:bg-gray-900 border dark:border-gray-600 shadow-sm rounded-xl sticky top-4">
-            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-bold flex items-center gap-2 text-black dark:text-white card-hdr-border">
-              <FaSquare className="text-blue-600" />
-              Pipeline Nodes
-            </div>
-            <div className="p-4 flex flex-col gap-3">
-              <button
-                title="Add resampling node"
-                onClick={() => addNode('ResamplingNode', { samplingRate, deleteNode, setChartDataProcessed })}
-                className="border border-blue-600 text-blue-600 text-sm px-3 py-2 rounded hover:bg-blue-50 flex items-center justify-center gap-2"
-              >
-                <FaChartLine />
-                Resampling
-              </button>
-
-              <button
-                title="Add outlier detection node"
-                onClick={() => addNode('OutliersNode', { deleteNode, setChartDataProcessed })}
-                className="border border-gray-500 text-gray-700 dark:text-white text-sm px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
-              >
-                <FaBullseye />
-                Outliers
-              </button>
-
-              <button
-                title="Add filtering node"
-                onClick={() => addNode('FilteringNode', { signalType, samplingRate, deleteNode, setChartDataProcessed })}
-                className="border border-green-600 text-green-600 text-sm px-3 py-2 rounded hover:bg-green-50 dark:hover:bg-green-900 flex items-center justify-center gap-2"
-              >
-                <FaFilter />
-                Filtering
-              </button>
-
-              <hr className="my-2" />
-
-              <button
-                title="Start-end execution"
-                onClick={deleteSourceTablesAndExecute}
-                className="bg-red-600 text-white text-sm px-3 py-2 rounded hover:bg-red-700 flex items-center justify-center gap-2"
-              >
-                <FaRocket />
-                Run Pipeline
-              </button>
-
-              <Popover
-                opened={opened}
-                onClose={() => setOpened(false)}
-                position="bottom-end"
-                withArrow
-                shadow="md"
-              >
-                <Popover.Target>
-                  <Button
-                    onClick={() => setOpened((o) => !o)}
-                    title="Restart flow"
-                    className="bg-cyan-600 text-white text-sm px-3 py-2 rounded flex items-center justify-center gap-2 hover:bg-cyan-700"
-                  >
-                    <FaTrash />
-                    Clean Pipeline
-                  </Button>
-                </Popover.Target>
-
-                <Popover.Dropdown className="w-64 bg-white dark:bg-gray-900 text-gray-800 dark:text-white border rounded shadow-md p-4">
-                  <Text className="font-semibold mb-2 dark:text-white">Confirm reset</Text>
-                  <Text className="text-sm mb-3 text-gray-600 dark:text-gray-300">
-                    Are you sure you want to clean the pipeline?
-                  </Text>
-                  <Group position="right" spacing="sm">
-                    <Button
-                      variant="default"
-                      size="xs"
-                      onClick={() => setOpened(false)}
-                      className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      color="red"
-                      size="xs"
-                      onClick={() => {
-                        cleanFlow();
-                        setOpened(false);
-                      }}
-                      className="text-sm px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                    >
-                      Yes, clean
-                    </Button>
-                  </Group>
-                </Popover.Dropdown>
-              </Popover>
-
-              <button
-                title="Go to charts"
-                onClick={() => document.getElementById('charts').scrollIntoView({ behavior: 'smooth' })}
-                className="mx-auto w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700"
-              >
-                <FaEye />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id='charts'>
-        <Tabs color="violet" variant="pills" defaultValue="charts" className='mt-2'>
-          <Tabs.List justify="center">
-            <Tabs.Tab value="charts" className="flex-1">Charts</Tabs.Tab>
-            <Tabs.Tab value="spectrum" className="flex-1">Spectrum</Tabs.Tab>
-          </Tabs.List>
-
-          <Tabs.Panel value="charts">
-            <SignalPanel
-              rightTitle="Processed Signal"
-              rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
-              leftContent={
-                chartDataOriginal ? (
-                  <CustomChart table={chartDataOriginal} />
-                ) : (
-                  <LoaderMessage message="Waiting for request..." />
-                )
-              }
-              rightContent={
-                chartDataProcessed ? (
-                  <CustomChart table={chartDataProcessed} defaultColor="#50C878" />
-                ) : (
-                  <LoaderMessage message="Waiting for pipeline execution..." />
-                )
-              }
-              comparisonContent={
-                chartDataOriginal && chartDataProcessed ? (
-                  <ComparisonChart table1={chartDataOriginal} table2={chartDataProcessed} name2="Porcessed" />
-                ) : (
-                  <LoaderMessage message="Rendering comparison..." />
-                )
-              }
-            />
-          </Tabs.Panel>
-
-          <Tabs.Panel value="spectrum">
-            <SignalPanel
-              rightTitle="Filtered Signal"
-              rightIcon={<FaFilter className="my-auto text-green-500" />}
-              leftContent={
-                chartDataOriginal ? (
-                  <SpectrumChart
-                    table={chartDataOriginal}
-                    samplingRate={samplingRate}
-                  />
-                ) : (
-                  <LoaderMessage message="Waiting for request..." />
-                )
-              }
-              rightContent={
-                chartDataProcessed ? (
-                  <SpectrumChart
-                    table={chartDataProcessed}
-                    samplingRate={samplingRate}
-                    defaultColor="#50C878"
-                  />
-                ) : (
-                  <LoaderMessage message="Waiting for request..." />
-                )
-              }
-              comparisonContent={
-                chartDataOriginal && chartDataProcessed ? (
-                  <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataProcessed} samplingRate={samplingRate} name2="Processed" />
-                ) : (
-                  <LoaderMessage message="Rendering comparison..." />
-                )
-              }
-            />
-          </Tabs.Panel>
-        </Tabs>
-
-
-
-
-
-      </div>
-      {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-          {metricsOriginal ? (
-            <InfoMetrics metrics={metricsOriginal} />
-          ) : (
-            <LoaderMessage message="Calculating..." />
-          )}
-        </div>
-        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-          {metricsProcessed ? (
-            <InfoMetrics metrics={metricsProcessed} />
-          ) : (
-            <LoaderMessage message="Waiting for request..." />
-          )}
-        </div>
-      </div>
-    </div >
-
+      </div >
+    </ReactFlowProvider>
   );
 };
 

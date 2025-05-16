@@ -16,28 +16,29 @@ import toast from 'react-hot-toast';
 
 const filtersFields = {
   butterworth: {
-    order: { value: 2 },
-    lowcut: { value: 0 },
-    highcut: { value: 1000 },
-    python: { value: "" }
+    order: 2,
+    lowcut: 0,
+    highcut: 1000,
+    python: ""
   },
   bessel: {
-    lowcut: { value: 0 },
-    highcut: { value: 1000 },
-    python: { value: "" }
+    lowcut: 0,
+    highcut: 1000,
+    python: ""
   },
   fir: {
-    lowcut: { value: 0 },
-    highcut: { value: 1000 },
-    python: { value: "" }
+    lowcut: 0,
+    highcut: 1000,
+    python: ""
   },
   savgol: {
-    order: { value: 2 },
-    lowcut: { value: 0 },
-    highcut: { value: 1000 },
-    python: { value: "" }
+    order: 2,
+    lowcut: 0,
+    highcut: 1000,
+    python: ""
   },
 };
+
 
 /**
  * FilteringNode component
@@ -50,16 +51,22 @@ const filtersFields = {
  * @returns {JSX.Element} Visual representation of the filtering node with UI for selecting a filter, configuring parameters, and executing the filtering operation
  */
 function FilteringNode({ id, data }) {
+  const signalType = data.signalType;
+  const samplingRate = data.samplingRate;
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
   const [filter, setFilter] = useState("butterworth");
   const [fields, setFields] = useState(filtersFields[filter]);
-  const signalType = data.signalType;
-  const samplingRate = data.samplingRate;
   const [executionState, setExecutionState] = useState('waiting');
 
   const connections = useNodeConnections({ type: 'target' });
+  const { python, ...rest } = fields;
+  data["technique"] = JSON.stringify({
+    name: filter,
+    fields: python == "" ? rest : { "python": python }
+  });
+  data["target"] = targetNodeId;
 
   // Set source and target node IDs based on the current connections
   useEffect(() => {
@@ -144,8 +151,7 @@ function FilteringNode({ id, data }) {
     formData.append('sampling_rate', samplingRate);
 
     Object.keys(fields).forEach((field) => {
-      const fieldValue = fields[field].value;
-      formData.append(field, fieldValue);
+      formData.append(field, fields[field]);
     });
 
     formData.append('method', filter);
@@ -194,7 +200,7 @@ function FilteringNode({ id, data }) {
    * @param {any} new_value - The new value for the field
    */
   const handleFieldChange = (field, new_value) => {
-    setFields((prevFields) => ({ ...prevFields, [field]: { value: new_value } }));
+    setFields((prevFields) => ({ ...prevFields, [field]: new_value }));
   };
 
   return (
@@ -257,7 +263,7 @@ function FilteringNode({ id, data }) {
       <Form>
         <Form.Group className="mb-4" controlId="filterTechnique">
           <Form.Label className="text-uppercase text-sm font-medium text-muted dark:text-gray-300 mb-2">
-              Filtering technique
+            Filtering technique
           </Form.Label>
           <Select
             size="sm"
@@ -276,7 +282,7 @@ function FilteringNode({ id, data }) {
             classNames={{
               input: 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
               dropdown: 'dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
-               item: `
+              item: `
                   dark:data-[hover]:bg-gray-700 !important
                   data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
                   data-[selected]:text-black dark:data-[selected]:text-white

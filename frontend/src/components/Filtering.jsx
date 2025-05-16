@@ -24,26 +24,26 @@ import { FaFilter, FaSignal, FaTools } from 'react-icons/fa';
 
 const filtersFields = {
   butterworth: {
-    order: { value: 2 },
-    lowcut: { value: 0 },
-    highcut: { value: 1000 },
-    python: { value: "" }
+    order: 2,
+    lowcut: 0,
+    highcut: 1000,
+    python: ""
   },
   bessel: {
-    lowcut: { value: 0 },
-    highcut: { value: 1000 },
-    python: { value: "" }
+    lowcut: 0,
+    highcut: 1000,
+    python: ""
   },
   fir: {
-    lowcut: { value: 0 },
-    highcut: { value: 1000 },
-    python: { value: "" }
+    lowcut: 0,
+    highcut: 1000,
+    python: ""
   },
   savgol: {
-    order: { value: 2 },
-    lowcut: { value: 0 },
-    highcut: { value: 1000 },
-    python: { value: "" }
+    order: 2,
+    lowcut: 0,
+    highcut: 1000,
+    python: ""
   },
 };
 
@@ -120,8 +120,7 @@ const Filtering = () => {
     formData.append('sampling_rate', samplingRate);
 
     Object.keys(fields).forEach((field) => {
-      const fieldValue = fields[field].value;
-      formData.append(field, fieldValue);
+      formData.append(field, fields[field]);
     });
 
     formData.append('method', filter);
@@ -181,8 +180,13 @@ const Filtering = () => {
     }, 500);
   };
 
+  /**
+   * Handle changes in the filter fields.
+   * @param {string} field - The name of the field being updated
+   * @param {any} new_value - The new value for the field
+   */
   const handleFieldChange = (field, new_value) => {
-    setFields((prevFields) => ({ ...prevFields, [field]: { value: new_value } }));
+    setFields((prevFields) => ({ ...prevFields, [field]: new_value }));
   };
 
   return (

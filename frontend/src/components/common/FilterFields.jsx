@@ -141,7 +141,7 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
               <input
                 type="number"
                 placeholder={`Enter ${field}`}
-                value={fieldConfig.value}
+                value={fieldConfig}
                 onChange={(e) => onFieldChange(field, Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-black dark:text-white"
               />

@@ -31,7 +31,7 @@ const SignalPanel = ({
             </Tabs.List>
 
             <Tabs.Panel value="dual" pt="md">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg">
                         <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 font-semibold flex justify-center gap-2 text-black dark:text-white card-hdr-border">
                             <FaSignal className="my-auto text-blue-500" />

@@ -34,6 +34,12 @@ function ResamplingNode({ id, data }) {
   const connections = useNodeConnections({
     type: 'target',
   });
+  data["technique"] = JSON.stringify(
+    {
+    "name": interpolationTechnique,
+    "fields": { "Sampling rate": targetSamplingRate }
+  });
+  data["target"] = targetNodeId;
 
   // Set source and target node IDs based on the current connections
   useEffect(() => {
@@ -229,7 +235,7 @@ function ResamplingNode({ id, data }) {
             classNames={{
               input: 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
               dropdown: 'dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
-               item: `
+              item: `
                   dark:data-[hover]:bg-gray-700 !important
                   data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
                   data-[selected]:text-black dark:data-[selected]:text-white
