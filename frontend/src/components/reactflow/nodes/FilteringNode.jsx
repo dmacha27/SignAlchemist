@@ -12,6 +12,7 @@ import FilterFields from '../../common/FilterFields';
 import { FaFilter, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 import toast from 'react-hot-toast';
+import HandleLimit from '../edges/HandleLimit';
 
 
 const filtersFields = {
@@ -257,7 +258,7 @@ function FilteringNode({ id, data }) {
         </div>
       </div>
 
-      <Handle type="target" position={Position.Left} className="custom-handle" />
+      <HandleLimit type="target" position={Position.Left} className="custom-handle" connectionCount={1} />
 
       {/* Form */}
       <Form>

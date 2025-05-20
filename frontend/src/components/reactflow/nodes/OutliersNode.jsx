@@ -11,6 +11,7 @@ import { Form } from 'react-bootstrap';
 import { FaBullseye, FaEye, FaTrash } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 import toast from 'react-hot-toast';
+import HandleLimit from '../edges/HandleLimit';
 
 /**
  * OutliersNode component
@@ -34,8 +35,8 @@ function OutliersNode({ id, data }) {
 
   data["technique"] = JSON.stringify(
     {
-    "name": outlierTechnique,
-  });
+      "name": outlierTechnique,
+    });
   data["target"] = targetNodeId;
 
   // Update source and target node IDs when connections change
@@ -211,8 +212,7 @@ function OutliersNode({ id, data }) {
       </div>
 
       {/* Handle for incoming connections */}
-      <Handle type="target" position={Position.Left} className="custom-handle" />
-
+      <HandleLimit type="target" position={Position.Left} className="custom-handle" connectionCount={1} />
       {/* Outlier detection configuration form */}
       <Form>
         <Form.Group className="mb-4" controlId="outlierTechnique">

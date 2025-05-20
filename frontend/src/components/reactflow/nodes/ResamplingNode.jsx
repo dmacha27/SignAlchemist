@@ -11,6 +11,7 @@ import { Form } from 'react-bootstrap';
 import { FaChartLine, FaTrash, FaEye } from 'react-icons/fa';
 import ExecutionIcon from '../../common/ExecutionIcon';
 import toast from 'react-hot-toast';
+import HandleLimit from '../edges/HandleLimit';
 
 /**
  * ResamplingNode component
@@ -36,9 +37,9 @@ function ResamplingNode({ id, data }) {
   });
   data["technique"] = JSON.stringify(
     {
-    "name": interpolationTechnique,
-    "fields": { "Sampling rate": targetSamplingRate }
-  });
+      "name": interpolationTechnique,
+      "fields": { "Sampling rate": targetSamplingRate }
+    });
   data["target"] = targetNodeId;
 
   // Set source and target node IDs based on the current connections
@@ -215,7 +216,7 @@ function ResamplingNode({ id, data }) {
         </div>
       </div>
 
-      <Handle type="target" position={Position.Left} className="custom-handle" />
+      <HandleLimit type="target" position={Position.Left} className="custom-handle" connectionCount={1} />
 
       {/* Form */}
       <Form>

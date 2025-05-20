@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Handle, Position, useNodeConnections, useNodesData } from '@xyflow/react';
 import { Card } from '@mantine/core';
 import DownloadSignal from '../../common/DownloadSignal';
+import HandleLimit from '../edges/HandleLimit';
 
 /**
  * OutputSignal component
@@ -70,7 +71,7 @@ function OutputSignal({ id, data }) {
       )}
 
       {/* Handle for incoming connections */}
-      <Handle type="target" position={Position.Left} className="custom-handle" />
+      <HandleLimit type="target" position={Position.Left} className="custom-handle" connectionCount={1} />
     </Card>
   );
 }
