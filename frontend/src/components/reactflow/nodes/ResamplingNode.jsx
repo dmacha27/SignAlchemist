@@ -152,6 +152,7 @@ function ResamplingNode({ id, data }) {
       return new_table;
     } catch (error) {
       console.error('Failed to apply resampling:', error);
+      toast.error('Failed to apply resampling');
       updateNodeData(id, (prev) => ({
         ...prev,
         table: table,  // Reset to original table in case of error

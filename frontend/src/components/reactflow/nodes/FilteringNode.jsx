@@ -185,6 +185,7 @@ function FilteringNode({ id, data }) {
       return new_table;
     } catch (error) {
       console.error('Failed to apply filter:', error);
+      toast.error('Failed to apply filter');
       updateNodeData(id, (prev) => ({
         ...prev,
         table: table, // Reset to original table on error

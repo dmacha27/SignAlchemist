@@ -100,79 +100,70 @@ const Filtering = () => {
 
   }, [file]);
 
-  const requestFilter = () => {
-    // Request to ChatGPT. Docs: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-    //document.getElementById("charts").scrollIntoView({ behavior: "smooth" });
+  const requestFilter = async () => {
+    try {
+      // Request to ChatGPT. Docs: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+      //document.getElementById("charts").scrollIntoView({ behavior: "smooth" });
 
+      const formData = new FormData();
 
-    const formData = new FormData();
+      const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
 
-    const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
+      formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
+      formData.append('signal_type', signalType);
+      formData.append('sampling_rate', samplingRate);
 
-    formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
-    formData.append('signal_type', signalType);
-    formData.append('sampling_rate', samplingRate);
+      Object.keys(fields).forEach((field) => {
+        formData.append(field, fields[field]);
+      });
 
-    Object.keys(fields).forEach((field) => {
-      formData.append(field, fields[field]);
-    });
+      formData.append('method', filter);
 
-    formData.append('method', filter);
-
-    setTimeout(() => {
-      fetch('http://localhost:8000/filtering', {
+      const response = await fetch('http://localhost:8000/filtering', {
         method: 'POST',
         body: formData,
-      })
-        .then(async (response) => {
-          if (!response.ok) {
-            const data = await response.json();
+      });
 
-            if (!response.ok) {
-              setChartDataFiltered(null);
-              setMetricsFiltered(null);
-              console.log(data.error);
-              toast.error(data.error);
-              return null;
-            }
+      if (!response.ok) {
+        const data = await response.json();
+        setChartDataFiltered(null);
+        setMetricsFiltered(null);
+        console.error(data.error);
+        toast.error(data.error);
+        return;
+      }
 
-            return data;
-          }
-          return response.json();;
-        })
-        .then((data) => {
-          if (data) {
+      const data = await response.json();
 
-            data["data"].unshift([headers[timestampColumn], headers[signalValues]]);
-            setChartDataFiltered(data["data"]);
+      data["data"].unshift([headers[timestampColumn], headers[signalValues]]);
+      setChartDataFiltered(data["data"]);
 
-            const filteredMetricsForm = new FormData();
-            filteredMetricsForm.append("signal", JSON.stringify(data["data"].slice(1)));
-            filteredMetricsForm.append("signal_type", signalType);
-            filteredMetricsForm.append("sampling_rate", samplingRate);
+      const filteredMetricsForm = new FormData();
+      filteredMetricsForm.append("signal", JSON.stringify(data["data"].slice(1)));
+      filteredMetricsForm.append("signal_type", signalType);
+      filteredMetricsForm.append("sampling_rate", samplingRate);
 
-            fetch('http://localhost:8000/metrics', {
-              method: 'POST',
-              body: filteredMetricsForm,
-            })
-              .then(async (res) => {
-                const metricsFiltered = await res.json();
-                if (!res.ok) {
-                  console.log(metricsFiltered.error);
-                  toast.error(metricsFiltered.error);
-                  return;
-                }
-                setMetricsFiltered(metricsFiltered);
-              });
+      const metricsResponse = await fetch('http://localhost:8000/metrics', {
+        method: 'POST',
+        body: filteredMetricsForm,
+      });
 
-          }
+      if (!metricsResponse.ok) {
+        const metricsFiltered = await metricsResponse.json();
+        console.error(metricsFiltered.error);
+        toast.error(metricsFiltered.error);
+        return;
+      }
 
-        })
-        .catch((error) => {
-          console.error('Error al realizar el resampling:', error);
-        });
-    }, 500);
+      const metricsFiltered = await metricsResponse.json();
+      setMetricsFiltered(metricsFiltered);
+
+    } catch (error) {
+      console.error('Error performing resampling:', error);
+      toast.error('Error performing resampling.');
+    }
   };
+
 
   /**
    * Handle changes in the filter fields.

@@ -147,6 +147,7 @@ function OutliersNode({ id, data }) {
       return new_table;
     } catch (error) {
       console.error('Failed to apply outliers:', error);
+      toast.error('Failed to apply outliers');
       updateNodeData(id, (prev) => ({
         ...prev,
         table: table, // Reset to original table on error

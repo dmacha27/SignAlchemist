@@ -47,32 +47,38 @@ const Resampling = () => {
   }, [file]);
 
 
-  const requestResample = () => {
-    const formData = new FormData();
+  const requestResample = async () => {
+    try {
+      const formData = new FormData();
 
-    const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
+      const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
 
-    formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
-    formData.append('interpolation_technique', interpolation);
-    formData.append('source_sampling_rate', parseFloat(samplingRate));
-    formData.append('target_sampling_rate', parseFloat(newSamplingRate));
+      formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
+      formData.append('interpolation_technique', interpolation);
+      formData.append('source_sampling_rate', parseFloat(samplingRate));
+      formData.append('target_sampling_rate', parseFloat(newSamplingRate));
 
-    setTimeout(() => {
-      // Realizar la petición POST a la API de resampling
-      fetch('http://localhost:8000/resampling', {
+      const response = await fetch('http://localhost:8000/resampling', {
         method: 'POST',
         body: formData,
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          data["data"].unshift([headers[timestampColumn], headers[signalValues]]);
-          setChartDataResampled(data["data"]);
-        })
-        .catch((error) => {
-          console.error('Error al realizar el resampling:', error);
-        });
-    }, 500);
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error during resampling:', errorData.error);
+        toast.error(errorData.error);
+        return;
+      }
+
+      const data = await response.json();
+
+      data["data"].unshift([headers[timestampColumn], headers[signalValues]]);
+      setChartDataResampled(data["data"]);
+
+    } catch (error) {
+      console.error('Error performing resampling:', error);
+      toast.error('Error performing resampling.');
+    }
   };
 
   return (
