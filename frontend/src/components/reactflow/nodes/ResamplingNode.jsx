@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Handle,
   Position,
   useNodeConnections,
   useNodesData,
   useReactFlow,
-} from '@xyflow/react';
-import { Card, Button, Select, Tooltip } from '@mantine/core';
-import { Form } from 'react-bootstrap';
-import { FaChartLine, FaTrash, FaEye } from 'react-icons/fa';
-import ExecutionIcon from '../../common/ExecutionIcon';
-import toast from 'react-hot-toast';
-import HandleLimit from '../edges/HandleLimit';
+} from "@xyflow/react";
+import { Card, Button, Select, Tooltip } from "@mantine/core";
+import { Form } from "react-bootstrap";
+import { FaChartLine, FaTrash, FaEye } from "react-icons/fa";
+import ExecutionIcon from "../../common/ExecutionIcon";
+import toast from "react-hot-toast";
+import HandleLimit from "../edges/HandleLimit";
 
 /**
  * ResamplingNode component
@@ -28,24 +28,24 @@ function ResamplingNode({ id, data }) {
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
-  const [interpolationTechnique, setInterpolationTechnique] = useState('spline');
+  const [interpolationTechnique, setInterpolationTechnique] =
+    useState("spline");
   const [targetSamplingRate, setTargetSamplingRate] = useState(samplingRate);
-  const [executionState, setExecutionState] = useState('waiting');
+  const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({
-    type: 'target',
+    type: "target",
   });
-  data["technique"] = JSON.stringify(
-    {
-      "name": interpolationTechnique,
-      "fields": { "Sampling rate": targetSamplingRate }
-    });
+  data["technique"] = JSON.stringify({
+    name: interpolationTechnique,
+    fields: { "Sampling rate": targetSamplingRate },
+  });
   data["target"] = targetNodeId;
 
   // Set source and target node IDs based on the current connections
   useEffect(() => {
-    const sourceId = connections?.find(conn => conn.target === id)?.source;
-    const targetId = connections?.find(conn => conn.source === id)?.target;
+    const sourceId = connections?.find((conn) => conn.target === id)?.source;
+    const targetId = connections?.find((conn) => conn.source === id)?.target;
     setSourceNodeId(sourceId);
     setTargetNodeId(targetId);
   }, [connections]);
@@ -55,7 +55,6 @@ function ResamplingNode({ id, data }) {
   let table = sourceNodeData?.data?.table;
 
   useEffect(() => {
-
     /**
      * Handler to delete the current node's table and propagate the event to the next node.
      */
@@ -65,7 +64,7 @@ function ResamplingNode({ id, data }) {
         table: null,
       }));
 
-      setExecutionState('waiting');
+      setExecutionState("waiting");
 
       const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
       window.dispatchEvent(event);
@@ -94,9 +93,13 @@ function ResamplingNode({ id, data }) {
     window.addEventListener(`execute-node${id}`, handleExecute);
     window.addEventListener(`delete-source-tables${id}`, handleDeleteTable);
 
-    return () => { // Clean up events when dependencies change (avoid multiple listeners of the same type)
+    return () => {
+      // Clean up events when dependencies change (avoid multiple listeners of the same type)
       window.removeEventListener(`execute-node${id}`, handleExecute);
-      window.removeEventListener(`delete-source-tables${id}`, handleDeleteTable);
+      window.removeEventListener(
+        `delete-source-tables${id}`,
+        handleDeleteTable
+      );
     };
   }, [targetNodeId, interpolationTechnique, targetSamplingRate]);
 
@@ -106,7 +109,6 @@ function ResamplingNode({ id, data }) {
   useEffect(() => {
     const event = new CustomEvent(`delete-source-tables${id}`);
     window.dispatchEvent(event);
-
   }, [interpolationTechnique, targetSamplingRate]);
 
   /**
@@ -116,20 +118,20 @@ function ResamplingNode({ id, data }) {
   const requestResample = async () => {
     if (!table) return;
 
-    setExecutionState('running');
+    setExecutionState("running");
 
     const formData = new FormData();
-    formData.append('signal', JSON.stringify(table.slice(1)));  // Append the table data (excluding the first row which is assumed to be headers)
-    formData.append('interpolation_technique', interpolationTechnique);
-    formData.append('source_sampling_rate', parseFloat(samplingRate));
-    formData.append('target_sampling_rate', parseFloat(targetSamplingRate));
+    formData.append("signal", JSON.stringify(table.slice(1))); // Append the table data (excluding the first row which is assumed to be headers)
+    formData.append("interpolation_technique", interpolationTechnique);
+    formData.append("source_sampling_rate", parseFloat(samplingRate));
+    formData.append("target_sampling_rate", parseFloat(targetSamplingRate));
 
     const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
     window.dispatchEvent(event);
 
     try {
-      const response = await fetch('http://localhost:8000/resampling', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/resampling", {
+        method: "POST",
         body: formData,
       });
 
@@ -141,24 +143,24 @@ function ResamplingNode({ id, data }) {
 
       const result = await response.json();
 
-      const new_table = [table[0]].concat(result.data);  // Combine the original header with the resampled data
+      const new_table = [table[0]].concat(result.data); // Combine the original header with the resampled data
 
       updateNodeData(id, (prev) => ({
         ...prev,
         table: new_table,
       }));
 
-      setExecutionState('executed');
+      setExecutionState("executed");
       return new_table;
     } catch (error) {
-      console.error('Failed to apply resampling:', error);
-      toast.error('Failed to apply resampling');
+      console.error("Failed to apply resampling:", error);
+      toast.error("Failed to apply resampling");
       updateNodeData(id, (prev) => ({
         ...prev,
-        table: table,  // Reset to original table in case of error
+        table: table, // Reset to original table in case of error
       }));
 
-      setExecutionState('error');
+      setExecutionState("error");
       return table;
     }
   };
@@ -169,7 +171,9 @@ function ResamplingNode({ id, data }) {
       <div className="flex items-center justify-between mb-4 pb-3 border-b dark:border-gray-700">
         <div className="flex items-center gap-2">
           <FaChartLine className="text-blue-600" size={20} />
-          <span className="font-bold text-lg text-gray-800 dark:text-white">Resampling</span>
+          <span className="font-bold text-lg text-gray-800 dark:text-white">
+            Resampling
+          </span>
 
           {/* Node execution state icon */}
           <Tooltip label={executionState} withArrow position="bottom">
@@ -177,9 +181,11 @@ function ResamplingNode({ id, data }) {
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 toast.custom(
-                  <div className='toast-status'>
+                  <div className="toast-status">
                     <div>Status:</div>
-                    <div><ExecutionIcon executionState={executionState} /></div>
+                    <div>
+                      <ExecutionIcon executionState={executionState} />
+                    </div>
                     <div>{executionState}</div>
                   </div>
                 );
@@ -209,7 +215,9 @@ function ResamplingNode({ id, data }) {
           <Tooltip label="Delete node" withArrow position="bottom">
             <div
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => { data.deleteNode(id); }}
+              onClick={() => {
+                data.deleteNode(id);
+              }}
             >
               <FaTrash className="text-red-500" />
             </div>
@@ -217,7 +225,12 @@ function ResamplingNode({ id, data }) {
         </div>
       </div>
 
-      <HandleLimit type="target" position={Position.Left} className="custom-handle" connectionCount={1} />
+      <HandleLimit
+        type="target"
+        position={Position.Left}
+        className="custom-handle"
+        connectionCount={1}
+      />
 
       {/* Form */}
       <Form>
@@ -230,18 +243,20 @@ function ResamplingNode({ id, data }) {
             value={interpolationTechnique}
             onChange={setInterpolationTechnique}
             data={[
-              { value: 'spline', label: 'Spline' },
-              { value: '1d', label: 'Interp1d' }
+              { value: "spline", label: "Spline" },
+              { value: "1d", label: "Interp1d" },
             ]}
             className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
             classNames={{
-              input: 'bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
-              dropdown: 'dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600',
+              input:
+                "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+              dropdown:
+                "dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
               item: `
                   dark:data-[hover]:bg-gray-700 !important
                   data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
                   data-[selected]:text-black dark:data-[selected]:text-white
-                `
+                `,
             }}
           />
         </Form.Group>
@@ -268,13 +283,19 @@ function ResamplingNode({ id, data }) {
           size="sm"
           disabled={!table}
           onClick={requestResample}
-          className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${!table ? '' : 'dark:text-white'}`}
+          className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${
+            !table ? "" : "dark:text-white"
+          }`}
         >
           Resample
         </Button>
       </div>
 
-      <Handle type="source" position={Position.Right} className="custom-handle" />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="custom-handle"
+      />
     </Card>
   );
 }

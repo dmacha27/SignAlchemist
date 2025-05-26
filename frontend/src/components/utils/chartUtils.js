@@ -2,67 +2,67 @@
  * getActualColor function returns the actual color of a chart point.
  * If the color is a string, it returns the string.
  * If it's an array, it looks for a color other than '#fa6400' or 'gray' and returns it.
- * 
+ *
  * @param {string|Array} pointBackgroundColor - The color of the chart points, either as a string or an array of colors.
  * @returns {string|null} The actual color for the chart points or null if no valid color is found.
  */
 export function getActualColor(pointBackgroundColor) {
-    if (typeof pointBackgroundColor === 'string') return pointBackgroundColor;
+  if (typeof pointBackgroundColor === "string") return pointBackgroundColor;
 
-    for (const color of pointBackgroundColor) {
-        if (color !== '#fa6400' && color !== 'gray') {
-            return color;
-        }
+  for (const color of pointBackgroundColor) {
+    if (color !== "#fa6400" && color !== "gray") {
+      return color;
     }
+  }
 
-    return pointBackgroundColor[0] || null;
+  return pointBackgroundColor[0] || null;
 }
 
 /**
  * handleResetZoom function resets the zoom on the provided chart by setting the x and y scale min/max to undefined.
- * 
+ *
  * @param {Object} chart - The chart object to reset the zoom on.
  */
 export function handleResetZoom(chart) {
-    if (!chart) return;
-    chart.options.scales.x.min = undefined;
-    chart.options.scales.x.max = undefined;
-    chart.options.scales.y.min = undefined;
-    chart.options.scales.y.max = undefined;
-    chart.update();
+  if (!chart) return;
+  chart.options.scales.x.min = undefined;
+  chart.options.scales.x.max = undefined;
+  chart.options.scales.y.min = undefined;
+  chart.options.scales.y.max = undefined;
+  chart.update();
 }
 
 /**
  * handleResetStyle function resets the chart's styling to the provided color.
- * 
+ *
  * @param {Object} chart - The chart object to reset the style on.
  * @param {string} color - The color to apply to the chart's points and segments.
  */
 export function handleResetStyle(chart, color) {
-    if (!chart) return;
-    const dataset = chart.data.datasets[0];
-    dataset.pointBackgroundColor = dataset.data.map(() => color);
-    dataset.pointBorderColor = dataset.data.map(() => color);
-    dataset.pointRadius = dataset.data.map(() => 2);
-    dataset.segment = {
-        borderColor: () => color,
-        backgroundColor: () => color,
-    };
-    chart.update();
+  if (!chart) return;
+  const dataset = chart.data.datasets[0];
+  dataset.pointBackgroundColor = dataset.data.map(() => color);
+  dataset.pointBorderColor = dataset.data.map(() => color);
+  dataset.pointRadius = dataset.data.map(() => 2);
+  dataset.segment = {
+    borderColor: () => color,
+    backgroundColor: () => color,
+  };
+  chart.update();
 }
 
 /**
  * exportToPNG function exports the chart as a PNG image.
- * 
+ *
  * @param {Object} chart - The chart object to export as an image.
  * @param {string} [filename='chart.png'] - The filename for the exported PNG image.
  */
-export function exportToPNG(chart, filename = 'chart.png') {
-    if (chart) {
-        const imageUrl = chart.toBase64Image();
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = filename;
-        link.click();
-    }
+export function exportToPNG(chart, filename = "chart.png") {
+  if (chart) {
+    const imageUrl = chart.toBase64Image();
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = filename;
+    link.click();
+  }
 }

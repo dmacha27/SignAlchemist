@@ -1,23 +1,24 @@
 import { useState, memo, useContext } from "react";
-import PropTypes from 'prop-types';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import PropTypes from "prop-types";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { FaInfo, FaCheck, FaClipboard } from "react-icons/fa";
 
-import { Modal, Button, Group, Tooltip } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { Modal, Button, Group, Tooltip } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 
-import { ThemeContext } from '../../contexts/ThemeContext';
+import { ThemeContext } from "../../contexts/ThemeContext";
 
 /**
  * InfoModal component displays a modal with Python function information and example code.
- * 
+ *
  * @param {Object} props
  * @param {boolean} props.opened - Boolean that controls whether the modal is visible or not.
  * @param {function} props.close - Function to close the modal.
  */
 const InfoModal = ({ opened, close }) => {
-  const content = 'def filter_signal(signal): \n\tnew_values = scipy.ndimage.gaussian_filter1d(signal, sigma=30) \n\treturn new_values';
+  const content =
+    "def filter_signal(signal): \n\tnew_values = scipy.ndimage.gaussian_filter1d(signal, sigma=30) \n\treturn new_values";
 
   const [copied, setCopied] = useState(false);
 
@@ -39,9 +40,10 @@ const InfoModal = ({ opened, close }) => {
       centered
       withCloseButton
       classNames={{
-        header: 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700',
-        body: 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white',
-        title: 'text-gray-800 dark:text-white',
+        header:
+          "bg-white dark:bg-gray-900 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700",
+        body: "bg-white dark:bg-gray-900 text-gray-800 dark:text-white",
+        title: "text-gray-800 dark:text-white",
       }}
     >
       <div className="overflow-x-hidden text-gray-800 dark:text-white">
@@ -52,42 +54,65 @@ const InfoModal = ({ opened, close }) => {
             <strong>Code:</strong> The code must be written in Python.
           </li>
           <li>
-            <strong>Function name:</strong> The code must contain the definition of a function named <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">filter_signal</code> that performs the filtering of the signal.
+            <strong>Function name:</strong> The code must contain the definition
+            of a function named{" "}
+            <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">
+              filter_signal
+            </code>{" "}
+            that performs the filtering of the signal.
           </li>
           <li>
-            <strong>Parameters:</strong> The function must have a single parameter that represents the signal values.
+            <strong>Parameters:</strong> The function must have a single
+            parameter that represents the signal values.
           </li>
           <li>
-            <strong>Output:</strong> The function's output will be the processed (filtered) signal values (must have the same length as the input).
+            <strong>Output:</strong> The function's output will be the processed
+            (filtered) signal values (must have the same length as the input).
           </li>
           <li>
-            <strong>No additional parameters:</strong> The function should not accept any additional parameters.
+            <strong>No additional parameters:</strong> The function should not
+            accept any additional parameters.
           </li>
           <li>
-            <strong>Syntax Error:</strong> If there is a syntax error in the code, an error message will be displayed.
+            <strong>Syntax Error:</strong> If there is a syntax error in the
+            code, an error message will be displayed.
           </li>
           <li>
-            <strong>Empty Field:</strong> If the field is left blank, the filter will be executed with the other parameters from the form (this field will be ignored).
+            <strong>Empty Field:</strong> If the field is left blank, the filter
+            will be executed with the other parameters from the form (this field
+            will be ignored).
           </li>
           <li>
             <strong>What packages can I use? (more to come):</strong>
-            <SyntaxHighlighter language="python" style={isDark ? materialDark : undefined}>
-              {'import numpy as np\nimport pandas as pd\nimport neurokit2\nimport scipy'}
+            <SyntaxHighlighter
+              language="python"
+              style={isDark ? materialDark : undefined}
+            >
+              {
+                "import numpy as np\nimport pandas as pd\nimport neurokit2\nimport scipy"
+              }
             </SyntaxHighlighter>
           </li>
           <li>
             <strong>Example (copy and paste to try!):</strong>
             <div className="relative">
-              <SyntaxHighlighter language="python" style={isDark ? materialDark : undefined}>
+              <SyntaxHighlighter
+                language="python"
+                style={isDark ? materialDark : undefined}
+              >
                 {content}
               </SyntaxHighlighter>
 
-              <Tooltip label={copied ? 'Copied!' : 'Copy'} position="top-end" withArrow>
+              <Tooltip
+                label={copied ? "Copied!" : "Copy"}
+                position="top-end"
+                withArrow
+              >
                 <button
                   className="absolute top-2 right-2 cursor-pointer text-gray-500 dark:text-gray-100"
                   onClick={handleCopy}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+                    if (e.key === "Enter" || e.key === " ") {
                       handleCopy();
                     }
                   }}
@@ -112,12 +137,11 @@ const InfoModal = ({ opened, close }) => {
       </div>
     </Modal>
   );
-
 };
 
 /**
  * FilterFields component renders form fields for different filter parameters and displays a modal for Python code information.
- * 
+ *
  * @param {Object} props
  * @param {Object} props.fields - An object containing the filter fields and their configuration.
  * @param {function} props.onFieldChange - A callback function to handle field value changes.
@@ -151,7 +175,9 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
           return (
             <div key={field}>
               <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-gray-700 dark:text-white">Python code</span >
+                <span className="font-medium text-gray-700 dark:text-white">
+                  Python code
+                </span>
                 <button
                   type="button"
                   onClick={open}
@@ -173,10 +199,7 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
       })}
     </>
   );
-
-}
-);
-
+});
 
 InfoModal.propTypes = {
   opened: PropTypes.bool.isRequired,
@@ -186,7 +209,8 @@ InfoModal.propTypes = {
 FilterFields.propTypes = {
   fields: PropTypes.objectOf(
     PropTypes.shape({
-      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        .isRequired,
     })
   ).isRequired,
   onFieldChange: PropTypes.func.isRequired,

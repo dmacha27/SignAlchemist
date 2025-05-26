@@ -1,19 +1,20 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { usePapaParse } from 'react-papaparse';
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { usePapaParse } from "react-papaparse";
 
-import generateDataOriginal from './utils/dataUtils';
+import generateDataOriginal from "./utils/dataUtils";
 
-import DownloadSignal from './common/DownloadSignal';
-import InfoTable from './common/InfoTable';
-import SignalTabs from './common/SignalTabs';
-import LoaderMessage from './common/LoaderMessage';
+import DownloadSignal from "./common/DownloadSignal";
+import InfoTable from "./common/InfoTable";
+import SignalTabs from "./common/SignalTabs";
+import LoaderMessage from "./common/LoaderMessage";
 
-import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from 'react-icons/fa';
+import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from "react-icons/fa";
 
 const Resampling = () => {
   const location = useLocation();
-  const { file, signalType, timestampColumn, samplingRate, signalValues } = location.state || {};
+  const { file, signalType, timestampColumn, samplingRate, signalValues } =
+    location.state || {};
   const { readString } = usePapaParse();
 
   const [headers, setHeaders] = useState([]);
@@ -31,11 +32,16 @@ const Resampling = () => {
       const content = e.target.result;
       readString(content, {
         complete: (results) => {
-
           const file_headers = [...results.data[0], "Timestamp (calc)"];
           const rows = results.data.slice(1);
 
-          let data_original = generateDataOriginal(file_headers, rows, timestampColumn, signalValues, samplingRate);
+          let data_original = generateDataOriginal(
+            file_headers,
+            rows,
+            timestampColumn,
+            signalValues,
+            samplingRate
+          );
 
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
@@ -43,9 +49,7 @@ const Resampling = () => {
       });
     };
     reader.readAsText(file);
-
   }, [file]);
-
 
   const requestResample = async () => {
     try {
@@ -53,19 +57,19 @@ const Resampling = () => {
 
       const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
 
-      formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
-      formData.append('interpolation_technique', interpolation);
-      formData.append('source_sampling_rate', parseFloat(samplingRate));
-      formData.append('target_sampling_rate', parseFloat(newSamplingRate));
+      formData.append("signal", JSON.stringify(chartDataOriginal_noheaders));
+      formData.append("interpolation_technique", interpolation);
+      formData.append("source_sampling_rate", parseFloat(samplingRate));
+      formData.append("target_sampling_rate", parseFloat(newSamplingRate));
 
-      const response = await fetch('http://localhost:8000/resampling', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/resampling", {
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error during resampling:', errorData.error);
+        console.error("Error during resampling:", errorData.error);
         toast.error(errorData.error);
         return;
       }
@@ -74,10 +78,9 @@ const Resampling = () => {
 
       data["data"].unshift([headers[timestampColumn], headers[signalValues]]);
       setChartDataResampled(data["data"]);
-
     } catch (error) {
-      console.error('Error performing resampling:', error);
-      toast.error('Error performing resampling.');
+      console.error("Error performing resampling:", error);
+      toast.error("Error performing resampling.");
     }
   };
 
@@ -107,7 +110,9 @@ const Resampling = () => {
               {chartDataOriginal ? (
                 <InfoTable table={chartDataOriginal} onlyTable={false} />
               ) : (
-                <div className="text-center text-gray-500 dark:text-gray-400">No data available</div>
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                  No data available
+                </div>
               )}
             </div>
           </div>
@@ -122,13 +127,18 @@ const Resampling = () => {
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label htmlFor="interpTechnique" className="block mb-1 font-medium text-black dark:text-white">
+                <label
+                  htmlFor="interpTechnique"
+                  className="block mb-1 font-medium text-black dark:text-white"
+                >
                   Interpolation technique
                 </label>
                 <select
                   id="interpTechnique"
                   className="block w-full border border-gray-300 dark:border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
-                  onChange={(value) => { setInterpolation(value) }}
+                  onChange={(value) => {
+                    setInterpolation(value);
+                  }}
                 >
                   <option value="spline">Spline</option>
                   <option value="1d">Interp1d</option>
@@ -136,7 +146,10 @@ const Resampling = () => {
               </div>
 
               <div>
-                <label htmlFor="samplingRate" className="block mb-1 font-medium">
+                <label
+                  htmlFor="samplingRate"
+                  className="block mb-1 font-medium"
+                >
                   New sampling rate (Hz)
                 </label>
                 <input
@@ -144,7 +157,9 @@ const Resampling = () => {
                   step={1}
                   id="samplingRate"
                   defaultValue={samplingRate}
-                  onChange={(event) => { setNewSamplingRate(event.target.value) }}
+                  onChange={(event) => {
+                    setNewSamplingRate(event.target.value);
+                  }}
                   placeholder="Enter Hz"
                   className="block w-full border border-gray-300 dark:border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
@@ -189,11 +204,8 @@ const Resampling = () => {
         chartDataProcessed={chartDataResampled}
         samplingRate={samplingRate}
       />
-
     </div>
   );
-
-
 };
 
 export default Resampling;

@@ -1,7 +1,7 @@
-import { memo, useRef, useEffect, useMemo, useContext } from 'react';
-import PropTypes from 'prop-types';
-import { Line } from 'react-chartjs-2';
-import 'chartjs-adapter-date-fns';
+import { memo, useRef, useEffect, useMemo, useContext } from "react";
+import PropTypes from "prop-types";
+import { Line } from "react-chartjs-2";
+import "chartjs-adapter-date-fns";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,12 +11,12 @@ import {
   Title,
   Tooltip,
   Legend,
-  TimeScale
-} from 'chart.js';
-import zoomPlugin from 'chartjs-plugin-zoom';
-import { FaSearch, FaDownload, FaImage, FaHandPaper } from 'react-icons/fa';
-import { Menu, Button } from '@mantine/core';
-import Draggable from 'react-draggable';
+  TimeScale,
+} from "chart.js";
+import zoomPlugin from "chartjs-plugin-zoom";
+import { FaSearch, FaDownload, FaImage, FaHandPaper } from "react-icons/fa";
+import { Menu, Button } from "@mantine/core";
+import Draggable from "react-draggable";
 
 ChartJS.register(
   zoomPlugin,
@@ -35,62 +35,60 @@ import {
   handleResetZoom,
   handleResetStyle,
   exportToPNG,
-} from '../utils/chartUtils';
+} from "../utils/chartUtils";
 
-import { ThemeContext } from '../../contexts/ThemeContext';
+import { ThemeContext } from "../../contexts/ThemeContext";
 
 const MAX_DATA_LENGTH = 5000;
-
 
 const baseChartOptions = {
   label: "signal",
   responsive: true,
   plugins: {
     legend: {
-      display: false
+      display: false,
     },
     tooltip: {
-      mode: 'index',
+      mode: "index",
       intersect: true,
-      backgroundColor: '#fff',
-      titleColor: '#222',
-      bodyColor: '#333',
-      borderColor: '#ccc',
+      backgroundColor: "#fff",
+      titleColor: "#222",
+      bodyColor: "#333",
+      borderColor: "#ccc",
       borderWidth: 1,
-    }
+    },
   },
   scales: {
     x: {
-      type: 'time',
-      position: 'bottom',
+      type: "time",
+      position: "bottom",
       time: {
-        unit: 'second',
-        tooltipFormat: 'dd MMM yyyy HH:mm:ss',
+        unit: "second",
+        tooltipFormat: "dd MMM yyyy HH:mm:ss",
         displayFormats: {
-          minute: 'HH:mm',
-          hour: 'HH:mm',
-          day: 'MMM d',
-        }
+          minute: "HH:mm",
+          hour: "HH:mm",
+          day: "MMM d",
+        },
       },
       title: {
         display: true,
-        text: '(ms)',
-        color: '#111',
-        font: { size: 14, weight: 'bold' }
-      }
+        text: "(ms)",
+        color: "#111",
+        font: { size: 14, weight: "bold" },
+      },
     },
     y: {
-      ticks: { color: '#444' },
+      ticks: { color: "#444" },
       title: {
         display: true,
-        text: 'Value',
-        color: '#111',
-        font: { size: 14, weight: 'bold' }
-      }
-    }
-  }
+        text: "Value",
+        color: "#111",
+        font: { size: 14, weight: "bold" },
+      },
+    },
+  },
 };
-
 
 // Auxiliary functions for CustomChart
 
@@ -102,10 +100,19 @@ const baseChartOptions = {
  * @param {string} highlightColor - The color used to highlight the selected point.
  * @param {string} actualColor - The color used for the non-selected points.
  */
-const updateDatasetStyles = (dataset, pointIndex, highlightColor, actualColor) => {
-  dataset.pointBackgroundColor = dataset.data.map((_, i) => i === pointIndex ? highlightColor : actualColor);
-  dataset.pointBorderColor = dataset.data.map((_, i) => i === pointIndex ? highlightColor : actualColor);
-  dataset.pointRadius = dataset.data.map((_, i) => i === pointIndex ? 6 : 2);
+const updateDatasetStyles = (
+  dataset,
+  pointIndex,
+  highlightColor,
+  actualColor
+) => {
+  dataset.pointBackgroundColor = dataset.data.map((_, i) =>
+    i === pointIndex ? highlightColor : actualColor
+  );
+  dataset.pointBorderColor = dataset.data.map((_, i) =>
+    i === pointIndex ? highlightColor : actualColor
+  );
+  dataset.pointRadius = dataset.data.map((_, i) => (i === pointIndex ? 6 : 2));
 };
 
 /**
@@ -118,13 +125,21 @@ const updateDatasetStyles = (dataset, pointIndex, highlightColor, actualColor) =
  * @param {number} zoomRange - The range used to zoom the X-axis around the selected point.
  * @param {Object} chartRef - A ref to the main chart for data correspondence validation.
  */
-const processChartHighlight = (chart, pointIndex, timestamp, highlightColor, zoomRange, chartRef) => {
+const processChartHighlight = (
+  chart,
+  pointIndex,
+  timestamp,
+  highlightColor,
+  zoomRange,
+  chartRef
+) => {
   const dataset = chart.data.datasets[0];
   const actualColor = getActualColor(dataset.pointBackgroundColor);
 
   // Skip if dataset is too large or data length mismatch (to optimize performance)
   if (dataset.data.length > MAX_DATA_LENGTH) return;
-  if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return;
+  if (chartRef.current.data.datasets[0].data.length !== dataset.data.length)
+    return;
 
   // Update dataset styles to highlight the selected point
   updateDatasetStyles(dataset, pointIndex, highlightColor, actualColor);
@@ -138,20 +153,21 @@ const processChartHighlight = (chart, pointIndex, timestamp, highlightColor, zoo
 
 /**
  * CustomChart component renders a chart based on the given table data.
- * 
+ *
  * @param {Object} props
  * @param {Array} props.table - A 2D array with headers in the first row and data points in subsequent rows.
  * @param {string} [props.defaultColor='#2196f3'] - The default color for the chart's line and points.
  */
-const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-render on parent render if table and setChartImage do not change.
+const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
+  // Avoid re-render on parent render if table and setChartImage do not change.
   // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
 
   const chartRef = useRef(null);
   const draggableRef = useRef(null);
   const [headers, ...rows] = table;
 
-  const minValue = Math.min(...rows.map(row => row[0])); //seconds
-  const maxValue = Math.max(...rows.map(row => row[0]));
+  const minValue = Math.min(...rows.map((row) => row[0])); //seconds
+  const maxValue = Math.max(...rows.map((row) => row[0]));
   const zoomRange = parseInt((maxValue * 1000 - minValue * 1000) * 0.02);
   const isLargeDataset = rows.length > MAX_DATA_LENGTH;
 
@@ -162,92 +178,122 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
 
   const { isDarkMode: isDark } = useContext(ThemeContext);
 
-  const chartOptions = useMemo(() => ({
-    ...baseChartOptions,
-    onClick: function (evt) {
-      const elements = chartRef.current.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
-      if (elements.length === 0) return;
+  const chartOptions = useMemo(
+    () => ({
+      ...baseChartOptions,
+      onClick: function (evt) {
+        const elements = chartRef.current.getElementsAtEventForMode(
+          evt,
+          "nearest",
+          { intersect: true },
+          true
+        );
+        if (elements.length === 0) return;
 
-      const pointIndex = elements[0].index;
-      const timestamp = chartRef.current.data.datasets[0].data[pointIndex].x;
-      const highlightColor = '#fa6400';
+        const pointIndex = elements[0].index;
+        const timestamp = chartRef.current.data.datasets[0].data[pointIndex].x;
+        const highlightColor = "#fa6400";
 
-      Object.values(ChartJS.instances)
-        .filter(chart => chart?.config?.options?.label === "signal")
-        .forEach(chart => processChartHighlight(chart, pointIndex, timestamp, highlightColor, zoomRange, chartRef));
-
-    },
-    onHover: (event, chartElements) => {
-      if (chartElements.length === 0) return;
-
-      const elements = chartRef.current.getElementsAtEventForMode(event.native, 'nearest', { intersect: true }, false);
-      if (elements.length === 0) return;
-
-      // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
-      const index = elements[0].index;
-      const charts = Object.values(ChartJS.instances).filter(chart => chart?.config?.options?.label === "signal");
-
-      charts.forEach(chart => {
-        if (chartRef.current !== chart) {
-          if (chartRef.current.data.datasets[0].data.length !== chart.data.datasets[0].data.length) return; // No point-to-point correspondence
-          chart.tooltip.setActiveElements(
-            [{ datasetIndex: 0, index }],
-            { x: event.native.x, y: event.native.y }
+        Object.values(ChartJS.instances)
+          .filter((chart) => chart?.config?.options?.label === "signal")
+          .forEach((chart) =>
+            processChartHighlight(
+              chart,
+              pointIndex,
+              timestamp,
+              highlightColor,
+              zoomRange,
+              chartRef
+            )
           );
-          chart.update();
-        }
-      });
-    },
-    plugins: {
-      ...baseChartOptions.plugins,
-      tooltip: {
-        ...baseChartOptions.plugins.tooltip,
-        backgroundColor: isDark ? '#333' : '#fff',
-        titleColor: isDark ? '#fff' : '#222',
-        bodyColor: isDark ? '#ddd' : '#333',
-        borderColor: isDark ? '#555' : '#ccc',
       },
-      zoom: {
-        pan: {
-          enabled: !isLargeDataset,
-          mode: 'x'
+      onHover: (event, chartElements) => {
+        if (chartElements.length === 0) return;
+
+        const elements = chartRef.current.getElementsAtEventForMode(
+          event.native,
+          "nearest",
+          { intersect: true },
+          false
+        );
+        if (elements.length === 0) return;
+
+        // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
+        const index = elements[0].index;
+        const charts = Object.values(ChartJS.instances).filter(
+          (chart) => chart?.config?.options?.label === "signal"
+        );
+
+        charts.forEach((chart) => {
+          if (chartRef.current !== chart) {
+            if (
+              chartRef.current.data.datasets[0].data.length !==
+              chart.data.datasets[0].data.length
+            )
+              return; // No point-to-point correspondence
+            chart.tooltip.setActiveElements([{ datasetIndex: 0, index }], {
+              x: event.native.x,
+              y: event.native.y,
+            });
+            chart.update();
+          }
+        });
+      },
+      plugins: {
+        ...baseChartOptions.plugins,
+        tooltip: {
+          ...baseChartOptions.plugins.tooltip,
+          backgroundColor: isDark ? "#333" : "#fff",
+          titleColor: isDark ? "#fff" : "#222",
+          bodyColor: isDark ? "#ddd" : "#333",
+          borderColor: isDark ? "#555" : "#ccc",
         },
         zoom: {
-          wheel: { enabled: !isLargeDataset },
-          pinch: { enabled: !isLargeDataset },
-          mode: 'x'
-        }
-      }
-    },
-    scales: {
-      ...baseChartOptions.scales,
-      x: {
-        ...baseChartOptions.scales.x,
-        type: rows[0][0] == 0.0 ? 'linear' : 'time',
-        ticks: { color: isDark ? '#ffffff' : '#000000' },
-        grid: { color: isDark ? '#444444' : '#e5e5e5' },
-        title: {
-          ...baseChartOptions.scales.x.title,
-          text: rows[0][0] == 0.0 ? `${headers[0]} (ms)` : `${headers[0]} (date)`,
-          color: isDark ? '#ffffff' : '#000000',
+          pan: {
+            enabled: !isLargeDataset,
+            mode: "x",
+          },
+          zoom: {
+            wheel: { enabled: !isLargeDataset },
+            pinch: { enabled: !isLargeDataset },
+            mode: "x",
+          },
         },
-
-        ...(rows[0][0] == 0.0 ? {} : {
-          time: baseChartOptions.scales.x.time
-        })
       },
-      y: {
-        ...baseChartOptions.scales.y,
-        ticks: { color: isDark ? '#ffffff' : '#444444' },
-        grid: { color: isDark ? '#444444' : '#e5e5e5' },
-        title: {
-          ...baseChartOptions.scales.y.title,
-          text: headers[1],
-          color: isDark ? '#ffffff' : '#000000',
-        }
-      }
-    }
-  }), [isDark, headers, isLargeDataset, rows]);
+      scales: {
+        ...baseChartOptions.scales,
+        x: {
+          ...baseChartOptions.scales.x,
+          type: rows[0][0] == 0.0 ? "linear" : "time",
+          ticks: { color: isDark ? "#ffffff" : "#000000" },
+          grid: { color: isDark ? "#444444" : "#e5e5e5" },
+          title: {
+            ...baseChartOptions.scales.x.title,
+            text:
+              rows[0][0] == 0.0 ? `${headers[0]} (ms)` : `${headers[0]} (date)`,
+            color: isDark ? "#ffffff" : "#000000",
+          },
+
+          ...(rows[0][0] == 0.0
+            ? {}
+            : {
+                time: baseChartOptions.scales.x.time,
+              }),
+        },
+        y: {
+          ...baseChartOptions.scales.y,
+          ticks: { color: isDark ? "#ffffff" : "#444444" },
+          grid: { color: isDark ? "#444444" : "#e5e5e5" },
+          title: {
+            ...baseChartOptions.scales.y.title,
+            text: headers[1],
+            color: isDark ? "#ffffff" : "#000000",
+          },
+        },
+      },
+    }),
+    [isDark, headers, isLargeDataset, rows]
+  );
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -261,9 +307,9 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
         borderColor: defaultColor,
         pointRadius: isLargeDataset ? 0 : 2,
         pointBackgroundColor: defaultColor,
-        fill: false
-      }
-    ]
+        fill: false,
+      },
+    ],
   };
 
   return (
@@ -276,15 +322,14 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
             <div className="relative inline-block group">
               <Menu shadow="md" width={100}>
                 <Menu.Target>
-                  <Button
-                    size="xs"
-                    variant="light"
-                  >
+                  <Button size="xs" variant="light">
                     <FaDownload />
                   </Button>
                 </Menu.Target>
                 <Menu.Dropdown className="bg-white dark:bg-gray-900 dark:border-gray-600">
-                  <Menu.Label className="text-black dark:text-white">Export as</Menu.Label>
+                  <Menu.Label className="text-black dark:text-white">
+                    Export as
+                  </Menu.Label>
                   <Menu.Item
                     leftSection={<FaImage size={12} />}
                     onClick={() => exportToPNG(chartRef.current)}
@@ -301,12 +346,12 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
             </div>
           </div>
         </Draggable>
-
       </div>
 
       {isLargeDataset ? (
         <div className="w-3/4 mx-auto mt-3 bg-yellow-100 text-yellow-800 p-4 rounded-md">
-          <strong>Too much data</strong> – interaction is disabled to improve performance.
+          <strong>Too much data</strong> – interaction is disabled to improve
+          performance.
         </div>
       ) : (
         <div className="flex justify-center gap-4 mt-3">
@@ -330,9 +375,7 @@ const CustomChart = memo(({ table, defaultColor = '#2196f3' }) => { // Avoid re-
 
 CustomChart.propTypes = {
   table: PropTypes.arrayOf(
-    PropTypes.arrayOf(
-      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-    )
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number]))
   ).isRequired,
   defaultColor: PropTypes.string,
 };

@@ -1,50 +1,49 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { usePapaParse } from 'react-papaparse';
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { usePapaParse } from "react-papaparse";
 
-import generateDataOriginal from './utils/dataUtils';
+import generateDataOriginal from "./utils/dataUtils";
 
-import InfoMetrics from './common/InfoMetrics';
-import DownloadSignal from './common/DownloadSignal';
-import InfoTable from './common/InfoTable';
-import FilterFields from './common/FilterFields';
-import LoaderMessage from './common/LoaderMessage';
+import InfoMetrics from "./common/InfoMetrics";
+import DownloadSignal from "./common/DownloadSignal";
+import InfoTable from "./common/InfoTable";
+import FilterFields from "./common/FilterFields";
+import LoaderMessage from "./common/LoaderMessage";
 
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
-import { FaFilter, FaSignal, FaTools } from 'react-icons/fa';
-import SignalTabs from './common/SignalTabs';
-
+import { FaFilter, FaSignal, FaTools } from "react-icons/fa";
+import SignalTabs from "./common/SignalTabs";
 
 const filtersFields = {
   butterworth: {
     order: 2,
     lowcut: 0,
     highcut: 1000,
-    python: ""
+    python: "",
   },
   bessel: {
     lowcut: 0,
     highcut: 1000,
-    python: ""
+    python: "",
   },
   fir: {
     lowcut: 0,
     highcut: 1000,
-    python: ""
+    python: "",
   },
   savgol: {
     order: 2,
     lowcut: 0,
     highcut: 1000,
-    python: ""
+    python: "",
   },
 };
 
-
 const Filtering = () => {
   const location = useLocation();
-  const { file, signalType, timestampColumn, samplingRate, signalValues } = location.state || {};
+  const { file, signalType, timestampColumn, samplingRate, signalValues } =
+    location.state || {};
 
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
@@ -66,38 +65,44 @@ const Filtering = () => {
       const content = e.target.result;
       readString(content, {
         complete: (results) => {
-
           const file_headers = [...results.data[0], "Timestamp (calc)"];
           const rows = results.data.slice(1);
 
-          let data_original = generateDataOriginal(file_headers, rows, timestampColumn, signalValues, samplingRate);
+          let data_original = generateDataOriginal(
+            file_headers,
+            rows,
+            timestampColumn,
+            signalValues,
+            samplingRate
+          );
 
           setHeaders(file_headers);
           setChartDataOriginal(data_original);
 
           const originalMetricsForm = new FormData();
-          originalMetricsForm.append("signal", JSON.stringify(data_original.slice(1)));
+          originalMetricsForm.append(
+            "signal",
+            JSON.stringify(data_original.slice(1))
+          );
           originalMetricsForm.append("signal_type", signalType);
           originalMetricsForm.append("sampling_rate", samplingRate);
 
-          fetch('http://localhost:8000/metrics', {
-            method: 'POST',
+          fetch("http://localhost:8000/metrics", {
+            method: "POST",
             body: originalMetricsForm,
-          })
-            .then(async (res) => {
-              const metricsOriginal = await res.json();
-              if (!res.ok) {
-                console.log(metricsOriginal.error);
-                toast.error(metricsOriginal.error);
-                return;
-              }
-              setMetricsOriginal(metricsOriginal);
-            });
+          }).then(async (res) => {
+            const metricsOriginal = await res.json();
+            if (!res.ok) {
+              console.log(metricsOriginal.error);
+              toast.error(metricsOriginal.error);
+              return;
+            }
+            setMetricsOriginal(metricsOriginal);
+          });
         },
       });
     };
     reader.readAsText(file);
-
   }, [file]);
 
   const requestFilter = async () => {
@@ -109,18 +114,18 @@ const Filtering = () => {
 
       const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
 
-      formData.append('signal', JSON.stringify(chartDataOriginal_noheaders));
-      formData.append('signal_type', signalType);
-      formData.append('sampling_rate', samplingRate);
+      formData.append("signal", JSON.stringify(chartDataOriginal_noheaders));
+      formData.append("signal_type", signalType);
+      formData.append("sampling_rate", samplingRate);
 
       Object.keys(fields).forEach((field) => {
         formData.append(field, fields[field]);
       });
 
-      formData.append('method', filter);
+      formData.append("method", filter);
 
-      const response = await fetch('http://localhost:8000/filtering', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/filtering", {
+        method: "POST",
         body: formData,
       });
 
@@ -139,12 +144,15 @@ const Filtering = () => {
       setChartDataFiltered(data["data"]);
 
       const filteredMetricsForm = new FormData();
-      filteredMetricsForm.append("signal", JSON.stringify(data["data"].slice(1)));
+      filteredMetricsForm.append(
+        "signal",
+        JSON.stringify(data["data"].slice(1))
+      );
       filteredMetricsForm.append("signal_type", signalType);
       filteredMetricsForm.append("sampling_rate", samplingRate);
 
-      const metricsResponse = await fetch('http://localhost:8000/metrics', {
-        method: 'POST',
+      const metricsResponse = await fetch("http://localhost:8000/metrics", {
+        method: "POST",
         body: filteredMetricsForm,
       });
 
@@ -157,13 +165,11 @@ const Filtering = () => {
 
       const metricsFiltered = await metricsResponse.json();
       setMetricsFiltered(metricsFiltered);
-
     } catch (error) {
-      console.error('Error performing resampling:', error);
-      toast.error('Error performing resampling.');
+      console.error("Error performing resampling:", error);
+      toast.error("Error performing resampling.");
     }
   };
-
 
   /**
    * Handle changes in the filter fields.
@@ -200,7 +206,9 @@ const Filtering = () => {
               {chartDataOriginal ? (
                 <InfoTable table={chartDataOriginal} onlyTable={true} />
               ) : (
-                <div className="text-center text-gray-500 dark:text-gray-400">No data available</div>
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                  No data available
+                </div>
               )}
             </div>
           </div>
@@ -215,7 +223,10 @@ const Filtering = () => {
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label htmlFor="filterTechnique" className="block mb-1 font-medium text-black dark:text-white">
+                <label
+                  htmlFor="filterTechnique"
+                  className="block mb-1 font-medium text-black dark:text-white"
+                >
                   Filtering technique
                 </label>
                 <select
@@ -282,11 +293,8 @@ const Filtering = () => {
           metricsProcessed={metricsFiltered}
         />
       )}
-
     </div>
   );
-
-
 };
 
 export default Filtering;

@@ -1,6 +1,10 @@
-import PropTypes from 'prop-types';
-import { FaClock, FaSpinner, FaCheck, FaExclamationCircle } from 'react-icons/fa';
-
+import PropTypes from "prop-types";
+import {
+  FaClock,
+  FaSpinner,
+  FaCheck,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 /**
  * ExecutionIcon component renders an icon based on the execution state.
@@ -16,14 +20,15 @@ const ExecutionIcon = ({ executionState }) => {
     waiting: <FaClock className="text-muted dark:text-white" />,
     running: <FaSpinner className="spin text-primary dark:text-white" />,
     executed: <FaCheck className="text-success dark:text-white" />,
-    error: <FaExclamationCircle className="text-danger dark:text-white" />
+    error: <FaExclamationCircle className="text-danger dark:text-white" />,
   };
 
   return icons[executionState] || null;
 };
 
 ExecutionIcon.propTypes = {
-  executionState: PropTypes.oneOf(['waiting', 'running', 'executed', 'error']).isRequired,
+  executionState: PropTypes.oneOf(["waiting", "running", "executed", "error"])
+    .isRequired,
 };
 
 export default ExecutionIcon;

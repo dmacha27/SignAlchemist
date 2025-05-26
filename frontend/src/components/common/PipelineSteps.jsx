@@ -1,5 +1,5 @@
-import { Stepper, Popover, Text } from '@mantine/core';
-import PropTypes from 'prop-types';
+import { Stepper, Popover, Text } from "@mantine/core";
+import PropTypes from "prop-types";
 
 /**
  * Renders a step-by-step pipeline view.
@@ -14,7 +14,7 @@ const PipelineSteps = ({ nodes }) => {
   });
 
   const conectedNodes = [];
-  let actualNode = '1';
+  let actualNode = "1";
 
   while (actualNode) {
     const current = dictNodes[actualNode];
@@ -45,11 +45,11 @@ const PipelineSteps = ({ nodes }) => {
             key={node.id}
             label={capitalize(node.type)}
             description={
-              node.type !== 'InputSignal' && node.type !== 'OutputSignal' && (
+              node.type !== "InputSignal" &&
+              node.type !== "OutputSignal" && (
                 <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
                   <div>
-                    <strong>Technique:</strong>{' '}
-                    {capitalize(techniqueObj.name)}
+                    <strong>Technique:</strong> {capitalize(techniqueObj.name)}
                   </div>
                   <div>
                     <ul className="mt-2">
@@ -64,14 +64,22 @@ const PipelineSteps = ({ nodes }) => {
                               <li key={key} className="mb-1">
                                 <strong>{capitalizedKey}:</strong>
                                 {isLong ? (
-                                  <Popover width={300} trapFocus position="bottom" withArrow shadow="md">
+                                  <Popover
+                                    width={300}
+                                    trapFocus
+                                    position="bottom"
+                                    withArrow
+                                    shadow="md"
+                                  >
                                     <Popover.Target>
-                                      <Text title="Click to view full text" >
+                                      <Text title="Click to view full text">
                                         Click
                                       </Text>
                                     </Popover.Target>
                                     <Popover.Dropdown>
-                                      <Text size="sm" className="break-words">{valueStr}</Text>
+                                      <Text size="sm" className="break-words">
+                                        {valueStr}
+                                      </Text>
                                     </Popover.Dropdown>
                                   </Popover>
                                 ) : (
