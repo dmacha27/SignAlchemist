@@ -416,10 +416,13 @@ const Processing = () => {
         </div>
 
         {/* Metrics */}
-        <InfoMetrics
-          metricsOriginal={metricsOriginal}
-          metricsProcessed={metricsProcessed}
-        />
+        {signalType !== "OTHER" && (
+          <InfoMetrics
+            metricsOriginal={metricsOriginal}
+            metricsProcessed={metricsProcessed}
+          />
+        )}
+
       </div >
     </ReactFlowProvider>
   );

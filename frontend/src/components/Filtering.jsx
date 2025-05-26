@@ -276,10 +276,13 @@ const Filtering = () => {
       />
 
       {/* Metrics */}
-      <InfoMetrics
-        metricsOriginal={metricsOriginal}
-        metricsProcessed={metricsFiltered}
-      />
+      {signalType !== "OTHER" && (
+        <InfoMetrics
+          metricsOriginal={metricsOriginal}
+          metricsProcessed={metricsFiltered}
+        />
+      )}
+
     </div>
   );
 
