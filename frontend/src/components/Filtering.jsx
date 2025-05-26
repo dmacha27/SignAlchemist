@@ -4,22 +4,16 @@ import { usePapaParse } from 'react-papaparse';
 
 import generateDataOriginal from './utils/dataUtils';
 
-import CustomChart from './common/CustomChart';
 import InfoMetrics from './common/InfoMetrics';
-import SpectrumChart from './common/SpectrumChart';
 import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
 import FilterFields from './common/FilterFields';
 import LoaderMessage from './common/LoaderMessage';
-import SignalPanel from './common/SignalPanel';
-import ComparisonChart from './common/ComparisonChart';
-import ComparisonSpectrumChart from './common/ComparisonSpectrumChart';
-
-import { Tabs } from '@mantine/core';
 
 import toast from 'react-hot-toast';
 
 import { FaFilter, FaSignal, FaTools } from 'react-icons/fa';
+import SignalTabs from './common/SignalTabs';
 
 
 const filtersFields = {
@@ -282,96 +276,19 @@ const Filtering = () => {
         </div>
       </div>
 
-      <Tabs color="violet" variant="pills" defaultValue="charts" className='mt-2'>
-        <Tabs.List justify="center">
-          <Tabs.Tab value="charts" className="flex-1">Charts</Tabs.Tab>
-          <Tabs.Tab value="spectrum" className="flex-1">Spectrum</Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value="charts">
-          <SignalPanel
-            rightTitle="Filtered Signal"
-            rightIcon={<FaFilter className="my-auto text-green-500" />}
-            leftContent={
-              chartDataOriginal ? (
-                <CustomChart table={chartDataOriginal} />
-              ) : (
-                <LoaderMessage message="Waiting for request..." />
-              )
-            }
-            rightContent={
-              chartDataFiltered ? (
-                <CustomChart
-                  table={chartDataFiltered}
-                  defaultColor="#50C878"
-                />
-              ) : (
-                <LoaderMessage message="Waiting for request..." />
-              )
-            }
-            comparisonContent={
-              chartDataOriginal && chartDataFiltered ? (
-                <ComparisonChart table1={chartDataOriginal} table2={chartDataFiltered} name2="Filtered" />
-              ) : (
-                <LoaderMessage message="Rendering comparison..." />
-              )
-            }
-          />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="spectrum">
-          <SignalPanel
-            rightTitle="Filtered Signal"
-            rightIcon={<FaFilter className="my-auto text-green-500" />}
-            leftContent={
-              chartDataOriginal ? (
-                <SpectrumChart
-                  table={chartDataOriginal}
-                  samplingRate={samplingRate}
-                />
-              ) : (
-                <LoaderMessage message="Waiting for request..." />
-              )
-            }
-            rightContent={
-              chartDataFiltered ? (
-                <SpectrumChart
-                  table={chartDataFiltered}
-                  samplingRate={samplingRate}
-                  defaultColor="#50C878"
-                />
-              ) : (
-                <LoaderMessage message="Waiting for request..." />
-              )
-            }
-            comparisonContent={
-              chartDataOriginal && chartDataFiltered ? (
-                <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataFiltered} samplingRate={samplingRate} name2="Filtered" />
-              ) : (
-                <LoaderMessage message="Rendering comparison..." />
-              )
-            }
-          />
-        </Tabs.Panel>
-      </Tabs>
+      <SignalTabs
+        rightTitle="Filtered"
+        rightIcon={<FaFilter className="my-auto text-green-500" />}
+        chartDataOriginal={chartDataOriginal}
+        chartDataProcessed={chartDataFiltered}
+        samplingRate={samplingRate}
+      />
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
-        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-          {metricsOriginal ? (
-            <InfoMetrics metrics={metricsOriginal} />
-          ) : (
-            <LoaderMessage message="Waiting for request..." />
-          )}
-        </div>
-        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-          {metricsFiltered ? (
-            <InfoMetrics metrics={metricsFiltered} />
-          ) : (
-            <LoaderMessage message="Waiting for request..." />
-          )}
-        </div>
-      </div>
+      <InfoMetrics
+        metricsOriginal={metricsOriginal}
+        metricsProcessed={metricsFiltered}
+      />
     </div>
   );
 

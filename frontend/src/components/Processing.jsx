@@ -14,24 +14,19 @@ import '@xyflow/react/dist/style.css';
 
 import generateDataOriginal from './utils/dataUtils';
 
-import CustomChart from './common/CustomChart';
-import SpectrumChart from './common/SpectrumChart';
-import ComparisonChart from './common/ComparisonChart';
-import ComparisonSpectrumChart from './common/ComparisonSpectrumChart';
 import InfoMetrics from './common/InfoMetrics';
 import InputSignal from './reactflow/nodes/InputSignal';
 import OutputSignal from './reactflow/nodes/OutputSignal';
 import ResamplingNode from './reactflow/nodes/ResamplingNode';
 import OutliersNode from './reactflow/nodes/OutliersNode';
 import FilteringNode from './reactflow/nodes/FilteringNode';
-import SignalPanel from './common/SignalPanel';
 import LoaderMessage from './common/LoaderMessage';
 import PipelineSteps from './common/PipelineSteps';
 
 import { ThemeContext } from '../contexts/ThemeContext';
 
 import { useDisclosure } from '@mantine/hooks';
-import { Popover, Button, Text, Group, Tabs, Collapse, ActionIcon } from '@mantine/core';
+import { Popover, Button, Text, Group, Collapse, ActionIcon } from '@mantine/core';
 
 import { usePapaParse } from 'react-papaparse';
 
@@ -41,6 +36,7 @@ import { FaFilter, FaChevronDown, FaChartLine, FaBullseye, FaWaveSquare, FaProje
 
 import toast from 'react-hot-toast';
 import ButtonEdge from './reactflow/edges/ButtonEdge';
+import SignalTabs from './common/SignalTabs';
 
 const Processing = () => {
   const location = useLocation();
@@ -392,76 +388,13 @@ const Processing = () => {
         </div>
 
         <div id='charts'>
-          <Tabs color="violet" variant="pills" defaultValue="charts" className='mt-2'>
-            <Tabs.List justify="center">
-              <Tabs.Tab value="charts" className="flex-1">Charts</Tabs.Tab>
-              <Tabs.Tab value="spectrum" className="flex-1">Spectrum</Tabs.Tab>
-            </Tabs.List>
-
-            <Tabs.Panel value="charts">
-              <SignalPanel
-                rightTitle="Processed Signal"
-                rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
-                leftContent={
-                  chartDataOriginal ? (
-                    <CustomChart table={chartDataOriginal} />
-                  ) : (
-                    <LoaderMessage message="Waiting for request..." />
-                  )
-                }
-                rightContent={
-                  chartDataProcessed ? (
-                    <CustomChart table={chartDataProcessed} defaultColor="#50C878" />
-                  ) : (
-                    <LoaderMessage message="Waiting for pipeline execution..." />
-                  )
-                }
-                comparisonContent={
-                  chartDataOriginal && chartDataProcessed ? (
-                    <ComparisonChart table1={chartDataOriginal} table2={chartDataProcessed} name2="Porcessed" />
-                  ) : (
-                    <LoaderMessage message="Rendering comparison..." />
-                  )
-                }
-              />
-            </Tabs.Panel>
-
-            <Tabs.Panel value="spectrum">
-              <SignalPanel
-                rightTitle="Filtered Signal"
-                rightIcon={<FaFilter className="my-auto text-green-500" />}
-                leftContent={
-                  chartDataOriginal ? (
-                    <SpectrumChart
-                      table={chartDataOriginal}
-                      samplingRate={samplingRate}
-                    />
-                  ) : (
-                    <LoaderMessage message="Waiting for request..." />
-                  )
-                }
-                rightContent={
-                  chartDataProcessed ? (
-                    <SpectrumChart
-                      table={chartDataProcessed}
-                      samplingRate={samplingRate}
-                      defaultColor="#50C878"
-                    />
-                  ) : (
-                    <LoaderMessage message="Waiting for request..." />
-                  )
-                }
-                comparisonContent={
-                  chartDataOriginal && chartDataProcessed ? (
-                    <ComparisonSpectrumChart table1={chartDataOriginal} table2={chartDataProcessed} samplingRate={samplingRate} name2="Processed" />
-                  ) : (
-                    <LoaderMessage message="Rendering comparison..." />
-                  )
-                }
-              />
-            </Tabs.Panel>
-          </Tabs>
-
+          <SignalTabs
+            rightTitle="Processed"
+            rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
+            chartDataOriginal={chartDataOriginal}
+            chartDataProcessed={chartDataProcessed}
+            samplingRate={samplingRate}
+          />
         </div>
 
         <div className='mt-6'>
@@ -483,22 +416,10 @@ const Processing = () => {
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-          <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-            {metricsOriginal ? (
-              <InfoMetrics metrics={metricsOriginal} />
-            ) : (
-              <LoaderMessage message="Calculating..." />
-            )}
-          </div>
-          <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-            {metricsProcessed ? (
-              <InfoMetrics metrics={metricsProcessed} />
-            ) : (
-              <LoaderMessage message="Waiting for request..." />
-            )}
-          </div>
-        </div>
+        <InfoMetrics
+          metricsOriginal={metricsOriginal}
+          metricsProcessed={metricsProcessed}
+        />
       </div >
     </ReactFlowProvider>
   );

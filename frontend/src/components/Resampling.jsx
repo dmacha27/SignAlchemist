@@ -4,14 +4,12 @@ import { usePapaParse } from 'react-papaparse';
 
 import generateDataOriginal from './utils/dataUtils';
 
-import CustomChart from './common/CustomChart';
 import DownloadSignal from './common/DownloadSignal';
 import InfoTable from './common/InfoTable';
-import SignalPanel from './common/SignalPanel';
+import SignalTabs from './common/SignalTabs';
 import LoaderMessage from './common/LoaderMessage';
 
 import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from 'react-icons/fa';
-import ComparisonChart from './common/ComparisonChart';
 
 const Resampling = () => {
   const location = useLocation();
@@ -178,33 +176,12 @@ const Resampling = () => {
         </div>
       </div>
 
-      <SignalPanel
-        rightTitle="Resampled Signal"
+      <SignalTabs
+        rightTitle="Resampled"
         rightIcon={<FaExpandAlt className="my-auto text-green-500" />}
-        leftContent={
-          chartDataOriginal ? (
-            <CustomChart table={chartDataOriginal} />
-          ) : (
-            <LoaderMessage message="Waiting for request..." />
-          )
-        }
-        rightContent={
-          chartDataResampled ? (
-            <CustomChart
-              table={chartDataResampled}
-              defaultColor="#50C878"
-            />
-          ) : (
-            <LoaderMessage message="Waiting for request..." />
-          )
-        }
-        comparisonContent={
-          chartDataOriginal && chartDataResampled ? (
-            <ComparisonChart table1={chartDataOriginal} table2={chartDataResampled} name2="Resampled" />
-          ) : (
-            <LoaderMessage message="Rendering comparison..." />
-          )
-        }
+        chartDataOriginal={chartDataOriginal}
+        chartDataProcessed={chartDataResampled}
+        samplingRate={samplingRate}
       />
 
     </div>

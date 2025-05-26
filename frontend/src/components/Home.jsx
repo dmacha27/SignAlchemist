@@ -14,6 +14,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 import { Modal, Button, Card, Text, Image, Group } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import CustomChart from './common/CustomChart';
 
 const max_length_lag = 5000;
 
@@ -295,104 +296,6 @@ const InfoTable = ({ table }) => {
   );
 };
 
-const CustomChart = ({ table }) => {
-    // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
-
-    const headers = table[0];
-    const data = table.slice(1);
-
-    const chartRef = useRef(null);
-    const isLargeDataset = data.length > max_length_lag;
-
-    // Detect dark mode
-    const { isDarkMode: isDark } = useContext(ThemeContext);
-    
-    const options = useMemo(() => ({
-        responsive: true,
-        plugins: {
-          legend: {
-            onClick: () => {},
-            labels: {
-              color: isDark ? '#ffffff' : '#000000',
-            },
-          },
-          title: {
-            display: false,
-          },
-        },
-        scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-            title: {
-              display: true,
-              text: headers[0] + " (s)",
-              color: isDark ? '#ffffff' : '#000000',
-            },
-            ticks: {
-              color: isDark ? '#ffffff' : '#000000',
-            },
-            grid: {
-              color: isDark ? '#444444' : '#e5e5e5',
-            },
-          },
-          y: {
-            title: {
-              display: true,
-              text: headers[1],
-              color: isDark ? '#ffffff' : '#000000',
-            },
-            ticks: {
-              color: isDark ? '#ffffff' : '#000000',
-            },
-            grid: {
-              color: isDark ? '#444444' : '#e5e5e5',
-            },
-          },
-        },
-    }), [isDark, headers]);
-
-    useEffect(() => {
-    if (!chartRef.current) return;
-
-    const chart = chartRef.current;
-
-    const color = isDark ? '#ffffff' : '#000000';
-    const gridColor = isDark ? '#444444' : '#e5e5e5';
-
-    chart.options.scales.x.ticks.color = color;
-    chart.options.scales.x.title.color = color;
-    chart.options.scales.x.grid.color = gridColor;
-
-    chart.options.scales.y.ticks.color = color;
-    chart.options.scales.y.title.color = color;
-    chart.options.scales.y.grid.color = gridColor;
-
-    chart.options.plugins.legend.labels.color = color;
-
-    chart.update();
-  }, [isDark]);
-
-    const datasets = [
-        {
-            label: "Signal",
-            pointRadius: isLargeDataset ? 0 : 2,
-            data: data.map((row) => ({
-                x: parseFloat(row[0]),
-                y: parseFloat(row[1]),
-            })),
-            borderColor: '#2196f3',
-            backgroundColor: '#2196f3',
-            fill: false,
-        },
-    ];
-
-    return (
-        <div className="text-center">
-            <Line ref={chartRef} data={{ datasets }} options={options} />
-        </div>
-    );
-};
 
 const Home = () => {
     window.history.replaceState({}, '')
