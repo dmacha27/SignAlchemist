@@ -181,7 +181,7 @@ function ResamplingNode({ id, data }) {
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 toast.custom(
-                  <div className="toast-status">
+                  <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
                     <div>Status:</div>
                     <div>
                       <ExecutionIcon executionState={executionState} />

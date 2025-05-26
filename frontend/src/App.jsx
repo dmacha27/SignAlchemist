@@ -109,7 +109,14 @@ const App = () => {
           className="App user-select-none bg-white text-black dark:bg-gray-900 dark:text-white"
           style={{ position: "relative", minHeight: "100vh" }}
         >
-          <Toaster />
+          <Toaster
+            toastOptions={{
+              style: {
+                background: isDarkMode ? "#1f2937" : "#f3f4f6", // bg-gray-800 / bg-gray-100
+                color: isDarkMode ? "#ffffff" : "#000000",
+              },
+            }}
+          />
 
           {/* Dark mode button */}
           <button
