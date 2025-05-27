@@ -169,12 +169,14 @@ const Processing = () => {
         type: "InputSignal",
         position: { x: 0, y: 150 },
         data: { table: chartDataOriginal },
+        deletable: false
       },
       {
         id: "2",
         type: "OutputSignal",
         position: { x: 1100, y: 150 },
         data: { setChartDataProcessed },
+        deletable: false
       },
     ];
 
