@@ -36,6 +36,7 @@ const filtersFields = {
     order: 2,
     lowcut: 0,
     highcut: 1000,
+    window_size: 999,
     python: "",
   },
 };
@@ -44,6 +45,13 @@ const Filtering = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
+
+  let window_size = Math.round(samplingRate / 3);
+  if (window_size % 2 === 0) {
+    window_size += 1;
+  }
+
+  filtersFields.savgol.window_size = window_size;
 
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
@@ -115,14 +123,14 @@ const Filtering = () => {
       const chartDataOriginal_noheaders = chartDataOriginal.slice(1);
 
       formData.append("signal", JSON.stringify(chartDataOriginal_noheaders));
-      formData.append("signal_type", signalType);
       formData.append("sampling_rate", samplingRate);
 
-      Object.keys(fields).forEach((field) => {
-        formData.append(field, fields[field]);
-      });
+      const filterConfig = {
+        method: filter,
+        ...fields,
+      };
 
-      formData.append("method", filter);
+      formData.append("filter_config", JSON.stringify(filterConfig));
 
       const response = await fetch("http://localhost:8000/filtering", {
         method: "POST",

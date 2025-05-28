@@ -35,6 +35,7 @@ const filtersFields = {
     order: 2,
     lowcut: 0,
     highcut: 1000,
+    window_size: 999,
     python: "",
   },
 };
@@ -50,8 +51,14 @@ const filtersFields = {
  * @returns {JSX.Element} Visual representation of the filtering node with UI for selecting a filter, configuring parameters, and executing the filtering operation
  */
 function FilteringNode({ id, data }) {
-  const signalType = data.signalType;
   const samplingRate = data.samplingRate;
+
+  let window_size = Math.round(samplingRate / 3);
+  if (window_size % 2 === 0) {
+    window_size += 1;
+  }
+  filtersFields.savgol.window_size = window_size;
+
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
@@ -150,14 +157,14 @@ function FilteringNode({ id, data }) {
     const signalOnly = table.slice(1); // Exclude headers
 
     formData.append("signal", JSON.stringify(signalOnly));
-    formData.append("signal_type", signalType);
     formData.append("sampling_rate", samplingRate);
 
-    Object.keys(fields).forEach((field) => {
-      formData.append(field, fields[field]);
-    });
+    const filterConfig = {
+      method: filter,
+      ...fields,
+    };
 
-    formData.append("method", filter);
+    formData.append("filter_config", JSON.stringify(filterConfig));
 
     const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
     window.dispatchEvent(event);

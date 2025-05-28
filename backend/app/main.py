@@ -113,46 +113,35 @@ async def options_filtering():
 async def filtering(
     signal: str = Form(...,
                        description="JSON-encoded list of `[timestamp, value]` pairs."),
-    signal_type: str = Form(...,
-                            description="Signal type, e.g., `'EDA'`, `'PPG'`."),
     sampling_rate: int = Form(...,
                               description="Sampling rate of the input signal in Hz."),
-    method: str = Form(...,
-                       description="Filtering method (e.g., `'butterworth'`, `'bessel'`)."),
-    lowcut: float = Form(
-        None, description="Lower frequency bound for bandpass filters."),
-    highcut: float = Form(
-        None, description="Upper frequency bound for bandpass filters."),
-    order: int = Form(None, description="Filter order (default is 2)."),
-    python: str = Form(
-        None, description="Optional custom Python code defining a `filter_signal` function."),
+    filter_config: str = Form(
+        ..., description="JSON-encoded dict including `method`, `lowcut`, `highcut`, `order`, or `python`."),
 ):
     """
     Filter a signal using a predefined or custom method.
 
     Supports NeuroKit2 filters or custom inline Python code for full control.
     """
+
     try:
-        order = order or 2
-        python = python or ""
+        config = json.loads(filter_config)
         data = np.array(json.loads(signal))
 
-        if python:
+        if "python" in config and config["python"]:
             try:
                 namespace = globals().copy()
-                exec(python, namespace)
+                exec(config["python"], namespace)
                 filter_signal = namespace["filter_signal"]
                 new_values = filter_signal(data[:, 1])
             except Exception as e:
                 return JSONResponse(content={"error": str(e)}, status_code=400)
         else:
+            del config["python"]
             new_values = neurokit2.signal_filter(
                 data[:, 1],
                 sampling_rate=sampling_rate,
-                method=method,
-                lowcut=lowcut,
-                highcut=highcut,
-                order=order,
+                **config
             )
 
         new_data = np.stack((data[:, 0], new_values), axis=1)
@@ -189,26 +178,22 @@ def get_metrics(
         return {
             "Böttcher et al. (2022)": {
                 "value": gsr_quality(values, fs=sampling_rate),
-                "description": "Evaluates EDA signal quality using amplitude thresholding and RAC (range of absolute change) stability over 2-second windows, as per Böttcher et al. (2022)."
-                ,
+                "description": "Evaluates EDA signal quality using amplitude thresholding and RAC (range of absolute change) stability over 2-second windows, as per Böttcher et al. (2022).",
             },
             "Kleckner et al. (2017)": {
                 "value": gsr_automated_2secs(values, fs=sampling_rate),
-                "description": "Assesses EDA signal quality using automated heuristics described by Kleckner et al. (2017), typically over short 2-second windows."
-                ,
+                "description": "Assesses EDA signal quality using automated heuristics described by Kleckner et al. (2017), typically over short 2-second windows.",
             },
         }
     elif signal_type == "PPG":
         return {
             "Mohamed Elgendi (2016)": {
                 "value": bvp_skewness(values, fs=sampling_rate, W=2),
-                "description": "Skewness is a measure of the symmetry (or the lack of it) of a probability distribution."
-                ,
+                "description": "Skewness is a measure of the symmetry (or the lack of it) of a probability distribution.",
             },
             "Maki et al. (2020)": {
                 "value": bvp_quality(values, fs=sampling_rate),
-                "description": "Quantifies the consistency of peak amplitudes in a BVP/PPG signal, with lower PHV values indicating higher signal reliability."
-                ,
+                "description": "Quantifies the consistency of peak amplitudes in a BVP/PPG signal, with lower PHV values indicating higher signal reliability.",
             }
         }
     else:
