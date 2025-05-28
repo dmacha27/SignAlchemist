@@ -1,14 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import Tilt from "react-parallax-tilt";
-import { useContext } from "react";
-
-import { ThemeContext } from "../contexts/ThemeContext";
 
 const About = () => {
   const navigate = useNavigate();
-
-  // Detect dark mode
-  const { isDarkMode: isDark } = useContext(ThemeContext);
 
   return (
     <div className="max-w-7xl mx-auto px-4">
@@ -64,6 +58,7 @@ const About = () => {
             >
               Try it out
             </button>
+
           </div>
 
           <div className="md:col-span-4">
@@ -75,14 +70,22 @@ const About = () => {
               perspective={600}
             >
               <img
-                src={isDark ? "/processing_dark.gif" : "/processing.gif"}
+                src="/processing.gif"
                 alt="Signal Processing"
                 className="w-full h-full object-cover"
-                style={{ pointerEvents: "none" }} // Prevent image from being dragged
+                style={{ pointerEvents: "none" }}
               />
             </Tilt>
           </div>
         </div>
+        <p className="mt-4 text-xs text-center italic">
+              This software is part of the project PID2023-150694OA-I00 funded
+              by the Spanish State Research Agency (Agencia Estatal de
+              Investigación, AEI) through the Ministry of Science, Innovation
+              and Universities (MICIU/AEI/ 10.13039/501100011033), and
+              co-financed by the European Union through FEDER funds and the
+              European Union NextGenerationEU/PRTR.
+            </p>
       </section>
     </div>
   );
