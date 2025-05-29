@@ -266,7 +266,9 @@ const ComparisonSpectrumChart = memo(
     return (
       <div className="text-center py-4">
         <div className="relative">
-          <Line ref={chartRef} data={chartData} options={chartOptions} />
+          <ErrorBoundary>
+            <Line ref={chartRef} data={chartData} options={chartOptions} />
+          </ErrorBoundary>
           <Draggable
             bounds="parent"
             nodeRef={draggableRef}

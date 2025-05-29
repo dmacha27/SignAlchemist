@@ -34,6 +34,7 @@ ChartJS.register(
 import { handleResetZoom, exportToPNG } from "../utils/chartUtils";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
+import ErrorBoundary from "./ErrorBoundary";
 
 const MAX_DATA_LENGTH = 5000;
 
@@ -205,8 +206,9 @@ const ComparisonChart = memo(
     return (
       <div className="text-center py-4 px-2">
         <div className="relative">
-          <Line ref={chartRef} data={chartData} options={chartOptions} />
-
+          <ErrorBoundary>
+            <Line ref={chartRef} data={chartData} options={chartOptions} />
+          </ErrorBoundary>
           <Draggable
             bounds="parent"
             nodeRef={draggableRef}

@@ -161,21 +161,21 @@ const App = () => {
           </Routes>
 
           <footer>
-            <div class="w-full max-w-screen-xl mx-auto mt-10">
-              <div class="sm:flex sm:items-center sm:justify-between">
+            <div className="w-full max-w-screen-xl mx-auto mt-10">
+              <div className="sm:flex sm:items-center sm:justify-between">
                 <img
                   src={isDarkMode ? "/logo_dark.png" : "/logo.png"}
-                  class="h-8"
+                  className="h-8"
                   alt="SignAlchemist Logo"
                 />
-                <ul class="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
+                <ul className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
                   <li>
                     <a
                       target="_blank"
                       rel="noopener noreferrer"
                       href="https://ec.europa.eu/regional_policy/es/funding/erdf/"
                     >
-                      <img class="w-32 h-auto" alt="FEDER" src="/FEDER.svg" />
+                      <img className="w-32 h-auto" alt="FEDER" src="/FEDER.svg" />
                     </a>
                   </li>
                   <li>
@@ -184,7 +184,7 @@ const App = () => {
                       rel="noopener noreferrer"
                       href="http://www.mineco.gob.es/portal/site/mineco/"
                     >
-                      <img class="w-32 h-auto" alt="MEC" src="/MEC.svg" />
+                      <img className="w-32 h-auto" alt="MEC" src="/MEC.svg" />
                     </a>
                   </li>
                   <li>
@@ -193,7 +193,7 @@ const App = () => {
                       rel="noopener noreferrer"
                       href="https://www.jcyl.es/"
                     >
-                      <img class="w-32 h-auto" alt="JCYL" src={isDarkMode ? "/JCYL_dark.svg" : "/JCYL.svg"} />
+                      <img className="w-32 h-auto" alt="JCYL" src={isDarkMode ? "/JCYL_dark.svg" : "/JCYL.svg"} />
                     </a>
                   </li>
                   <li>
@@ -203,7 +203,7 @@ const App = () => {
                       href="https://www.educa.jcyl.es/universidad/es/fondos-europeos/fondo-europeo-desarrollo-regional-feder/"
                     >
                       <img
-                        class="w-32 h-auto"
+                        className="w-32 h-auto"
                         alt="JCYL_impulsa"
                         src="/JCYL_impulsa.svg"
                       />
@@ -211,12 +211,12 @@ const App = () => {
                   </li>
                 </ul>
               </div>
-              <hr class="my-3 border-gray-200 sm:mx-auto dark:border-gray-700" />
-              <span class="text-sm text-gray-500 text-center dark:text-gray-400 flex items-center justify-center gap-2">
+              <hr className="my-3 border-gray-200 sm:mx-auto dark:border-gray-700" />
+              <span className="text-sm text-gray-500 text-center dark:text-gray-400 flex items-center justify-center gap-2">
                 <FaGithub />
                 <a
                   href="https://github.com/dmacha27/Signalis"
-                  class="hover:underline"
+                  className="hover:underline"
                 >
                   Source code
                 </a>

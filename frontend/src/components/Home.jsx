@@ -510,7 +510,7 @@ const Home = () => {
               x.push(timestamp);
             }
 
-            calculated_samplingrate = 1 / average(diff(x.slice(0, 30000)));
+            calculated_samplingrate = 1 / average(diff(x));
             setSamplingRate(calculated_samplingrate);
             samplingRate_select.value = calculated_samplingrate.toFixed(1);
           }

@@ -38,6 +38,7 @@ import {
 } from "../utils/chartUtils";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
+import ErrorBoundary from "./ErrorBoundary";
 
 const MAX_DATA_LENGTH = 5000;
 
@@ -315,8 +316,9 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
   return (
     <div className="text-center py-4">
       <div className="relative">
-        <Line ref={chartRef} data={chartData} options={chartOptions} />
-
+        <ErrorBoundary>
+          <Line ref={chartRef} data={chartData} options={chartOptions} />
+        </ErrorBoundary>
         <Draggable bounds="parent" nodeRef={draggableRef} handle=".drag-handle">
           <div ref={draggableRef} className="absolute top-0 right-0 z-10">
             <div className="relative inline-block group">
