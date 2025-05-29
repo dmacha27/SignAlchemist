@@ -325,7 +325,10 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
             const fileRows = [
               file_headers.map((item) => item[0]).join(","),
             ].concat(results.data.map((row) => row.join(",")));
-            setFile(new Blob([fileRows.join("\n")], { type: "text/csv" }));
+
+            // Idea from: https://stackoverflow.com/questions/67337853/remove-empty-lines-from-a-file-in-javascript
+            let no_empty_lines = fileRows.join("\n").split('\n').filter(Boolean).join('\n');
+            setFile(new Blob([no_empty_lines], { type: "text/csv" }));
             setHeaders([...file_headers.map((row) => row[0]), "No timestamps"]);
           }
         },
