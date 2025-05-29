@@ -34,6 +34,7 @@ import {
   FaChartLine,
   FaProjectDiagram,
   FaHome,
+  FaGithub,
 } from "react-icons/fa";
 
 // Get default system or prefered theme
@@ -158,6 +159,70 @@ const App = () => {
               }
             />
           </Routes>
+
+          <footer>
+            <div class="w-full max-w-screen-xl mx-auto mt-10">
+              <div class="sm:flex sm:items-center sm:justify-between">
+                <img
+                  src={isDarkMode ? "/logo_dark.png" : "/logo.png"}
+                  class="h-8"
+                  alt="SignAlchemist Logo"
+                />
+                <ul class="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
+                  <li>
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://ec.europa.eu/regional_policy/es/funding/erdf/"
+                    >
+                      <img class="w-32 h-auto" alt="FEDER" src="/FEDER.svg" />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="http://www.mineco.gob.es/portal/site/mineco/"
+                    >
+                      <img class="w-32 h-auto" alt="MEC" src="/MEC.svg" />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://www.jcyl.es/"
+                    >
+                      <img class="w-32 h-auto" alt="JCYL" src={isDarkMode ? "/JCYL_dark.svg" : "/JCYL.svg"} />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://www.educa.jcyl.es/universidad/es/fondos-europeos/fondo-europeo-desarrollo-regional-feder/"
+                    >
+                      <img
+                        class="w-32 h-auto"
+                        alt="JCYL_impulsa"
+                        src="/JCYL_impulsa.svg"
+                      />
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <hr class="my-3 border-gray-200 sm:mx-auto dark:border-gray-700" />
+              <span class="text-sm text-gray-500 text-center dark:text-gray-400 flex items-center justify-center gap-2">
+                <FaGithub />
+                <a
+                  href="https://github.com/dmacha27/Signalis"
+                  class="hover:underline"
+                >
+                  Source code
+                </a>
+              </span>
+            </div>
+          </footer>
 
           {!isHome && (
             <div
