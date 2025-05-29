@@ -163,11 +163,14 @@ const App = () => {
           <footer>
             <div className="w-full max-w-screen-xl mx-auto mt-10">
               <div className="sm:flex sm:items-center sm:justify-between">
-                <img
-                  src={isDarkMode ? "/logo_dark.png" : "/logo.png"}
-                  className="h-8"
-                  alt="SignAlchemist Logo"
-                />
+                <a href="/">
+                  <img
+                    src={isDarkMode ? "/logo_dark.png" : "/logo.png"}
+                    className="h-8"
+                    alt="SignAlchemist Logo"
+                  />{" "}
+                </a>
+
                 <ul className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
                   <li>
                     <a
@@ -175,7 +178,11 @@ const App = () => {
                       rel="noopener noreferrer"
                       href="https://ec.europa.eu/regional_policy/es/funding/erdf/"
                     >
-                      <img className="w-32 h-auto" alt="FEDER" src="/FEDER.svg" />
+                      <img
+                        className="w-32 h-auto"
+                        alt="FEDER"
+                        src="/FEDER.svg"
+                      />
                     </a>
                   </li>
                   <li>
@@ -193,7 +200,11 @@ const App = () => {
                       rel="noopener noreferrer"
                       href="https://www.jcyl.es/"
                     >
-                      <img className="w-32 h-auto" alt="JCYL" src={isDarkMode ? "/JCYL_dark.svg" : "/JCYL.svg"} />
+                      <img
+                        className="w-32 h-auto"
+                        alt="JCYL"
+                        src={isDarkMode ? "/JCYL_dark.svg" : "/JCYL.svg"}
+                      />
                     </a>
                   </li>
                   <li>

@@ -37,6 +37,7 @@ ChartJS.register(
 const MAX_DATA_LENGTH = 5000;
 
 import { ThemeContext } from "../../contexts/ThemeContext";
+import ErrorBoundary from "./ErrorBoundary";
 
 const baseChartOptions = {
   label: "comparison-spectrum",

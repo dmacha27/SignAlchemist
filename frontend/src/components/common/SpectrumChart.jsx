@@ -42,6 +42,7 @@ import {
 } from "../utils/chartUtils";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
+import ErrorBoundary from "./ErrorBoundary";
 
 const MAX_DATA_LENGTH = 5000;
 

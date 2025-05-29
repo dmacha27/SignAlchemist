@@ -327,7 +327,11 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
             ].concat(results.data.map((row) => row.join(",")));
 
             // Idea from: https://stackoverflow.com/questions/67337853/remove-empty-lines-from-a-file-in-javascript
-            let no_empty_lines = fileRows.join("\n").split('\n').filter(Boolean).join('\n');
+            let no_empty_lines = fileRows
+              .join("\n")
+              .split("\n")
+              .filter(Boolean)
+              .join("\n");
             setFile(new Blob([no_empty_lines], { type: "text/csv" }));
             setHeaders([...file_headers.map((row) => row[0]), "No timestamps"]);
           }
@@ -440,6 +444,7 @@ const Home = () => {
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const { readString } = usePapaParse();
+  const { isDarkMode: isDark } = useContext(ThemeContext);
 
   // Stackoverflow: https://stackoverflow.com/questions/30399123/finding-difference-between-consecutive-numbers-in-an-array-in-javascript
   const diff = (A) => {
@@ -546,8 +551,12 @@ const Home = () => {
 
   return (
     <div className="container mx-auto px-4">
-      <header className="text-center py-2">
-        <h1 className="text-3xl font-bold">SignAlchemist</h1>
+      <header className="flex flex-col gap-2 items-center justify-center text-center py-2">
+        <img
+          src={isDark ? "/logo_dark.png" : "/logo.png"}
+          className="h-20"
+          alt="SignAlchemist Logo"
+        />
         <p className="text-gray-600 dark:text-gray-300">
           Physiological signal processing
         </p>

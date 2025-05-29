@@ -8,6 +8,7 @@ import DownloadSignal from "./common/DownloadSignal";
 import InfoTable from "./common/InfoTable";
 import SignalTabs from "./common/SignalTabs";
 import LoaderMessage from "./common/LoaderMessage";
+import toast from "react-hot-toast";
 
 import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from "react-icons/fa";
 
