@@ -7,7 +7,6 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { Card, Button, Select, Tooltip } from "@mantine/core";
-import { Form } from "react-bootstrap";
 import FilterFields from "../../common/FilterFields";
 import { FaFilter, FaTrash, FaEye } from "react-icons/fa";
 import ExecutionIcon from "../../common/ExecutionIcon";
@@ -17,24 +16,24 @@ import HandleLimit from "../edges/HandleLimit";
 const filtersFields = {
   butterworth: {
     order: 2,
-    lowcut: 0,
-    highcut: 1000,
+    lowcut: null,
+    highcut: null,
     python: "",
   },
   bessel: {
-    lowcut: 0,
-    highcut: 1000,
+    lowcut: null,
+    highcut: null,
     python: "",
   },
   fir: {
-    lowcut: 0,
-    highcut: 1000,
+    lowcut: null,
+    highcut: null,
     python: "",
   },
   savgol: {
     order: 2,
-    lowcut: 0,
-    highcut: 1000,
+    lowcut: null,
+    highcut: null,
     window_size: 999,
     python: "",
   },
@@ -281,42 +280,40 @@ function FilteringNode({ id, data }) {
         connectionCount={1}
       />
 
-      {/* Form */}
-      <Form>
-        <Form.Group className="mb-4" controlId="filterTechnique">
-          <Form.Label className="text-uppercase text-sm font-medium text-muted dark:text-gray-300 mb-2">
-            Filtering technique
-          </Form.Label>
-          <Select
-            size="sm"
-            value={filter}
-            onChange={(value) => {
-              setFilter(value);
-              setFields(filtersFields[value]);
-            }}
-            data={[
-              { value: "butterworth", label: "Butterworth" },
-              { value: "bessel", label: "Bessel" },
-              { value: "fir", label: "FIR" },
-              { value: "savgol", label: "Savgol" },
-            ]}
-            className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
-            classNames={{
-              input:
-                "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
-              dropdown:
-                "dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
-              item: `
-                  dark:data-[hover]:bg-gray-700 !important
-                  data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
-                  data-[selected]:text-black dark:data-[selected]:text-white
-                `,
-            }}
-          />
-        </Form.Group>
+      <div className="p-4 space-y-2">
+        <label
+          htmlFor="filterTechnique"
+          className="block font-medium text-black dark:text-white"
+        >
+          Filtering technique
+        </label>
+        <Select
+          size="sm"
+          value={filter}
+          onChange={(value) => {
+            setFilter(value);
+            setFields(filtersFields[value]);
+          }}
+          data={Object.keys(filtersFields).map((key) => ({
+            value: key,
+            label: key.charAt(0).toUpperCase() + key.slice(1),
+          }))}
+          className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
+          classNames={{
+            input:
+              "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+            dropdown:
+              "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+            option: `
+                                      hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white
+                                      data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600
+                                      data-[selected]:text-black dark:data-[selected]:text-white
+                                    `,
+          }}
+        />
 
         <FilterFields fields={fields} onFieldChange={handleFieldChange} />
-      </Form>
+      </div>
 
       {/* Button */}
       <div className="w-full">

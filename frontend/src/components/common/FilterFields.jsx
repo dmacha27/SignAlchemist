@@ -4,7 +4,19 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { FaInfo, FaCheck, FaClipboard } from "react-icons/fa";
 
-import { Modal, Button, Group, Tooltip } from "@mantine/core";
+import {
+  Modal,
+  Button,
+  Group,
+  Tooltip,
+  Text,
+  NumberInput,
+  Checkbox,
+  Textarea,
+  Stack,
+  Box,
+  Code,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
@@ -51,7 +63,8 @@ const InfoModal = ({ opened, close }) => {
 
         <ol className="list-decimal list-inside space-y-3 text-sm">
           <li>
-            <strong>Code:</strong> The code must be written in Python.
+            <strong>Code:</strong> The Python code must be well written, with
+            correct tabulations and blank spaces.
           </li>
           <li>
             <strong>Function name:</strong> The code must contain the definition
@@ -148,6 +161,20 @@ const InfoModal = ({ opened, close }) => {
  */
 const FilterFields = memo(({ fields, onFieldChange }) => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [enabledFields, setEnabledFields] = useState({});
+
+  const onCheckboxChange = (field, checked) => {
+    setEnabledFields((prev) => ({
+      ...prev,
+      [field]: checked,
+    }));
+
+    if (checked) {
+      onFieldChange(field, 1);
+    } else {
+      onFieldChange(field, null);
+    }
+  };
 
   return (
     <>
@@ -159,16 +186,44 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
         if (field !== "python") {
           return (
             <div key={field} className="mb-4">
-              <label className="block mb-1 font-medium text-gray-700 dark:text-white">
-                {field.charAt(0).toUpperCase() + field.slice(1)} Frequency
+              <label
+                htmlFor="filterTechnique"
+                className="block mb-1 font-medium text-black dark:text-white"
+              >
+                {field.charAt(0).toUpperCase() + field.slice(1)}
               </label>
-              <input
-                type="number"
-                placeholder={`Enter ${field}`}
-                value={fieldConfig}
-                onChange={(e) => onFieldChange(field, Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-black dark:text-white"
-              />
+              <Group align="center" spacing="sm">
+                <NumberInput
+                  id={field}
+                  placeholder={`Enter ${field}`}
+                  value={fieldConfig}
+                  min={1}
+                  onBlur={(event) => {
+                    if (event.target.value === "") {
+                      onFieldChange(field, 1);
+                    }
+                  }}
+                  onChange={(value) => onFieldChange(field, value)}
+                  disabled={
+                    (field === "lowcut" || field === "highcut") &&
+                    !enabledFields[field]
+                  }
+                  style={{ flex: 1 }}
+                  className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
+                  classNames={{
+                    input:
+                      "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                  }}
+                />
+
+                {(field === "lowcut" || field === "highcut") && (
+                  <Checkbox
+                    defaultChecked={false}
+                    onChange={(e) => onCheckboxChange(field, e.target.checked)}
+                    size="md"
+                  />
+                )}
+              </Group>
             </div>
           );
         } else {
@@ -178,20 +233,19 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
                 <span className="font-medium text-gray-700 dark:text-white">
                   Python code
                 </span>
-                <button
-                  type="button"
-                  onClick={open}
-                  title="Info"
-                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm"
-                >
-                  <FaInfo></FaInfo>
-                </button>
+                <Button variant="subtle" size="xs" onClick={open} title="Info">
+                  <FaInfo /> Info
+                </Button>
               </div>
-              <textarea
+              <Textarea
                 value={fieldConfig.value}
                 onChange={(e) => onFieldChange(field, e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-black dark:text-white focus:outline-none focus:ring focus:ring-blue-200 resize-none"
+                minRows={3}
+                autosize
+                classNames={{
+                  input:
+                    "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                }}
               />
             </div>
           );

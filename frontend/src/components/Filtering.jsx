@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
 
+import { Select } from "@mantine/core";
+
 import generateDataOriginal from "./utils/dataUtils";
 
 import InfoMetrics from "./common/InfoMetrics";
@@ -18,24 +20,24 @@ import SignalTabs from "./common/SignalTabs";
 const filtersFields = {
   butterworth: {
     order: 2,
-    lowcut: 0,
-    highcut: 1000,
+    lowcut: null,
+    highcut: null,
     python: "",
   },
   bessel: {
-    lowcut: 0,
-    highcut: 1000,
+    lowcut: null,
+    highcut: null,
     python: "",
   },
   fir: {
-    lowcut: 0,
-    highcut: 1000,
+    lowcut: null,
+    highcut: null,
     python: "",
   },
   savgol: {
     order: 2,
-    lowcut: 0,
-    highcut: 1000,
+    lowcut: null,
+    highcut: null,
     window_size: 999,
     python: "",
   },
@@ -229,28 +231,37 @@ const Filtering = () => {
               <FaTools className="my-auto text-gray-500 dark:text-gray-400" />
               Filtering Controls
             </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <label
-                  htmlFor="filterTechnique"
-                  className="block mb-1 font-medium text-black dark:text-white"
-                >
-                  Filtering technique
-                </label>
-                <select
-                  id="filterTechnique"
-                  onChange={(e) => {
-                    setFilter(e.target.value);
-                    setFields(filtersFields[e.target.value]);
-                  }}
-                  className="block w-full border border-gray-300 dark:border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
-                >
-                  <option value="butterworth">Butterworth</option>
-                  <option value="bessel">Bessel</option>
-                  <option value="fir">FIR</option>
-                  <option value="savgol">Savgol</option>
-                </select>
-              </div>
+            <div className="p-4 space-y-2">
+              <label
+                htmlFor="filterTechnique"
+                className="block font-medium text-black dark:text-white"
+              >
+                Filtering technique
+              </label>
+              <Select
+                size="sm"
+                value={filter}
+                onChange={(value) => {
+                  setFilter(value);
+                  setFields(filtersFields[value]);
+                }}
+                data={Object.keys(filtersFields).map((key) => ({
+                  value: key,
+                  label: key.charAt(0).toUpperCase() + key.slice(1),
+                }))}
+                className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
+                classNames={{
+                  input:
+                    "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                  dropdown:
+                    "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                  option: `
+                                hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white
+                                data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600
+                                data-[selected]:text-black dark:data-[selected]:text-white
+                              `,
+                }}
+              />
 
               <FilterFields fields={fields} onFieldChange={handleFieldChange} />
 
