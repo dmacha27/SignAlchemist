@@ -21,6 +21,7 @@ import LoaderMessage from "./LoaderMessage";
  * @param {Array|Object} props.chartDataOriginal - Data for the original signal chart.
  * @param {Array|Object} props.chartDataProcessed - Data for the processed signal chart.
  * @param {number} props.samplingRate - Sampling rate used for spectrum charts.
+ * @param {boolean} [props.isRequesting=true] - Whether the processed data is being requested.
  */
 const SignalTabs = ({
   rightTitle,
@@ -28,6 +29,7 @@ const SignalTabs = ({
   chartDataOriginal,
   chartDataProcessed,
   samplingRate,
+  isRequesting = true,
 }) => {
   return (
     <Tabs color="violet" variant="pills" defaultValue="charts" className="mt-2">
@@ -85,14 +87,18 @@ const SignalTabs = ({
                   {rightIcon}
                   {rightTitle} Signal
                 </div>
-                <div>
-                  {chartDataProcessed ? (
+                <div className="p-4">
+                  {isRequesting ? (
+                    <LoaderMessage message="Processing request..." />
+                  ) : chartDataProcessed ? (
                     <CustomChart
                       table={chartDataProcessed}
                       defaultColor="#50C878"
                     />
                   ) : (
-                    <LoaderMessage message="Waiting for request..." />
+                    <div className="p-5 text-center text-gray-500 dark:text-gray-400">
+                      Please run processing to see results.
+                    </div>
                   )}
                 </div>
               </div>
@@ -106,14 +112,18 @@ const SignalTabs = ({
                 Comparison View
               </div>
               <div>
-                {chartDataOriginal && chartDataProcessed ? (
+                {isRequesting ? (
+                  <LoaderMessage message="Rendering comparison..." />
+                ) : chartDataOriginal && chartDataProcessed ? (
                   <ComparisonChart
                     table1={chartDataOriginal}
                     table2={chartDataProcessed}
                     name2={rightTitle}
                   />
                 ) : (
-                  <LoaderMessage message="Rendering comparison..." />
+                  <div className="p-5 text-center text-gray-500 dark:text-gray-400">
+                    Please run processing to see results.
+                  </div>
                 )}
               </div>
             </div>
@@ -169,15 +179,19 @@ const SignalTabs = ({
                   {rightIcon}
                   {rightTitle} Signal
                 </div>
-                <div>
-                  {chartDataProcessed ? (
+                <div className="p-4">
+                  {isRequesting ? (
+                    <LoaderMessage message="Processing request..." />
+                  ) : chartDataProcessed ? (
                     <SpectrumChart
                       table={chartDataProcessed}
                       samplingRate={samplingRate}
                       defaultColor="#50C878"
                     />
                   ) : (
-                    <LoaderMessage message="Waiting for request..." />
+                    <div className="p-5 text-center text-gray-500 dark:text-gray-400">
+                      Please run processing to see results.
+                    </div>
                   )}
                 </div>
               </div>
@@ -191,7 +205,9 @@ const SignalTabs = ({
                 Comparison View
               </div>
               <div>
-                {chartDataOriginal && chartDataProcessed ? (
+                {isRequesting ? (
+                  <LoaderMessage message="Rendering comparison..." />
+                ) : chartDataOriginal && chartDataProcessed ? (
                   <ComparisonSpectrumChart
                     table1={chartDataOriginal}
                     table2={chartDataProcessed}
@@ -199,7 +215,9 @@ const SignalTabs = ({
                     name2={rightTitle}
                   />
                 ) : (
-                  <LoaderMessage message="Rendering comparison..." />
+                  <div className="p-5 text-center text-gray-500 dark:text-gray-400">
+                    Please run processing to see results.
+                  </div>
                 )}
               </div>
             </div>
@@ -220,6 +238,7 @@ SignalTabs.propTypes = {
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number]))
   ).isRequired,
   samplingRate: PropTypes.number.isRequired,
+  isRequesting: PropTypes.bool.isRequired,
 };
 
 export default SignalTabs;

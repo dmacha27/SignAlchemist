@@ -17,6 +17,7 @@ const Resampling = () => {
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
   const { readString } = usePapaParse();
+  const [isRequesting, setIsRequesting] = useState(false);
 
   const [headers, setHeaders] = useState([]);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
@@ -53,6 +54,7 @@ const Resampling = () => {
   }, [file]);
 
   const requestResample = async () => {
+    setIsRequesting(true);
     try {
       const formData = new FormData();
 
@@ -82,6 +84,8 @@ const Resampling = () => {
     } catch (error) {
       console.error("Error performing resampling:", error);
       toast.error("Error performing resampling.");
+    } finally {
+      setIsRequesting(false);
     }
   };
 
@@ -185,13 +189,17 @@ const Resampling = () => {
               Resampled Signal
             </div>
             <div className="p-4 text-black dark:text-white">
-              {chartDataResampled ? (
+              {isRequesting ? (
+                <LoaderMessage message="Processing request..." />
+              ) : chartDataResampled ? (
                 <>
                   <InfoTable table={chartDataResampled} onlyTable={false} />
                   <DownloadSignal table={chartDataResampled} name="resampled" />
                 </>
               ) : (
-                <LoaderMessage message="Waiting for request..." />
+                <div className="p-5 text-center text-gray-500 dark:text-gray-400">
+                  Please run processing to see results.
+                </div>
               )}
             </div>
           </div>
@@ -204,6 +212,7 @@ const Resampling = () => {
         chartDataOriginal={chartDataOriginal}
         chartDataProcessed={chartDataResampled}
         samplingRate={samplingRate}
+        isRequesting={isRequesting}
       />
     </div>
   );

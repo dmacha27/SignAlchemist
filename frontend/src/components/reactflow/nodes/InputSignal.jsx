@@ -3,7 +3,6 @@ import {
   Handle,
   Position,
   useNodeConnections,
-  useNodesData,
 } from "@xyflow/react";
 import { Card } from "@mantine/core";
 

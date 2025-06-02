@@ -47,6 +47,7 @@ const Filtering = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
+  const [isRequesting, setIsRequesting] = useState(false);
 
   let window_size = Math.round(samplingRate / 3);
   if (window_size % 2 === 0) {
@@ -116,6 +117,8 @@ const Filtering = () => {
   }, [file]);
 
   const requestFilter = async () => {
+    setIsRequesting(true);
+
     try {
       // Request to ChatGPT. Docs: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
       //document.getElementById("charts").scrollIntoView({ behavior: "smooth" });
@@ -176,8 +179,10 @@ const Filtering = () => {
       const metricsFiltered = await metricsResponse.json();
       setMetricsFiltered(metricsFiltered);
     } catch (error) {
-      console.error("Error performing resampling:", error);
-      toast.error("Error performing resampling.");
+      console.error("Error performing filtering:", error);
+      toast.error("Error performing filtering.");
+    } finally {
+      setIsRequesting(false);
     }
   };
 
@@ -284,13 +289,17 @@ const Filtering = () => {
               Filtered Signal
             </div>
             <div className="p-4 text-black dark:text-white">
-              {chartDataFiltered ? (
+              {isRequesting ? (
+                <LoaderMessage message="Processing request..." />
+              ) : chartDataFiltered ? (
                 <>
                   <InfoTable table={chartDataFiltered} onlyTable={true} />
                   <DownloadSignal table={chartDataFiltered} name="filtered" />
                 </>
               ) : (
-                <LoaderMessage message="Waiting for request..." />
+                <div className="p-5 text-center text-gray-500 dark:text-gray-400">
+                  Please run processing to see results.
+                </div>
               )}
             </div>
           </div>
@@ -303,6 +312,7 @@ const Filtering = () => {
         chartDataOriginal={chartDataOriginal}
         chartDataProcessed={chartDataFiltered}
         samplingRate={samplingRate}
+        isRequesting={isRequesting}
       />
 
       {/* Metrics */}
@@ -310,6 +320,7 @@ const Filtering = () => {
         <InfoMetrics
           metricsOriginal={metricsOriginal}
           metricsProcessed={metricsFiltered}
+          isRequesting={isRequesting}
         />
       )}
     </div>

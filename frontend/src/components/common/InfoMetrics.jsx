@@ -68,30 +68,37 @@ const MetricCards = ({ metrics }) => {
  * Displays two metric panels side-by-side: one for original metrics and one for processed metrics.
  *
  * @component
- * @param {Object} props
+ * @param {Object} props - Component props.
  * @param {Object.<string, { value: number, description: string }>} [props.metricsOriginal] - Metrics of the original signal.
  * @param {Object.<string, { value: number, description: string }>} [props.metricsProcessed] - Metrics of the processed signal.
+ * @param {boolean} [props.isRequesting=true] - Whether the processed metrics are being requested or calculated.
  */
-const InfoMetrics = memo(({ metricsOriginal, metricsProcessed }) => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
-      <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-        {metricsOriginal ? (
-          <MetricCards metrics={metricsOriginal} />
-        ) : (
-          <LoaderMessage message="Waiting for request..." />
-        )}
+const InfoMetrics = memo(
+  ({ metricsOriginal, metricsProcessed, isRequesting = true }) => {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
+        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
+          {metricsOriginal ? (
+            <MetricCards metrics={metricsOriginal} />
+          ) : (
+            <LoaderMessage message="Calculating..." />
+          )}
+        </div>
+        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
+          {isRequesting ? (
+            <LoaderMessage message="Processing request..." />
+          ) : metricsProcessed ? (
+            <MetricCards metrics={metricsProcessed} />
+          ) : (
+            <div className="p-5 text-center text-gray-500 dark:text-gray-400">
+              Please run processing to see results.
+            </div>
+          )}
+        </div>
       </div>
-      <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-        {metricsProcessed ? (
-          <MetricCards metrics={metricsProcessed} />
-        ) : (
-          <LoaderMessage message="Waiting for request..." />
-        )}
-      </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 MetricCards.propTypes = {
   metrics: PropTypes.objectOf(
@@ -115,6 +122,7 @@ InfoMetrics.propTypes = {
       description: PropTypes.string.isRequired,
     })
   ),
+  isRequesting: PropTypes.bool.isRequired,
 };
 
 export default InfoMetrics;
