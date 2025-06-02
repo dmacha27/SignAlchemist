@@ -71,10 +71,10 @@ const MetricCards = ({ metrics }) => {
  * @param {Object} props - Component props.
  * @param {Object.<string, { value: number, description: string }>} [props.metricsOriginal] - Metrics of the original signal.
  * @param {Object.<string, { value: number, description: string }>} [props.metricsProcessed] - Metrics of the processed signal.
- * @param {boolean} [props.isRequesting=true] - Whether the processed metrics are being requested or calculated.
+ * @param {boolean} [props.isRequesting=false] - Whether the processed metrics are being requested or calculated.
  */
 const InfoMetrics = memo(
-  ({ metricsOriginal, metricsProcessed, isRequesting = true }) => {
+  ({ metricsOriginal, metricsProcessed, isRequesting = false }) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
         <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">

@@ -21,7 +21,7 @@ import LoaderMessage from "./LoaderMessage";
  * @param {Array|Object} props.chartDataOriginal - Data for the original signal chart.
  * @param {Array|Object} props.chartDataProcessed - Data for the processed signal chart.
  * @param {number} props.samplingRate - Sampling rate used for spectrum charts.
- * @param {boolean} [props.isRequesting=true] - Whether the processed data is being requested.
+ * @param {boolean} [props.isRequesting=false] - Whether the processed data is being requested.
  */
 const SignalTabs = ({
   rightTitle,
@@ -29,7 +29,7 @@ const SignalTabs = ({
   chartDataOriginal,
   chartDataProcessed,
   samplingRate,
-  isRequesting = true,
+  isRequesting = false,
 }) => {
   return (
     <Tabs color="violet" variant="pills" defaultValue="charts" className="mt-2">
