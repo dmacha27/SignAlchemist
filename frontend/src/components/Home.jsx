@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { PrimeReactProvider } from "primereact/api";
 import { FileUpload } from "primereact/fileupload";
 import { usePapaParse } from "react-papaparse";
-import { Line } from "react-chartjs-2";
+import RangeSlider from "react-range-slider-input";
+import "react-range-slider-input/dist/style.css";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -53,9 +54,36 @@ const UtilityModal = memo(
     timestampColumn,
     samplingRate,
     signalValues,
+    cropValues,
   }) => {
     // Detect dark mode
     const { isDarkMode: isDark } = useContext(ThemeContext);
+    const { readString } = usePapaParse();
+
+    const [croppedFile, setCroppedFile] = useState(null);
+
+    useEffect(() => {
+      if (!file || !cropValues) return;
+
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        readString(e.target.result, {
+          complete: ({ data }) => {
+            const [header, ...rows] = data;
+            const [start, end] = cropValues;
+            const cropped = [header, ...rows.slice(start, end + 1)];
+            const blob = new Blob(
+              [cropped.map((r) => r.join(",")).join("\n")],
+              { type: "text/csv" }
+            );
+            setCroppedFile(blob);
+          },
+        });
+      };
+
+      reader.readAsText(file);
+    }, [file, cropValues]);
 
     return (
       <Modal
@@ -106,7 +134,7 @@ const UtilityModal = memo(
               onClick={() => {
                 navigate("/resampling", {
                   state: {
-                    file,
+                    file: croppedFile || file,
                     signalType,
                     timestampColumn,
                     samplingRate,
@@ -154,7 +182,7 @@ const UtilityModal = memo(
               onClick={() => {
                 navigate("/filtering", {
                   state: {
-                    file,
+                    file: croppedFile || file,
                     signalType,
                     timestampColumn,
                     samplingRate,
@@ -202,7 +230,7 @@ const UtilityModal = memo(
               onClick={() => {
                 navigate("/processing", {
                   state: {
-                    file,
+                    file: croppedFile || file,
                     signalType,
                     timestampColumn,
                     samplingRate,
@@ -226,7 +254,7 @@ const UtilityModal = memo(
   }
 );
 
-const CSVUploader = memo(({ file, setFile, setHeaders }) => {
+const CSVUploader = memo(({ file, setFile, setHeaders, cropValues }) => {
   const fileUploader = useRef();
   const { readString } = usePapaParse();
   const navigate = useNavigate();
@@ -374,12 +402,13 @@ const CSVUploader = memo(({ file, setFile, setHeaders }) => {
         timestampColumn={timestampColumn}
         samplingRate={samplingRate}
         signalValues={signalValues}
+        cropValues={cropValues}
       />
     </>
   );
 });
 
-const InfoTable = ({ table }) => {
+const InfoTable = ({ table, start = 0 }) => {
   // table: [[header, header, header..], [x1, y1, ...], [x2, y2, ...], [x3, y3, ...]]
   const headers = table[0];
   const data = table.slice(1);
@@ -414,7 +443,7 @@ const InfoTable = ({ table }) => {
                 }
               >
                 <td className="px-3 py-1 border border-gray-200 dark:border-gray-600 font-medium text-gray-700 dark:text-gray-100">
-                  {index + 1}
+                  {start + index + 1}
                 </td>
                 {row.map((cell, i) => (
                   <td
@@ -433,6 +462,29 @@ const InfoTable = ({ table }) => {
   );
 };
 
+const CropView = ({ fileRows, cropValues, setCropValues }) => {
+  return (
+    <>
+      <RangeSlider
+        className="my-3"
+        id="range-slider"
+        step={1}
+        min={0}
+        max={fileRows.length}
+        defaultValue={[0, fileRows.length]}
+        onInput={setCropValues}
+      />
+      <InfoTable
+        table={[
+          fileRows[0],
+          ...fileRows.slice(cropValues[0] + 1, cropValues[1] + 1),
+        ]}
+        start={cropValues[0]}
+      />
+    </>
+  );
+};
+
 const Home = () => {
   window.history.replaceState({}, "");
 
@@ -445,6 +497,7 @@ const Home = () => {
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const { readString } = usePapaParse();
   const { isDarkMode: isDark } = useContext(ThemeContext);
+  const [cropValues, setCropValues] = useState();
 
   // Stackoverflow: https://stackoverflow.com/questions/30399123/finding-difference-between-consecutive-numbers-in-an-array-in-javascript
   const diff = (A) => {
@@ -468,7 +521,7 @@ const Home = () => {
       readString(content, {
         complete: (results) => {
           setFileRows(results.data);
-
+          setCropValues([0, results.data.length - 1]);
           setTimestampColumn(headers.length - 1);
         },
       });
@@ -603,7 +656,12 @@ const Home = () => {
         </div>
 
         <div className="max-w-xl w-full border border-slate-400 shadow rounded-lg p-4 bg-white dark:bg-gray-900">
-          <CSVUploader file={file} setFile={setFile} setHeaders={setHeaders} />
+          <CSVUploader
+            file={file}
+            setFile={setFile}
+            setHeaders={setHeaders}
+            cropValues={cropValues}
+          />
         </div>
 
         <div className="w-16 h-16 invisible" />
@@ -673,9 +731,25 @@ const Home = () => {
                   className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
                 />
               </div>
-            </form>
 
-            {fileRows && <InfoTable table={fileRows} />}
+              <div>
+                {fileRows && (
+                  <>
+                    <label
+                      htmlFor="range-slider"
+                      className="text-black dark:text-white"
+                    >
+                      Crop signal
+                    </label>
+                    <CropView
+                      fileRows={fileRows}
+                      cropValues={cropValues}
+                      setCropValues={setCropValues}
+                    />
+                  </>
+                )}
+              </div>
+            </form>
           </div>
         </div>
 
@@ -687,7 +761,6 @@ const Home = () => {
             >
               Detected sampling rate of {samplingRate} Hz
             </div>
-
             {chartDataOriginal ? (
               <CustomChart table={chartDataOriginal} />
             ) : (

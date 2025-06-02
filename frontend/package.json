@@ -36,6 +36,7 @@
     "react-icons": "^5.5.0",
     "react-papaparse": "^4.4.0",
     "react-parallax-tilt": "^1.7.295",
+    "react-range-slider-input": "^3.2.1",
     "react-router-dom": "^7.2.0",
     "react-syntax-highlighter": "^15.6.1",
     "styled-components": "^6.1.17"

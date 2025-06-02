@@ -8,6 +8,34 @@
   position: relative;
 }
 
+#range-slider {
+  height: 40px;
+  background: transparent;
+  overflow: hidden;
+}
+
+#range-slider .range-slider__thumb {
+  width: 18px;
+  height: 20px;
+  border-radius: 4px;
+  background: #363636;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#range-slider .range-slider__range {
+  border-radius: 6px;
+  background: transparent;
+  border: 4px solid #363636;
+  box-sizing: border-box;
+}
+.dark #range-slider .range-slider__thumb {
+  background: #ffffff;
+}
+
+.dark #range-slider .range-slider__range {
+  border-color: #ffffff;
+}
 .copy-icon {
   position: absolute;
   top: 10px;
@@ -31,9 +59,9 @@
 
 /* ReactFlow Watermark */
 .react-flow__attribution {
-  background: transparent !important; 
-  color: #9ca3af !important; 
-  opacity: 0.6 !important; 
+  background: transparent !important;
+  color: #9ca3af !important;
+  opacity: 0.6 !important;
   font-size: 10px !important;
 }
 
@@ -42,10 +70,9 @@
 .dark .p-fileupload-buttonbar,
 .dark .p-fileupload-empty {
   background-color: #1f2937 !important; /* Tailwind bg-gray-800 */
-  color: #f3f4f6 !important;            /* Tailwind text-gray-100 */
-  border-color: #4b5563 !important;     /* dark:border-gray-600 */
+  color: #f3f4f6 !important; /* Tailwind text-gray-100 */
+  border-color: #4b5563 !important; /* dark:border-gray-600 */
 }
-
 
 /* Loader author: https://github.com/Afif13/*/
 .loader {
@@ -64,20 +91,18 @@
   --dot-color: #000;
   --bg-color: #0000 64%, var(--dot-color) 66% 98%, #0000 101%;
 
-  background:
-    radial-gradient(35% 146% at 50% 159%, var(--bg-color)) 0 0,
-    radial-gradient(35% 146% at 50% -59%, var(--bg-color)) 100% 100%; 
+  background: radial-gradient(35% 146% at 50% 159%, var(--bg-color)) 0 0,
+    radial-gradient(35% 146% at 50% -59%, var(--bg-color)) 100% 100%;
 
-  background-size: calc(200%/3) 50%;
+  background-size: calc(200% / 3) 50%;
   background-repeat: repeat-x;
   -webkit-mask: repeating-linear-gradient(90deg, #000 0 10%, #0000 0 20%);
-  animation: l12 .8s infinite linear;
+  animation: l12 0.8s infinite linear;
 }
-
 
 /* Dark mode */
 html.dark .loader {
-  background: #111827; 
+  background: #111827;
 }
 
 html.dark .loader:before {
@@ -85,17 +110,17 @@ html.dark .loader:before {
 }
 
 /* About */
-html.dark .about-button:hover, .about-button:hover {
-    background-color: #e9499d;/* #e9499d; #040498;  #9B59B6; */
-    color: white;
-    border: none;
+html.dark .about-button:hover,
+.about-button:hover {
+  background-color: #e9499d; /* #e9499d; #040498;  #9B59B6; */
+  color: white;
+  border: none;
 }
-
 
 /* Animation */
 @keyframes l12 {
   to {
-    background-position: -200% 0, -100% 100%
+    background-position: -200% 0, -100% 100%;
   }
 }
 
@@ -103,7 +128,6 @@ html.dark .about-button:hover, .about-button:hover {
 .card-hdr-border {
   border-radius: 11px 11px 0px 0px;
 }
-
 
 .flip-container {
   perspective: 1000px;

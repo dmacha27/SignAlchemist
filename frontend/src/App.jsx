@@ -226,7 +226,7 @@ const App = () => {
               <span className="text-sm text-gray-500 text-center dark:text-gray-400 flex items-center justify-center gap-2">
                 <FaGithub />
                 <a
-                  href="https://github.com/dmacha27/Signalis"
+                  href="https://github.com/dmacha27/SignAlchemist"
                   className="hover:underline"
                 >
                   Source code
