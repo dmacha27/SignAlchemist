@@ -650,6 +650,11 @@ const Home = () => {
                     EDA.csv
                   </a>
                 </Menu.Item>
+                <Menu.Item>
+                  <a href="/PPG.csv" download>
+                    PPG.csv
+                  </a>
+                </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           </div>
