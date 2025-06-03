@@ -72,7 +72,7 @@ const UtilityModal = memo(
           complete: ({ data }) => {
             const [header, ...rows] = data;
             const [start, end] = cropValues;
-            const cropped = [header, ...rows.slice(start, end + 1)];
+            const cropped = [header, ...rows.slice(start, end)];
             const blob = new Blob(
               [cropped.map((r) => r.join(",")).join("\n")],
               { type: "text/csv" }

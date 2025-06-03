@@ -20,7 +20,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
   const seconds_to_minutes = (s) => {
     const mins = Math.floor(s / 60);
     const secs = Math.floor(s % 60);
-    return `${mins} mins ${secs}`;
+    return `${mins} min ${secs} s`;
   };
 
   const [page, setPage] = useState(1);
@@ -58,7 +58,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
       {!onlyTable && (
         <div className="shadow-sm rounded-xl border border-gray-200 dark:border dark:border-gray-600 p-2 mb-2 bg-white dark:bg-gray-900">
           <p>
-            <strong>Duration:</strong> {seconds_to_minutes(duration)} s
+            <strong>Duration:</strong> {seconds_to_minutes(duration)}
           </p>
           <p>
             <strong>Sampling rate:</strong> {samplingRateCalculated.toFixed(1)}{" "}
@@ -93,17 +93,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
 
         {totalPages > 1 && (
           <div className="flex justify-center mt-4">
-            <Pagination
-              value={page}
-              onChange={setPage}
-              total={totalPages}
-              classNames={{
-                control: ({ active }) =>
-                  active
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
-              }}
-            />
+            <Pagination value={page} onChange={setPage} total={totalPages} />
           </div>
         )}
       </div>
