@@ -22,7 +22,6 @@ const DownloadSignal = memo(({ table, name }) => {
   };
 
   const handleDownload = () => {
-    if (separator.includes(".")) return;
     const blob = new Blob([generateContent()], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -35,9 +34,16 @@ const DownloadSignal = memo(({ table, name }) => {
   const handleSeparatorChange = (e) => {
     const newSeparator = e.target.value;
     setSeparator(newSeparator);
-    setError(
-      newSeparator.includes(".") ? 'The separator cannot be a dot (".")' : ""
-    );
+
+    if (newSeparator.length !== 1) {
+      setError("The separator must be a single character");
+    } else if (newSeparator === ".") {
+      setError('The separator cannot be a dot (".")');
+    } else if (!isNaN(newSeparator)) {
+      setError("The separator cannot be a number");
+    } else {
+      setError("");
+    }
   };
 
   return (
@@ -88,7 +94,7 @@ const DownloadSignal = memo(({ table, name }) => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleDownload}
-            disabled={separator.includes(".")}
+            disabled={error}
             className="bg-green-500 text-white text-sm py-2 px-4 rounded disabled:bg-gray-300 dark:disabled:bg-gray-700"
           >
             📥 Download

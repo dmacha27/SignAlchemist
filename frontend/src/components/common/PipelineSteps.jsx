@@ -7,21 +7,28 @@ import PropTypes from "prop-types";
  * @param {Array} nodes - Array of node objects with id, type, and data.
  */
 const PipelineSteps = ({ nodes }) => {
-  const dictNodes = {};
+  if (!Array.isArray(nodes) || nodes.length === 0) {
+    return <Text>No steps to display.</Text>;
+  }
 
+  const dictNodes = {};
   nodes.forEach((element) => {
-    dictNodes[element.id] = element;
+    if (element?.id) {
+      dictNodes[element.id] = element;
+    }
   });
 
   const conectedNodes = [];
+  const visited = new Set();
   let actualNode = "1";
 
-  while (actualNode) {
+  while (actualNode && !visited.has(actualNode)) {
     const current = dictNodes[actualNode];
     if (!current) break;
 
     conectedNodes.push(current);
-    actualNode = current?.data?.target;
+    visited.add(actualNode);
+    actualNode = current.data?.target;
   }
 
   const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);

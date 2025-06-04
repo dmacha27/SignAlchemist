@@ -15,6 +15,7 @@ describe("InfoMetrics", () => {
   test("MetricsOriginal: NO, MetricsProcessed: NO, isRequesting: NO — shows loader and ask user to run processing", () => {
     render(<InfoMetrics isRequesting={false} />);
     expect(screen.getByText(/Calculating.../i)).toBeInTheDocument();
+
     expect(
       screen.getByText(/Please run processing to see results./i)
     ).toBeInTheDocument();
@@ -23,6 +24,7 @@ describe("InfoMetrics", () => {
   test("MetricsOriginal: NO, MetricsProcessed: NO, isRequesting: YES — shows loader and loader", () => {
     render(<InfoMetrics isRequesting={true} />);
     expect(screen.getByText(/Calculating.../i)).toBeInTheDocument();
+
     expect(screen.getByText(/Processing request.../i)).toBeInTheDocument();
   });
 
@@ -33,7 +35,8 @@ describe("InfoMetrics", () => {
     expect(screen.getByText("metricA")).toBeInTheDocument();
     expect(screen.getByText("0.9675")).toBeInTheDocument(); // Metric value should be fixed to 4 digits
     expect(screen.getByText("metricB")).toBeInTheDocument();
-    expect(screen.getByText("0.6554")).toBeInTheDocument(); // Metric value should be fixed to 4 digits
+    expect(screen.getByText("0.6554")).toBeInTheDocument();
+
     expect(
       screen.getByText(/Please run processing to see results./i)
     ).toBeInTheDocument();
@@ -46,7 +49,8 @@ describe("InfoMetrics", () => {
     expect(screen.getByText("metricA")).toBeInTheDocument();
     expect(screen.getByText("0.9675")).toBeInTheDocument(); // Metric value should be fixed to 4 digits
     expect(screen.getByText("metricB")).toBeInTheDocument();
-    expect(screen.getByText("0.6554")).toBeInTheDocument(); // Metric value should be fixed to 4 digits
+    expect(screen.getByText("0.6554")).toBeInTheDocument();
+
     expect(screen.getByText(/Processing request.../i)).toBeInTheDocument();
   });
 
@@ -58,6 +62,7 @@ describe("InfoMetrics", () => {
       />
     );
     expect(screen.getByText(/Calculating.../i)).toBeInTheDocument();
+    
     expect(screen.getByText("metricA")).toBeInTheDocument();
     expect(screen.getByText("1.0000")).toBeInTheDocument();
     expect(screen.getByText("metricB")).toBeInTheDocument();
@@ -102,6 +107,6 @@ describe("InfoMetrics", () => {
     expect(screen.getByText("metricB")).toBeInTheDocument();
     expect(screen.getByText("0.6554")).toBeInTheDocument();
 
-    expect(screen.getByText(/Processing request.../i)).toBeInTheDocument(); // Processed
+    expect(screen.getByText(/Processing request.../i)).toBeInTheDocument();
   });
 });
