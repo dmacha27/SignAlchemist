@@ -113,7 +113,7 @@ const SignalTabs = ({
               </div>
               <div>
                 {isRequesting ? (
-                  <LoaderMessage message="Rendering comparison..." />
+                  <LoaderMessage message="Processing request..." />
                 ) : chartDataOriginal && chartDataProcessed ? (
                   <ComparisonChart
                     table1={chartDataOriginal}
@@ -206,7 +206,7 @@ const SignalTabs = ({
               </div>
               <div>
                 {isRequesting ? (
-                  <LoaderMessage message="Rendering comparison..." />
+                  <LoaderMessage message="Processing request..." />
                 ) : chartDataOriginal && chartDataProcessed ? (
                   <ComparisonSpectrumChart
                     table1={chartDataOriginal}
