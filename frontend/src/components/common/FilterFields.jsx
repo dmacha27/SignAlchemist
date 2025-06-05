@@ -124,11 +124,6 @@ const InfoModal = ({ opened, close }) => {
                 <button
                   className="absolute top-2 right-2 cursor-pointer text-gray-500 dark:text-gray-100"
                   onClick={handleCopy}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      handleCopy();
-                    }
-                  }}
                   title="Copy"
                 >
                   {copied ? (
@@ -187,7 +182,7 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
           return (
             <div key={field} className="mb-4">
               <label
-                htmlFor="filterTechnique"
+                htmlFor={field}
                 className="block mb-1 font-medium text-black dark:text-white"
               >
                 {field.charAt(0).toUpperCase() + field.slice(1)}

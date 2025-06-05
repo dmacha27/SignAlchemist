@@ -1,25 +1,22 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "WATCHPACK_POLLING=true react-scripts start",
     "test": "jest",
     "coverage": "jest --coverage"
   },
   "dependencies": {
-    "@heroui/react": "^2.7.8",
     "@img-comparison-slider/react": "^8.0.2",
     "@mantine/core": "^7.17.7",
     "@mantine/hooks": "^7.17.7",
     "@xyflow/react": "^12.5.5",
     "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.11.3",
     "chart.js": "^4.4.8",
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-zoom": "^2.2.0",
