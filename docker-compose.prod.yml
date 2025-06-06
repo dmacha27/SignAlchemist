@@ -2,25 +2,16 @@ services:
   backend:
     build:
       context: ./backend
-    volumes:
-      - ./backend:/app
     ports:
       - "${VITE_BACKEND_PORT}:${VITE_BACKEND_PORT}"
-    env_file:
-      - .env.prod
     command: sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${VITE_BACKEND_PORT}"
 
   frontend:
     build:
       context: ./frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_BACKEND_PORT: ${VITE_BACKEND_PORT}
     ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-    environment:
-      - WATCHPACK_POLLING=true
-      - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
-    env_file:
-      - .env.prod
-    command: sh -c "npm run start -- --port ${FRONTEND_PORT}"
+      - "${FRONTEND_PORT}:80"
+    

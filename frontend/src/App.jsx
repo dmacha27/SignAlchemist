@@ -18,6 +18,7 @@ import About from "./components/About";
 import Processing from "./components/Processing";
 import Resampling from "./components/Resampling";
 import Filtering from "./components/Filtering";
+import NotFound from "./components/common/NotFound";
 
 import { ThemeContext } from "./contexts/ThemeContext";
 
@@ -158,6 +159,8 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route path="*" element={<NotFound />} />
           </Routes>
 
           <footer>
