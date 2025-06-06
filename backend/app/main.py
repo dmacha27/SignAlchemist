@@ -11,6 +11,7 @@ from app.metrics import *
 from app.outliers import *
 
 import json
+import os
 
 app = FastAPI(
     title="SignAlchemist",
@@ -128,8 +129,11 @@ async def filtering(
     try:
         config = json.loads(filter_config)
         data = np.array(json.loads(signal))
+        python_enabled = os.getenv("PYTHON_ENABLED") == "true"
 
         if "python" in config and config["python"]:
+            if not python_enabled:
+                return JSONResponse(content={"error": "Python code is disabled in public build"}, status_code=403)
             try:
                 namespace = globals().copy()
                 exec(config["python"], namespace)

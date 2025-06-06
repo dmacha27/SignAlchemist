@@ -13,6 +13,9 @@ import ExecutionIcon from "../../common/ExecutionIcon";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 
+const backendPort = import.meta.env.VITE_BACKEND_PORT;
+const backendUrl = `http://localhost:${backendPort}`;
+
 const filtersFields = {
   butterworth: {
     order: 2,
@@ -169,7 +172,7 @@ function FilteringNode({ id, data }) {
     window.dispatchEvent(event);
 
     try {
-      const response = await fetch("http://localhost:8000/filtering", {
+      const response = await fetch(`${backendUrl}/filtering`, {
         method: "POST",
         body: formData,
       });

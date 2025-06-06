@@ -17,6 +17,10 @@ import toast from "react-hot-toast";
 import { FaFilter, FaSignal, FaTools } from "react-icons/fa";
 import SignalTabs from "./common/SignalTabs";
 
+const backendPort = import.meta.env.VITE_BACKEND_PORT;
+console.log(backendPort)
+const backendUrl = `http://localhost:${backendPort}`;
+
 const filtersFields = {
   butterworth: {
     order: 2,
@@ -98,7 +102,7 @@ const Filtering = () => {
           originalMetricsForm.append("signal_type", signalType);
           originalMetricsForm.append("sampling_rate", samplingRate);
 
-          fetch("http://localhost:8000/metrics", {
+          fetch(`${backendUrl}/metrics`, {
             method: "POST",
             body: originalMetricsForm,
           }).then(async (res) => {
@@ -137,7 +141,7 @@ const Filtering = () => {
 
       formData.append("filter_config", JSON.stringify(filterConfig));
 
-      const response = await fetch("http://localhost:8000/filtering", {
+      const response = await fetch(`${backendUrl}/filtering`, {
         method: "POST",
         body: formData,
       });
@@ -164,7 +168,7 @@ const Filtering = () => {
       filteredMetricsForm.append("signal_type", signalType);
       filteredMetricsForm.append("sampling_rate", samplingRate);
 
-      const metricsResponse = await fetch("http://localhost:8000/metrics", {
+      const metricsResponse = await fetch(`${backendUrl}/metrics`, {
         method: "POST",
         body: filteredMetricsForm,
       });

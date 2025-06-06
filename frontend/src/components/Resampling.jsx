@@ -12,6 +12,9 @@ import toast from "react-hot-toast";
 
 import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from "react-icons/fa";
 
+const backendPort = import.meta.env.VITE_BACKEND_PORT;
+const backendUrl = `http://localhost:${backendPort}`;
+
 const Resampling = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
@@ -65,7 +68,7 @@ const Resampling = () => {
       formData.append("source_sampling_rate", parseFloat(samplingRate));
       formData.append("target_sampling_rate", parseFloat(newSamplingRate));
 
-      const response = await fetch("http://localhost:8000/resampling", {
+      const response = await fetch(`${backendUrl}/resampling`, {
         method: "POST",
         body: formData,
       });

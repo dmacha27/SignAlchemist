@@ -5,9 +5,8 @@ WORKDIR /app
 COPY . /app/
 
 RUN npm install
-
 RUN npm run build
 
-EXPOSE 5173
+EXPOSE ${FRONTEND_PORT:-5173}
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npm run dev -- --port ${FRONTEND_PORT:-5173}"]

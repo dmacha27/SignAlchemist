@@ -13,6 +13,9 @@ import ExecutionIcon from "../../common/ExecutionIcon";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 
+const backendPort = import.meta.env.VITE_BACKEND_PORT;
+const backendUrl = `http://localhost:${backendPort}`;
+
 /**
  * OutliersNode component
  *
@@ -125,7 +128,7 @@ function OutliersNode({ id, data }) {
     window.dispatchEvent(event);
 
     try {
-      const response = await fetch("http://localhost:8000/outliers", {
+      const response = await fetch(`${backendUrl}/outliers`, {
         method: "POST",
         body: formData,
       });
