@@ -15,7 +15,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
 
   const duration = data[data.length - 1][0] - data[0][0];
   const signalLength = data.length;
-  const samplingRateCalculated = signalLength / duration;
+  const samplingRateCalculated = (signalLength - 1) / duration;
 
   const seconds_to_minutes = (s) => {
     const mins = Math.floor(s / 60);

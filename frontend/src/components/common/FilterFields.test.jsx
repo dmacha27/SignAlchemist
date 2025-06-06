@@ -2,11 +2,8 @@ import {
   render,
   screen,
   fireEvent,
-  userEvent,
   waitFor,
-  act,
 } from "../../test-utils";
-import { FaCheck, FaClipboard } from "react-icons/fa";
 import FilterFields from "./FilterFields";
 import { ThemeContext } from "../../contexts/ThemeContext";
 

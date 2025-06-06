@@ -571,6 +571,8 @@ const Home = () => {
               x.push(timestamp);
             }
 
+            data_original.sort((a, b) => a[0] - b[0]); // Ascending timestamps
+
             calculated_samplingrate = 1 / average(diff(x));
             setSamplingRate(calculated_samplingrate);
             samplingRate_select.value = calculated_samplingrate.toFixed(1);

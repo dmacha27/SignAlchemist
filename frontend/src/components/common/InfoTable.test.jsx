@@ -12,7 +12,7 @@ const mockEDA = [
   [6, 4.4],
 ];
 
-const mock5hz = [
+const mock4hz = [
   ["Timestamp", "Gsr"],
   [0, 1.1],
   [0.25, 1.5],
@@ -42,14 +42,14 @@ describe("InfoTable", () => {
 
   // Metrics OK
   it("calculates and renders (format) statistics properly", () => {
-    render(<InfoTable table={mock5hz} onlyTable={false} />);
+    render(<InfoTable table={mock4hz} onlyTable={false} />);
 
     expect(screen.getByText("Duration:")).toBeInTheDocument();
     expect(screen.getByText("Sampling rate:")).toBeInTheDocument();
     expect(screen.getByText("Signal length:")).toBeInTheDocument();
 
     expect(screen.getByText("0 min 1 s")).toBeInTheDocument();
-    expect(screen.getByText("5.0 Hz")).toBeInTheDocument();
+    expect(screen.getByText("4.0 Hz")).toBeInTheDocument();
     expect(screen.getByText("5 samples")).toBeInTheDocument();
   });
 
