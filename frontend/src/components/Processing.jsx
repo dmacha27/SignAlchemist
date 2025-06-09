@@ -12,8 +12,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import generateDataOriginal from "./utils/dataUtils";
-
+import { generateDataOriginal } from "./utils/dataUtils";
 import InfoMetrics from "./common/InfoMetrics";
 import InputSignal from "./reactflow/nodes/InputSignal";
 import OutputSignal from "./reactflow/nodes/OutputSignal";

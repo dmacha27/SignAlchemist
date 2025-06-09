@@ -1,6 +1,7 @@
 import { memo, useState } from "react";
 import PropTypes from "prop-types";
 import { Table, Pagination } from "@mantine/core";
+import { diff, average } from "../utils/dataUtils.js";
 
 /**
  * InfoTable component renders a table displaying signal data and additional information like duration and sampling rate.
@@ -15,7 +16,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
 
   const duration = data[data.length - 1][0] - data[0][0];
   const signalLength = data.length;
-  const samplingRateCalculated = (signalLength - 1) / duration;
+  const samplingRateCalculated = 1 / average(diff(data.map((row) => row[0])));
 
   const seconds_to_minutes = (s) => {
     const mins = Math.floor(s / 60);

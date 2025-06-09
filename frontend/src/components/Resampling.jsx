@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
 
-import generateDataOriginal from "./utils/dataUtils";
-
+import { generateDataOriginal } from "./utils/dataUtils";
 import DownloadSignal from "./common/DownloadSignal";
 import InfoTable from "./common/InfoTable";
 import SignalTabs from "./common/SignalTabs";

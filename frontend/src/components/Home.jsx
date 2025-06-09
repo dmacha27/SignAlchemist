@@ -19,6 +19,8 @@ import {
 import { ThemeContext } from "../contexts/ThemeContext";
 import LoaderMessage from "./common/LoaderMessage";
 
+import { diff, average } from "./utils/dataUtils";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -42,7 +44,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import CustomChart from "./common/CustomChart";
 
-const max_length_lag = 5000;
+const MAX_DATA_LENGTH = 5000;
 
 const UtilityModal = memo(
   ({
@@ -420,7 +422,7 @@ const InfoTable = ({ table, start = 0 }) => {
           <thead className="bg-gray-100 dark:bg-gray-900 sticky top-0 z-10">
             <tr>
               <th className="px-3 py-2 border border-gray-300 dark:border-gray-600 font-medium bg-gray-200 dark:bg-gray-800 text-black dark:text-white">
-                {data.length > max_length_lag ? "Truncated" : ""}
+                {data.length > MAX_DATA_LENGTH ? "Truncated" : ""}
               </th>
               {headers.map((header, idx) => (
                 <th
@@ -433,7 +435,7 @@ const InfoTable = ({ table, start = 0 }) => {
             </tr>
           </thead>
           <tbody>
-            {data.slice(0, max_length_lag).map((row, index) => (
+            {data.slice(0, MAX_DATA_LENGTH).map((row, index) => (
               <tr
                 key={index}
                 className={
@@ -498,16 +500,6 @@ const Home = () => {
   const { readString } = usePapaParse();
   const { isDarkMode: isDark } = useContext(ThemeContext);
   const [cropValues, setCropValues] = useState();
-
-  // Stackoverflow: https://stackoverflow.com/questions/30399123/finding-difference-between-consecutive-numbers-in-an-array-in-javascript
-  const diff = (A) => {
-    return A.slice(1).map((item, index) => {
-      return item - A[index];
-    });
-  };
-
-  // Stackoverflow: https://stackoverflow.com/questions/29544371/finding-the-average-of-an-array-using-js
-  const average = (array) => array.reduce((a, b) => a + b) / array.length;
 
   //const roundIfReallyClose = (num) => { return Math.abs(num - Math.round(num)) <= 0.01 ? Math.round(num) : num }
 

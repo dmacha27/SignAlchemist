@@ -4,8 +4,7 @@ import { usePapaParse } from "react-papaparse";
 
 import { Select } from "@mantine/core";
 
-import generateDataOriginal from "./utils/dataUtils";
-
+import { generateDataOriginal } from "./utils/dataUtils";
 import InfoMetrics from "./common/InfoMetrics";
 import DownloadSignal from "./common/DownloadSignal";
 import InfoTable from "./common/InfoTable";

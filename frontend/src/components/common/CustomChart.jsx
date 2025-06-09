@@ -31,10 +31,10 @@ ChartJS.register(
 );
 
 import {
-  getActualColor,
   handleResetZoom,
   handleResetStyle,
   exportToPNG,
+  processChartHighlight,
 } from "../utils/chartUtils";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
@@ -91,67 +91,6 @@ const baseChartOptions = {
   },
 };
 
-// Auxiliary functions for CustomChart
-
-/**
- * Updates the dataset's styles to highlight a specific data point.
- *
- * @param {Object} dataset - The dataset to update.
- * @param {number} pointIndex - The index of the point to highlight.
- * @param {string} highlightColor - The color used to highlight the selected point.
- * @param {string} actualColor - The color used for the non-selected points.
- */
-const updateDatasetStyles = (
-  dataset,
-  pointIndex,
-  highlightColor,
-  actualColor
-) => {
-  dataset.pointBackgroundColor = dataset.data.map((_, i) =>
-    i === pointIndex ? highlightColor : actualColor
-  );
-  dataset.pointBorderColor = dataset.data.map((_, i) =>
-    i === pointIndex ? highlightColor : actualColor
-  );
-  dataset.pointRadius = dataset.data.map((_, i) => (i === pointIndex ? 6 : 2));
-};
-
-/**
- * Processes a Chart.js chart instance to highlight a selected data point and adjust the X axis range.
- *
- * @param {Object} chart - The Chart.js instance to update.
- * @param {number} pointIndex - The index of the selected point.
- * @param {number} timestamp - The X-axis value of the selected point (timestamp).
- * @param {string} highlightColor - The color used to highlight the selected point.
- * @param {number} zoomRange - The range used to zoom the X-axis around the selected point.
- * @param {Object} chartRef - A ref to the main chart for data correspondence validation.
- */
-const processChartHighlight = (
-  chart,
-  pointIndex,
-  timestamp,
-  highlightColor,
-  zoomRange,
-  chartRef
-) => {
-  const dataset = chart.data.datasets[0];
-  const actualColor = getActualColor(dataset.pointBackgroundColor);
-
-  // Skip if dataset is too large or data length mismatch (to optimize performance)
-  if (dataset.data.length > MAX_DATA_LENGTH) return;
-  if (chartRef.current.data.datasets[0].data.length !== dataset.data.length)
-    return;
-
-  // Update dataset styles to highlight the selected point
-  updateDatasetStyles(dataset, pointIndex, highlightColor, actualColor);
-
-  // Adjust X axis range to center around the selected timestamp
-  chart.options.scales.x.min = timestamp - zoomRange;
-  chart.options.scales.x.max = timestamp + zoomRange;
-
-  chart.update();
-};
-
 /**
  * CustomChart component renders a chart based on the given table data.
  *
@@ -171,11 +110,6 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
   const maxValue = Math.max(...rows.map((row) => row[0]));
   const zoomRange = parseInt((maxValue * 1000 - minValue * 1000) * 0.02);
   const isLargeDataset = rows.length > MAX_DATA_LENGTH;
-
-  const shouldCaptureImage = useRef(true);
-  useEffect(() => {
-    shouldCaptureImage.current = true; // Allow setChartImage, this will avoid zoomed images
-  }, [table]);
 
   const { isDarkMode: isDark } = useContext(ThemeContext);
 
@@ -324,7 +258,7 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
             <div className="relative inline-block group">
               <Menu shadow="md" width={100}>
                 <Menu.Target>
-                  <Button size="xs" variant="light">
+                  <Button size="xs" variant="light" aria-label="export">
                     <FaDownload />
                   </Button>
                 </Menu.Target>
