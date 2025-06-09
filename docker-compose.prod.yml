@@ -2,6 +2,8 @@ services:
   backend:
     build:
       context: ./backend
+    environment:
+      - PYTHON_ENABLED=${PYTHON_ENABLED:-false}
     ports:
       - "${VITE_BACKEND_PORT}:${VITE_BACKEND_PORT}"
     command: sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${VITE_BACKEND_PORT}"
@@ -14,4 +16,3 @@ services:
         VITE_BACKEND_PORT: ${VITE_BACKEND_PORT}
     ports:
       - "${FRONTEND_PORT}:80"
-    
