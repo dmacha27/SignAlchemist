@@ -145,16 +145,8 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
       onHover: (event, chartElements) => {
         if (chartElements.length === 0) return;
 
-        const elements = chartRef.current.getElementsAtEventForMode(
-          event.native,
-          "nearest",
-          { intersect: true },
-          false
-        );
-        if (elements.length === 0) return;
-
         // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
-        const index = elements[0].index;
+        const index = chartElements[0].index;
         const charts = Object.values(ChartJS.instances).filter(
           (chart) => chart?.config?.options?.label === "signal"
         );

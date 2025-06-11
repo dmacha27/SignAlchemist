@@ -17,7 +17,6 @@ import { FaFilter, FaSignal, FaTools } from "react-icons/fa";
 import SignalTabs from "./common/SignalTabs";
 
 const backendPort = import.meta.env.VITE_BACKEND_PORT;
-console.log(backendPort)
 const backendUrl = `http://localhost:${backendPort}`;
 
 const filtersFields = {

@@ -218,7 +218,7 @@ const ComparisonChart = memo(
               <div className="relative inline-block group">
                 <Menu shadow="md" width={100}>
                   <Menu.Target>
-                    <Button size="xs" variant="light">
+                    <Button size="xs" variant="light" aria-label="export">
                       <FaDownload />
                     </Button>
                   </Menu.Target>
