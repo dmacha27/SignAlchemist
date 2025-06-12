@@ -98,6 +98,8 @@ export function updateDatasetStyles(
 /**
  * Processes a Chart.js chart instance to highlight a selected data point and adjust the X axis range.
  *
+ * Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
+ *
  * @param {Object} chart - The Chart.js instance to update.
  * @param {number} pointIndex - The index of the selected point.
  * @param {number} xvalue - The X-axis value of the selected point.

@@ -108,7 +108,7 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
 
   const minValue = Math.min(...rows.map((row) => row[0])); //seconds
   const maxValue = Math.max(...rows.map((row) => row[0]));
-  const zoomRange = parseInt((maxValue * 1000 - minValue * 1000) * 0.02);
+  const zoomRangeX = parseInt((maxValue * 1000 - minValue * 1000) * 0.02);
   const isLargeDataset = rows.length > MAX_DATA_LENGTH;
 
   const { isDarkMode: isDark } = useContext(ThemeContext);
@@ -127,20 +127,21 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
 
         const pointIndex = elements[0].index;
         const timestamp = chartRef.current.data.datasets[0].data[pointIndex].x;
-        const highlightColor = "#fa6400";
 
-        Object.values(ChartJS.instances)
-          .filter((chart) => chart?.config?.options?.label === "signal")
-          .forEach((chart) =>
-            processChartHighlight(
-              chart,
-              pointIndex,
-              timestamp,
-              highlightColor,
-              zoomRange,
-              chartRef
-            )
+        const highlightColor = "#fa6400";
+        const charts = Object.values(ChartJS.instances).filter(
+          (chart) => chart?.config?.options?.label === "signal"
+        );
+        charts.forEach((chart) => {
+          processChartHighlight(
+            chart,
+            pointIndex,
+            timestamp,
+            highlightColor,
+            zoomRangeX,
+            chartRef
           );
+        });
       },
       onHover: (event, chartElements) => {
         if (chartElements.length === 0) return;

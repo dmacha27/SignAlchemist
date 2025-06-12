@@ -39,6 +39,7 @@ import {
   handleResetZoom,
   handleResetStyle,
   exportToPNG,
+  processChartHighlight,
 } from "../utils/chartUtils";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
@@ -179,49 +180,24 @@ const SpectrumChart = memo(
           );
 
           charts.forEach((chart) => {
-            // Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
-            const dataset = chart.data.datasets[0];
-
-            let actualColor = getActualColor(dataset.pointBackgroundColor);
-
-            if (dataset.data.length > MAX_DATA_LENGTH) return; // No interaction to improve performance
-            if (
-              chartRef.current.data.datasets[0].data.length !==
-              dataset.data.length
-            )
-              return; // No point-to-point correspondence
-
-            dataset.pointBackgroundColor = dataset.data.map((_, i) =>
-              i === pointIndex ? highlightColor : actualColor
+            processChartHighlight(
+              chart,
+              pointIndex,
+              frequence,
+              highlightColor,
+              zoomRangeX,
+              chartRef
             );
-
-            dataset.pointBorderColor = dataset.data.map((_, i) =>
-              i === pointIndex ? highlightColor : actualColor
-            );
-
-            dataset.pointRadius = dataset.data.map((_, i) =>
-              i === pointIndex ? 6 : 2
-            );
-            chart.options.scales.x.min = frequence - zoomRangeX;
-            chart.options.scales.x.max = frequence + zoomRangeX;
-
-            chart.update();
           });
         },
         onHover: (event, chartElements) => {
           if (chartElements.length === 0) return;
 
-          const elements = chartRef.current.getElementsAtEventForMode(
-            event.native,
-            "nearest",
-            { intersect: true },
-            false
-          );
-          if (elements.length === 0) return;
-
           // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
-          const index = elements[0].index;
-          const charts = Object.values(ChartJS.instances);
+          const index = chartElements[0].index;
+          const charts = Object.values(ChartJS.instances).filter(
+            (chart) => chart?.config?.options?.label === "spectrum"
+          );
           charts.forEach((chart) => {
             if (chartRef.current !== chart) {
               if (
@@ -256,8 +232,8 @@ const SpectrumChart = memo(
               pinch: { enabled: !isLargeDataset },
               mode: "x",
               onZoomComplete: ({ chart }) => {
-                chart.options.scales.y.min = undefined;
-                chart.options.scales.y.max = undefined;
+                chart.config.options.scales.y.min = undefined;
+                chart.config.options.scales.y.max = undefined;
                 chart.update();
               },
             },
@@ -313,7 +289,7 @@ const SpectrumChart = memo(
 
     const handleGoToX = (both = false) => {
       if (chartRef.current && goToX !== null) {
-        if (minXValue <= goToX <= maxXValue) {
+        if (minXValue <= goToX && goToX <= maxXValue) {
           const charts = both
             ? Object.values(ChartJS.instances).filter(
                 (chart) => chart?.config?.options?.label === "spectrum"
@@ -326,8 +302,8 @@ const SpectrumChart = memo(
             let actualColor = getActualColor(dataset.pointBackgroundColor);
             handleResetStyle(chart, actualColor);
 
-            chart.options.scales.x.min = goToX - zoomRangeX;
-            chart.options.scales.x.max = goToX + zoomRangeX;
+            chart.config.options.scales.x.min = goToX - zoomRangeX;
+            chart.config.options.scales.x.max = goToX + zoomRangeX;
             chart.update();
           });
         }
@@ -337,8 +313,10 @@ const SpectrumChart = memo(
     const handleYMinMax = (both = false) => {
       if (chartRef.current && yMin !== null && yMax !== null) {
         if (
-          minYValue <= yMin <= maxYValue &&
-          minYValue <= yMax <= maxYValue &&
+          minYValue <= yMin &&
+          yMin <= maxYValue &&
+          minYValue <= yMax &&
+          yMax <= maxYValue &&
           yMin <= yMax
         ) {
           const charts = both
@@ -377,8 +355,8 @@ const SpectrumChart = memo(
               },
             };
 
-            chart.options.scales.y.min = yMin - zoomRangeY;
-            chart.options.scales.y.max = yMax + zoomRangeX;
+            chart.config.options.scales.y.min = yMin - zoomRangeY;
+            chart.config.options.scales.y.max = yMax + zoomRangeX;
             chart.update();
           });
         }
@@ -400,7 +378,7 @@ const SpectrumChart = memo(
               <div className="relative inline-block group">
                 <Menu shadow="md" width={100}>
                   <Menu.Target>
-                    <Button size="xs" variant="light">
+                    <Button size="xs" variant="light" aria-label="export">
                       <FaDownload />
                     </Button>
                   </Menu.Target>
@@ -453,10 +431,18 @@ const SpectrumChart = memo(
                   onChange={(value) => setGoToX(value)}
                 />
                 <div className="flex gap-1">
-                  <Button size="xs" onClick={() => handleGoToX(false)}>
+                  <Button
+                    size="xs"
+                    onClick={() => handleGoToX()}
+                    aria-label="go-x"
+                  >
                     Go
                   </Button>
-                  <Button size="xs" onClick={() => handleGoToX(true)}>
+                  <Button
+                    size="xs"
+                    onClick={() => handleGoToX(true)}
+                    aria-label="both-x"
+                  >
                     Both
                   </Button>
                 </div>
@@ -487,10 +473,18 @@ const SpectrumChart = memo(
                   onChange={(value) => setYMax(value)}
                 />
                 <div className="flex gap-1">
-                  <Button size="xs" onClick={() => handleYMinMax(false)}>
+                  <Button
+                    size="xs"
+                    onClick={() => handleYMinMax()}
+                    aria-label="go-y"
+                  >
                     Go
                   </Button>
-                  <Button size="xs" onClick={() => handleYMinMax(true)}>
+                  <Button
+                    size="xs"
+                    onClick={() => handleYMinMax(true)}
+                    aria-label="both-y"
+                  >
                     Both
                   </Button>
                 </div>
