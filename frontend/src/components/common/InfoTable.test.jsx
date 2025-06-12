@@ -57,7 +57,7 @@ describe("InfoTable", () => {
   test("renders only table when onlyTable is true", () => {
     render(<InfoTable table={mockEDA} onlyTable={true} />);
 
-    // Test whether not in the document: https://github.com/tom-sherman/jest-dom-nottobeindocument-bug/commit/eca61346d83bec2a1d0212b916bc9a8852dcf6e9
+    // Test not in the document: https://github.com/tom-sherman/jest-dom-nottobeindocument-bug/commit/eca61346d83bec2a1d0212b916bc9a8852dcf6e9
     expect(() => screen.getByText("Duration:")).toThrow();
     expect(() => screen.getByText("Sampling rate:")).toThrow();
     expect(() => screen.getByText("Signal length:")).toThrow();

@@ -87,7 +87,7 @@ describe("FilterFields", () => {
     expect(onFieldChange).toHaveBeenCalledWith("order", 1); // Empty input is forbidden, then force value of 1
   });
 
-  it("toggles checkbox and enables/disables lowcut input", () => {
+  it("toggles checkbox and enables/disables input", () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
         <FilterFields fields={mockFields} onFieldChange={onFieldChange} />

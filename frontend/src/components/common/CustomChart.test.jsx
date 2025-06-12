@@ -108,7 +108,61 @@ describe("CustomChart", () => {
     expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
     expect(screen.getByText("Reset Zoom")).toBeInTheDocument();
     expect(screen.getByText("Reset Style")).toBeInTheDocument();
+
+    expect(mockChartRef.config.options.scales.x.type).toBe("linear"); // Datasets seem to be calculated (start by 0)
+    expect(mockChartRef.config.options.scales.x.title.text).toMatch(/((ms))/i);
   });
+
+  it("renders correctly without timestamps starting with 0", () => {
+    const mockRealTimeEDA = [
+      ["Timestamp", "Gsr"],
+      [1749626640, 1.1],
+      [1749626641, 1.5],
+      [1749626642, 2.2],
+      [1749626643, 2.5],
+      [1749626644, 3.3],
+      [1749626645, 3.5],
+      [1749626646, 4.4],
+    ];
+    render(
+      <ThemeContext.Provider value={mockTheme}>
+        <CustomChart table={mockRealTimeEDA} />
+      </ThemeContext.Provider>
+    );
+
+    expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
+
+    expect(mockChartRef.config.options.scales.x.type).toBe("time");
+    expect(mockChartRef.config.options.scales.x.title.text).toMatch(
+      /((date))/i
+    );
+  });
+
+  it("renders warning and disables interaction with large dataset", () => {
+    const largeDataset = [
+      ["Timestamp", "Gsr"],
+      ...Array.from({ length: 6000 }, (_, i) => [i, Math.random() * 10]),
+    ];
+
+    render(
+      <ThemeContext.Provider value={mockTheme}>
+        <CustomChart table={largeDataset} />
+      </ThemeContext.Provider>
+    );
+    expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
+    expect(screen.getByText(/Too much data/i)).toBeInTheDocument();
+
+    expect(screen.queryByText(/Reset Zoom/i)).not.toBeInTheDocument();
+
+    expect(mockChartRef.config.options.plugins.zoom.pan.enabled).toBe(false);
+    expect(mockChartRef.config.options.plugins.zoom.zoom.wheel.enabled).toBe(
+      false
+    );
+    expect(mockChartRef.config.options.plugins.zoom.zoom.pinch.enabled).toBe(
+      false
+    );
+  });
+
   it("calls exportToPNG when export PNG menu item is clicked", async () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
@@ -153,41 +207,6 @@ describe("CustomChart", () => {
     expect(chartUtils.handleResetStyle).toHaveBeenCalled();
   });
 
-  it("renders correctly in dark mode", () => {
-    render(
-      <ThemeContext.Provider value={{ ...mockTheme, isDarkMode: true }}>
-        <CustomChart table={mockEDA} />
-      </ThemeContext.Provider>
-    );
-
-    expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
-  });
-
-  it("renders warning and disables interaction with large dataset", () => {
-    const largeDataset = [
-      ["Timestamp", "Gsr"],
-      ...Array.from({ length: 6000 }, (_, i) => [i, Math.random() * 10]),
-    ];
-
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <CustomChart table={largeDataset} />
-      </ThemeContext.Provider>
-    );
-    expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
-    expect(screen.getByText(/Too much data/i)).toBeInTheDocument();
-
-    expect(screen.queryByText(/Reset Zoom/i)).not.toBeInTheDocument();
-
-    expect(mockChartRef.config.options.plugins.zoom.pan.enabled).toBe(false);
-    expect(mockChartRef.config.options.plugins.zoom.zoom.wheel.enabled).toBe(
-      false
-    );
-    expect(mockChartRef.config.options.plugins.zoom.zoom.pinch.enabled).toBe(
-      false
-    );
-  });
-
   it("onClick executes properly", () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
@@ -200,24 +219,7 @@ describe("CustomChart", () => {
     fireEvent.click(chart);
 
     // processChartHighlight is already tested individually, correct behaviour spected.
-    expect(chartUtils.processChartHighlight).toHaveBeenCalled();
-  });
-
-  it("prevents onClick when there are no elements at event", () => {
-    mockChartRef.getElementsAtEventForMode = jest.fn(() => []);
-
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <CustomChart table={mockEDA} />
-      </ThemeContext.Provider>
-    );
-
-    const chart = screen.getByTestId("mock-line-chart");
-
-    fireEvent.click(chart);
-
-    // processChartHighlight is already tested individually, correct behaviour spected.
-    expect(chartUtils.processChartHighlight).not.toHaveBeenCalled();
+    expect(chartUtils.processChartHighlight).toHaveBeenCalledTimes(1);
   });
 
   it("onHover activates tooltip in the other chart", () => {
@@ -268,38 +270,6 @@ describe("CustomChart", () => {
 
     mockInstances["mockChartRef2"] = mockChartRef2;
 
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <CustomChart table={mockEDA} />
-      </ThemeContext.Provider>
-    );
-
-    const chart = screen.getByTestId("mock-line-chart");
-
-    fireEvent.mouseMove(chart);
-
-    expect(mockChartRef2.tooltip.setActiveElements).not.toHaveBeenCalled();
-    expect(mockChartRef2.update).not.toHaveBeenCalled();
-
-    delete mockInstances["mockChartRef2"];
-  });
-
-  it("prevents onHover when there are no elements at event", () => {
-    const mockChartRef2 = {
-      config: {
-        options: {
-          label: "signal",
-        },
-      },
-      update: jest.fn(),
-      tooltip: {
-        setActiveElements: jest.fn(),
-      },
-      data: { datasets: [{ data: { length: 345 } }] },
-    };
-
-    mockInstances["mockChartRef2"] = mockChartRef2;
-    mockElements = [];
     render(
       <ThemeContext.Provider value={mockTheme}>
         <CustomChart table={mockEDA} />

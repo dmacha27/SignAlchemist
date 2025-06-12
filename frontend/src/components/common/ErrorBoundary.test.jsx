@@ -16,11 +16,6 @@ describe("ErrorBoundary", () => {
   });
 
   test("renders message instead of child when the later throws error", () => {
-    // https://krasimirtsonev.com/blog/article/jest-mock-console-methods + ChatGPT
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
     render(
       <ErrorBoundary>
         <BadChartChild />

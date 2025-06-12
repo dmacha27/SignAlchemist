@@ -79,11 +79,11 @@ describe("ComparisonChart", () => {
     expect(screen.getByText("Reset Zoom")).toBeInTheDocument();
     expect(mockChartRef.data.datasets).toHaveLength(2); // Two datasets (2 lines)
 
-    expect(mockChartRef.config.options.scales.x.type).toBe("linear");
+    expect(mockChartRef.config.options.scales.x.type).toBe("linear"); // Datasets seem to be calculated (start by 0)
     expect(mockChartRef.config.options.scales.x.title.text).toMatch(/((ms))/i);
   });
 
-  it("renders correctly without timestamps starting with 0 in dark mode", () => {
+  it("renders correctly without timestamps starting with 0", () => {
     const mockRealTimeEDA = [
       ["Timestamp", "Gsr"],
       [1749626640, 1.1],
