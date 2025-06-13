@@ -40,7 +40,6 @@ import {
   handleResetZoom,
   handleResetStyle,
   exportToPNG,
-  processChartHighlight,
 } from "../utils/chartUtils";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
@@ -57,7 +56,7 @@ const baseChartOptions = {
     },
     tooltip: {
       mode: "index",
-      intersect: true,
+      intersect: false,
       backgroundColor: "#fff",
       titleColor: "#222",
       bodyColor: "#333",

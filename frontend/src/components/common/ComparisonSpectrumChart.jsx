@@ -20,6 +20,7 @@ import { Button, Menu, NumberInput, Group } from "@mantine/core";
 import { FaDownload, FaImage, FaSearch, FaHandPaper } from "react-icons/fa";
 import Draggable from "react-draggable";
 
+import { diff, average } from "../utils/dataUtils.js";
 import { exportToPNG, handleResetZoom } from "../utils/chartUtils";
 
 ChartJS.register(
@@ -48,8 +49,8 @@ const baseChartOptions = {
       position: "top",
     },
     tooltip: {
-      mode: "index",
-      intersect: false,
+      mode: "nearest",
+      intersect: true,
       backgroundColor: "#fff",
       titleColor: "#222",
       bodyColor: "#333",
@@ -107,40 +108,39 @@ function processFFT(table, samplingRate) {
  *
  */
 const ComparisonSpectrumChart = memo(
-  ({ table1, table2, samplingRate, name2, name1 = "Original" }) => {
+  ({ table1, table2, name2, name1 = "Original" }) => {
     const chartRef = useRef(null);
     const draggableRef = useRef(null);
 
-    const dataset1 = useMemo(
-      () => processFFT(table1, samplingRate),
-      [table1, samplingRate]
-    );
-    const dataset2 = useMemo(
-      () => processFFT(table2, samplingRate),
-      [table2, samplingRate]
-    );
+    const samplingRate1 =
+      1 / average(diff(table1.slice(1).map((row) => row[0])));
+    const dataset1 = useMemo(() => processFFT(table1, samplingRate1), [table1]);
 
-    const isLargeDataset = dataset1.length > MAX_DATA_LENGTH;
+    const samplingRate2 =
+      1 / average(diff(table2.slice(1).map((row) => row[0])));
+    const dataset2 = useMemo(() => processFFT(table2, samplingRate2), [table2]);
 
-    const minXValue = useMemo(
-      () => Math.min(...dataset1.map((d) => d.x)),
-      [dataset1]
-    );
-    const maxXValue = useMemo(
-      () => Math.max(...dataset1.map((d) => d.x)),
-      [dataset1]
-    );
-    const minYValue = useMemo(
-      () => Math.min(...dataset1.map((d) => d.y)),
-      [dataset1]
-    );
-    const maxYValue = useMemo(
-      () => Math.max(...dataset1.map((d) => d.y)),
-      [dataset1]
-    );
+    const isLargeDataset =
+      dataset1.length > MAX_DATA_LENGTH || dataset2.length > MAX_DATA_LENGTH;
+
+    const minXValue = useMemo(() => {
+      return Math.min(...dataset1.map((d) => d.x), ...dataset2.map((d) => d.x));
+    }, [dataset1, dataset2]);
+
+    const maxXValue = useMemo(() => {
+      return Math.max(...dataset1.map((d) => d.x), ...dataset2.map((d) => d.x));
+    }, [dataset1, dataset2]);
+
+    const minYValue = useMemo(() => {
+      return Math.min(...dataset1.map((d) => d.y), ...dataset2.map((d) => d.y));
+    }, [dataset1, dataset2]);
+
+    const maxYValue = useMemo(() => {
+      return Math.max(...dataset1.map((d) => d.y), ...dataset2.map((d) => d.y));
+    }, [dataset1, dataset2]);
 
     const zoomRangeX = (maxXValue - minXValue) * 0.02;
-    const zoomRangeY = (maxYValue - minYValue) * 0.02;
+    const zoomRangeY = (maxYValue - minYValue) * 0.001;
 
     const [goToX, setGoToX] = useState(null);
     const [yMin, setYMin] = useState(null);
@@ -257,6 +257,7 @@ const ComparisonSpectrumChart = memo(
         minYValue <= yMin &&
         yMax <= maxYValue
       ) {
+        console.log(zoomRangeY, yMax);
         handleResetZoom(chartRef.current);
         chartRef.current.options.scales.y.min = yMin - zoomRangeY;
         chartRef.current.options.scales.y.max = yMax + zoomRangeY;
@@ -279,7 +280,7 @@ const ComparisonSpectrumChart = memo(
               <div className="relative inline-block group">
                 <Menu shadow="md" width={100}>
                   <Menu.Target>
-                    <Button size="xs" variant="light">
+                    <Button size="xs" variant="light" aria-label="export">
                       <FaDownload />
                     </Button>
                   </Menu.Target>
@@ -331,7 +332,7 @@ const ComparisonSpectrumChart = memo(
                 max={maxXValue}
                 onChange={(value) => setGoToX(value)}
               />
-              <Button size="xs" onClick={handleGoToX}>
+              <Button size="xs" onClick={handleGoToX} aria-label="go-x">
                 Go
               </Button>
             </Group>
@@ -360,7 +361,7 @@ const ComparisonSpectrumChart = memo(
                 max={Infinity}
                 onChange={(value) => setYMax(value)}
               />
-              <Button size="xs" onClick={handleYMinMax}>
+              <Button size="xs" onClick={handleYMinMax} aria-label="go-y">
                 Go
               </Button>
             </Group>
@@ -378,7 +379,6 @@ ComparisonSpectrumChart.propTypes = {
   table2: PropTypes.arrayOf(
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number]))
   ).isRequired,
-  samplingRate: PropTypes.number.isRequired,
   name1: PropTypes.string,
   name2: PropTypes.string.isRequired,
 };

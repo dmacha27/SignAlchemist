@@ -46,7 +46,7 @@ const baseChartOptions = {
       display: true,
     },
     tooltip: {
-      mode: "index",
+      mode: "nearest",
       intersect: true,
       backgroundColor: "#fff",
       titleColor: "#222",
