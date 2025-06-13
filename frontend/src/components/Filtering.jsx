@@ -313,7 +313,6 @@ const Filtering = () => {
         rightIcon={<FaFilter className="my-auto text-green-500" />}
         chartDataOriginal={chartDataOriginal}
         chartDataProcessed={chartDataFiltered}
-        samplingRate={samplingRate}
         isRequesting={isRequesting}
       />
 

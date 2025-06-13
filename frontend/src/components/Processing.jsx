@@ -450,7 +450,6 @@ const Processing = () => {
             rightIcon={<FaWaveSquare className="my-auto text-green-500" />}
             chartDataOriginal={chartDataOriginal}
             chartDataProcessed={chartDataProcessed}
-            samplingRate={samplingRate}
           />
         </div>
 

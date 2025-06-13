@@ -213,7 +213,6 @@ const Resampling = () => {
         rightIcon={<FaExpandAlt className="my-auto text-green-500" />}
         chartDataOriginal={chartDataOriginal}
         chartDataProcessed={chartDataResampled}
-        samplingRate={samplingRate}
         isRequesting={isRequesting}
       />
     </div>

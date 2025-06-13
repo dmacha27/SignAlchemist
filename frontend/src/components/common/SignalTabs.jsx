@@ -20,7 +20,6 @@ import LoaderMessage from "./LoaderMessage";
  * @param {JSX.Element} props.rightIcon - The icon displayed in the right panel header.
  * @param {Array|Object} props.chartDataOriginal - Data for the original signal chart.
  * @param {Array|Object} props.chartDataProcessed - Data for the processed signal chart.
- * @param {number} props.samplingRate - Sampling rate used for spectrum charts.
  * @param {boolean} [props.isRequesting=false] - Whether the processed data is being requested.
  */
 const SignalTabs = ({
@@ -28,7 +27,6 @@ const SignalTabs = ({
   rightIcon,
   chartDataOriginal,
   chartDataProcessed,
-  samplingRate,
   isRequesting = false,
 }) => {
   return (
@@ -164,10 +162,7 @@ const SignalTabs = ({
                 </div>
                 <div className="p-4">
                   {chartDataOriginal ? (
-                    <SpectrumChart
-                      table={chartDataOriginal}
-                      samplingRate={samplingRate}
-                    />
+                    <SpectrumChart table={chartDataOriginal} />
                   ) : (
                     <LoaderMessage message="Waiting for request..." />
                   )}
@@ -185,7 +180,6 @@ const SignalTabs = ({
                   ) : chartDataProcessed ? (
                     <SpectrumChart
                       table={chartDataProcessed}
-                      samplingRate={samplingRate}
                       defaultColor="#50C878"
                     />
                   ) : (
@@ -211,7 +205,6 @@ const SignalTabs = ({
                   <ComparisonSpectrumChart
                     table1={chartDataOriginal}
                     table2={chartDataProcessed}
-                    samplingRate={samplingRate}
                     name2={rightTitle}
                   />
                 ) : (
@@ -237,7 +230,6 @@ SignalTabs.propTypes = {
   chartDataProcessed: PropTypes.arrayOf(
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number]))
   ).isRequired,
-  samplingRate: PropTypes.number.isRequired,
   isRequesting: PropTypes.bool.isRequired,
 };
 
