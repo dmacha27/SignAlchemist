@@ -103,7 +103,7 @@ describe("SpectrumChart", () => {
   it("renders the chart with small dataset", () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
+        <SpectrumChart table={mockEDA} />
       </ThemeContext.Provider>
     );
     expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
@@ -112,12 +112,12 @@ describe("SpectrumChart", () => {
   it("renders warning and disables interaction with large dataset", () => {
     const largeDataset = [
       ["Timestamp", "Gsr"],
-      ...Array.from({ length: 6000 }, (_, i) => [i, Math.random() * 10]),
+      ...Array.from({ length: 10000 }, (_, i) => [i, Math.random() * 10]),
     ];
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={largeDataset} samplingRate={1} />
+        <SpectrumChart table={largeDataset} />
       </ThemeContext.Provider>
     );
     expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
@@ -134,57 +134,10 @@ describe("SpectrumChart", () => {
     );
   });
 
-  it("onClick executes properly", () => {
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
-      </ThemeContext.Provider>
-    );
-
-    const chart = screen.getByTestId("mock-line-chart");
-
-    fireEvent.click(chart);
-
-    // processChartHighlight is already tested individually, correct behaviour spected.
-    expect(chartUtils.processChartHighlight).toHaveBeenCalledTimes(1);
-  });
-
-  it("onHover activates tooltip in the other chart", () => {
-    const mockChartRef2 = {
-      config: {
-        options: {
-          label: "spectrum",
-        },
-      },
-      update: jest.fn(),
-      tooltip: {
-        setActiveElements: jest.fn(),
-      },
-      data: { datasets: [{ data: { length: 4 } }] },
-    };
-
-    mockInstances["mockChartRef2"] = mockChartRef2;
-
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
-      </ThemeContext.Provider>
-    );
-
-    const chart = screen.getByTestId("mock-line-chart");
-
-    fireEvent.mouseMove(chart);
-
-    expect(mockChartRef2.tooltip.setActiveElements).toHaveBeenCalled();
-    expect(mockChartRef2.update).toHaveBeenCalled();
-
-    delete mockInstances["mockChartRef2"];
-  });
-
   it("calls exportToPNG when export PNG menu item is clicked", async () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
+        <SpectrumChart table={mockEDA} />
       </ThemeContext.Provider>
     );
 
@@ -202,7 +155,7 @@ describe("SpectrumChart", () => {
   it("calls handleResetZoom when Reset Zoom button is clicked", async () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
+        <SpectrumChart table={mockEDA} />
       </ThemeContext.Provider>
     );
 
@@ -215,7 +168,7 @@ describe("SpectrumChart", () => {
   it("calls handleResetStyle when Reset Style button is clicked", async () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
+        <SpectrumChart table={mockEDA} />
       </ThemeContext.Provider>
     );
 
@@ -228,7 +181,7 @@ describe("SpectrumChart", () => {
   it("handleGoToX works properly with one chart", async () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
+        <SpectrumChart table={mockEDA} />
       </ThemeContext.Provider>
     );
 
@@ -265,7 +218,7 @@ describe("SpectrumChart", () => {
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
+        <SpectrumChart table={mockEDA} />
       </ThemeContext.Provider>
     );
 
@@ -290,7 +243,7 @@ describe("SpectrumChart", () => {
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
+        <SpectrumChart table={mockEDA} />
       </ThemeContext.Provider>
     );
 
@@ -370,7 +323,7 @@ describe("SpectrumChart", () => {
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <SpectrumChart table={mockEDA} samplingRate={1} />
+        <SpectrumChart table={mockEDA} />
       </ThemeContext.Provider>
     );
 

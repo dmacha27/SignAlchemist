@@ -1,5 +1,5 @@
-import { render, screen, userEvent } from "../../test-utils";
-import ComparisonChart from "./ComparisonChart";
+import { render, screen, userEvent, fireEvent } from "../../test-utils";
+import SpectrumComparisonChart from "./ComparisonSpectrumChart";
 import { ThemeContext } from "../../contexts/ThemeContext";
 import * as chartUtils from "../utils/chartUtils";
 
@@ -22,6 +22,7 @@ const mockEDA = [
   [4, 3.3],
   [5, 3.5],
   [6, 4.4],
+  [7, 4.7],
 ];
 
 jest.mock("react-chartjs-2", () => {
@@ -29,6 +30,10 @@ jest.mock("react-chartjs-2", () => {
     mockChartRef.config.options = {
       ...options,
       label: "signal",
+      scales: {
+        y: {},
+        x: {},
+      },
     };
     mockChartRef.data = data;
     ref.current = mockChartRef;
@@ -54,7 +59,7 @@ const mockTheme = {
   toggleDarkMode: jest.fn(),
 };
 
-describe("ComparisonChart", () => {
+describe("ComparisonSpectrumChart", () => {
   beforeEach(() => {
     jest.spyOn(chartUtils, "exportToPNG").mockImplementation(() => {});
     jest.spyOn(chartUtils, "handleResetZoom").mockImplementation(() => {});
@@ -72,56 +77,31 @@ describe("ComparisonChart", () => {
   it("renders the chart with small dataset", () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />
-      </ThemeContext.Provider>
-    );
-    expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
-    expect(screen.getByText("Reset Zoom")).toBeInTheDocument();
-    expect(mockChartRef.data.datasets).toHaveLength(2); // Two datasets (2 lines)
-
-    expect(mockChartRef.config.options.scales.x.type).toBe("linear"); // Datasets seem to be calculated (start by 0)
-    expect(mockChartRef.config.options.scales.x.title.text).toMatch(/((ms))/i);
-  });
-
-  it("renders correctly without timestamps starting with 0", () => {
-    const mockRealTimeEDA = [
-      ["Timestamp", "Gsr"],
-      [1749626640, 1.1],
-      [1749626641, 1.5],
-      [1749626642, 2.2],
-      [1749626643, 2.5],
-      [1749626644, 3.3],
-      [1749626645, 3.5],
-      [1749626646, 4.4],
-    ];
-
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart
-          table1={mockRealTimeEDA}
-          table2={mockRealTimeEDA}
+        <SpectrumComparisonChart
+          table1={mockEDA}
+          table2={mockEDA}
+          samplingRate={1}
           name2="Test"
         />
       </ThemeContext.Provider>
     );
-
     expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
-
-    expect(mockChartRef.config.options.scales.x.type).toBe("time");
-    expect(mockChartRef.config.options.scales.x.title.text).toMatch(
-      /((date))/i
-    );
   });
 
   it("renders warning and disables interaction with large dataset", () => {
     const largeDataset = [
       ["Timestamp", "Gsr"],
-      ...Array.from({ length: 6000 }, (_, i) => [i, Math.random() * 10]),
+      ...Array.from({ length: 10000 }, (_, i) => [i, Math.random() * 10]),
     ];
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart table1={largeDataset} table2={mockEDA} name2="Test" />
+        <SpectrumComparisonChart
+          table1={largeDataset}
+          table2={largeDataset}
+          samplingRate={1}
+          name2="Test"
+        />
       </ThemeContext.Provider>
     );
     expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
@@ -141,7 +121,12 @@ describe("ComparisonChart", () => {
   it("calls exportToPNG when export PNG menu item is clicked", async () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />
+        <SpectrumComparisonChart
+          table1={mockEDA}
+          table2={mockEDA}
+          samplingRate={1}
+          name2="Test"
+        />
       </ThemeContext.Provider>
     );
 
@@ -159,7 +144,12 @@ describe("ComparisonChart", () => {
   it("calls handleResetZoom when Reset Zoom button is clicked", async () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />
+        <SpectrumComparisonChart
+          table1={mockEDA}
+          table2={mockEDA}
+          samplingRate={1}
+          name2="Test"
+        />
       </ThemeContext.Provider>
     );
 
@@ -167,5 +157,55 @@ describe("ComparisonChart", () => {
     await userEvent.click(resetZoomButton);
 
     expect(chartUtils.handleResetZoom).toHaveBeenCalled();
+  });
+
+  it("handleGoToX works properly", async () => {
+    render(
+      <ThemeContext.Provider value={mockTheme}>
+        <SpectrumComparisonChart
+          table1={mockEDA}
+          table2={mockEDA}
+          samplingRate={1}
+          name2="Test"
+        />
+      </ThemeContext.Provider>
+    );
+
+    const setGoToX = screen.getByPlaceholderText("Go to X...");
+    fireEvent.change(setGoToX, { target: { value: 0.2 } });
+
+    const goXButton = screen.getByLabelText("go-x");
+    await userEvent.click(goXButton);
+
+    expect(chartUtils.handleResetZoom).toHaveBeenCalledTimes(1);
+    expect(mockChartRef.update).toHaveBeenCalled();
+  });
+
+  it("handleYMinMax works properly", async () => {
+    const yMin = 5;
+    const yMax = 15;
+
+    render(
+      <ThemeContext.Provider value={mockTheme}>
+        <SpectrumComparisonChart
+          table1={mockEDA}
+          table2={mockEDA}
+          samplingRate={1}
+          name2="Test"
+        />
+      </ThemeContext.Provider>
+    );
+
+    const setYMin = screen.getByPlaceholderText("Y min");
+    fireEvent.change(setYMin, { target: { value: yMin } });
+
+    const setYMax = screen.getByPlaceholderText("Y max");
+    fireEvent.change(setYMax, { target: { value: yMax } });
+
+    const goXButton = screen.getByLabelText("go-y");
+    await userEvent.click(goXButton);
+
+    expect(chartUtils.handleResetZoom).toHaveBeenCalledTimes(1);
+    expect(mockChartRef.update).toHaveBeenCalled();
   });
 });

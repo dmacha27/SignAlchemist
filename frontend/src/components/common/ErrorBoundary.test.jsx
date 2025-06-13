@@ -16,6 +16,7 @@ describe("ErrorBoundary", () => {
   });
 
   test("renders message instead of child when the later throws error", () => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
     render(
       <ErrorBoundary>
         <BadChartChild />

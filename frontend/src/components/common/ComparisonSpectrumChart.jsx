@@ -176,8 +176,8 @@ const ComparisonSpectrumChart = memo(
               pinch: { enabled: !isLargeDataset },
               mode: "x",
               onZoomComplete: ({ chart }) => {
-                chart.options.scales.y.min = undefined;
-                chart.options.scales.y.max = undefined;
+                chart.config.options.scales.y.min = undefined;
+                chart.config.options.scales.y.max = undefined;
                 chart.update();
               },
             },
@@ -242,8 +242,8 @@ const ComparisonSpectrumChart = memo(
         goToX <= maxXValue
       ) {
         handleResetZoom(chartRef.current);
-        chartRef.current.options.scales.x.min = goToX - zoomRangeX;
-        chartRef.current.options.scales.x.max = goToX + zoomRangeX;
+        chartRef.current.config.options.scales.x.min = goToX - zoomRangeX;
+        chartRef.current.config.options.scales.x.max = goToX + zoomRangeX;
         chartRef.current.update();
       }
     };
@@ -257,10 +257,9 @@ const ComparisonSpectrumChart = memo(
         minYValue <= yMin &&
         yMax <= maxYValue
       ) {
-        console.log(zoomRangeY, yMax);
         handleResetZoom(chartRef.current);
-        chartRef.current.options.scales.y.min = yMin - zoomRangeY;
-        chartRef.current.options.scales.y.max = yMax + zoomRangeY;
+        chartRef.current.config.options.scales.y.min = yMin - zoomRangeY;
+        chartRef.current.config.options.scales.y.max = yMax + zoomRangeY;
         chartRef.current.update();
       }
     };
