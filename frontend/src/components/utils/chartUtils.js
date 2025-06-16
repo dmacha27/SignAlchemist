@@ -1,34 +1,14 @@
 /**
- * getActualColor function returns the actual color of a chart point.
- * If the color is a string, it returns the string.
- * If it's an array, it looks for a color other than '#fa6400' or 'gray' and returns it.
- *
- * @param {string|Array} pointBackgroundColor - The color of the chart points, either as a string or an array of colors.
- * @returns {string|null} The actual color for the chart points or null if no valid color is found.
- */
-export function getActualColor(pointBackgroundColor) {
-  if (typeof pointBackgroundColor === "string") return pointBackgroundColor;
-
-  for (const color of pointBackgroundColor) {
-    if (color !== "#fa6400" && color !== "gray") {
-      return color;
-    }
-  }
-
-  return pointBackgroundColor[0] || null;
-}
-
-/**
  * handleResetZoom function resets the zoom on the provided chart by setting the x and y scale min/max to undefined.
  *
  * @param {Object} chart - The chart object to reset the zoom on.
  */
 export function handleResetZoom(chart) {
   if (!chart) return;
-  chart.options.scales.x.min = undefined;
-  chart.options.scales.x.max = undefined;
-  chart.options.scales.y.min = undefined;
-  chart.options.scales.y.max = undefined;
+  chart.config.options.scales.x.min = undefined;
+  chart.config.options.scales.x.max = undefined;
+  chart.config.options.scales.y.min = undefined;
+  chart.config.options.scales.y.max = undefined;
   chart.update();
 }
 
@@ -116,7 +96,7 @@ export function processChartHighlight(
   chartRef
 ) {
   const dataset = chart.data.datasets[0];
-  const actualColor = getActualColor(dataset.pointBackgroundColor);
+  const actualColor = chart.config.options.actualColor;
 
   // Skip if dataset is too large or data length mismatch (to optimize performance)
   if (dataset.data.length > MAX_DATA_LENGTH) return;
@@ -127,8 +107,8 @@ export function processChartHighlight(
   updateDatasetStyles(dataset, pointIndex, highlightColor, actualColor);
 
   // Adjust X axis range to center around the selected timestamp
-  chart.options.scales.x.min = xvalue - zoomRange;
-  chart.options.scales.x.max = xvalue + zoomRange;
+  chart.config.options.scales.x.min = xvalue - zoomRange;
+  chart.config.options.scales.x.max = xvalue + zoomRange;
 
   chart.update();
 }

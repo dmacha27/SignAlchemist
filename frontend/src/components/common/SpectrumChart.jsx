@@ -36,7 +36,6 @@ ChartJS.register(
 );
 
 import {
-  getActualColor,
   handleResetZoom,
   handleResetStyle,
   exportToPNG,
@@ -70,7 +69,7 @@ const baseChartOptions = {
       position: "bottom",
       title: {
         display: true,
-        text: "Frequence (Hz)",
+        text: "Frequency (Hz)",
         color: "#111",
         font: { size: 14, weight: "bold" },
       },
@@ -114,44 +113,36 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
   const [yMin, setYMin] = useState(null);
   const [yMax, setYMax] = useState(null);
 
-  const {
-    both_data,
-    minXValue,
-    maxXValue,
-    minYValue,
-    maxYValue,
-    zoomRangeX,
-    zoomRangeY,
-  } = useMemo(() => {
-    const samplingRate = 1 / average(diff(table.slice(1).map((row) => row[0])));
-    const paddedSignal = padToPowerOfTwo(signal);
-    const phasors = fft(paddedSignal);
-    const frequencies = fftUtil.fftFreq(phasors, samplingRate);
-    const magnitudes = fftUtil.fftMag(phasors);
+  const { both_data, minXValue, maxXValue, minYValue, maxYValue, zoomRangeX } =
+    useMemo(() => {
+      const samplingRate =
+        1 / average(diff(table.slice(1).map((row) => row[0])));
+      const paddedSignal = padToPowerOfTwo(signal);
+      const phasors = fft(paddedSignal);
+      const frequencies = fftUtil.fftFreq(phasors, samplingRate);
+      const magnitudes = fftUtil.fftMag(phasors);
 
-    const both_data = frequencies.map((f, ix) => ({
-      frequency: f,
-      magnitude: magnitudes[ix],
-    }));
+      const both_data = frequencies.map((f, ix) => ({
+        frequency: f,
+        magnitude: magnitudes[ix],
+      }));
 
-    const minXValue = Math.min(...frequencies);
-    const maxXValue = Math.max(...frequencies);
-    const minYValue = Math.min(...magnitudes);
-    const maxYValue = Math.max(...magnitudes);
+      const minXValue = Math.min(...frequencies);
+      const maxXValue = Math.max(...frequencies);
+      const minYValue = Math.min(...magnitudes);
+      const maxYValue = Math.max(...magnitudes);
 
-    const zoomRangeX = (maxXValue - minXValue) * 0.02;
-    const zoomRangeY = (maxYValue - minYValue) * 0.02;
+      const zoomRangeX = (maxXValue - minXValue) * 0.02;
 
-    return {
-      both_data,
-      minXValue,
-      maxXValue,
-      minYValue,
-      maxYValue,
-      zoomRangeX,
-      zoomRangeY,
-    };
-  }, [signal]);
+      return {
+        both_data,
+        minXValue,
+        maxXValue,
+        minYValue,
+        maxYValue,
+        zoomRangeX,
+      };
+    }, [signal]);
 
   const isLargeDataset = both_data.length > MAX_DATA_LENGTH;
 
@@ -160,6 +151,7 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
   const chartOptions = useMemo(
     () => ({
       ...baseChartOptions,
+      actualColor: defaultColor,
       plugins: {
         ...baseChartOptions.plugins,
         tooltip: {
@@ -246,9 +238,9 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
         charts.forEach((chart) => {
           const dataset = chart.data.datasets[0];
           if (dataset.data.length > MAX_DATA_LENGTH) return;
+          const actualColor = chart.config.options.actualColor;
 
           handleResetZoom(chart);
-          const actualColor = getActualColor(dataset.pointBackgroundColor);
           handleResetStyle(chart, actualColor);
 
           chart.config.options.scales.x.min = goToX - zoomRangeX;
@@ -276,9 +268,9 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
         charts.forEach((chart) => {
           const dataset = chart.data.datasets[0];
           if (dataset.data.length > MAX_DATA_LENGTH) return;
+          const actualColor = chart.config.options.actualColor;
 
           handleResetZoom(chart);
-          const actualColor = getActualColor(dataset.pointBackgroundColor);
           handleResetStyle(chart, actualColor);
 
           dataset.pointBackgroundColor = dataset.data.map(({ y }) => {
@@ -306,8 +298,9 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
             },
           };
 
+          const zoomRangeY = (yMax - yMin) * 0.02;
           chart.config.options.scales.y.min = yMin - zoomRangeY;
-          chart.config.options.scales.y.max = yMax + zoomRangeX;
+          chart.config.options.scales.y.max = yMax + zoomRangeY;
           chart.update();
         });
       }

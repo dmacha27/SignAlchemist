@@ -59,10 +59,6 @@ describe("ComparisonChart", () => {
     jest.spyOn(chartUtils, "exportToPNG").mockImplementation(() => {});
     jest.spyOn(chartUtils, "handleResetZoom").mockImplementation(() => {});
     jest.spyOn(chartUtils, "handleResetStyle").mockImplementation(() => {});
-    jest.spyOn(chartUtils, "getActualColor").mockReturnValue("#2196f3");
-    jest
-      .spyOn(chartUtils, "processChartHighlight")
-      .mockImplementation(() => {});
   });
 
   afterEach(() => {

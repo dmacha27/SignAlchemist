@@ -88,10 +88,6 @@ describe("SpectrumChart", () => {
     jest.spyOn(chartUtils, "exportToPNG").mockImplementation(() => {});
     jest.spyOn(chartUtils, "handleResetZoom").mockImplementation(() => {});
     jest.spyOn(chartUtils, "handleResetStyle").mockImplementation(() => {});
-    jest.spyOn(chartUtils, "getActualColor").mockReturnValue("#2196f3");
-    jest
-      .spyOn(chartUtils, "processChartHighlight")
-      .mockImplementation(() => {});
 
     mockElements = [{ index: 2 }];
   });
@@ -192,7 +188,6 @@ describe("SpectrumChart", () => {
     await userEvent.click(goXButton);
 
     expect(chartUtils.handleResetZoom).toHaveBeenCalledTimes(1);
-    expect(chartUtils.getActualColor).toHaveBeenCalledTimes(1);
     expect(chartUtils.handleResetStyle).toHaveBeenCalledTimes(1);
     expect(mockChartRef.update).toHaveBeenCalled();
   });
@@ -229,7 +224,6 @@ describe("SpectrumChart", () => {
     await userEvent.click(bothXButton);
 
     expect(chartUtils.handleResetZoom).toHaveBeenCalledTimes(2);
-    expect(chartUtils.getActualColor).toHaveBeenCalledTimes(2);
     expect(chartUtils.handleResetStyle).toHaveBeenCalledTimes(2);
     expect(mockChartRef2.update).toHaveBeenCalled();
 
@@ -257,7 +251,6 @@ describe("SpectrumChart", () => {
     await userEvent.click(goXButton);
 
     expect(chartUtils.handleResetZoom).toHaveBeenCalledTimes(1);
-    expect(chartUtils.getActualColor).toHaveBeenCalledTimes(1);
     expect(chartUtils.handleResetStyle).toHaveBeenCalledTimes(1);
     expect(mockChartRef.update).toHaveBeenCalled();
 
@@ -337,7 +330,6 @@ describe("SpectrumChart", () => {
     await userEvent.click(goXButton);
 
     expect(chartUtils.handleResetZoom).toHaveBeenCalledTimes(2);
-    expect(chartUtils.getActualColor).toHaveBeenCalledTimes(2);
     expect(chartUtils.handleResetStyle).toHaveBeenCalledTimes(2);
     expect(mockChartRef2.update).toHaveBeenCalled();
 

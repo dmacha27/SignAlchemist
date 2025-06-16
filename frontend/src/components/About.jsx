@@ -25,7 +25,7 @@ const About = () => {
               This open-source web application was designed to simplify signal
               processing, particularly for physiological data such as EDA and
               PPG. However, it is flexible enough to work with any time-series
-              signal{" "}
+              signal
             </p>
             <p className="mt-2">
               It offers an intuitive, modular interface where you can resample,
@@ -40,7 +40,7 @@ const About = () => {
               tool where you can connect blocks for filtering, outlier
               detection, and resampling, with more options to come! It's a very
               user-friendly and flexible space for building and experimenting
-              with signal processing pipelines.{" "}
+              with signal processing pipelines.
             </p>
             <p className="mt-2">
               For physiological signals, the app also provides automatic quality
@@ -58,7 +58,6 @@ const About = () => {
             >
               Try it out
             </button>
-
           </div>
 
           <div className="md:col-span-4">
@@ -79,13 +78,13 @@ const About = () => {
           </div>
         </div>
         <p className="mt-4 text-xs text-center italic">
-              This software is part of the project PID2023-150694OA-I00 funded
-              by the Spanish State Research Agency (Agencia Estatal de
-              Investigación, AEI) through the Ministry of Science, Innovation
-              and Universities (MICIU/AEI/ 10.13039/501100011033), and
-              co-financed by the European Union through FEDER funds and the
-              European Union NextGenerationEU/PRTR.
-            </p>
+          This software is part of the project PID2023-150694OA-I00 funded by
+          the Spanish State Research Agency (Agencia Estatal de Investigación,
+          AEI) through the Ministry of Science, Innovation and Universities
+          (MICIU/AEI/ 10.13039/501100011033), and co-financed by the European
+          Union through FEDER funds and the European Union
+          NextGenerationEU/PRTR.
+        </p>
       </section>
     </div>
   );

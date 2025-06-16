@@ -116,6 +116,7 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
   const chartOptions = useMemo(
     () => ({
       ...baseChartOptions,
+      actualColor: defaultColor,
       onClick: function (evt) {
         const elements = chartRef.current.getElementsAtEventForMode(
           evt,

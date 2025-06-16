@@ -1,7 +1,6 @@
 import { generateDataOriginal } from "./dataUtils";
 import {
   exportToPNG,
-  getActualColor,
   handleResetStyle,
   handleResetZoom,
   updateDatasetStyles,
@@ -47,32 +46,15 @@ describe("dataUtils", () => {
 });
 
 describe("chartUtils", () => {
-  describe("getActualColor", () => {
-    it("returns the string color if input is a string", () => {
-      expect(getActualColor("#123456")).toBe("#123456");
-      expect(getActualColor("red")).toBe("red");
-    });
-
-    it("returns the first color different from '#fa6400' and 'gray'", () => {
-      expect(getActualColor(["#fa6400", "gray", "#abc123", "blue"])).toBe(
-        "#abc123"
-      );
-      expect(getActualColor(["gray", "#fa6400", "yellow"])).toBe("yellow");
-    });
-
-    it("returns first element or null if no valid color found", () => {
-      expect(getActualColor(["#fa6400", "gray"])).toBe("#fa6400");
-      expect(getActualColor([])).toBe(null);
-    });
-  });
-
   describe("handleResetZoom", () => {
     it("sets min and max and calls update", () => {
       const mockChart = {
-        options: {
-          scales: {
-            x: { min: "STH", max: "STH" },
-            y: { min: "STH", max: "STH" },
+        config: {
+          options: {
+            scales: {
+              x: { min: "STH", max: "STH" },
+              y: { min: "STH", max: "STH" },
+            },
           },
         },
         update: jest.fn(),
@@ -80,10 +62,10 @@ describe("chartUtils", () => {
 
       handleResetZoom(mockChart);
 
-      expect(mockChart.options.scales.x.min).toBeUndefined();
-      expect(mockChart.options.scales.x.max).toBeUndefined();
-      expect(mockChart.options.scales.y.min).toBeUndefined();
-      expect(mockChart.options.scales.y.max).toBeUndefined();
+      expect(mockChart.config.options.scales.x.min).toBeUndefined();
+      expect(mockChart.config.options.scales.x.max).toBeUndefined();
+      expect(mockChart.config.options.scales.y.min).toBeUndefined();
+      expect(mockChart.config.options.scales.y.max).toBeUndefined();
       expect(mockChart.update).toHaveBeenCalled();
     });
 
@@ -218,7 +200,7 @@ describe("chartUtils", () => {
           },
         ],
       },
-      options: { scales: { x: { min: "STH", max: "STH" } } },
+      config: { options: { scales: { x: { min: "STH", max: "STH" } } } },
       update: jest.fn(),
     };
 
@@ -268,8 +250,8 @@ describe("chartUtils", () => {
         mockChartRef
       );
 
-      expect(mockChart.options.scales.x.min).toBe(-1); // 1 - 2 / xvalue - zoomRange
-      expect(mockChart.options.scales.x.max).toBe(3); // 1 + 2
+      expect(mockChart.config.options.scales.x.min).toBe(-1); // 1 - 2 / xvalue - zoomRange
+      expect(mockChart.config.options.scales.x.max).toBe(3); // 1 + 2
       expect(mockChart.update).toHaveBeenCalled();
     });
   });
