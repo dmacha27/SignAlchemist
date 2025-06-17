@@ -15,7 +15,14 @@ export default defineConfig({
     },
     host: true,
     strictPort: true,
-    port: 5173,
+    port: parseInt(process.env.FRONTEND_PORT || '5173'),
+    proxy: {
+      '/api': {
+        target: `http://backend:${process.env.VITE_BACKEND_PORT || '8000'}`,
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, ''),
+      },
+    },
   },
   build: {
     sourcemap: false,

@@ -56,7 +56,7 @@ import ButtonEdge from "./reactflow/edges/ButtonEdge";
 import SignalTabs from "./common/SignalTabs";
 
 const backendPort = import.meta.env.VITE_BACKEND_PORT;
-const backendUrl = `http://localhost:${backendPort}`;
+const backendUrl = `/api`;
 
 const Processing = () => {
   const location = useLocation();

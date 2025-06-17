@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from "react-icons/fa";
 
 const backendPort = import.meta.env.VITE_BACKEND_PORT;
-const backendUrl = `http://localhost:${backendPort}`;
+const backendUrl = `/api`;
 
 const Resampling = () => {
   const location = useLocation();

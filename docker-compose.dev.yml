@@ -19,9 +19,7 @@ services:
       - /app/node_modules
     ports:
       - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    env_file:
+      - .env.dev
     environment:
       - WATCHPACK_POLLING=true
-      - VITE_BACKEND_PORT=${VITE_BACKEND_PORT} # This could be parsed with env_file as backend service does
-    #env_file:
-    # -.env.dev (wherever VITE_BACKEND_PORT is defined)
-    command: sh -c "npm run dev -- --port ${FRONTEND_PORT}"

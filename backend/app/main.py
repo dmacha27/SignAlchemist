@@ -23,6 +23,7 @@ The SignAlchemist API provides tools for **preprocessing** and **quality assessm
 ---
 """,
     version="1.0.0",
+    root_path="/api"
 )
 
 app.add_middleware(

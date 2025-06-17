@@ -17,7 +17,7 @@ import { FaFilter, FaSignal, FaTools } from "react-icons/fa";
 import SignalTabs from "./common/SignalTabs";
 
 const backendPort = import.meta.env.VITE_BACKEND_PORT;
-const backendUrl = `http://localhost:${backendPort}`;
+const backendUrl = `/api`;
 
 const filtersFields = {
   butterworth: {
