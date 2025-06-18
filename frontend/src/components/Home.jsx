@@ -371,42 +371,85 @@ const CSVUploader = memo(({ file, setFile, setHeaders, cropValues }) => {
     reader.readAsText(new_file);
   };
 
+  const loadSampleFile = async (filename) => {
+    const response = await fetch(`/${filename}`);
+    const data = await response.blob();
+    const file = new File([data], filename, { type: "text/csv" });
+    fileSelected({ files: [file] });
+    fileUploader.current.setFiles([file]);
+  };
+
   return (
     <>
-      <PrimeReactProvider>
-        {/* dark:bg-gray-800 to unify the background of the card */}
-        <div className="card bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow rounded p-4">
-          <p id="error-message" style={{ color: "red" }}></p>
-          <FileUpload
-            ref={fileUploader}
-            uploadLabel="Process"
-            customUpload
-            uploadHandler={handleUtilityModal}
-            onSelect={fileSelected}
-            onClear={clearForm}
-            onRemove={clearForm}
-            accept=".csv"
-            maxFileSize={52428868} // 50 MB
-            emptyTemplate={
-              <p className="m-0 text-gray-800 dark:text-gray-100">
-                Upload your signal CSV file by dragging it here or selecting it
-                manually. Then complete the parameters below.
-              </p>
-            }
+      <div className="flex justify-center items-center gap-4 p-2">
+        <div className="w-16 h-16 border border-slate-400 shadow rounded-lg bg-white dark:bg-gray-900 flex items-center justify-center">
+          <div className="p-1 h-full w-full flex flex-col">
+            <Button
+              className="h-3/4 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-xs p-0"
+              variant="default"
+              onClick={() => loadSampleFile("EDA.csv")}
+            >
+              EDA.csv
+            </Button>
+            <Menu className="h-1/4 w-full" trigger="click-hover">
+              <Menu.Target>
+                <Button className="h-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs p-0">
+                  Files
+                </Button>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>Sample files</Menu.Label>
+                <Menu.Item onClick={() => loadSampleFile("EDA.csv")}>
+                  EDA.csv
+                </Menu.Item>
+                <Menu.Item onClick={() => loadSampleFile("PPG.csv")}>
+                  PPG.csv
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </div>
+        </div>
+
+        <div className="max-w-xl w-full border border-slate-400 shadow rounded-lg p-4 bg-white dark:bg-gray-900">
+          <PrimeReactProvider>
+            {/* dark:bg-gray-800 to unify the background of the card */}
+            <div className="card bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow rounded p-4">
+              <p id="error-message" style={{ color: "red" }}></p>
+              <FileUpload
+                ref={fileUploader}
+                uploadLabel="Process"
+                customUpload
+                uploadHandler={handleUtilityModal}
+                onSelect={fileSelected}
+                onClear={clearForm}
+                onRemove={clearForm}
+                accept=".csv"
+                maxFileSize={52428868} // 50 MB
+                emptyTemplate={
+                  <p className="m-0 text-gray-800 dark:text-gray-100">
+                    Upload your signal CSV file by dragging it here or selecting
+                    it manually. Then complete the parameters below.
+                  </p>
+                }
+              />
+            </div>
+          </PrimeReactProvider>
+          <UtilityModal
+            opened={opened}
+            close={close}
+            navigate={navigate}
+            file={file}
+            signalType={signalType}
+            timestampColumn={timestampColumn}
+            samplingRate={parseInt(samplingRate)}
+            signalValues={signalValues}
+            cropValues={cropValues}
           />
         </div>
-      </PrimeReactProvider>
-      <UtilityModal
-        opened={opened}
-        close={close}
-        navigate={navigate}
-        file={file}
-        signalType={signalType}
-        timestampColumn={timestampColumn}
-        samplingRate={parseInt(samplingRate)}
-        signalValues={signalValues}
-        cropValues={cropValues}
-      />
+
+        <div className="w-16 h-16 invisible" />
+      </div>
     </>
   );
 });
@@ -616,56 +659,12 @@ const Home = () => {
         </Link>
       </header>
 
-      <div className="flex justify-center items-center gap-4 p-2">
-        <div className="w-16 h-16 border border-slate-400 shadow rounded-lg bg-white dark:bg-gray-900 flex items-center justify-center">
-          <div className="p-1 h-full w-full flex flex-col">
-            <Button
-              className="h-3/4 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-xs p-0"
-              variant="default"
-              onClick={() => {
-                const link = document.createElement("a");
-                link.href = "/EDA.csv";
-                link.download = "EDA.csv";
-                link.click();
-              }}
-            >
-              EDA.csv
-            </Button>
-            <Menu className="h-1/4 w-full" trigger="click-hover">
-              <Menu.Target>
-                <Button className="h-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs p-0">
-                  Files
-                </Button>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Label>Sample files</Menu.Label>
-                <Menu.Item>
-                  <a href="/EDA.csv" download>
-                    EDA.csv
-                  </a>
-                </Menu.Item>
-                <Menu.Item>
-                  <a href="/PPG.csv" download>
-                    PPG.csv
-                  </a>
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </div>
-        </div>
-
-        <div className="max-w-xl w-full border border-slate-400 shadow rounded-lg p-4 bg-white dark:bg-gray-900">
-          <CSVUploader
-            file={file}
-            setFile={setFile}
-            setHeaders={setHeaders}
-            cropValues={cropValues}
-          />
-        </div>
-
-        <div className="w-16 h-16 invisible" />
-      </div>
+      <CSVUploader
+        file={file}
+        setFile={setFile}
+        setHeaders={setHeaders}
+        cropValues={cropValues}
+      />
 
       <div className="flex flex-wrap justify-center gap-4 p-2">
         <div className="w-full max-w-xl">
@@ -741,7 +740,7 @@ const Home = () => {
               </div>
 
               <div>
-                {fileRows && (
+                {fileRows && file && (
                   <>
                     <label
                       htmlFor="range-slider"
@@ -767,9 +766,11 @@ const Home = () => {
               id="samplingRateBadge"
               className="bg-blue-500 text-white rounded px-4 py-1 mx-auto w-1/2 mb-4 hidden"
             >
-              Detected sampling rate of {samplingRate} Hz
+              {chartDataOriginal && file && (
+                <>Detected sampling rate of {samplingRate} Hz</>
+              )}
             </div>
-            {chartDataOriginal ? (
+            {chartDataOriginal && file ? (
               <CustomChart table={chartDataOriginal} />
             ) : (
               <LoaderMessage message="Waiting for file..." />
