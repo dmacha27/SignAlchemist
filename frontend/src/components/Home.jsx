@@ -389,7 +389,8 @@ const CSVUploader = memo(({ file, setFile, setHeaders, cropValues }) => {
             maxFileSize={52428868} // 50 MB
             emptyTemplate={
               <p className="m-0 text-gray-800 dark:text-gray-100">
-                Drag and drop files here to upload.
+                Upload your signal CSV file by dragging it here or selecting it
+                manually. Then complete the parameters below.
               </p>
             }
           />
@@ -402,7 +403,7 @@ const CSVUploader = memo(({ file, setFile, setHeaders, cropValues }) => {
         file={file}
         signalType={signalType}
         timestampColumn={timestampColumn}
-        samplingRate={samplingRate}
+        samplingRate={parseInt(samplingRate)}
         signalValues={signalValues}
         cropValues={cropValues}
       />
@@ -675,7 +676,7 @@ const Home = () => {
                   htmlFor="signalType"
                   className="text-black dark:text-white"
                 >
-                  Signal type
+                  Signal Type
                 </label>
                 <select
                   id="signalType"
@@ -702,14 +703,22 @@ const Home = () => {
                   htmlFor="samplingRate"
                   className="text-black dark:text-white"
                 >
-                  Sampling rate (Hz)
+                  Sampling Rate (Hz)
                 </label>
                 <input
                   type="number"
                   step={1}
+                  min={1}
                   placeholder="Enter Hz"
                   id="samplingRate"
                   onChange={handleSamplingRateChange}
+                  onBlur={(event) => {
+                    const value = parseInt(event.target.value, 10);
+                    if (isNaN(value) || value < 1) {
+                      event.target.value = 1;
+                      handleSamplingRateChange({ target: { value: 1 } });
+                    }
+                  }}
                   disabled={
                     headers === null || timestampColumn !== headers.length - 1
                   }

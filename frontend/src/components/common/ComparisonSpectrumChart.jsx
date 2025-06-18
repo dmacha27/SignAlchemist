@@ -140,7 +140,6 @@ const ComparisonSpectrumChart = memo(
     }, [dataset1, dataset2]);
 
     const zoomRangeX = (maxXValue - minXValue) * 0.02;
-    const zoomRangeY = (maxYValue - minYValue) * 0.001;
 
     const [goToX, setGoToX] = useState(null);
     const [yMin, setYMin] = useState(null);
@@ -258,6 +257,8 @@ const ComparisonSpectrumChart = memo(
         yMax <= maxYValue
       ) {
         handleResetZoom(chartRef.current);
+        
+        const zoomRangeY = (yMax - yMin) * 0.02;
         chartRef.current.config.options.scales.y.min = yMin - zoomRangeY;
         chartRef.current.config.options.scales.y.max = yMax + zoomRangeY;
         chartRef.current.update();

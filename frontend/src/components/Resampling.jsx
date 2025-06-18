@@ -11,9 +11,6 @@ import toast from "react-hot-toast";
 
 import { FaChartLine, FaSignal, FaTools, FaExpandAlt } from "react-icons/fa";
 
-const backendPort = import.meta.env.VITE_BACKEND_PORT;
-const backendUrl = `/api`;
-
 const Resampling = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
@@ -67,7 +64,7 @@ const Resampling = () => {
       formData.append("source_sampling_rate", parseFloat(samplingRate));
       formData.append("target_sampling_rate", parseFloat(newSamplingRate));
 
-      const response = await fetch(`${backendUrl}/resampling`, {
+      const response = await fetch("/api/resampling", {
         method: "POST",
         body: formData,
       });
@@ -162,10 +159,18 @@ const Resampling = () => {
                 <input
                   type="number"
                   step={1}
+                  min={1}
                   id="samplingRate"
                   defaultValue={samplingRate}
                   onChange={(event) => {
                     setNewSamplingRate(event.target.value);
+                  }}
+                  onBlur={(event) => {
+                    const value = parseInt(event.target.value, 10);
+                    if (isNaN(value) || value < 1) {
+                      event.target.value = 1;
+                      setNewSamplingRate(1);
+                    }
                   }}
                   placeholder="Enter Hz"
                   className="block w-full border border-gray-300 dark:border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400"

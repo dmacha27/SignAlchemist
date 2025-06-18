@@ -55,9 +55,6 @@ import toast from "react-hot-toast";
 import ButtonEdge from "./reactflow/edges/ButtonEdge";
 import SignalTabs from "./common/SignalTabs";
 
-const backendPort = import.meta.env.VITE_BACKEND_PORT;
-const backendUrl = `/api`;
-
 const Processing = () => {
   const location = useLocation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
@@ -101,7 +98,7 @@ const Processing = () => {
           originalMetricsForm.append("signal_type", signalType);
           originalMetricsForm.append("sampling_rate", samplingRate);
 
-          fetch(`${backendUrl}/metrics`, {
+          fetch("/api/metrics", {
             method: "POST",
             body: originalMetricsForm,
           }).then(async (res) => {
@@ -129,7 +126,7 @@ const Processing = () => {
       processedMetricsForm.append("signal_type", signalType);
       processedMetricsForm.append("sampling_rate", samplingRate);
 
-      fetch(`${backendUrl}/metrics`, {
+      fetch("/api/metrics", {
         method: "POST",
         body: processedMetricsForm,
       }).then(async (res) => {

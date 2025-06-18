@@ -13,9 +13,6 @@ import ExecutionIcon from "../../common/ExecutionIcon";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 
-const backendPort = import.meta.env.VITE_BACKEND_PORT;
-const backendUrl = `/api`;
-
 /**
  * ResamplingNode component
  * This component represents a resampling operation node in a flow diagram.
@@ -133,7 +130,7 @@ function ResamplingNode({ id, data }) {
     window.dispatchEvent(event);
 
     try {
-      const response = await fetch(`${backendUrl}/resampling`, {
+      const response = await fetch("/api/resampling", {
         method: "POST",
         body: formData,
       });

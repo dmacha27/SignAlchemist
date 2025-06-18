@@ -171,7 +171,7 @@ const App = () => {
                     src={isDarkMode ? "/logo_dark.png" : "/logo.png"}
                     className="h-8"
                     alt="SignAlchemist Logo"
-                  />{" "}
+                  />
                 </a>
 
                 <ul className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
@@ -179,47 +179,12 @@ const App = () => {
                     <a
                       target="_blank"
                       rel="noopener noreferrer"
-                      href="https://ec.europa.eu/regional_policy/es/funding/erdf/"
+                      href="https://www.aei.gob.es/"
                     >
                       <img
-                        className="w-32 h-auto"
-                        alt="FEDER"
-                        src="/FEDER.svg"
-                      />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href="http://www.mineco.gob.es/portal/site/mineco/"
-                    >
-                      <img className="w-32 h-auto" alt="MEC" src="/MEC.svg" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href="https://www.jcyl.es/"
-                    >
-                      <img
-                        className="w-32 h-auto"
-                        alt="JCYL"
-                        src={isDarkMode ? "/JCYL_dark.svg" : "/JCYL.svg"}
-                      />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href="https://www.educa.jcyl.es/universidad/es/fondos-europeos/fondo-europeo-desarrollo-regional-feder/"
-                    >
-                      <img
-                        className="w-32 h-auto"
-                        alt="JCYL_impulsa"
-                        src="/JCYL_impulsa.svg"
+                        className="w-96 h-auto"
+                        alt="MICIU"
+                        src="/MICIU.svg"
                       />
                     </a>
                   </li>
