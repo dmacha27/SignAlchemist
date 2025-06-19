@@ -34,4 +34,3 @@ The application has been designed with up-to-date web-based frameworks that make
    resampling
    filtering
    processing
-   developer_guide

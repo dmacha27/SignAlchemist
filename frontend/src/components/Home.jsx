@@ -4,6 +4,7 @@ import { PrimeReactProvider } from "primereact/api";
 import { FileUpload } from "primereact/fileupload";
 import { usePapaParse } from "react-papaparse";
 import RangeSlider from "react-range-slider-input";
+import { FiSettings } from "react-icons/fi";
 import "react-range-slider-input/dist/style.css";
 import {
   Chart as ChartJS,
@@ -266,7 +267,7 @@ const CSVUploader = memo(({ file, setFile, setHeaders, cropValues }) => {
   const [signalValues, setSignalValues] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
 
-  const handleUtilityModal = (event) => {
+  const handleUtilityModal = () => {
     const signalType_select = document.getElementById("signalType");
     const timestampColumn_select = document.getElementById("timestampColumn");
     const samplingRate_select = document.getElementById("samplingRate");
@@ -293,7 +294,7 @@ const CSVUploader = memo(({ file, setFile, setHeaders, cropValues }) => {
     open();
   };
 
-  const clearForm = (event) => {
+  const clearForm = () => {
     // Stackoverflow: https://stackoverflow.com/questions/39546133/remove-all-options-from-select-tag#comment66404874_39546133
     const clearSelect = (selectId) => {
       document.getElementById(selectId).innerHTML = "";
@@ -418,7 +419,7 @@ const CSVUploader = memo(({ file, setFile, setHeaders, cropValues }) => {
               <p id="error-message" style={{ color: "red" }}></p>
               <FileUpload
                 ref={fileUploader}
-                uploadLabel="Process"
+                uploadLabel="Select utlity"
                 customUpload
                 uploadHandler={handleUtilityModal}
                 onSelect={fileSelected}
@@ -432,6 +433,11 @@ const CSVUploader = memo(({ file, setFile, setHeaders, cropValues }) => {
                     it manually. Then complete the parameters below.
                   </p>
                 }
+                uploadOptions={{
+                  icon: <FiSettings className="mr-2" />,
+                  className:
+                    "bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded shadow-lg cursor-pointer transition",
+                }}
               />
             </div>
           </PrimeReactProvider>
@@ -508,29 +514,6 @@ const InfoTable = ({ table, start = 0 }) => {
   );
 };
 
-const CropView = ({ fileRows, cropValues, setCropValues }) => {
-  return (
-    <>
-      <RangeSlider
-        className="my-3"
-        id="range-slider"
-        step={1}
-        min={0}
-        max={fileRows.length}
-        defaultValue={[0, fileRows.length]}
-        onInput={setCropValues}
-      />
-      <InfoTable
-        table={[
-          fileRows[0],
-          ...fileRows.slice(cropValues[0] + 1, cropValues[1] + 1),
-        ]}
-        start={cropValues[0]}
-      />
-    </>
-  );
-};
-
 const Home = () => {
   window.history.replaceState({}, "");
 
@@ -539,7 +522,7 @@ const Home = () => {
   const [samplingRate, setSamplingRate] = useState(null);
   const [file, setFile] = useState(null);
   const [fileRows, setFileRows] = useState(null);
-  const [headers, setHeaders] = useState([]);
+  const [headers, setHeaders] = useState([]); // These are set in CSVUploader
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const { readString } = usePapaParse();
   const { isDarkMode: isDark } = useContext(ThemeContext);
@@ -547,6 +530,11 @@ const Home = () => {
 
   //const roundIfReallyClose = (num) => { return Math.abs(num - Math.round(num)) <= 0.01 ? Math.round(num) : num }
 
+  /*
+   * useEffect to establish all fields.
+   * It is worth mentioning that when this executes, the headers have already been set because CSVUploader has done so.
+   *
+   */
   useEffect(() => {
     if (!file) return;
 
@@ -558,7 +546,9 @@ const Home = () => {
         complete: (results) => {
           setFileRows(results.data);
           setCropValues([0, results.data.length - 1]);
-          setTimestampColumn(headers.length - 1);
+          setTimestampColumn(headers.length - 1); // = "No timestamps"
+          setSignalValues(-1);
+          setSamplingRate(null);
         },
       });
     };
@@ -568,17 +558,11 @@ const Home = () => {
   useEffect(() => {
     if (!file) return;
 
-    updateData();
-  }, [timestampColumn, signalValues, samplingRate]);
-
-  const updateData = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target.result;
       readString(content, {
         complete: (results) => {
-          let samplingRate_select = document.getElementById("samplingRate");
-
           const rows = isNaN(results.data[0][0])
             ? results.data.slice(1)
             : results.data;
@@ -611,14 +595,6 @@ const Home = () => {
 
             calculated_samplingrate = 1 / average(diff(x));
             setSamplingRate(calculated_samplingrate);
-            samplingRate_select.value = calculated_samplingrate.toFixed(1);
-          }
-
-          const badge = document.getElementById("samplingRateBadge");
-          if (timestampColumn == headers.length - 1 || timestampColumn == -1) {
-            badge.style.display = "none";
-          } else {
-            badge.style.display = "block";
           }
 
           setChartDataOriginal(data_original);
@@ -626,7 +602,7 @@ const Home = () => {
       });
     };
     reader.readAsText(file);
-  };
+  }, [timestampColumn, signalValues, samplingRate]);
 
   const handleTimestampChange = (event) => {
     setTimestampColumn(parseInt(event.target.value));
@@ -692,6 +668,7 @@ const Home = () => {
                 </label>
                 <select
                   id="timestampColumn"
+                  value={timestampColumn}
                   onChange={handleTimestampChange}
                   className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
                 />
@@ -710,6 +687,7 @@ const Home = () => {
                   min={1}
                   placeholder="Enter Hz"
                   id="samplingRate"
+                  value={samplingRate || ""}
                   onChange={handleSamplingRateChange}
                   onBlur={(event) => {
                     const value = parseInt(event.target.value, 10);
@@ -734,6 +712,7 @@ const Home = () => {
                 </label>
                 <select
                   id="signalValues"
+                  value={signalValues}
                   onChange={handleSignalValuesChange}
                   className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
                 />
@@ -748,10 +727,23 @@ const Home = () => {
                     >
                       Crop signal
                     </label>
-                    <CropView
-                      fileRows={fileRows}
-                      cropValues={cropValues}
-                      setCropValues={setCropValues}
+                    <RangeSlider
+                      className="my-3"
+                      id="range-slider"
+                      step={1}
+                      min={0}
+                      max={fileRows.length}
+                      defaultValue={[0, fileRows.length]}
+                      onInput={setCropValues}
+                    />
+                    <InfoTable
+                      table={[
+                        fileRows[0],
+                        ...fileRows
+                          .slice(1)
+                          .slice(cropValues[0], cropValues[1] + 1),
+                      ]}
+                      start={cropValues[0]}
                     />
                   </>
                 )}
@@ -762,14 +754,14 @@ const Home = () => {
 
         <div className="w-full max-w-xl">
           <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4 text-center">
-            <div
-              id="samplingRateBadge"
-              className="bg-blue-500 text-white rounded px-4 py-1 mx-auto w-1/2 mb-4 hidden"
-            >
-              {chartDataOriginal && file && (
-                <>Detected sampling rate of {samplingRate} Hz</>
-              )}
-            </div>
+            {samplingRate && timestampColumn !== headers.length - 1 && (
+              <div
+                id="samplingRateBadge"
+                className="bg-blue-500 text-white rounded px-4 py-1 mx-auto w-1/2 mb-4"
+              >
+                Detected sampling rate of {samplingRate.toFixed(1)} Hz
+              </div>
+            )}
             {chartDataOriginal && file ? (
               <CustomChart table={chartDataOriginal} />
             ) : (
