@@ -69,7 +69,7 @@ const PipelineSteps = ({ nodes }) => {
 
                             return (
                               <li key={key} className="mb-1">
-                                <strong>{capitalizedKey}:</strong>
+                                <strong>{capitalizedKey}: </strong>
                                 {isLong ? (
                                   <Popover
                                     width={300}
