@@ -25,7 +25,7 @@ const About = () => {
               This open-source web application was designed to simplify signal
               processing, particularly for physiological data such as EDA and
               PPG. However, it is flexible enough to work with any time-series
-              signal
+              signal.
             </p>
             <p className="mt-2">
               It offers an intuitive, modular interface where you can resample,
