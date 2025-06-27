@@ -71,7 +71,7 @@ const Resampling = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error during resampling:", errorData.error);
+        console.error(errorData.error);
         toast.error(errorData.error);
         return;
       }
@@ -140,8 +140,8 @@ const Resampling = () => {
                 <select
                   id="interpTechnique"
                   className="block w-full border border-gray-300 dark:border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-black dark:text-white"
-                  onChange={(value) => {
-                    setInterpolation(value);
+                  onChange={(event) => {
+                    setInterpolation(event.target.value);
                   }}
                 >
                   <option value="spline">Spline</option>
@@ -166,7 +166,7 @@ const Resampling = () => {
                     setNewSamplingRate(event.target.value);
                   }}
                   onBlur={(event) => {
-                    const value = parseInt(event.target.value, 10);
+                    const value = parseInt(event.target.value);
                     if (isNaN(value) || value < 1) {
                       event.target.value = 1;
                       setNewSamplingRate(1);
