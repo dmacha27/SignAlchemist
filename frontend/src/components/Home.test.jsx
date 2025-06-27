@@ -259,7 +259,7 @@ describe("Home", () => {
         throw new Error("Options not loaded yet");
     });
 
-    const uploadBtn = screen.getByText(/Select utlity/i).parentElement;
+    const uploadBtn = screen.getByText(/Select utility/i).parentElement;
     fireEvent.click(uploadBtn);
 
     expect(
@@ -292,7 +292,7 @@ describe("Home", () => {
     fireEvent.change(signalValuesSelect, { target: { value: 1 } });
     fireEvent.change(signalType, { target: { value: "EDA" } });
 
-    const openModalButton = screen.getByText(/Select utlity/i).parentElement;
+    const openModalButton = screen.getByText(/Select utility/i).parentElement;
 
     await waitFor(() => {
       expect(openModalButton).not.toBeDisabled();

@@ -393,6 +393,14 @@ const CSVUploader = memo(
       reader.readAsText(new_file);
     };
 
+    const fileRemoved = () => {
+      clearForm();
+      setFileRows(null);
+      setSamplingRate(null);
+      setTimestampColumn(-1);
+      setSignalValues(-1);
+    };
+
     const loadSampleFile = async (filename) => {
       const response = await fetch(`/${filename}`);
       const data = await response.blob();
@@ -441,12 +449,12 @@ const CSVUploader = memo(
                 <FileUpload
                   data-testid="csv-file-dropzone"
                   ref={fileUploader}
-                  uploadLabel="Select utlity"
+                  uploadLabel="Select utility"
                   customUpload
                   uploadHandler={handleUtilityModal}
                   onSelect={fileSelected}
-                  onClear={clearForm}
-                  onRemove={clearForm}
+                  onClear={fileRemoved}
+                  onRemove={fileRemoved}
                   accept=".csv"
                   maxFileSize={52428868} // 50 MB
                   emptyTemplate={
@@ -552,7 +560,10 @@ const Home = () => {
   //const roundIfReallyClose = (num) => { return Math.abs(num - Math.round(num)) <= 0.01 ? Math.round(num) : num }
 
   useEffect(() => {
-    if (!fileRows) return;
+    if (!fileRows) {
+      setChartDataOriginal(null);
+      return;
+    }
 
     const rows = isNaN(fileRows[0][0]) ? fileRows.slice(1) : fileRows;
 
@@ -750,8 +761,10 @@ const Home = () => {
                 Detected sampling rate of {samplingRate.toFixed(1)} Hz
               </div>
             )}
-            {chartDataOriginal ? (
+            {chartDataOriginal && fileRows ? (
               <CustomChart table={chartDataOriginal} />
+            ) : fileRows ? (
+              <LoaderMessage message="Waiting for parameters..." />
             ) : (
               <LoaderMessage message="Waiting for file..." />
             )}
