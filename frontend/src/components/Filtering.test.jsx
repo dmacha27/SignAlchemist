@@ -46,12 +46,6 @@ const mockTheme = {
   toggleDarkMode: jest.fn(),
 };
 
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
-
 const mockEDA = [
   ["Timestamp", "Gsr"],
   [0, 1.1],
