@@ -142,12 +142,12 @@ const Filtering = () => {
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const errorData = await response.json();
         setChartDataFiltered(null);
         setMetricsFiltered(null);
-        console.error(data.error);
-        toast.error(data.error);
-        return;
+        console.error(errorData.error);
+        toast.error(errorData.error);
+        throw new Error(errorData.error);
       }
 
       const data = await response.json();
@@ -169,10 +169,10 @@ const Filtering = () => {
       });
 
       if (!metricsResponse.ok) {
-        const metricsFiltered = await metricsResponse.json();
-        console.error(metricsFiltered.error);
-        toast.error(metricsFiltered.error);
-        return;
+        const errorData = await metricsResponse.json();
+        console.error(errorData.error);
+        toast.error(errorData.error);
+        throw new Error(errorData.error);
       }
 
       const metricsFiltered = await metricsResponse.json();

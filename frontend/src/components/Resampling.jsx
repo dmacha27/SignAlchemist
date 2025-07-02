@@ -73,7 +73,7 @@ const Resampling = () => {
         const errorData = await response.json();
         console.error(errorData.error);
         toast.error(errorData.error);
-        return;
+        throw new Error(errorData.error);
       }
 
       const data = await response.json();
