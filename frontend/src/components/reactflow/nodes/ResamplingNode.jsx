@@ -137,6 +137,7 @@ function ResamplingNode({ id, data }) {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error(errorData.error);
         toast.error(errorData.error);
         throw new Error(errorData.error);
       }
@@ -198,11 +199,13 @@ function ResamplingNode({ id, data }) {
           {/* Button to see the node output */}
           <Tooltip label="See output" withArrow position="bottom">
             <div
+              data-testid="output"
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 if (currentNodeData?.data?.table) {
                   data.setChartDataProcessed(currentNodeData.data.table);
                 } else {
+                  console.error("Execute node first");
                   toast.error("Execute node first");
                 }
               }}
@@ -214,6 +217,7 @@ function ResamplingNode({ id, data }) {
           {/* Button to delete the node */}
           <Tooltip label="Delete node" withArrow position="bottom">
             <div
+              data-testid="delete"
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 data.deleteNode(id);
@@ -240,6 +244,7 @@ function ResamplingNode({ id, data }) {
           </Form.Label>
           <Select
             size="sm"
+            data-testid="Select interpolation"
             value={interpolationTechnique}
             onChange={setInterpolationTechnique}
             data={[
@@ -268,6 +273,7 @@ function ResamplingNode({ id, data }) {
           <input
             type="number"
             step={1}
+            min={1}
             placeholder="Enter Hz"
             value={targetSamplingRate}
             onChange={(event) => setTargetSamplingRate(event.target.value)}
