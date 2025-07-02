@@ -9,6 +9,7 @@ const HandleLimit = (props) => {
     <Handle
       {...props}
       isConnectable={connections.length < props.connectionCount}
+      data-testid="Handle"
     />
   );
 };
