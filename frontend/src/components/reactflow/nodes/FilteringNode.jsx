@@ -12,6 +12,7 @@ import { FaFilter, FaTrash, FaEye } from "react-icons/fa";
 import ExecutionIcon from "../../common/ExecutionIcon";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
+import { diff, average } from "../../utils/dataUtils";
 
 const filtersFields = {
   butterworth: {
@@ -50,7 +51,7 @@ const filtersFields = {
  * @returns {JSX.Element} Visual representation of the filtering node with UI for selecting a filter, configuring parameters, and executing the filtering operation
  */
 function FilteringNode({ id, data }) {
-  const samplingRate = data.samplingRate;
+  let samplingRate = data.samplingRate;
 
   let window_size = Math.round(samplingRate / 3);
   if (window_size % 2 === 0) {
@@ -85,6 +86,15 @@ function FilteringNode({ id, data }) {
   const sourceNodeData = useNodesData(sourceNodeId);
   let table = sourceNodeData?.data?.table;
 
+  if (table) {
+    samplingRate = 1 / average(diff(table.slice(1).map((x) => x[0])));
+
+    window_size = Math.round(samplingRate / 3);
+    if (window_size % 2 === 0) {
+      window_size += 1;
+    }
+  }
+
   useEffect(() => {
     /**
      * Handler to delete the current node's table and propagate the event to the next node.
@@ -110,6 +120,14 @@ function FilteringNode({ id, data }) {
 
       if (table_source) {
         table = table_source;
+
+        samplingRate =
+          1 / average(diff(table_source.slice(1).map((x) => x[0])));
+
+        window_size = Math.round(samplingRate / 3);
+        if (window_size % 2 === 0) {
+          window_size += 1;
+        }
         const new_table = await requestFilter();
 
         if (targetNodeId) {
@@ -156,7 +174,7 @@ function FilteringNode({ id, data }) {
     const signalOnly = table.slice(1); // Exclude headers
 
     formData.append("signal", JSON.stringify(signalOnly));
-    formData.append("sampling_rate", samplingRate);
+    formData.append("sampling_rate", Math.round(samplingRate));
 
     const filterConfig = {
       method: filter,

@@ -116,7 +116,7 @@ async def options_filtering():
 async def filtering(
     signal: str = Form(...,
                        description="JSON-encoded list of `[timestamp, value]` pairs."),
-    sampling_rate: int = Form(...,
+    sampling_rate: float = Form(...,
                               description="Sampling rate of the input signal in Hz."),
     filter_config: str = Form(
         ..., description="JSON-encoded dict including `method`, `lowcut`, `highcut`, `order`, or `python`."),
