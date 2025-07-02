@@ -132,6 +132,7 @@ function OutliersNode({ id, data }) {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error(errorData.error);
         toast.error(errorData.error);
         throw new Error(errorData.error);
       }
@@ -193,11 +194,13 @@ function OutliersNode({ id, data }) {
           {/* Button to see the node output */}
           <Tooltip label="See output" withArrow position="bottom">
             <div
+              data-testid="output"
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 if (currentNodeData?.data?.table) {
                   data.setChartDataProcessed(currentNodeData.data.table);
                 } else {
+                  console.error("Execute node first");
                   toast.error("Execute node first");
                 }
               }}
@@ -209,6 +212,7 @@ function OutliersNode({ id, data }) {
           {/* Button to delete the node */}
           <Tooltip label="Delete node" withArrow position="bottom">
             <div
+              data-testid="delete"
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 data.deleteNode(id);
@@ -235,6 +239,7 @@ function OutliersNode({ id, data }) {
           </Form.Label>
           <Select
             size="sm"
+            data-testid="Select outlier"
             value={outlierTechnique}
             onChange={(e) => setOutlierTechnique(e)}
             data={[

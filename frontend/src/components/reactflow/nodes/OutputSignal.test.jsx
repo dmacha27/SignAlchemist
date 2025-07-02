@@ -30,6 +30,7 @@ const mockSetChartDataProcessed = jest.fn();
 describe("OutputSignal", () => {
   beforeEach(() => {
     mockUseNodeConnections.mockReset();
+    mockUseNodesData.mockReset();
   });
   it("renders the headers and rows when source populated", async () => {
     mockUseNodeConnections.mockReturnValue([{ source: "0", target: "1" }]);
@@ -63,6 +64,5 @@ describe("OutputSignal", () => {
     expect(
       screen.getByText(/Waiting for processed signal/i)
     ).toBeInTheDocument();
-
   });
 });
