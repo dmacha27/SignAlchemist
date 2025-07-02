@@ -12,6 +12,7 @@ import { FaChartLine, FaTrash, FaEye } from "react-icons/fa";
 import ExecutionIcon from "../../common/ExecutionIcon";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
+import { diff, average } from "../../utils/dataUtils";
 
 /**
  * ResamplingNode component
@@ -24,7 +25,7 @@ import HandleLimit from "../edges/HandleLimit";
  * @returns {JSX.Element} Visual representation of the resampling node with UI for setting parameters and executing the resampling operation
  */
 function ResamplingNode({ id, data }) {
-  const samplingRate = data.samplingRate;
+  let samplingRate = data.samplingRate;
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
@@ -54,6 +55,10 @@ function ResamplingNode({ id, data }) {
   const sourceNodeData = useNodesData(sourceNodeId);
   let table = sourceNodeData?.data?.table;
 
+  if (table) {
+    samplingRate = 1 / average(diff(table.slice(1).map((x) => x[0])));
+  }
+
   useEffect(() => {
     /**
      * Handler to delete the current node's table and propagate the event to the next node.
@@ -79,6 +84,9 @@ function ResamplingNode({ id, data }) {
 
       if (table_source) {
         table = table_source;
+
+        samplingRate = 1 / average(diff(table.slice(1).map((x) => x[0])));
+
         const new_table = await requestResample();
 
         if (targetNodeId) {

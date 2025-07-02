@@ -59,18 +59,24 @@ async def resampling(
     """
     Resample a signal with state-of-art interpolation techniques.
     """
-    signal = np.array(json.loads(signal))
-    min_timestamp = min(signal[:, 0])
-    max_timestamp = max(signal[:, 0])
-    num_samples = int(len(signal[:, 1]) *
-                      (target_sampling_rate / source_sampling_rate))
-    new_time = np.linspace(min_timestamp, max_timestamp, num_samples)
+
+    signal = np.array(json.loads(signal), dtype=np.float64)
+
+    min_timestamp = signal[:, 0].min()
+    max_timestamp = signal[:, 0].max()
+
+    duration = max_timestamp - min_timestamp
+    num_samples = int(np.floor(duration * target_sampling_rate)) + 1
+
+    new_time = min_timestamp + \
+        np.arange(num_samples, dtype=np.float64) / target_sampling_rate
 
     if interpolation_technique == "spline":
         interp_func = scipy.interpolate.UnivariateSpline(
             signal[:, 0], signal[:, 1])
     else:
-        interp_func = scipy.interpolate.interp1d(signal[:, 0], signal[:, 1])
+        interp_func = scipy.interpolate.interp1d(
+            signal[:, 0], signal[:, 1], kind='linear')
 
     new_values = interp_func(new_time)
     new_data = np.stack((new_time, new_values), axis=1)
@@ -117,7 +123,7 @@ async def filtering(
     signal: str = Form(...,
                        description="JSON-encoded list of `[timestamp, value]` pairs."),
     sampling_rate: float = Form(...,
-                              description="Sampling rate of the input signal in Hz."),
+                                description="Sampling rate of the input signal in Hz."),
     filter_config: str = Form(
         ..., description="JSON-encoded dict including `method`, `lowcut`, `highcut`, `order`, or `python`."),
 ):
