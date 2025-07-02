@@ -244,7 +244,7 @@ const Filtering = () => {
               </label>
               <Select
                 size="sm"
-                label="Select filter"
+                data-testid="Select filter"
                 value={filter}
                 onChange={(value) => {
                   setFilter(value);

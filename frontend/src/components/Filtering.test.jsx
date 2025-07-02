@@ -157,16 +157,13 @@ describe("Filtering", () => {
       expect(elements.length).toBe(0);
     });
 
-    await fireEvent.click(
-      screen.getByRole("textbox", { name: "Select filter" })
-    );
+    await fireEvent.click(screen.getByTestId("Select filter"));
 
     await fireEvent.click((await screen.findByText(/Fir/i)).parentElement);
-    expect(screen.getByRole("textbox", { name: "Select filter" })).toHaveValue(
-      "Fir"
-    );
+    expect(screen.getByTestId("Select filter")).toHaveValue("Fir");
 
-    await waitFor(() => { // Fir does not have order parameter
+    await waitFor(() => {
+      // Fir does not have order parameter
       expect(screen.queryByLabelText(/Order/i)).not.toBeInTheDocument();
     });
   });
