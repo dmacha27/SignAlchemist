@@ -756,7 +756,7 @@ const Home = () => {
             {samplingRate && timestampColumn !== headers.length - 1 && (
               <div
                 id="samplingRateBadge"
-                className="bg-blue-500 text-white rounded px-4 py-1 mx-auto w-1/2 mb-4"
+                className="bg-blue-500 text-white rounded px-4 py-1 mx-auto w-3/5 mb-4"
               >
                 Detected sampling rate of {samplingRate.toFixed(1)} Hz
               </div>

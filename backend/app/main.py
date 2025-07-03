@@ -50,9 +50,7 @@ async def resampling(
     signal: str = Form(...,
                        description="JSON-encoded list of `[timestamp, value]` pairs representing the input signal."),
     interpolation_technique: str = Form(
-        ..., description="Interpolation method to use: `'linear'` or `'spline'`."),
-    source_sampling_rate: float = Form(
-        ..., description="Original sampling rate of the signal, in Hz."),
+        ..., description="Interpolation method to use: `'1d'` or `'spline'`."),
     target_sampling_rate: float = Form(...,
                                        description="Desired target sampling rate, in Hz."),
 ):
@@ -73,7 +71,7 @@ async def resampling(
 
     if interpolation_technique == "spline":
         interp_func = scipy.interpolate.UnivariateSpline(
-            signal[:, 0], signal[:, 1])
+            signal[:, 0], signal[:, 1], s=1.0)
     else:
         interp_func = scipy.interpolate.interp1d(
             signal[:, 0], signal[:, 1], kind='linear')
@@ -122,8 +120,8 @@ async def options_filtering():
 async def filtering(
     signal: str = Form(...,
                        description="JSON-encoded list of `[timestamp, value]` pairs."),
-    sampling_rate: float = Form(...,
-                                description="Sampling rate of the input signal in Hz."),
+    sampling_rate: int = Form(...,
+                              description="Sampling rate of the input signal in Hz."),
     filter_config: str = Form(
         ..., description="JSON-encoded dict including `method`, `lowcut`, `highcut`, `order`, or `python`."),
 ):

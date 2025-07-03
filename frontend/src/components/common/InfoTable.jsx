@@ -62,8 +62,13 @@ const InfoTable = memo(({ table, onlyTable }) => {
             <strong>Duration:</strong> {seconds_to_minutes(duration)}
           </p>
           <p>
-            <strong>Sampling rate:</strong> {samplingRateCalculated.toFixed(1)}{" "}
-            Hz
+            <strong>Sampling rate: </strong>
+            <span
+              title={`${samplingRateCalculated} Hz`}
+              className="cursor-help"
+            >
+              {samplingRateCalculated.toFixed(2)} Hz
+            </span>
           </p>
           <p>
             <strong>Signal length:</strong> {signalLength} samples

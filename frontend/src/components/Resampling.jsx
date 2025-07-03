@@ -163,10 +163,11 @@ const Resampling = () => {
                   id="samplingRate"
                   defaultValue={samplingRate}
                   onChange={(event) => {
-                    setNewSamplingRate(event.target.value);
+                    setNewSamplingRate(parseInt(event.target.value));
                   }}
                   onBlur={(event) => {
                     const value = parseInt(event.target.value);
+                    event.target.value = value;
                     if (isNaN(value) || value < 1) {
                       event.target.value = 1;
                       setNewSamplingRate(1);
