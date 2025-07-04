@@ -229,7 +229,7 @@ describe("Filtering", () => {
     expect(secondCall[1].method).toBe("POST");
   });
 
-  it("shows error toast if filtering returns error", async () => {
+  it("shows error if filtering returns error", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
     global.fetch = jest.fn(() =>
@@ -267,7 +267,7 @@ describe("Filtering", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it("shows error toast if metrics returns error", async () => {
+  it("shows error if metrics returns error", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
     global.fetch = jest.fn((url) => {

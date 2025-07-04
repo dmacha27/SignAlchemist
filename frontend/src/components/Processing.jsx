@@ -104,7 +104,7 @@ const Processing = () => {
           }).then(async (res) => {
             const metricsOriginal = await res.json();
             if (!res.ok) {
-              console.log(metricsOriginal.error);
+              console.error(metricsOriginal.error);
               toast.error(metricsOriginal.error);
               return;
             }
@@ -132,7 +132,7 @@ const Processing = () => {
       }).then(async (res) => {
         const metricsProcessed = await res.json();
         if (!res.ok) {
-          console.log(metricsProcessed.error);
+          console.error(metricsProcessed.error);
           toast.error(metricsProcessed.error);
           return;
         }
