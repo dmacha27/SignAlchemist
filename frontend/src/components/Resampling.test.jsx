@@ -196,7 +196,7 @@ describe("Resampling", () => {
     expect(body.get("target_sampling_rate")).toBe("1");
   });
 
-  it("shows error toast if filtering returns error", async () => {
+  it("shows error if filtering returns error", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
     global.fetch = jest.fn(() =>

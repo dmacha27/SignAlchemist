@@ -17,6 +17,7 @@ console.error = function (...data) {
   originalConsoleError(...data);
 };
 
+// React Flow docs: https://reactflow.dev/learn/advanced-use/testing
 class ResizeObserver {
   constructor(callback) {
     this.callback = callback;
@@ -40,32 +41,24 @@ class DOMMatrixReadOnly {
   }
 }
 
-// Only run the shim once when requested
-let init = false;
+global.DOMMatrixReadOnly = DOMMatrixReadOnly;
 
-export const mockReactFlow = () => {
-  if (init) return;
-  init = true;
-
-  global.DOMMatrixReadOnly = DOMMatrixReadOnly;
-
-  Object.defineProperties(global.HTMLElement.prototype, {
-    offsetHeight: {
-      get() {
-        return parseFloat(this.style.height) || 1;
-      },
+Object.defineProperties(global.HTMLElement.prototype, {
+  offsetHeight: {
+    get() {
+      return parseFloat(this.style.height) || 1;
     },
-    offsetWidth: {
-      get() {
-        return parseFloat(this.style.width) || 1;
-      },
+  },
+  offsetWidth: {
+    get() {
+      return parseFloat(this.style.width) || 1;
     },
-  });
+  },
+});
 
-  global.SVGElement.prototype.getBBox = () => ({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  });
-};
+global.SVGElement.prototype.getBBox = () => ({
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+});

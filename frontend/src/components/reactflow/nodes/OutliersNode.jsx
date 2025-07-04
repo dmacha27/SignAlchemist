@@ -194,7 +194,7 @@ function OutliersNode({ id, data }) {
           {/* Button to see the node output */}
           <Tooltip label="See output" withArrow position="bottom">
             <div
-              data-testid="output"
+              data-testid={`output${id}`}
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 if (currentNodeData?.data?.table) {
@@ -212,7 +212,7 @@ function OutliersNode({ id, data }) {
           {/* Button to delete the node */}
           <Tooltip label="Delete node" withArrow position="bottom">
             <div
-              data-testid="delete"
+              data-testid={`delete${id}`}
               className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
               onClick={() => {
                 data.deleteNode(id);

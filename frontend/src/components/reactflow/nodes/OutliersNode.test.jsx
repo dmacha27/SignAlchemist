@@ -115,7 +115,7 @@ describe("OutliersNode", () => {
       </ThemeContext.Provider>
     );
 
-    const deleteButton = screen.getByTestId("delete");
+    const deleteButton = screen.getByTestId("delete2");
     fireEvent.click(deleteButton);
 
     expect(mockDeleteNode).toHaveBeenCalled();
@@ -138,7 +138,7 @@ describe("OutliersNode", () => {
       </ThemeContext.Provider>
     );
 
-    const outputButton = screen.getByTestId("output");
+    const outputButton = screen.getByTestId("output2");
     fireEvent.click(outputButton);
 
     expect(mockSetChartDataProcessed).toHaveBeenCalled();
@@ -162,7 +162,7 @@ describe("OutliersNode", () => {
       </ThemeContext.Provider>
     );
 
-    const outputButton = screen.getByTestId("output");
+    const outputButton = screen.getByTestId("output2");
     fireEvent.click(outputButton);
 
     expect(consoleErrorSpy).toHaveBeenCalled();

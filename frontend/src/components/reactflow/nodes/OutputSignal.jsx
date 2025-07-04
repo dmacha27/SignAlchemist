@@ -27,7 +27,6 @@ function OutputSignal({ id, data }) {
   const sourceId = incomingConnections?.find(
     (conn) => conn.target === id
   )?.source;
-
   const sourceNodeData = useNodesData(sourceId);
   const table = sourceNodeData?.data?.table;
 

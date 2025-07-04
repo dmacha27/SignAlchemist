@@ -49,7 +49,7 @@ describe("InfoTable", () => {
     expect(screen.getByText("Signal length:")).toBeInTheDocument();
 
     expect(screen.getByText("0 min 1 s")).toBeInTheDocument();
-    expect(screen.getByText("4.0 Hz")).toBeInTheDocument();
+    expect(screen.getByText("4.00 Hz")).toBeInTheDocument();
     expect(screen.getByText("5 samples")).toBeInTheDocument();
   });
 
