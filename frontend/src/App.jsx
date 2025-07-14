@@ -223,7 +223,7 @@ const App = () => {
                   tooltipPlacement={TooltipPlacement.Left}
                   onClick={() => handleNavigate("/")}
                 >
-                  <FaHome />
+                  <FaHome data-testid="home" />
                 </CircleMenuItem>
                 <CircleMenuItem
                   tooltip="Resampling"
