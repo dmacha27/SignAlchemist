@@ -78,12 +78,11 @@ const About = () => {
           </div>
         </div>
         <p className="mt-4 text-xs text-center italic">
-          This software is part of the project PID2023-150694OA-I00 funded by
-          the Spanish State Research Agency (Agencia Estatal de Investigación,
-          AEI) through the Ministry of Science, Innovation and Universities
-          (MICIU/AEI/ 10.13039/501100011033), and co-financed by the European
-          Union through FEDER funds and the European Union
-          NextGenerationEU/PRTR.
+          This work is part of the project <strong>TED2021-129485B-C4</strong>{" "}
+          funded by MCIN/AEI/\\10.13039/501100011033 and the European Union{" "}
+          <em>"NextGenerationEU"</em>/PRTR and project{" "}
+          <strong>PID2023-150694OA-I00</strong> MICIU/AEI/10.13039/501100011033
+          and by <em>"ERDF/EU"</em>.
         </p>
       </section>
     </div>
