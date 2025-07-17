@@ -247,8 +247,10 @@ const Filtering = () => {
                 data-testid="Select filter"
                 value={filter}
                 onChange={(value) => {
-                  setFilter(value);
-                  setFields(filtersFields[value]);
+                  if (value) {
+                    setFilter(value);
+                    setFields(filtersFields[value]);
+                  }
                 }}
                 data={Object.keys(filtersFields).map((key) => ({
                   value: key,
@@ -268,7 +270,11 @@ const Filtering = () => {
                 }}
               />
 
-              <FilterFields fields={fields} onFieldChange={handleFieldChange} />
+              <FilterFields
+                filter={filter}
+                fields={fields}
+                onFieldChange={handleFieldChange}
+              />
 
               <button
                 className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center"

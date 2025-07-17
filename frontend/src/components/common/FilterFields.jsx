@@ -1,4 +1,4 @@
-import { useState, memo, useContext } from "react";
+import { useState, memo, useContext, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -154,9 +154,13 @@ const InfoModal = ({ opened, close }) => {
  * @param {Object} props.fields - An object containing the filter fields and their configuration.
  * @param {function} props.onFieldChange - A callback function to handle field value changes.
  */
-const FilterFields = memo(({ fields, onFieldChange }) => {
+const FilterFields = memo(({ filter, fields, onFieldChange }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [enabledFields, setEnabledFields] = useState({});
+
+  useEffect(() => {
+    setEnabledFields({});
+  }, [filter]);
 
   const onCheckboxChange = (field, checked) => {
     setEnabledFields((prev) => ({
@@ -189,6 +193,7 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
               </label>
               <Group align="center" spacing="sm">
                 <NumberInput
+                  key={`${filter}_${field}`}
                   id={field}
                   placeholder={`Enter ${field}`}
                   value={fieldConfig}
@@ -213,7 +218,7 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
 
                 {(field === "lowcut" || field === "highcut") && (
                   <Checkbox
-                    defaultChecked={false}
+                    checked={!!enabledFields[field]}
                     onChange={(e) => onCheckboxChange(field, e.target.checked)}
                     size="md"
                   />
@@ -233,6 +238,7 @@ const FilterFields = memo(({ fields, onFieldChange }) => {
                 </Button>
               </div>
               <Textarea
+                key={`${filter}_${field}`}
                 value={fieldConfig.value}
                 onChange={(e) => onFieldChange(field, e.target.value)}
                 minRows={3}

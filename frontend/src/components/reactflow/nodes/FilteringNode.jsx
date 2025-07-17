@@ -335,7 +335,11 @@ function FilteringNode({ id, data }) {
           }}
         />
 
-        <FilterFields fields={fields} onFieldChange={handleFieldChange} />
+        <FilterFields
+          filter={filter}
+          fields={fields}
+          onFieldChange={handleFieldChange}
+        />
       </div>
 
       {/* Button */}
