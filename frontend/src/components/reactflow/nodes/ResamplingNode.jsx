@@ -284,7 +284,17 @@ function ResamplingNode({ id, data }) {
             min={1}
             placeholder="Enter Hz"
             value={targetSamplingRate}
-            onChange={(event) => setTargetSamplingRate(event.target.value)}
+            onChange={(event) =>
+              setTargetSamplingRate(parseInt(event.target.value))
+            }
+            onBlur={(event) => {
+              const value = parseInt(event.target.value);
+              event.target.value = value;
+              if (isNaN(value) || value < 1) {
+                event.target.value = 1;
+                setTargetSamplingRate(1);
+              }
+            }}
             className="w-full text-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 text-black dark:text-white"
           />
         </Form.Group>
