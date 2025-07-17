@@ -740,7 +740,7 @@ const Home = () => {
                         fileRows[0],
                         ...fileRows
                           .slice(1)
-                          .slice(cropValues[0], cropValues[1] + 1),
+                          .slice(cropValues[0], cropValues[1]),
                       ]}
                       start={cropValues[0]}
                     />
