@@ -254,7 +254,12 @@ function ResamplingNode({ id, data }) {
             size="sm"
             data-testid="Select interpolation"
             value={interpolationTechnique}
-            onChange={setInterpolationTechnique}
+            onChange={(value) => {
+              if (value) {
+                console.log(value);
+                setInterpolationTechnique(value);
+              }
+            }}
             data={[
               { value: "spline", label: "Spline" },
               { value: "1d", label: "Interp1d" },

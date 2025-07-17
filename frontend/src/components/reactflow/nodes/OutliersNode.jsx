@@ -241,7 +241,11 @@ function OutliersNode({ id, data }) {
             size="sm"
             data-testid="Select outlier"
             value={outlierTechnique}
-            onChange={(e) => setOutlierTechnique(e)}
+            onChange={(value) => {
+              if (value) {
+                setOutlierTechnique(value);
+              }
+            }}
             data={[
               { value: "hampel", label: "Hampel" },
               { value: "iqr", label: "IQR" },

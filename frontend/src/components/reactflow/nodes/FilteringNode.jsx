@@ -314,8 +314,10 @@ function FilteringNode({ id, data }) {
           data-testid="Select filter"
           value={filter}
           onChange={(value) => {
-            setFilter(value);
-            setFields(filtersFields[value]);
+            if (value) {
+              setFilter(value);
+              setFields(filtersFields[value]);
+            }
           }}
           data={Object.keys(filtersFields).map((key) => ({
             value: key,
