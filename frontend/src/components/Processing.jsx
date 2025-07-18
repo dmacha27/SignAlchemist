@@ -221,6 +221,9 @@ const Processing = () => {
     setNodes((prevNodes) => prevNodes.slice(0, 2));
     setEdges([]);
     setLastId(2);
+
+    setChartDataProcessed(null);
+    setMetricsProcessed(null);
   };
 
   const deleteSourceTablesAndExecute = async () => {
