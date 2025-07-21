@@ -11,8 +11,8 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 
 project = 'SignAlchemist'
-copyright = '2025, UBU'
-author = 'UBU'
+copyright = '2025, David Martínez-Acha & Gadea Lucas-Pérez'
+author = 'David Martínez-Acha, Gadea Lucas-Pérez'
 release = "1.0.0"
 
 extensions = [

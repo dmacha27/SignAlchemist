@@ -16,7 +16,7 @@ The application has been designed with up-to-date web-based frameworks that make
 - **Outlier detection:** identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the *Hampel* filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.
 
 > **Important:**
-> From now on, all paths and commands will use the `src` folder as the main project folder.
+> From now on, all paths and commands will use the `signalchemist` folder as the main project folder.
 
 # Installation
 

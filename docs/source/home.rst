@@ -48,9 +48,9 @@ Once the fields have been filled in, a graph of the signal will be displayed on 
    :width: 400px
    :align: center
 
-The last step is to click on "Process" to open a popup window to select the desired functionality.
+The last step is to click on "Select utility" to open a popup window to select the desired functionality.
 
 .. image:: _static/process_popup.png
-   :alt: Process popup window
+   :alt: Select utility popup window
    :width: 400px
    :align: center
