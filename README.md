@@ -15,7 +15,8 @@ The application has been designed with up-to-date web-based frameworks that make
 - **Filtering:** removes artefacts (*e.g.*, noise, high-frequency...) using different filters including *Butterworth*, *Bessel*, *FIR*, and *Savitzky-Golay*. Parameters such as cutoff frequencies can be set based on user needs. Furthermore, users can create and customize their own filters using Python by following the instructions on the page.
 - **Outlier detection:** identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the *Hampel* filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.
 
-
+> **Important:**
+> From now on, all paths and commands will use the `src` folder as the main project folder.
 
 # Installation
 

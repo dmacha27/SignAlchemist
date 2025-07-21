@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Handle,
   Position,
@@ -25,13 +25,17 @@ import { diff, average } from "../../utils/dataUtils";
  * @returns {JSX.Element} Visual representation of the resampling node with UI for setting parameters and executing the resampling operation
  */
 function ResamplingNode({ id, data }) {
-  let samplingRate = data.samplingRate;
+  const tableRef = useRef(null);
+  const samplingRateRef = useRef(data.samplingRate);
+
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
   const [interpolationTechnique, setInterpolationTechnique] =
     useState("spline");
-  const [targetSamplingRate, setTargetSamplingRate] = useState(samplingRate);
+  const [targetSamplingRate, setTargetSamplingRate] = useState(
+    data.samplingRate
+  );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({
@@ -49,14 +53,20 @@ function ResamplingNode({ id, data }) {
     const targetId = connections?.find((conn) => conn.source === id)?.target;
     setSourceNodeId(sourceId);
     setTargetNodeId(targetId);
-  }, [connections]);
+  }, [connections, id]);
 
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
-  let table = sourceNodeData?.data?.table;
+  const incomingTable = sourceNodeData?.data?.table;
 
-  if (table) {
-    samplingRate = 1 / average(diff(table.slice(1).map((x) => x[0])));
+  if (incomingTable) {
+    tableRef.current = incomingTable;
+
+    samplingRateRef.current =
+      1 / average(diff(incomingTable.slice(1).map((x) => x[0])));
+  } else {
+    tableRef.current = null;
+    samplingRateRef.current = null;
   }
 
   useEffect(() => {
@@ -83,13 +93,14 @@ function ResamplingNode({ id, data }) {
       const table_source = e.detail.table;
 
       if (table_source) {
-        table = table_source;
+        tableRef.current = table_source;
 
-        samplingRate = 1 / average(diff(table.slice(1).map((x) => x[0])));
+        samplingRateRef.current =
+          1 / average(diff(table_source.slice(1).map((x) => x[0])));
 
         const new_table = await requestResample();
 
-        if (targetNodeId) {
+        if (targetNodeId && new_table) {
           const customEvent = new CustomEvent(`execute-node${targetNodeId}`, {
             detail: { table: new_table },
           });
@@ -109,7 +120,7 @@ function ResamplingNode({ id, data }) {
         handleDeleteTable
       );
     };
-  }, [targetNodeId, interpolationTechnique, targetSamplingRate]);
+  }, [targetNodeId, interpolationTechnique, targetSamplingRate, id]);
 
   /**
    * Trigger a delete event when form is changed.
@@ -117,13 +128,16 @@ function ResamplingNode({ id, data }) {
   useEffect(() => {
     const event = new CustomEvent(`delete-source-tables${id}`);
     window.dispatchEvent(event);
-  }, [interpolationTechnique, targetSamplingRate]);
+  }, [interpolationTechnique, targetSamplingRate, id]);
 
   /**
    * Makes a request to the server to resample the table data.
    * @returns {Array} The new resampled table.
    */
   const requestResample = async () => {
+    const table = tableRef.current;
+    const samplingRate = samplingRateRef.current;
+
     if (!table) return;
 
     setExecutionState("running");
@@ -164,13 +178,9 @@ function ResamplingNode({ id, data }) {
     } catch (error) {
       console.error("Failed to apply resampling:", error);
       toast.error("Failed to apply resampling");
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: table, // Reset to original table in case of error
-      }));
 
       setExecutionState("error");
-      return table;
+      return null;
     }
   };
 
@@ -310,10 +320,10 @@ function ResamplingNode({ id, data }) {
         <Button
           variant="subtle"
           size="sm"
-          disabled={!table}
+          disabled={!tableRef.current}
           onClick={requestResample}
           className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${
-            !table ? "" : "dark:text-white"
+            !tableRef.current ? "" : "dark:text-white"
           }`}
         >
           Resample

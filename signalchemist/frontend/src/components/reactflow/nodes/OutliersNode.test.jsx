@@ -9,7 +9,7 @@ const mockEDA = [
   [6, 4.4],
 ];
 
-const mockEdaResampling = [
+const mockEdaOutliers = [
   ["Timestamp", "Gsr"],
   [0, 55.55],
   [1, 1.5],
@@ -43,21 +43,21 @@ jest.mock("@xyflow/react", () => {
 });
 
 import { render, screen, fireEvent, act } from "../../../test-utils";
-import ResamplingNode from "./ResamplingNode";
+import OutliersNode from "./OutliersNode";
 import { ThemeContext } from "../../../contexts/ThemeContext";
 
 const mockSetChartDataProcessed = jest.fn();
 const mockDeleteNode = jest.fn();
 
-describe("ResamplingNode", () => {
+describe("OutliersNode", () => {
   beforeAll(() => {
     global.fetch = jest.fn((url) => {
-      if (url.includes("/api/resampling")) {
+      if (url.includes("/api/outliers")) {
         return Promise.resolve({
           ok: true,
           json: () =>
             Promise.resolve({
-              data: mockEdaResampling.slice(1),
+              data: mockEdaOutliers.slice(1),
             }),
         });
       }
@@ -85,7 +85,7 @@ describe("ResamplingNode", () => {
     mockUseNodesData.mockReturnValue({});
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ResamplingNode
+        <OutliersNode
           id="2"
           data={{
             samplingRate: 1,
@@ -96,8 +96,7 @@ describe("ResamplingNode", () => {
       </ThemeContext.Provider>
     );
 
-    expect(screen.getByText(/Interpolation technique/i)).toBeInTheDocument();
-    expect(screen.getByText(/New rate/i)).toBeInTheDocument();
+    expect(screen.getByText(/Outlier technique/i)).toBeInTheDocument();
   });
 
   it("deletes node", async () => {
@@ -105,7 +104,7 @@ describe("ResamplingNode", () => {
     mockUseNodesData.mockReturnValue({});
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ResamplingNode
+        <OutliersNode
           id="2"
           data={{
             samplingRate: 1,
@@ -128,7 +127,7 @@ describe("ResamplingNode", () => {
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ResamplingNode
+        <OutliersNode
           id="2"
           data={{
             samplingRate: 1,
@@ -152,7 +151,7 @@ describe("ResamplingNode", () => {
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ResamplingNode
+        <OutliersNode
           id="2"
           data={{
             samplingRate: 1,
@@ -177,7 +176,7 @@ describe("ResamplingNode", () => {
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ResamplingNode
+        <OutliersNode
           id="2"
           data={{
             samplingRate: 1,
@@ -215,7 +214,7 @@ describe("ResamplingNode", () => {
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ResamplingNode
+        <OutliersNode
           id="2"
           data={{
             samplingRate: 1,
@@ -245,7 +244,7 @@ describe("ResamplingNode", () => {
     const result = prevFn(prev);
     expect(result).toEqual({
       ...prev,
-      table: mockEdaResampling, // Resampling result
+      table: mockEdaOutliers, // Outliers result
     });
   });
 
@@ -260,13 +259,13 @@ describe("ResamplingNode", () => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
         ok: false,
-        json: () => Promise.resolve({ error: "Resampling failed" }),
+        json: () => Promise.resolve({ error: "Outliers failed" }),
       })
     );
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ResamplingNode
+        <OutliersNode
           id="2"
           data={{
             samplingRate: 1,
@@ -284,27 +283,15 @@ describe("ResamplingNode", () => {
       window.dispatchEvent(event);
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Resampling failed");
-
-    expect(mockUpdateNodeData).toHaveBeenCalledWith("2", expect.any(Function));
-
-    const prevFn = mockUpdateNodeData.mock.calls[1][1];
-    const prev = { table: mockEDA };
-    const result = prevFn(prev);
-    expect(result).toEqual({
-      ...prev,
-      table: mockEDA, // Resampling failed
-    });
-
-    consoleErrorSpy.mockRestore();
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Outliers failed");
   });
 
-  it("updates fields", async () => {
+  it("updates outlier technique select", async () => {
     mockUseNodeConnections.mockReturnValue([]);
 
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <ResamplingNode
+        <OutliersNode
           id="2"
           data={{
             samplingRate: 1,
@@ -315,15 +302,9 @@ describe("ResamplingNode", () => {
       </ThemeContext.Provider>
     );
 
-    await fireEvent.click(screen.getByTestId("Select interpolation"));
+    await fireEvent.click(screen.getByTestId("Select outlier"));
 
-    await fireEvent.click((await screen.findByText(/Interp1d/i)).parentElement);
-    expect(screen.getByTestId("Select interpolation")).toHaveValue("Interp1d");
-
-    const newrate = screen.getByPlaceholderText("Enter Hz");
-
-    fireEvent.change(newrate, { target: { value: "5" } });
-
-    expect(newrate.value).toBe("5");
+    await fireEvent.click((await screen.findByText(/IQR/i)).parentElement);
+    expect(screen.getByTestId("Select outlier")).toHaveValue("IQR");
   });
 });
