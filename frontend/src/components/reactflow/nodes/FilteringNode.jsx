@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Handle,
   Position,
@@ -51,13 +51,15 @@ const filtersFields = {
  * @returns {JSX.Element} Visual representation of the filtering node with UI for selecting a filter, configuring parameters, and executing the filtering operation
  */
 function FilteringNode({ id, data }) {
-  let samplingRate = data.samplingRate;
+  const tableRef = useRef(null);
+  const samplingRateRef = useRef(data.samplingRate);
+  const windowSizeRef = useRef(
+    Math.round(data.samplingRate / 3) % 2 === 0
+      ? Math.round(data.samplingRate / 3) + 1
+      : Math.round(data.samplingRate / 3)
+  );
 
-  let window_size = Math.round(samplingRate / 3);
-  if (window_size % 2 === 0) {
-    window_size += 1;
-  }
-  filtersFields.savgol.window_size = window_size;
+  filtersFields.savgol.window_size = windowSizeRef.current;
 
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
@@ -80,19 +82,26 @@ function FilteringNode({ id, data }) {
     const targetId = connections?.find((conn) => conn.source === id)?.target;
     setSourceNodeId(sourceId);
     setTargetNodeId(targetId);
-  }, [connections]);
+  }, [connections, id]);
 
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
-  let table = sourceNodeData?.data?.table;
+  const incomingTable = sourceNodeData?.data?.table;
 
-  if (table) {
-    samplingRate = 1 / average(diff(table.slice(1).map((x) => x[0])));
+  if (incomingTable) {
+    tableRef.current = incomingTable;
 
-    window_size = Math.round(samplingRate / 3);
-    if (window_size % 2 === 0) {
-      window_size += 1;
+    samplingRateRef.current =
+      1 / average(diff(incomingTable.slice(1).map((x) => x[0])));
+
+    windowSizeRef.current = Math.round(samplingRateRef.current / 3);
+    if (windowSizeRef.current % 2 === 0) {
+      windowSizeRef.current += 1;
     }
+  } else {
+    tableRef.current = null;
+    samplingRateRef.current = null;
+    windowSizeRef.current = null;
   }
 
   useEffect(() => {
@@ -119,18 +128,19 @@ function FilteringNode({ id, data }) {
       const table_source = e.detail.table;
 
       if (table_source) {
-        table = table_source;
+        tableRef.current = table_source;
 
-        samplingRate =
+        samplingRateRef.current =
           1 / average(diff(table_source.slice(1).map((x) => x[0])));
 
-        window_size = Math.round(samplingRate / 3);
-        if (window_size % 2 === 0) {
-          window_size += 1;
+        windowSizeRef.current = Math.round(samplingRateRef.current / 3);
+        if (windowSizeRef.current % 2 === 0) {
+          windowSizeRef.current += 1;
         }
+
         const new_table = await requestFilter();
 
-        if (targetNodeId) {
+        if (targetNodeId && new_table) {
           const customEvent = new CustomEvent(`execute-node${targetNodeId}`, {
             detail: { table: new_table },
           });
@@ -150,7 +160,7 @@ function FilteringNode({ id, data }) {
         handleDeleteTable
       );
     };
-  }, [targetNodeId, filter, fields]);
+  }, [targetNodeId, filter, fields, id]);
 
   /**
    * Trigger a delete event when filter configuration changes.
@@ -158,13 +168,16 @@ function FilteringNode({ id, data }) {
   useEffect(() => {
     const event = new CustomEvent(`delete-source-tables${id}`);
     window.dispatchEvent(event);
-  }, [filter, fields]);
+  }, [filter, fields, id]);
 
   /**
    * Makes a request to the server to filter the table data.
    * @returns {Array} The new filtered table.
    */
   const requestFilter = async () => {
+    const table = tableRef.current;
+    const samplingRate = samplingRateRef.current;
+
     if (!table) return;
 
     setExecutionState("running");
@@ -213,13 +226,9 @@ function FilteringNode({ id, data }) {
     } catch (error) {
       console.error("Failed to apply filter:", error);
       toast.error("Failed to apply filter");
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: table, // Reset to original table on error
-      }));
 
       setExecutionState("error");
-      return table;
+      return null;
     }
   };
 
@@ -349,10 +358,10 @@ function FilteringNode({ id, data }) {
         <Button
           variant="subtle"
           size="sm"
-          disabled={!table}
+          disabled={!tableRef.current}
           onClick={requestFilter}
           className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${
-            !table ? "" : "dark:text-white"
+            !tableRef.current ? "" : "dark:text-white"
           }`}
         >
           Filter

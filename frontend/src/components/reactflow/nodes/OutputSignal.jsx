@@ -1,10 +1,5 @@
 import { useEffect } from "react";
-import {
-  Handle,
-  Position,
-  useNodeConnections,
-  useNodesData,
-} from "@xyflow/react";
+import { Position, useNodeConnections, useNodesData } from "@xyflow/react";
 import { Card } from "@mantine/core";
 import DownloadSignal from "../../common/DownloadSignal";
 import HandleLimit from "../edges/HandleLimit";
@@ -33,7 +28,7 @@ function OutputSignal({ id, data }) {
   // Update the global chart data when source data changes
   useEffect(() => {
     data.setChartDataProcessed(table);
-  }, [sourceId, sourceNodeData]);
+  }, [sourceId, sourceNodeData, data, table]);
 
   return (
     <Card className="bg-white dark:bg-gray-900 border border-transparent dark:border-gray-600 shadow-lg dark:shadow-xl rounded-lg p-4 mt-2 relative overflow-visible">

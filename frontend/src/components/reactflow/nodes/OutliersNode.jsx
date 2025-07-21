@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Handle,
   Position,
@@ -25,6 +25,8 @@ import HandleLimit from "../edges/HandleLimit";
  * @returns {JSX.Element} Visual and functional representation of the outlier detection node
  */
 function OutliersNode({ id, data }) {
+  const tableRef = useRef(null);
+
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
@@ -44,11 +46,11 @@ function OutliersNode({ id, data }) {
     const targetId = connections?.find((conn) => conn.source === id)?.target;
     setSourceNodeId(sourceId);
     setTargetNodeId(targetId);
-  }, [connections]);
+  }, [connections, id]);
 
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
-  let table = sourceNodeData?.data?.table;
+  tableRef.current = sourceNodeData?.data?.table;
 
   useEffect(() => {
     /**
@@ -74,10 +76,11 @@ function OutliersNode({ id, data }) {
       const table_source = e.detail.table;
 
       if (table_source) {
-        table = table_source;
+        tableRef.current = table_source;
+
         const new_table = await requestOutliers();
 
-        if (targetNodeId) {
+        if (targetNodeId && new_table) {
           const customEvent = new CustomEvent(`execute-node${targetNodeId}`, {
             detail: { table: new_table },
           });
@@ -97,7 +100,7 @@ function OutliersNode({ id, data }) {
         handleDeleteTable
       );
     };
-  }, [targetNodeId, outlierTechnique]);
+  }, [targetNodeId, outlierTechnique, id]);
 
   /**
    * Trigger a delete event when filter configuration changes.
@@ -105,13 +108,14 @@ function OutliersNode({ id, data }) {
   useEffect(() => {
     const event = new CustomEvent(`delete-source-tables${id}`);
     window.dispatchEvent(event);
-  }, [outlierTechnique]);
+  }, [outlierTechnique, id]);
 
   /**
    * Makes a request to apply the selected outlier detection technique.
    * @returns {Array} New table after removing outliers
    */
   const requestOutliers = async () => {
+    const table = tableRef.current;
     if (!table) return;
 
     setExecutionState("running");
@@ -151,13 +155,9 @@ function OutliersNode({ id, data }) {
     } catch (error) {
       console.error("Failed to apply outliers:", error);
       toast.error("Failed to apply outliers");
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: table, // Reset to original table on error
-      }));
 
       setExecutionState("error");
-      return table;
+      return null;
     }
   };
 
@@ -272,10 +272,10 @@ function OutliersNode({ id, data }) {
           variant="subtle"
           size="sm"
           color="grey"
-          disabled={!table}
+          disabled={!tableRef.current}
           onClick={requestOutliers}
           className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${
-            !table ? "" : "dark:text-white"
+            !tableRef.current ? "" : "dark:text-white"
           }`}
         >
           Apply Outliers

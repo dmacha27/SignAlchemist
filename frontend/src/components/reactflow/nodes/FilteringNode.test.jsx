@@ -285,18 +285,6 @@ describe("FilteringNode", () => {
     });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith("Filtering failed");
-
-    expect(mockUpdateNodeData).toHaveBeenCalledWith("2", expect.any(Function));
-
-    const prevFn = mockUpdateNodeData.mock.calls[1][1];
-    const prev = { table: mockEDA };
-    const result = prevFn(prev);
-    expect(result).toEqual({
-      ...prev,
-      table: mockEDA, // Filtering failed
-    });
-
-    consoleErrorSpy.mockRestore();
   });
 
   it("updates filter and fields when filter changes", async () => {

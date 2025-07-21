@@ -1,9 +1,5 @@
-import { useEffect, useState } from "react";
-import {
-  Handle,
-  Position,
-  useNodeConnections,
-} from "@xyflow/react";
+import { useEffect } from "react";
+import { Handle, Position, useNodeConnections } from "@xyflow/react";
 import { Card } from "@mantine/core";
 
 /**
@@ -17,8 +13,8 @@ import { Card } from "@mantine/core";
  * @returns {JSX.Element} The visual representation of the signal table
  */
 function InputSignal({ id, data }) {
-  const [headers, setHeaders] = useState(data.table[0]);
-  const [table, setTable] = useState(data.table);
+  const headers = data.table[0];
+  const table = data.table;
 
   const outgoingConnections = useNodeConnections({
     type: "source",
@@ -44,7 +40,7 @@ function InputSignal({ id, data }) {
      */
     const handleExecute = () => {
       const event = new CustomEvent(`execute-node${targetNodeId}`, {
-        detail: { table: data.table },
+        detail: { table: table },
       });
       window.dispatchEvent(event);
     };
@@ -57,7 +53,7 @@ function InputSignal({ id, data }) {
       window.removeEventListener("start-execute", handleExecute);
       window.removeEventListener("delete-source-tables0", handleDeleteTable);
     };
-  }, [targetNodeId]);
+  }, [targetNodeId, table]);
 
   return (
     <Card className="bg-white dark:bg-gray-900 border border-transparent dark:border-gray-600 shadow-lg dark:shadow-xl rounded-lg p-4 mt-2 relative overflow-visible">

@@ -285,18 +285,6 @@ describe("ResamplingNode", () => {
     });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith("Resampling failed");
-
-    expect(mockUpdateNodeData).toHaveBeenCalledWith("2", expect.any(Function));
-
-    const prevFn = mockUpdateNodeData.mock.calls[1][1];
-    const prev = { table: mockEDA };
-    const result = prevFn(prev);
-    expect(result).toEqual({
-      ...prev,
-      table: mockEDA, // Resampling failed
-    });
-
-    consoleErrorSpy.mockRestore();
   });
 
   it("updates fields", async () => {

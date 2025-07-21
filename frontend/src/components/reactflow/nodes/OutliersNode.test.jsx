@@ -284,18 +284,6 @@ describe("OutliersNode", () => {
     });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith("Outliers failed");
-
-    expect(mockUpdateNodeData).toHaveBeenCalledWith("2", expect.any(Function));
-
-    const prevFn = mockUpdateNodeData.mock.calls[1][1];
-    const prev = { table: mockEDA };
-    const result = prevFn(prev);
-    expect(result).toEqual({
-      ...prev,
-      table: mockEDA, // Outlier failed
-    });
-
-    consoleErrorSpy.mockRestore();
   });
 
   it("updates outlier technique select", async () => {
