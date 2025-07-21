@@ -117,14 +117,14 @@ Features
    :width: 600px
    :align: center
 
-   Example of an spectrum chart after going to X on both charts.
+   Example of a spectrum chart after going to X on both charts.
 
 .. figure:: _static/spectrumchart_gotoy.png
    :alt: Chart widget example
    :width: 600px
    :align: center
 
-   Example of an spectrum chart after going to Y range on both charts.
+   Example of a spectrum chart after going to Y range on both charts.
 
 
 Comparison Charts
@@ -186,14 +186,14 @@ Features
    :width: 500px
    :align: center
 
-   Example of an spectrum chart after going to X.
+   Example of a spectrum chart after going to X.
 
 .. figure:: _static/comparisonchart_spectrum_gotoy.png
    :alt: Chart widget example
    :width: 500px
    :align: center
 
-   Example of an spectrum chart after going to Y range.
+   Example of a spectrum chart after going to Y range.
 
 
 Metrics

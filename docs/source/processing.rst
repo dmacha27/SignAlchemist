@@ -6,7 +6,7 @@ The **processing** panel is the most powerful feature of SignAlchemist. It allow
 Overview
 --------
 
-Inspired by tools like `KNIME <https://www.knime.com/>`_, the workflow editor lets users visually compose pipelines by connecting modular blocks (nodes). Each node corresponds to a preprocessing step, such as resampling, filtering, or outlier detection, and includes its own configurable parameters and controls.
+Inspired by tools like `Orange <https://orangedatamining.com/>`_, `KNIME <https://www.knime.com/>`_ or `Node-RED <https://nodered.org/>`_, the workflow editor lets users visually compose pipelines by connecting modular blocks (nodes). Each node corresponds to a preprocessing step, such as resampling, filtering, or outlier detection, and includes its own configurable parameters and controls.
 
 This interface removes the need for coding while maintaining flexibility and transparency in signal processing.
 
@@ -48,7 +48,7 @@ Applications examples
 ---------------------
 
 - Beginners can build pipelines with predefined modules by simply connecting blocks —ideal for EDA or PPG signals.
-- Advanced users can insert custom Python code for personalised filters.
+- Advanced users can execute custom Python code for personalised filters.
 - Researchers can visualise how each step affects the signal and export intermediate or final results.
 
 Workflow example

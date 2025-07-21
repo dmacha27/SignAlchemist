@@ -14,7 +14,7 @@ Firstly, there is a drag and drop box to upload the file, it can also be done in
 
 For those who just want to test the application, there is a small button and a drop-down menu on the left to download two sample signals.
 
-Once the files have been loaded, a table with all the contents of the csv file will be displayed at the very bottom. 
+Once the files have been loaded, a table with all the content of the csv file will be displayed at the very bottom. 
 
 .. image:: _static/signal_table.png
    :alt: CSV file content table

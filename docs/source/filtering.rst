@@ -1,7 +1,7 @@
 Filtering
 =========
 
-Filtering is a fundamental step in signal preprocessing, especially for cleaning and enhancing physiological data such as PPG and EDA.
+Filtering is a fundamental step in signal preprocessing, especially for cleaning and enhancing physiological data such as photoplethysmogram (PPG) and electrodermal activity (EDA).
 
 Overview
 --------
@@ -17,7 +17,7 @@ You can select from several built-in filters via a dropdown:
 **Butterworth Filter**
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The Butterworth filter is a classic IIR (Infinite Impulse Response) filter known for having a maximally flat frequency response in the passband. This ensures minimal distortion of amplitude in the preserved frequency range.
+The `Butterworth filter <https://en.wikipedia.org/wiki/Butterworth_filter>`_ is a classic IIR (Infinite Impulse Response) filter known for having a maximally flat frequency response in the passband. This ensures minimal distortion of amplitude in the preserved frequency range.
 
 - *Type*: IIR
 - *Phase response*: Non-linear
@@ -27,7 +27,7 @@ The Butterworth filter is a classic IIR (Infinite Impulse Response) filter known
 **Bessel Filter**
 ~~~~~~~~~~~~~~~~~
 
-The Bessel filter is designed to maintain the wave shape of signals in the time domain, making it valuable in applications that require minimal phase distortion.
+The `Bessel filter <https://en.wikipedia.org/wiki/Bessel_filter>`_ is designed to maintain the wave shape of signals in the time domain, making it valuable in applications that require minimal phase distortion.
 
 - *Type*: IIR
 - *Phase response*: Nearly linear
@@ -37,7 +37,7 @@ The Bessel filter is designed to maintain the wave shape of signals in the time 
 **FIR (Finite Impulse Response) Filter**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-FIR filters are known for their inherent stability and linear phase behaviour. They are non-recursive and rely on a finite number of input samples.
+`FIR filters <https://en.wikipedia.org/wiki/Finite_impulse_response>`_  are known for their inherent stability and linear phase behaviour. They are non-recursive and rely on a finite number of input samples.
 
 - *Type*: FIR (non-recursive)
 - *Phase response*: Linear
@@ -47,7 +47,7 @@ FIR filters are known for their inherent stability and linear phase behaviour. T
 **Savitzky-Golay Filter**
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Unlike traditional frequency-based filters, the Savitzky-Golay filter smooths data by fitting successive subsets with low-degree polynomials using linear least squares.
+Unlike traditional frequency-based filters, the `Savitzky-Golay filter <https://en.wikipedia.org/wiki/Savitzky–Golay_filter>`_ smooths data by fitting successive subsets with low-degree polynomials using linear least squares.
 
 - *Type*: Smoothing filter
 - *Applications*: Peak preservation in PPG, EDA, and spectroscopic signals
