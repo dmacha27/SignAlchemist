@@ -57,6 +57,7 @@ async def resampling(
     """
     Resample a signal with state-of-art interpolation techniques.
     """
+    python_enabled = os.getenv("PYTHON_ENABLED") == "true"
 
     signal = np.array(json.loads(signal), dtype=np.float64)
 
@@ -65,6 +66,16 @@ async def resampling(
 
     duration = max_timestamp - min_timestamp
     num_samples = int(np.floor(duration * target_sampling_rate)) + 1
+
+    if not python_enabled:
+        MAX_SAMPLES_ALLOWED = 200_000
+        if num_samples > MAX_SAMPLES_ALLOWED:
+            return JSONResponse(
+                content={
+                    "error": "Resampling request too large for production server."
+                },
+                status_code=400
+            )
 
     new_time = min_timestamp + \
         np.arange(num_samples, dtype=np.float64) / target_sampling_rate
