@@ -197,7 +197,7 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
                   id={field}
                   placeholder={`Enter ${field}`}
                   value={fieldConfig}
-                  min={1}
+                  min={0.01}
                   onBlur={(event) => {
                     if (event.target.value === "") {
                       onFieldChange(field, 1);
