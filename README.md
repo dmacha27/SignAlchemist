@@ -1,6 +1,5 @@
-
 <p align="center" style="background-color: white; padding: 10px; border-radius: 15px;">
-  <img src="SignAlchemist.png" alt="SignAlchemist" width="350" />
+  <img src="img/SignAlchemist.png" alt="SignAlchemist" width="350" />
 </p>
 
 # ⚗️ SignAlchemist
@@ -11,9 +10,9 @@ The application has been designed with up-to-date web-based frameworks that make
 
 ## ✨ Features (more to come!)
 
-- **Resampling:** changes the sampling rate of the signal by using several interpolation techniques such as *spline* or *interp1d*. This is useful when signals come from different sources or when they need to be normalized to a common frequency.
-- **Filtering:** removes artefacts (*e.g.*, noise, high-frequency...) using different filters including *Butterworth*, *Bessel*, *FIR*, and *Savitzky-Golay*. Parameters such as cutoff frequencies can be set based on user needs. Furthermore, users can create and customize their own filters using Python by following the instructions on the page.
-- **Outlier detection:** identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the *Hampel* filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.
+- **Resampling:** changes the sampling rate of the signal by using several interpolation techniques such as _spline_ or _interp1d_. This is useful when signals come from different sources or when they need to be normalized to a common frequency.
+- **Filtering:** removes artefacts (_e.g._, noise, high-frequency...) using different filters including _Butterworth_, _Bessel_, _FIR_, and _Savitzky-Golay_. Parameters such as cutoff frequencies can be set based on user needs. Furthermore, users can create and customize their own filters using Python by following the instructions on the page.
+- **Outlier detection:** identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the _Hampel_ filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.
 
 > **Important:**
 > From now on, all paths and commands will use the `signalchemist` folder as the main project folder.
@@ -24,12 +23,11 @@ The application has been designed with up-to-date web-based frameworks that make
 
 ## 🐳 Environment Variables
 
-
 Edit the environment variables file with:
 
 ```bash
 nano .env
-````
+```
 
 Example configuration:
 
@@ -41,9 +39,9 @@ PYTHON_ENABLED=        # Enable Python scripting support (true/false)
 
 Three environment files are used depending on the context:
 
-* **.env**: Default. Used only when neither `.env.dev` nor `.env.prod` are provided.
-* **.env.dev**: Used for the development build.
-* **.env.prod**: Used for the production build (Python scripting disabled).
+- **.env**: Default. Used only when neither `.env.dev` nor `.env.prod` are provided.
+- **.env.dev**: Used for the development build.
+- **.env.prod**: Used for the production build (Python scripting disabled).
 
 ## 🚧 Development Mode
 
@@ -55,8 +53,8 @@ docker compose -f docker-compose.dev.yml --env-file .env.dev up --build
 
 This will:
 
-* Build and run the containers in development configuration.
-* Use the settings from `.env.dev`.
+- Build and run the containers in development configuration.
+- Use the settings from `.env.dev`.
 
 **Important:** Don't forget the `--env-file` flag to load the correct environment variables.
 
@@ -95,8 +93,8 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
 
 This will:
 
-* Run the app in detached mode (`-d`)
-* Use `.env.prod` as the configuration
+- Run the app in detached mode (`-d`)
+- Use `.env.prod` as the configuration
 
 **Note:** In production mode, Python scripting must be disabled for security reasons.
 
@@ -110,15 +108,13 @@ In production, the application is composed of three containers:
 
 ## Port Behavior
 
-
-- `VITE_BACKEND_PORT` specifies the **internal port** used by the backend container.  
+- `VITE_BACKEND_PORT` specifies the **internal port** used by the backend container.
 - `FRONTEND_PORT` is the **host port** that maps to Nginx — this is the only port exposed to the outside world.
 - The **frontend container** serves/listens on port `80` internally and is only accessed by Nginx.
 
 So, when a user accesses the application via `http://localhost:<FRONTEND_PORT>` (whatever domain/IP), the request is actually handled by the Nginx container.
 
 ## Nginx Routing Logic
-
 
 Nginx forwards requests based on their path:
 
@@ -176,3 +172,11 @@ http://localhost:5173
 # 📄 License
 
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
+
+# 🏛️ Acknowledgments
+
+This work is part of the project <strong>TED2021-129485B-C43</strong> funded by <strong>MCIN/AEI/10.13039/501100011033</strong> and the European Union <em>“NextGenerationEU”/PRTR</em> and project <strong>PID2023-150694OA-I00</strong> funded by <strong>MICIU/AEI/10.13039/501100011033</strong> and by <em>“ERDF/EU”</em>. </p>
+
+<p align="center" style="background-color: white; padding: 10px; border-radius: 15px;">
+  <img src="img/MICIU.png" alt="MICIU Logo" width="350" />
+</p>
