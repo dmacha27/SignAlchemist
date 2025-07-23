@@ -123,20 +123,23 @@ const ComparisonSpectrumChart = memo(
     const isLargeDataset =
       dataset1.length > MAX_DATA_LENGTH || dataset2.length > MAX_DATA_LENGTH;
 
+    const allX = [...dataset1, ...dataset2].map((d) => d.x);
+    const allY = [...dataset1, ...dataset2].map((d) => d.y);
+
     const minXValue = useMemo(() => {
-      return Math.min(...dataset1.map((d) => d.x), ...dataset2.map((d) => d.x));
+      return allX.reduce((min, val) => Math.min(min, val), Infinity);
     }, [dataset1, dataset2]);
 
     const maxXValue = useMemo(() => {
-      return Math.max(...dataset1.map((d) => d.x), ...dataset2.map((d) => d.x));
+      return allX.reduce((max, val) => Math.max(max, val), -Infinity);
     }, [dataset1, dataset2]);
 
     const minYValue = useMemo(() => {
-      return Math.min(...dataset1.map((d) => d.y), ...dataset2.map((d) => d.y));
+      return allY.reduce((min, val) => Math.min(min, val), Infinity);
     }, [dataset1, dataset2]);
 
     const maxYValue = useMemo(() => {
-      return Math.max(...dataset1.map((d) => d.y), ...dataset2.map((d) => d.y));
+      return allY.reduce((max, val) => Math.max(max, val), -Infinity);
     }, [dataset1, dataset2]);
 
     const zoomRangeX = (maxXValue - minXValue) * 0.02;
@@ -257,7 +260,7 @@ const ComparisonSpectrumChart = memo(
         yMax <= maxYValue
       ) {
         handleResetZoom(chartRef.current);
-        
+
         const zoomRangeY = (yMax - yMin) * 0.02;
         chartRef.current.config.options.scales.y.min = yMin - zoomRangeY;
         chartRef.current.config.options.scales.y.max = yMax + zoomRangeY;

@@ -127,10 +127,17 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
         magnitude: magnitudes[ix],
       }));
 
-      const minXValue = Math.min(...frequencies);
-      const maxXValue = Math.max(...frequencies);
-      const minYValue = Math.min(...magnitudes);
-      const maxYValue = Math.max(...magnitudes);
+      console.log(magnitudes);
+      const minXValue = frequencies[0];
+      const maxXValue = frequencies[frequencies.length - 1];
+      const minYValue = magnitudes.reduce(
+        (min, val) => Math.min(min, val),
+        Infinity
+      );
+      const maxYValue = magnitudes.reduce(
+        (max, val) => Math.max(max, val),
+        -Infinity
+      );
 
       const zoomRangeX = (maxXValue - minXValue) * 0.02;
 

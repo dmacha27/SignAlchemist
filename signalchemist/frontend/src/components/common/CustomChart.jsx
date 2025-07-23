@@ -106,8 +106,8 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
   const draggableRef = useRef(null);
   const [headers, ...rows] = table;
 
-  const minValue = Math.min(...rows.map((row) => row[0])); //seconds
-  const maxValue = Math.max(...rows.map((row) => row[0]));
+  const minValue = rows[0]; //seconds
+  const maxValue = rows[rows.length - 1];
   const zoomRangeX = parseInt((maxValue * 1000 - minValue * 1000) * 0.02);
   const isLargeDataset = rows.length > MAX_DATA_LENGTH;
 
