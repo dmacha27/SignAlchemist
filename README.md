@@ -14,10 +14,18 @@ The application has been designed with up-to-date web-based frameworks that make
 - **Filtering:** removes artefacts (_e.g._, noise, high-frequency...) using different filters including _Butterworth_, _Bessel_, _FIR_, and _Savitzky-Golay_. Parameters such as cutoff frequencies can be set based on user needs. Furthermore, users can create and customize their own filters using Python by following the instructions on the page.
 - **Outlier detection:** identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the _Hampel_ filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.
 
-> **Important:**
-> From now on, all paths and commands will use the `signalchemist` folder as the main project folder.
+
+# 🎥 Video Tutorials
+
+A collection of SignAlchemist use case tutorials is available at the following link:
+
+[Watch the tutorials](https://universidaddeburgos-my.sharepoint.com/:f:/g/personal/glucas_ubu_es/EmhyI_ieM3xKkTKPiEKQrxYB928R9u7fzLJ7SWowcEog5g?e=Ng13BW)
+
 
 # Installation
+
+> **Important:**
+> From now on, all paths and commands will use the `signalchemist` folder as the main project folder.
 
 **SignAlchemist** uses Docker containers to simplify the installation and deployment process.
 
