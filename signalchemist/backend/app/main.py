@@ -34,6 +34,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+MAX_SAMPLES_ALLOWED = 150_000  # Maximum samples allowed for processing in production
+
+
+def check_max_samples(length: int, operation: str):
+    python_enabled = os.getenv("PYTHON_ENABLED") == "true"
+    if not python_enabled and length > MAX_SAMPLES_ALLOWED:
+        return JSONResponse(
+            content={
+                "error": f"{operation} request too large for production server."},
+            status_code=400
+        )
+    return None
+
 
 @app.get("/", tags=["System"])
 def read_root():
@@ -57,8 +70,6 @@ async def resampling(
     """
     Resample a signal with state-of-art interpolation techniques.
     """
-    python_enabled = os.getenv("PYTHON_ENABLED") == "true"
-
     signal = np.array(json.loads(signal), dtype=np.float64)
 
     min_timestamp = signal[:, 0].min()
@@ -67,15 +78,9 @@ async def resampling(
     duration = max_timestamp - min_timestamp
     num_samples = int(np.floor(duration * target_sampling_rate)) + 1
 
-    if not python_enabled:
-        MAX_SAMPLES_ALLOWED = 200_000
-        if num_samples > MAX_SAMPLES_ALLOWED:
-            return JSONResponse(
-                content={
-                    "error": "Resampling request too large for production server."
-                },
-                status_code=400
-            )
+    error = check_max_samples(num_samples, "Resampling")
+    if error:
+        return error
 
     new_time = min_timestamp + \
         np.arange(num_samples, dtype=np.float64) / target_sampling_rate
@@ -110,6 +115,10 @@ async def outliers(
     """
     signal = np.array(json.loads(signal))
     values = signal[:, 1]
+
+    error = check_max_samples(len(values), "Outlier detection")
+    if error:
+        return error
 
     if outlier_technique == "hampel":
         new_values = hampel(values)
@@ -146,6 +155,10 @@ async def filtering(
         config = json.loads(filter_config)
         data = np.array(json.loads(signal))
         python_enabled = os.getenv("PYTHON_ENABLED") == "true"
+
+        error = check_max_samples(len(data), "Filtering")
+        if error:
+            return error
 
         if "python" in config and config["python"]:
             if not python_enabled:
@@ -192,6 +205,11 @@ def get_metrics(
     try:
         data = np.array(json.loads(signal))
         values = data[:, 1]
+
+        error = check_max_samples(len(values), "Metrics")
+        if error:
+            return error
+
     except Exception as e:
         return {"error": f"Invalid signal format: {e}"}
 
