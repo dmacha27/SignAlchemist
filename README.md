@@ -19,7 +19,7 @@ The application has been designed with up-to-date web-based frameworks that make
 
 A collection of SignAlchemist use case tutorials is available at the following link:
 
-[Watch the tutorials](https://universidaddeburgos-my.sharepoint.com/:f:/g/personal/glucas_ubu_es/EmhyI_ieM3xKkTKPiEKQrxYB928R9u7fzLJ7SWowcEog5g?e=Ng13BW)
+[![Use case example](img/signalchemist.gif)](https://universidaddeburgos-my.sharepoint.com/:f:/g/personal/glucas_ubu_es/EmhyI_ieM3xKkTKPiEKQrxYB928R9u7fzLJ7SWowcEog5g?e=Ng13BW)
 
 
 # Installation
