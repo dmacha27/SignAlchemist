@@ -14,6 +14,9 @@ The application has been designed with up-to-date web-based frameworks that make
 - **Filtering:** removes artefacts (_e.g._, noise, high-frequency...) using different filters including _Butterworth_, _Bessel_, _FIR_, and _Savitzky-Golay_. Parameters such as cutoff frequencies can be set based on user needs. Furthermore, users can create and customize their own filters using Python by following the instructions on the page.
 - **Outlier detection:** identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the _Hampel_ filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.
 
+# 📚 Read the Docs
+
+Check the [official documentation](https://signalchemist.readthedocs.io/en/latest/) to learn about usage, examples, and additional details.
 
 # 🎥 Video Tutorials
 
