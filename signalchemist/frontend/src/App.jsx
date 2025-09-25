@@ -36,6 +36,7 @@ import {
   FaProjectDiagram,
   FaHome,
   FaGithub,
+  FaBook,
 } from "react-icons/fa";
 
 // Get default system or prefered theme
@@ -191,13 +192,23 @@ const App = () => {
                 </ul>
               </div>
               <hr className="my-3 border-gray-200 sm:mx-auto dark:border-gray-700" />
-              <span className="text-sm text-gray-500 text-center dark:text-gray-400 flex items-center justify-center gap-2">
-                <FaGithub />
+              <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-4">
                 <a
                   href="https://github.com/dmacha27/SignAlchemist"
-                  className="hover:underline"
+                  className="flex items-center gap-1 hover:underline"
+                  aria-label="Source code on GitHub"
                 >
-                  Source code
+                  <FaGithub /> Source code
+                </a>
+
+                <span className="text-gray-400">•</span>
+
+                <a
+                  href="https://signalchemist.readthedocs.io/en/latest/"
+                  className="flex items-center gap-1 hover:underline"
+                  aria-label="Read the documentation"
+                >
+                  <FaBook /> Read the Docs
                 </a>
               </span>
             </div>
