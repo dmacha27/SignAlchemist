@@ -40,7 +40,6 @@ import {
   Text,
   Image,
   Group,
-  Stack,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import CustomChart from "./common/CustomChart";
@@ -269,6 +268,7 @@ const CSVUploader = memo(
     setSignalValues,
     samplingRate,
     setSamplingRate,
+    setChartDataOriginal,
   }) => {
     const [file, setFile] = useState(null);
     const fileUploader = useRef();
@@ -298,7 +298,7 @@ const CSVUploader = memo(
       errorMessage.textContent = "";
       setSignalType(signalType_select.value);
       setTimestampColumn(parseInt(timestampColumn_select.value));
-      setSamplingRate(parseFloat(samplingRate_select.value));
+      setSamplingRate(parseFloat(samplingRate_select.value).toFixed(1));
       setSignalValues(parseInt(signalValues_select.value));
 
       open();
@@ -320,7 +320,7 @@ const CSVUploader = memo(
       const new_file = event.files[0];
 
       if (!new_file) return;
-
+      setChartDataOriginal(null);
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target.result;
@@ -556,7 +556,7 @@ const Home = () => {
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const { isDarkMode: isDark } = useContext(ThemeContext);
   const [cropValues, setCropValues] = useState();
-
+  console.log("Si", samplingRate);
   //const roundIfReallyClose = (num) => { return Math.abs(num - Math.round(num)) <= 0.01 ? Math.round(num) : num }
 
   useEffect(() => {
@@ -592,7 +592,7 @@ const Home = () => {
       data_original.sort((a, b) => a[0] - b[0]); // Ascending timestamps
 
       calculated_samplingrate = 1 / average(diff(x));
-      setSamplingRate(calculated_samplingrate);
+      setSamplingRate(parseInt(calculated_samplingrate.toFixed(1)));
     }
 
     setChartDataOriginal(data_original);
@@ -640,6 +640,7 @@ const Home = () => {
         setSignalValues={setSignalValues}
         samplingRate={samplingRate}
         setSamplingRate={setSamplingRate}
+        setChartDataOriginal={setChartDataOriginal}
       />
       <div className="flex flex-wrap justify-center gap-4 p-2">
         <div className="w-full max-w-xl">
@@ -727,6 +728,7 @@ const Home = () => {
                       Crop signal
                     </label>
                     <RangeSlider
+                      key={fileRows.length}
                       className="my-3"
                       id="range-slider"
                       step={1}
@@ -758,7 +760,7 @@ const Home = () => {
                 id="samplingRateBadge"
                 className="bg-blue-500 text-white rounded px-4 py-1 mx-auto w-3/5 mb-4"
               >
-                Detected sampling rate of {samplingRate.toFixed(1)} Hz
+                Detected sampling rate of {samplingRate} Hz
               </div>
             )}
             {chartDataOriginal && fileRows ? (
