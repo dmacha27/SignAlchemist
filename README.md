@@ -16,7 +16,7 @@ The application has been designed with up-to-date web-based frameworks that make
 
 # 📚 Read the Docs
 
-Check the [official documentation](https://signalchemist.readthedocs.io/en/latest/) to learn about usage, examples, and additional details.
+Check the [official documentation](https://signalchemist.dmacha.dev/docs/) to learn about usage, examples, and additional details.
 
 # 🎥 Video Tutorials
 
