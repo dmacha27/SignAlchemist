@@ -1,0 +1,222 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filtering &mdash; SignAlchemist 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Processing" href="processing.html" />
+    <link rel="prev" title="Resampling" href="resampling.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SignAlchemist
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Filtering</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#built-in-filters">Built-in filters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#butterworth-filter"><strong>Butterworth Filter</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bessel-filter"><strong>Bessel Filter</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fir-finite-impulse-response-filter"><strong>FIR (Finite Impulse Response) Filter</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#savitzky-golay-filter"><strong>Savitzky-Golay Filter</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-filters">Custom filters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interface-controls">Interface controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#applications-examples">Applications examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SignAlchemist</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Filtering</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/filtering.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="filtering">
+<h1>Filtering<a class="headerlink" href="#filtering" title="Link to this heading"></a></h1>
+<p>Filtering is a fundamental step in signal preprocessing, especially for cleaning and enhancing physiological data such as photoplethysmogram (PPG) and electrodermal activity (EDA).</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The filtering module enables users to apply a variety of signal filters with full configurability. It offers <strong>several predefined filters</strong> —including widely used digital filtering techniques that can be easily configured through intuitive UI controls— as well as support for <strong>custom Python code</strong> for more advanced use cases.</p>
+</section>
+<section id="built-in-filters">
+<h2>Built-in filters<a class="headerlink" href="#built-in-filters" title="Link to this heading"></a></h2>
+<p>You can select from several built-in filters via a dropdown:</p>
+<section id="butterworth-filter">
+<h3><strong>Butterworth Filter</strong><a class="headerlink" href="#butterworth-filter" title="Link to this heading"></a></h3>
+<p>The <a class="reference external" href="https://en.wikipedia.org/wiki/Butterworth_filter">Butterworth filter</a> is a classic IIR (Infinite Impulse Response) filter known for having a maximally flat frequency response in the passband. This ensures minimal distortion of amplitude in the preserved frequency range.</p>
+<ul class="simple">
+<li><p><em>Type</em>: IIR</p></li>
+<li><p><em>Phase response</em>: Non-linear</p></li>
+<li><p><em>Applications</em>: Ideal for general-purpose filtering when amplitude preservation is critical and phase delay is acceptable.</p></li>
+<li><p><em>Properties</em>: Smooth roll-off, configurable low-pass/high-pass/band-pass</p></li>
+</ul>
+</section>
+<section id="bessel-filter">
+<h3><strong>Bessel Filter</strong><a class="headerlink" href="#bessel-filter" title="Link to this heading"></a></h3>
+<p>The <a class="reference external" href="https://en.wikipedia.org/wiki/Bessel_filter">Bessel filter</a> is designed to maintain the wave shape of signals in the time domain, making it valuable in applications that require minimal phase distortion.</p>
+<ul class="simple">
+<li><p><em>Type</em>: IIR</p></li>
+<li><p><em>Phase response</em>: Nearly linear</p></li>
+<li><p><em>Applications</em>: Signals linke EDA where timing of features must be preserved</p></li>
+<li><p><em>Properties</em>: Gentle roll-off, excellent waveform fidelity, slower transition band</p></li>
+</ul>
+</section>
+<section id="fir-finite-impulse-response-filter">
+<h3><strong>FIR (Finite Impulse Response) Filter</strong><a class="headerlink" href="#fir-finite-impulse-response-filter" title="Link to this heading"></a></h3>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Finite_impulse_response">FIR filters</a>  are known for their inherent stability and linear phase behaviour. They are non-recursive and rely on a finite number of input samples.</p>
+<ul class="simple">
+<li><p><em>Type</em>: FIR (non-recursive)</p></li>
+<li><p><em>Phase response</em>: Linear</p></li>
+<li><p><em>Applications</em>: Situations requiring phase preservation (e.g., feature alignment across channels)</p></li>
+<li><p><em>Properties</em>: Very stable, supports high-order designs, ideal for multirate systems</p></li>
+</ul>
+</section>
+<section id="savitzky-golay-filter">
+<h3><strong>Savitzky-Golay Filter</strong><a class="headerlink" href="#savitzky-golay-filter" title="Link to this heading"></a></h3>
+<p>Unlike traditional frequency-based filters, the <a class="reference external" href="https://en.wikipedia.org/wiki/Savitzky–Golay_filter">Savitzky-Golay filter</a> smooths data by fitting successive subsets with low-degree polynomials using linear least squares.</p>
+<ul class="simple">
+<li><p><em>Type</em>: Smoothing filter</p></li>
+<li><p><em>Applications</em>: Peak preservation in PPG, EDA, and spectroscopic signals</p></li>
+<li><p><em>Properties</em>: Retains sharp features, excellent for denoising without destroying high-frequency events</p></li>
+</ul>
+</section>
+</section>
+<section id="custom-filters">
+<h2>Custom filters<a class="headerlink" href="#custom-filters" title="Link to this heading"></a></h2>
+<p>Advanced users can define their own filtering logic in Python.
+To do this:</p>
+<ol class="arabic">
+<li><p>Select the «Python code» option inside the filtering node.</p></li>
+<li><p>Paste your function following this format:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">filter_signal</span><span class="p">(</span><span class="n">signal</span><span class="p">):</span>
+      <span class="n">new_values</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">gaussian_filter1d</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">new_values</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Make sure the code is well written, with correct tabulations and blank spaces.</p></li>
+<li><p>The function must be named <cite>filter_signal</cite>.</p></li>
+<li><p>The input must be a <strong>single</strong> parameter that represents the signal values.</p></li>
+<li><p>The output must be a filtered array with the <strong>same shape</strong>.</p></li>
+<li><p>If there is a <strong>syntax error</strong> in the code, an error message will be displayed.</p></li>
+<li><p>If the field is <strong>left blank</strong>, the filter will be executed with the other parameters from the form (this field will be ignored).</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<a class="reference internal image-reference" href="_images/filtering_controls.png"><img alt="Filtering panel with code." class="align-center" src="_images/filtering_controls.png" style="width: 50%;" />
+</a>
+</section>
+<section id="interface-controls">
+<h2>Interface controls<a class="headerlink" href="#interface-controls" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Filtering technique</strong>: dropdown menu to choose the method.</p></li>
+<li><p><strong>Parameters</strong>: input fields to specify frequency cutoffs (determines the frequency threshold) and filter order (controls the steepness of the transition band).</p></li>
+<li><p><strong>Execute filter</strong>: applies the filter and updates the results displayed in the interface.</p></li>
+<li><p><strong>Core widgets</strong>: the results are displayed using core widgets, more specifically, charts and spectrum widgets. For more details, refer to the
+<a class="reference internal" href="core_widgets.html"><span class="doc">Core Widgets</span></a>.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/filtering_full_interface.png"><img alt="Filtering full interface." class="align-center" src="_images/filtering_full_interface.png" style="width: 70%;" />
+</a>
+</section>
+<section id="applications-examples">
+<h2>Applications examples<a class="headerlink" href="#applications-examples" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Denoising PPG signals to remove motion artifacts.</p></li>
+<li><p>Extracting low-frequency trends in EDA.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="resampling.html" class="btn btn-neutral float-left" title="Resampling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="processing.html" class="btn btn-neutral float-right" title="Processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, David Martínez-Acha &amp; Gadea Lucas-Pérez.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

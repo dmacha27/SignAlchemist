@@ -1,0 +1,172 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to SignAlchemist! &mdash; SignAlchemist 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            SignAlchemist
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">SignAlchemist</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to SignAlchemist!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <a class="reference internal image-reference" href="_images/logo.png"><img alt="SignAlchemist logo" class="align-center" src="_images/logo.png" style="width: 200px;" />
+</a>
+<section id="welcome-to-signalchemist">
+<h1>Welcome to SignAlchemist!<a class="headerlink" href="#welcome-to-signalchemist" title="Link to this heading"></a></h1>
+<p>SignAlchemist is an open-source web application designed to make physiological signal processing easy; nonetheless, any other signal can be processed.</p>
+<p>Its main aim is to be accessible to practitioners and researchers everywhere, providing a simple graphical user interface based on nodes for novice users, and more complex functionality for people with Python programming knowledge.</p>
+<p>The application has been designed with up-to-date web-based frameworks that make it responsive and easy to use on any device.</p>
+<section id="features-more-to-come">
+<h2>✨ Features (more to come!)<a class="headerlink" href="#features-more-to-come" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Resampling</strong>: changes the sampling rate of the signal by using several interpolation techniques such as spline or interp1d. This is useful when signals come from different sources or when they need to be normalized to a common frequency.</p></li>
+<li><p><strong>Filtering</strong>: removes artefacts (e.g., noise, high-frequency…) using different filters including Butterworth, Bessel, FIR, and Savitzky-Golay. Parameters such as cutoff frequencies can be set based on user needs. Furthermore, users can create and customize their own filters using Python by following the instructions on the page.</p></li>
+<li><p><strong>Outlier detection</strong>: identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the Hampel filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#environment-variables">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#development-mode">Development Mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#production-mode">Production Mode</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#accessing-the-application">Accessing the Application</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#chart">Chart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#spectrum-chart">Spectrum Chart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#comparison-charts">Comparison Charts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#metrics">Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="resampling.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resampling.html#interpolation-techniques">Interpolation techniques</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resampling.html#interface-controls">Interface controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resampling.html#applications-examples">Applications examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="filtering.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filtering.html#built-in-filters">Built-in filters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filtering.html#custom-filters">Custom filters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filtering.html#interface-controls">Interface controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filtering.html#applications-examples">Applications examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#applications-examples">Applications examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#workflow-example">Workflow example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, David Martínez-Acha &amp; Gadea Lucas-Pérez.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

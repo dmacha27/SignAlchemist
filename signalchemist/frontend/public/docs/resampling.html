@@ -1,0 +1,170 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resampling &mdash; SignAlchemist 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Filtering" href="filtering.html" />
+    <link rel="prev" title="Home" href="home.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SignAlchemist
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Resampling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interpolation-techniques">Interpolation techniques</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interface-controls">Interface controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#applications-examples">Applications examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SignAlchemist</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Resampling</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/resampling.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="resampling">
+<h1>Resampling<a class="headerlink" href="#resampling" title="Link to this heading"></a></h1>
+<p>Resampling is often the first step in physiological signal preprocessing, especially when signals are acquired at inconsistent or low sampling rates. This is common with wearable devices, whose widespread use has led to signals being recorded at varying sampling rates and qualities. Resampling helps standardize these signals, enabling more reliable comparisons and calculations.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The resampling module allows you to transform your raw signal to a new, consistent sampling rate using a variety of interpolation techniques.</p>
+<p>This is useful to:</p>
+<ul class="simple">
+<li><p>Standardise input signals from different sources</p></li>
+<li><p>Improve time resolution</p></li>
+<li><p>Prepare data for machine learning or statistical analysis</p></li>
+</ul>
+</section>
+<section id="interpolation-techniques">
+<h2>Interpolation techniques<a class="headerlink" href="#interpolation-techniques" title="Link to this heading"></a></h2>
+<p>Users can choose between different interpolation methods:</p>
+<ul class="simple">
+<li><p><strong>Spline</strong>:
+smooth interpolation using B-spline curves. Good for physiological signals with smooth trends.</p></li>
+<li><p><strong>Interp1d</strong>:
+flexible 1D interpolation using SciPy.</p></li>
+</ul>
+</section>
+<section id="interface-controls">
+<h2>Interface controls<a class="headerlink" href="#interface-controls" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Interpolation technique</strong>: select the desired method from the dropdown.</p></li>
+<li><p><strong>Parameters</strong>: the input field correspond to the new rate in Hz (specify the target sampling rate for the signal).</p></li>
+<li><p><strong>Execute resampling</strong>: applies the resampling technique and updates the results displayed in the interface.</p></li>
+<li><p><strong>Core widgets</strong>: the results are displayed using core widgets, more specifically, charts and spectrum widgets. For more details, refer to the
+<a class="reference internal" href="core_widgets.html"><span class="doc">Core Widgets</span></a>.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/resampling_panel.png"><img alt="Resampling panel screenshot" class="align-center" src="_images/resampling_panel.png" style="width: 50%;" />
+</a>
+<p>Once configured, the interface:</p>
+<ul class="simple">
+<li><p>Shows execution status via icons</p></li>
+<li><p>Allows preview of the resampled signal</p></li>
+<li><p>Enables export of the processed data and visual charts</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/resampling_full_interface.png"><img alt="Filtering full interface." class="align-center" src="_images/resampling_full_interface.png" style="width: 70%;" />
+</a>
+</section>
+<section id="applications-examples">
+<h2>Applications examples<a class="headerlink" href="#applications-examples" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Upsampling an EDA signal from 4 Hz to 20 Hz to enable better filter application.</p></li>
+<li><p>Resampling a PPG signal recorded with variable sampling to 100 Hz for standard analysis.</p></li>
+<li><p>Harmonising input signals with different sampling frequencies before model training.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="home.html" class="btn btn-neutral float-left" title="Home" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="filtering.html" class="btn btn-neutral float-right" title="Filtering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, David Martínez-Acha &amp; Gadea Lucas-Pérez.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

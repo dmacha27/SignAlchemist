@@ -100,7 +100,12 @@ const App = () => {
   };
 
   const isHome = location.pathname === "/" || location.pathname === "/about";
-
+  const DocsRedirect = () => {
+    useEffect(() => {
+      window.location.href = "/docs/index.html";
+    }, []);
+    return null;
+  };
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
       <MantineProvider
@@ -161,6 +166,7 @@ const App = () => {
               }
             />
 
+            <Route path="/docs" element={<DocsRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
 
@@ -193,6 +199,7 @@ const App = () => {
               </div>
               <hr className="my-3 border-gray-200 sm:mx-auto dark:border-gray-700" />
               <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-4">
+                {/*
                 <a
                   href="https://github.com/dmacha27/SignAlchemist"
                   className="flex items-center gap-1 hover:underline"
@@ -202,9 +209,9 @@ const App = () => {
                 </a>
 
                 <span className="text-gray-400">•</span>
-
+                */}
                 <a
-                  href="https://signalchemist.readthedocs.io/en/latest/"
+                  href="/docs/"
                   className="flex items-center gap-1 hover:underline"
                   aria-label="Read the documentation"
                 >

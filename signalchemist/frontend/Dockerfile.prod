@@ -11,6 +11,7 @@ ARG VITE_BACKEND_PORT
 ENV VITE_BACKEND_PORT=$VITE_BACKEND_PORT
 
 RUN npm run build
+RUN cp -r public/docs dist/docs
 
 FROM nginx:stable-alpine AS production
 
