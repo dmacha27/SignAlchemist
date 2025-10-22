@@ -1,0 +1,244 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; SignAlchemist 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="Welcome to SignAlchemist!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SignAlchemist
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development-mode">Development Mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#production-mode">Production Mode</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#production-architecture">Production Architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#port-behavior">Port Behavior</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nginx-routing-logic">Nginx Routing Logic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SignAlchemist</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<p><strong>SignAlchemist</strong> uses Docker containers to simplify the installation and deployment process.</p>
+<section id="environment-variables">
+<h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Link to this heading"></a></h2>
+<p>Edit the environment variables file with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nano<span class="w"> </span>.env
+</pre></div>
+</div>
+<p>Example configuration:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>VITE_BACKEND_PORT=     # Port where the backend server will run
+FRONTEND_PORT=         # Port where the frontend will be accessible
+PYTHON_ENABLED=        # Enable Python scripting support (true/false)
+</pre></div>
+</div>
+<p>Three environment files are used depending on the context:</p>
+<ul class="simple">
+<li><p><strong>.env</strong>: Default. Used only when neither <cite>.env.dev</cite> nor <cite>.env.prod</cite> are provided.</p></li>
+<li><p><strong>.env.dev</strong>: Used for the development build.</p></li>
+<li><p><strong>.env.prod</strong>: Used for the production build (Python scripting disabled).</p></li>
+</ul>
+</section>
+<section id="development-mode">
+<h2>Development Mode<a class="headerlink" href="#development-mode" title="Link to this heading"></a></h2>
+<p>To start the application in <strong>development mode</strong>, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>docker-compose.dev.yml<span class="w"> </span>--env-file<span class="w"> </span>.env.dev<span class="w"> </span>up<span class="w"> </span>--build
+</pre></div>
+</div>
+<p>This will:</p>
+<ul class="simple">
+<li><p>Build and run the containers in development configuration.</p></li>
+<li><p>Use the settings from <cite>.env.dev</cite>.</p></li>
+</ul>
+<p><strong>Important:</strong> Don’t forget the <cite>–env-file</cite> flag to load the correct environment variables.</p>
+<p>Once the containers are running, you don’t need to do anything else to access the application and its API — both will be available on the ports specified in the environment variables.</p>
+<p>It’s also important to note that these ports are not only used in the <cite>docker-compose.yml</cite> files but also in the <cite>vite.config.js</cite> configuration:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">watch</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">usePolling</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">strictPort</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">FRONTEND_PORT</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;5173&#39;</span><span class="p">),</span>
+<span class="w">  </span><span class="nx">proxy</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s1">&#39;/api&#39;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">target</span><span class="o">:</span><span class="w"> </span><span class="sb">`http://backend:</span><span class="si">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">VITE_BACKEND_PORT</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;8000&#39;</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">changeOrigin</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">rewrite</span><span class="o">:</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">path</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/^\/api/</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <strong>proxy</strong> section is essential during development. It ensures that any request to <cite>/api</cite> from the frontend is forwarded to the backend container.
+The <cite>rewrite</cite> function strips the <cite>/api</cite> prefix from the URL path before forwarding the request to the backend.</p>
+</section>
+<section id="production-mode">
+<h2>Production Mode<a class="headerlink" href="#production-mode" title="Link to this heading"></a></h2>
+<p>To launch the application in <strong>production mode</strong>, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>docker-compose.prod.yml<span class="w"> </span>--env-file<span class="w"> </span>.env.prod<span class="w"> </span>up<span class="w"> </span>--build<span class="w"> </span>-d
+</pre></div>
+</div>
+<p>This will:</p>
+<ul class="simple">
+<li><p>Run the app in detached mode (<cite>-d</cite>)</p></li>
+<li><p>Use <cite>.env.prod</cite> as the configuration</p></li>
+</ul>
+<p><strong>Note:</strong> In production mode, Python scripting must be disabled for security reasons.</p>
+<section id="production-architecture">
+<h3>Production Architecture<a class="headerlink" href="#production-architecture" title="Link to this heading"></a></h3>
+<p>In production, the application is composed of three containers:</p>
+<ol class="arabic simple">
+<li><p><strong>backend</strong> – Runs the Python API using Uvicorn.</p></li>
+<li><p><strong>frontend</strong> – Serves the built static frontend files.</p></li>
+<li><p><strong>nginx</strong> – Acts as the single public entrypoint, routing all incoming traffic.</p></li>
+</ol>
+</section>
+<section id="port-behavior">
+<h3>Port Behavior<a class="headerlink" href="#port-behavior" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">VITE_BACKEND_PORT</span></code> specifies the <strong>internal port</strong> used by the backend container.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FRONTEND_PORT</span></code> is the <strong>host port</strong> that maps to Nginx — this is the only port exposed to the outside world.</p></li>
+<li><p>The <strong>frontend container</strong> listens on port <cite>80</cite> internally and is only accessed by Nginx.</p></li>
+</ul>
+<p>So, when a user accesses the application via <a class="reference external" href="http://localhost">http://localhost</a>:&lt;FRONTEND_PORT&gt; (whatever domain/IP), the request is actually handled by the Nginx container.</p>
+</section>
+<section id="nginx-routing-logic">
+<h3>Nginx Routing Logic<a class="headerlink" href="#nginx-routing-logic" title="Link to this heading"></a></h3>
+<p>Nginx forwards requests based on their path:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/api/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://backend:8000/</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://frontend:80</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/request.png"><img alt="Example of request" class="align-center" src="_images/request.png" style="width: 600px;" />
+</a>
+<ul class="simple">
+<li><p>Requests to <cite>/api/</cite> are forwarded to the backend container.</p></li>
+<li><p>All other requests (such as <code class="docutils literal notranslate"><span class="pre">/about</span></code> or <code class="docutils literal notranslate"><span class="pre">/filtering</span></code>) are routed to the frontend container.</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The value in <cite>proxy_pass http://backend:8000/;</cite> must match the backend port (<cite>VITE_BACKEND_PORT</cite>) defined in <cite>.env.prod</cite>.
+If you change <cite>VITE_BACKEND_PORT</cite>, <strong>you must update this Nginx config manually</strong>.</p>
+</div>
+<p>It is up to the user to set up an additional reverse proxy on the host machine if needed. For example, route <cite>example.com</cite> to its <cite>localhost:&lt;FRONTEND_PORT&gt;</cite>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to SignAlchemist!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, David Martínez-Acha &amp; Gadea Lucas-Pérez.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
