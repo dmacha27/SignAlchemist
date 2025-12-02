@@ -21,6 +21,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-zoom": "^2.2.0",
     "date-fns": "^4.1.0",
+    "driver.js": "^1.4.0",
     "fft-js": "^0.0.12",
     "framer-motion": "^12.9.2",
     "primereact": "^10.9.2",
@@ -37,7 +38,7 @@
     "react-parallax-tilt": "^1.7.295",
     "react-range-slider-input": "^3.2.1",
     "react-router-dom": "^7.2.0",
-    "react-syntax-highlighter": "^15.6.1",
+    "react-syntax-highlighter": "^16.1.0",
     "styled-components": "^6.1.17"
   },
   "devDependencies": {

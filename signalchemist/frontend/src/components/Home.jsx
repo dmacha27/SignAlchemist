@@ -5,6 +5,7 @@ import { FileUpload } from "primereact/fileupload";
 import { usePapaParse } from "react-papaparse";
 import RangeSlider from "react-range-slider-input";
 import { FiSettings } from "react-icons/fi";
+import { TbHelpSquareRoundedFilled } from "react-icons/tb";
 import "react-range-slider-input/dist/style.css";
 import {
   Chart as ChartJS,
@@ -32,7 +33,11 @@ ChartJS.register(
   Legend
 );
 
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
 import {
+  Tooltip as MantineTooltip,
   Modal,
   Button,
   Menu,
@@ -256,6 +261,217 @@ const UtilityModal = memo(
   }
 );
 
+const startTour = () => {
+  let tutorialIsActive = false;
+
+  const tutorial = driver({
+    showProgress: true,
+    showButtons: ["next", "previous", "close"],
+    animate: true,
+    allowClose: false,
+    steps: [
+      {
+        popover: {
+          title: "Welcome to SignAlchemist!",
+          description: `
+            <p>SignAlchemist helps you preprocess physiological signals, mainly EDA and PPG.</p>
+            <p>We'll guide you through a quick tutorial—just follow the steps and click or perform the suggested actions.</p>
+          `,
+        },
+      },
+      {
+        element: ".upload-card",
+        popover: {
+          title: "Uploading Files",
+          description: `
+            <p>This is where you can upload the signal file you want to process.</p>
+            <p>EDA and PPG files are the main scope, but any time series data will also work.</p>
+            <p>Only CSV files are supported.</p>
+          `,
+        },
+      },
+      {
+        element: ".p-fileupload-choose",
+        popover: {
+          title: "Choose File",
+          description: `
+            <p>Click this button to open your system's file selector and pick a file.</p>
+            <p>But not just yet! We have a simpler option for the tutorial.</p>
+          `,
+        },
+      },
+      {
+        element: ".p-fileupload-content",
+        popover: {
+          title: "Drag & Drop",
+          description: `<p>Or, if you prefer, simply drag your CSV file directly into this panel.</p>`,
+        },
+      },
+      {
+        element: ".sample-eda",
+        popover: {
+          title: "Sample File",
+          description: `<p>You can also try one of our example files.</p>`,
+        },
+      },
+      {
+        element: ".sample-list",
+        popover: {
+          title: "Sample Files",
+          description: `<p>From this menu, you can select other sample files, like PPG examples, to see how different signals are handled.</p>`,
+        },
+      },
+      {
+        element: ".sample-eda",
+        allowInteraction: true, // ⚡ Permite clickar aquí
+        popover: {
+          title: "Load Sample File",
+          description: `
+            <p>For this tutorial, let’s use a sample EDA file.</p>
+            <p>Click this button to upload it. You won’t be able to continue until the file is fully uploaded.</p>
+          `,
+          onNextClick: () => {
+            const uploadedFile = document.querySelector(
+              ".p-fileupload-filename"
+            );
+            if (uploadedFile) tutorial.moveNext();
+          },
+        },
+      },
+      {
+        element: ".p-fileupload-content",
+        popover: {
+          title: "File Uploaded!",
+          description: `
+            <p>Here’s your uploaded file.</p>
+            <p>If it shows 'Pending', it means some parameters still need configuration. You can remove the file and start over if needed.</p>
+          `,
+        },
+      },
+      {
+        element: ".config-fields",
+        popover: {
+          title: "Configuration Fields",
+          description: `
+            <p>Next, we’ll set the parameters for analyzing your signal.</p>
+            <p>Each field helps SignAlchemist understand your data better.</p>
+          `,
+        },
+      },
+      {
+        element: ".tuto-signalType",
+        popover: {
+          title: "Signal Type",
+          description: `<p>Select the type of signal you’re working with.</p><p>For this tutorial, choose 'EDA'.</p>`,
+          onNextClick: () => {
+            const value = document.getElementById("signalType").value;
+            if (value === "EDA") tutorial.moveNext();
+          },
+        },
+      },
+      {
+        element: ".tuto-timestampColumn",
+        popover: {
+          title: "Timestamp Column",
+          description: `
+            <p>Next, choose the column that contains timestamps. For this EDA sample, select 'Timestamp'.</p>
+            <p>If your file doesn’t have timestamps, select 'No timestamps'.</p>
+            <p>If you select 'No timestamps', the Sampling Rate field will become editable.</p>
+          `,
+          onNextClick: () => {
+            const select = document.getElementById("timestampColumn");
+            const value = select.options[select.selectedIndex].text;
+            if (value === "Timestamp") tutorial.moveNext();
+          },
+        },
+      },
+      {
+        element: ".tuto-chart",
+        popover: {
+          title: "Chart Preview",
+          description: `
+            <p>With the timestamp column selected, SignAlchemist can now start plotting your signal.</p>
+            <p>This chart gives you a preview of your data based on the current settings. Let's continue configuring the remaining parameters.</p>
+          `,
+        },
+      },
+      {
+        element: ".tuto-samplingRate",
+        popover: {
+          title: "Sampling Rate",
+          description: `
+            <p>If your file has no timestamps, enter the sampling rate (Hz) here.</p>
+            <p>Otherwise, SignAlchemist can calculate it automatically from the timestamps.</p>
+            <p>If you know both, it’s best to enter it manually to avoid inaccuracies.</p>
+          `,
+        },
+      },
+      {
+        element: ".tuto-signalValues",
+        popover: {
+          title: "Signal Values",
+          description: `
+            <p>Now, select the column containing the signal values you want to analyze.</p>
+            <p>For this EDA sample, choose 'Gsr'.</p>
+          `,
+          onNextClick: () => {
+            const select = document.getElementById("signalValues");
+            const value = select.options[select.selectedIndex].text;
+            if (value === "Gsr") tutorial.moveNext();
+          },
+        },
+      },
+      {
+        element: ".tuto-range-slider",
+        popover: {
+          title: "Crop Signal",
+          description: `
+            <p>Finally, use this slider to trim your signal.</p>
+            <p>This is handy for removing unwanted sections at the start or end of your data.</p>
+          `,
+        },
+      },
+      {
+        element: ".p-fileupload-utility",
+        popover: {
+          title: "You're all set!",
+          description: `
+            <p>When you’re ready, close this tutorial and click the "Select utility" button in the upload panel to choose from Resampling, Filtering, or Processing tools.</p>
+            <p>Enjoy your signal processing journey!</p>
+          `,
+        },
+      },
+    ],
+    onHighlightStarted: () => {
+      tutorialIsActive = true;
+    },
+    onReset: () => {
+      tutorialIsActive = false;
+    },
+    onDeselected: () => {
+      tutorialIsActive = false;
+    },
+  });
+
+  // Bloquear clicks globales excepto en pasos con allowInteraction
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!tutorialIsActive) return;
+
+      const step = tutorial.getActiveStep();
+      if (step.allowInteraction) return; // permitir click solo en elementos interactivos del paso
+
+      e.stopPropagation();
+      e.preventDefault();
+      console.log("Click blocked during tutorial");
+    },
+    true
+  );
+
+  tutorial.drive();
+};
+
 const CSVUploader = memo(
   ({
     setFileRows,
@@ -412,36 +628,56 @@ const CSVUploader = memo(
     return (
       <>
         <div className="flex justify-center items-center gap-4 p-2">
-          <div className="w-16 h-16 border border-slate-400 shadow rounded-lg bg-white dark:bg-gray-900 flex items-center justify-center">
-            <div className="p-1 h-full w-full flex flex-col">
-              <Button
-                className="h-3/4 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-xs p-0"
-                variant="default"
-                onClick={() => loadSampleFile("EDA.csv")}
-              >
-                EDA.csv
-              </Button>
-              <Menu className="h-1/4 w-full" trigger="click-hover">
-                <Menu.Target>
-                  <Button className="h-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs p-0">
-                    Files
-                  </Button>
-                </Menu.Target>
+          <div className="w-16 h-24 flex flex-col gap-2">
+            <div className="h-1/3 flex items-center justify-center">
+              <MantineTooltip label="Onboarding Tutorial" withArrow>
+                <button
+                  onClick={startTour}
+                  className="shake bg-transparent p-0 border-none shadow-none hover:bg-transparent"
+                >
+                  <TbHelpSquareRoundedFilled
+                    size={32}
+                    className="text-blue-600"
+                  />
+                </button>
+              </MantineTooltip>
+            </div>
 
-                <Menu.Dropdown>
-                  <Menu.Label>Sample files</Menu.Label>
-                  <Menu.Item onClick={() => loadSampleFile("EDA.csv")}>
-                    EDA.csv
-                  </Menu.Item>
-                  <Menu.Item onClick={() => loadSampleFile("PPG.csv")}>
-                    PPG.csv
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
+            <div className="h-2/3 w-full border border-slate-400 shadow rounded-lg bg-white dark:bg-gray-900 flex items-center justify-center">
+              <div className="p-1 h-full w-full flex flex-col">
+                <Button
+                  className="sample-eda h-3/4 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-xs p-0"
+                  variant="default"
+                  onClick={() => loadSampleFile("EDA.csv")}
+                >
+                  EDA.csv
+                </Button>
+
+                <Menu
+                  className="sample-list h-1/4 w-full"
+                  trigger="click-hover"
+                >
+                  <Menu.Target>
+                    <Button className="h-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs p-0">
+                      Files
+                    </Button>
+                  </Menu.Target>
+
+                  <Menu.Dropdown>
+                    <Menu.Label>Sample files</Menu.Label>
+                    <Menu.Item onClick={() => loadSampleFile("EDA.csv")}>
+                      EDA.csv
+                    </Menu.Item>
+                    <Menu.Item onClick={() => loadSampleFile("PPG.csv")}>
+                      PPG.csv
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </div>
             </div>
           </div>
 
-          <div className="max-w-xl w-full border border-slate-400 shadow rounded-lg p-4 bg-white dark:bg-gray-900">
+          <div className="upload-card max-w-xl w-full border border-slate-400 shadow rounded-lg p-4 bg-white dark:bg-gray-900">
             <PrimeReactProvider>
               {/* dark:bg-gray-800 to unify the background of the card */}
               <div className="card bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow rounded p-4">
@@ -466,7 +702,7 @@ const CSVUploader = memo(
                   uploadOptions={{
                     icon: <FiSettings className="mr-2" />,
                     className:
-                      "bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded shadow-lg cursor-pointer transition",
+                      "bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded shadow-lg cursor-pointer transition p-fileupload-utility",
                   }}
                 />
               </div>
@@ -556,7 +792,7 @@ const Home = () => {
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const { isDarkMode: isDark } = useContext(ThemeContext);
   const [cropValues, setCropValues] = useState();
-  console.log("Si", samplingRate);
+
   //const roundIfReallyClose = (num) => { return Math.abs(num - Math.round(num)) <= 0.01 ? Math.round(num) : num }
 
   useEffect(() => {
@@ -643,10 +879,10 @@ const Home = () => {
         setChartDataOriginal={setChartDataOriginal}
       />
       <div className="flex flex-wrap justify-center gap-4 p-2">
-        <div className="w-full max-w-xl">
+        <div className="config-fields w-full max-w-xl">
           <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
             <form className="space-y-4">
-              <div>
+              <div className="tuto-signalType">
                 <label
                   htmlFor="signalType"
                   className="text-black dark:text-white"
@@ -659,7 +895,7 @@ const Home = () => {
                 />
               </div>
 
-              <div>
+              <div className="tuto-timestampColumn">
                 <label
                   htmlFor="timestampColumn"
                   className="text-black dark:text-white"
@@ -674,7 +910,7 @@ const Home = () => {
                 />
               </div>
 
-              <div>
+              <div className="tuto-samplingRate">
                 <label
                   htmlFor="samplingRate"
                   className="text-black dark:text-white"
@@ -703,7 +939,7 @@ const Home = () => {
                 />
               </div>
 
-              <div>
+              <div className="tuto-signalValues">
                 <label
                   htmlFor="signalValues"
                   className="text-black dark:text-white"
@@ -718,7 +954,7 @@ const Home = () => {
                 />
               </div>
 
-              <div>
+              <div className="tuto-range-slider">
                 {fileRows && (
                   <>
                     <label
@@ -754,7 +990,7 @@ const Home = () => {
         </div>
 
         <div className="w-full max-w-xl">
-          <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4 text-center">
+          <div className="tuto-chart bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4 text-center">
             {samplingRate && timestampColumn !== headers.length - 1 && (
               <div
                 id="samplingRateBadge"

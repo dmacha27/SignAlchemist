@@ -171,3 +171,30 @@ html.dark .about-button:hover,
   padding: 8px 10px;
   border-radius: 8px;
 }
+
+.driver-popover-close-btn {
+  display: block !important;
+}
+
+.shake {
+  display: inline-block;
+  animation: shake 5s infinite;
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  1% {
+    transform: translateX(-3px);
+  }
+  3% {
+    transform: translateX(3px);
+  }
+  5% {
+    transform: translateX(-3px);
+  }
+  7% {
+    transform: translateX(0);
+  }
+}
