@@ -1,7 +1,7 @@
 import { useState, memo, useContext, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter/dist/cjs/prism";
+import { materialDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { FaInfo, FaCheck, FaRegCopy } from "react-icons/fa";
 
 import {

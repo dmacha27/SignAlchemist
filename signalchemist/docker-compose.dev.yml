@@ -6,9 +6,11 @@ services:
       - ./backend:/app
     env_file:
       - .env.dev
+    environment:
+      PYTHON_ENABLED: ${PYTHON_ENABLED:-true}
     ports:
-      - "${VITE_BACKEND_PORT}:${VITE_BACKEND_PORT}"
-    command: sh -c "uvicorn app.main:app --host 0.0.0.0 --reload --port ${VITE_BACKEND_PORT}"
+      - "${VITE_BACKEND_PORT:-8000}:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --reload --port 8000
 
   frontend:
     build:
@@ -18,8 +20,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+      - "${FRONTEND_PORT:-5002}:5173"
     env_file:
       - .env.dev
     environment:
-      - WATCHPACK_POLLING=true
+      CHOKIDAR_USEPOLLING: "true"

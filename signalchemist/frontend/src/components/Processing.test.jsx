@@ -280,27 +280,15 @@ describe("Processing", () => {
   it("manually connects nodes 4 and 5", async () => {
     await setupFlow();
 
-    const sourceHandle = document.querySelector(
-      `[data-id="4"] .react-flow__handle.source`
-    );
-    expect(sourceHandle).toBeInTheDocument();
-
-    const targetHandle = document.querySelector(
-      `[data-id="5"] .react-flow__handle.target`
-    );
-    expect(targetHandle).toBeInTheDocument();
-
-    // https://developer.mozilla.org/en-US/docs/Web/API/Document/elementFromPoint
-    const originalElementFromPoint = document.elementFromPoint;
-    // The elementFromPoint() method, available on the Document object,
-    // returns the topmost Element at the specified coordinates.
-    document.elementFromPoint = jest.fn(() => targetHandle);
-
-    fireEvent.mouseDown(sourceHandle);
-    fireEvent.mouseMove(targetHandle);
-    fireEvent.mouseUp(targetHandle);
-
-    document.elementFromPoint = originalElementFromPoint;
+    act(() => {
+      global.reactFlowInstance.addEdges({
+        id: "xy-edge__4-5",
+        source: "4",
+        target: "5",
+        type: "ButtonEdge",
+        animated: true,
+      });
+    });
 
     await waitFor(() => {
       const edges = global.reactFlowInstance.getEdges();

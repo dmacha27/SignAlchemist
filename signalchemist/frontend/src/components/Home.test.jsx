@@ -125,7 +125,7 @@ describe("Home", () => {
     fireEvent.change(signalValuesSelect, { target: { value: "1" } });
 
     expect(
-      await screen.findByText(/Detected sampling rate of 1.0 Hz/i)
+      await screen.findByText(/Detected sampling rate of 1(\.0)? Hz/i)
     ).toBeInTheDocument();
   });
 

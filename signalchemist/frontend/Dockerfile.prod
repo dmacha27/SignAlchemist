@@ -1,14 +1,11 @@
-FROM node:20 AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
-
-ARG VITE_BACKEND_PORT
-ENV VITE_BACKEND_PORT=$VITE_BACKEND_PORT
 
 RUN npm run build
 RUN cp -r public/docs dist/docs

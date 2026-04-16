@@ -62,3 +62,11 @@ global.SVGElement.prototype.getBBox = () => ({
   width: 0,
   height: 0,
 });
+
+jest.mock("react-syntax-highlighter/dist/cjs/prism", () => ({
+  Prism: ({ children }) => children,
+}));
+
+jest.mock("react-syntax-highlighter/dist/cjs/styles/prism", () => ({
+  materialDark: {},
+}));
