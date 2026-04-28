@@ -1,13 +1,6 @@
-import { useState, memo } from "react";
+import { memo, useState } from "react";
 import PropTypes from "prop-types";
 
-/**
- * DownloadSignal component generates a downloadable file from the provided table.
- *
- * @param {Object} props
- * @param {Array} props.table - A 2D array containing the data to be included in the CSV.
- * @param {string} props.name - The name to be used for the downloaded file.
- */
 const DownloadSignal = memo(({ table, name }) => {
   const [onlySignal, setOnlySignal] = useState(false);
   const [withHeader, setWithHeader] = useState(true);
@@ -17,7 +10,9 @@ const DownloadSignal = memo(({ table, name }) => {
 
   const generateContent = () => {
     let data = onlySignal ? table.map((row) => [row[1]]) : table;
-    if (!withHeader) data = data.slice(1);
+    if (!withHeader) {
+      data = data.slice(1);
+    }
     return data.map((row) => row.join(separator)).join("\n");
   };
 
@@ -31,15 +26,15 @@ const DownloadSignal = memo(({ table, name }) => {
     URL.revokeObjectURL(url);
   };
 
-  const handleSeparatorChange = (e) => {
-    const newSeparator = e.target.value;
-    setSeparator(newSeparator);
+  const handleSeparatorChange = (event) => {
+    const nextSeparator = event.target.value;
+    setSeparator(nextSeparator);
 
-    if (newSeparator.length !== 1) {
+    if (nextSeparator.length !== 1) {
       setError("The separator must be a single character");
-    } else if (newSeparator === ".") {
+    } else if (nextSeparator === ".") {
       setError('The separator cannot be a dot (".")');
-    } else if (!isNaN(newSeparator)) {
+    } else if (!isNaN(nextSeparator)) {
       setError("The separator cannot be a number");
     } else {
       setError("");
@@ -47,61 +42,52 @@ const DownloadSignal = memo(({ table, name }) => {
   };
 
   return (
-    <div className="mt-2 p-4 border-0 dark:border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-900 text-center text-black dark:text-white">
-      <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
+    <div className="mt-3 rounded-[1rem] bg-slate-50/80 p-4 text-slate-900 dark:bg-gray-950/60 dark:text-white">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={onlySignal}
+            onChange={(event) => setOnlySignal(event.target.checked)}
+            className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-900"
+          />
+          Only signal
+        </label>
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={withHeader}
+            onChange={(event) => setWithHeader(event.target.checked)}
+            className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-900"
+          />
+          Include header
+        </label>
         <div className="flex items-center gap-2">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={onlySignal}
-              onChange={(e) => setOnlySignal(e.target.checked)}
-              className="form-checkbox text-green-500 dark:bg-gray-800 dark:border-gray-600"
-            />
-            <span>Only signal</span>
-          </label>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={withHeader}
-              onChange={(e) => setWithHeader(e.target.checked)}
-              className="form-checkbox text-green-500 dark:bg-gray-800 dark:border-gray-600"
-            />
-            <span>Include header</span>
-          </label>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm">Sep</span>
+          <span className="text-sm font-medium">Sep</span>
           <input
             type="text"
             value={separator}
             onChange={handleSeparatorChange}
-            className="w-12 text-center text-sm font-medium border-0 dark:border dark:border-gray-600 rounded-md p-1 bg-white dark:bg-gray-800 text-black dark:text-white"
-            style={{ maxWidth: "40px" }}
+            className="w-12 rounded-md border border-slate-300 bg-white p-1 text-center text-sm font-medium text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={extension}
-            onChange={(e) => setExtension(e.target.value)}
-            className="w-auto text-sm font-medium border-0 dark:border dark:border-gray-600 rounded-md p-1 bg-white dark:bg-gray-800 text-black dark:text-white"
-          >
-            <option value="csv">csv</option>
-            <option value="txt">txt</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleDownload}
-            disabled={error}
-            className="bg-green-500 text-white text-sm py-2 px-4 rounded disabled:bg-gray-300 dark:disabled:bg-gray-700"
-          >
-            📥 Download
-          </button>
-        </div>
-        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+        <select
+          value={extension}
+          onChange={(event) => setExtension(event.target.value)}
+          className="rounded-md border border-slate-300 bg-white p-1.5 text-sm font-medium text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+        >
+          <option value="csv">csv</option>
+          <option value="txt">txt</option>
+        </select>
+        <button
+          onClick={handleDownload}
+          disabled={!!error}
+          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
+        >
+          Download
+        </button>
       </div>
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
   );
 });

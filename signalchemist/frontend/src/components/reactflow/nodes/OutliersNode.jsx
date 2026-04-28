@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Handle,
   Position,
@@ -6,12 +6,11 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { Card, Button, Select, Tooltip } from "@mantine/core";
-import { Form } from "react-bootstrap";
-import { FaBullseye, FaEye, FaTrash } from "react-icons/fa";
-import ExecutionIcon from "../../common/ExecutionIcon";
+import { Select } from "@mantine/core";
+import { FaBullseye } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
+import { NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 
 /**
  * OutliersNode component
@@ -51,6 +50,53 @@ function OutliersNode({ id, data }) {
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
   tableRef.current = sourceNodeData?.data?.table;
+
+  const requestOutliers = useCallback(async () => {
+    const table = tableRef.current;
+    if (!table) return;
+
+    setExecutionState("running");
+
+    const signalOnly = table.slice(1); // Exclude headers
+    const formData = new FormData();
+    formData.append("signal", JSON.stringify(signalOnly));
+    formData.append("outlier_technique", outlierTechnique);
+
+    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
+    window.dispatchEvent(event);
+
+    try {
+      const response = await fetch("/api/outliers", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(errorData.error);
+        toast.error(errorData.error);
+        throw new Error(errorData.error);
+      }
+
+      const result = await response.json();
+
+      const new_table = [table[0]].concat(result.data); // Add headers back
+
+      updateNodeData(id, (prev) => ({
+        ...prev,
+        table: new_table,
+      }));
+
+      setExecutionState("executed");
+      return new_table;
+    } catch (error) {
+      console.error("Failed to apply outliers:", error);
+      toast.error("Failed to apply outliers");
+
+      setExecutionState("error");
+      return null;
+    }
+  }, [id, outlierTechnique, targetNodeId, updateNodeData]);
 
   useEffect(() => {
     /**
@@ -100,7 +146,7 @@ function OutliersNode({ id, data }) {
         handleDeleteTable
       );
     };
-  }, [targetNodeId, outlierTechnique, id]);
+  }, [id, requestOutliers, targetNodeId, updateNodeData]);
 
   /**
    * Trigger a delete event when filter configuration changes.
@@ -110,133 +156,52 @@ function OutliersNode({ id, data }) {
     window.dispatchEvent(event);
   }, [outlierTechnique, id]);
 
-  /**
-   * Makes a request to apply the selected outlier detection technique.
-   * @returns {Array} New table after removing outliers
-   */
-  const requestOutliers = async () => {
-    const table = tableRef.current;
-    if (!table) return;
-
-    setExecutionState("running");
-
-    const signalOnly = table.slice(1); // Exclude headers
-    const formData = new FormData();
-    formData.append("signal", JSON.stringify(signalOnly));
-    formData.append("outlier_technique", outlierTechnique);
-
-    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-    window.dispatchEvent(event);
-
-    try {
-      const response = await fetch("/api/outliers", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(errorData.error);
-        toast.error(errorData.error);
-        throw new Error(errorData.error);
-      }
-
-      const result = await response.json();
-
-      const new_table = [table[0]].concat(result.data); // Add headers back
-
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: new_table,
-      }));
-
-      setExecutionState("executed");
-      return new_table;
-    } catch (error) {
-      console.error("Failed to apply outliers:", error);
-      toast.error("Failed to apply outliers");
-
-      setExecutionState("error");
-      return null;
-    }
-  };
-
   return (
-    <Card className="bg-white dark:bg-gray-900 border border-transparent dark:border-gray-600 shadow-lg dark:shadow-xl rounded-lg p-4 relative overflow-visible">
-      {/* Header section with title, state icon, and action buttons */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <FaBullseye className="text-secondary dark:text-white" size={20} />
-          <span className="font-bold text-lg text-dark dark:text-white">
-            Outlier Detection
-          </span>
-
-          {/* Node execution state icon */}
-          <Tooltip label={executionState} withArrow position="bottom">
-            <div
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                toast.custom(
-                  <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
-                    <div>Status:</div>
-                    <div>
-                      <ExecutionIcon executionState={executionState} />
-                    </div>
-                    <div>{executionState}</div>
-                  </div>
-                );
-              }}
-            >
-              <ExecutionIcon executionState={executionState} />
-            </div>
-          </Tooltip>
-
-          {/* Button to see the node output */}
-          <Tooltip label="See output" withArrow position="bottom">
-            <div
-              data-testid={`output${id}`}
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                if (currentNodeData?.data?.table) {
-                  data.setChartDataProcessed(currentNodeData.data.table);
-                } else {
-                  console.error("Execute node first");
-                  toast.error("Execute node first");
-                }
-              }}
-            >
-              <FaEye className="text-black dark:text-white" />
-            </div>
-          </Tooltip>
-
-          {/* Button to delete the node */}
-          <Tooltip label="Delete node" withArrow position="bottom">
-            <div
-              data-testid={`delete${id}`}
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                data.deleteNode(id);
-              }}
-            >
-              <FaTrash className="text-red-500" />
-            </div>
-          </Tooltip>
-        </div>
-      </div>
-
-      {/* Handle for incoming connections */}
+    <NodeShell
+      icon={<FaBullseye />}
+      title="Outlier Detection"
+      eyebrow="Node"
+      accent="amber"
+      executionState={executionState}
+      onStatusClick={() => {
+        toast.custom(
+          <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
+            <div>Status:</div>
+            <div>{executionState}</div>
+          </div>
+        );
+      }}
+      onOutputClick={() => {
+        if (currentNodeData?.data?.table) {
+          data.setChartDataProcessed(currentNodeData.data.table);
+        } else {
+          console.error("Execute node first");
+          toast.error("Execute node first");
+        }
+      }}
+      onDeleteClick={() => {
+        data.deleteNode(id);
+      }}
+      outputTestId={`output${id}`}
+      deleteTestId={`delete${id}`}
+      footer={
+        <NodeRunButton
+          disabled={!tableRef.current}
+          onClick={requestOutliers}
+          accent="amber"
+        >
+          Apply Outliers
+        </NodeRunButton>
+      }
+    >
       <HandleLimit
         type="target"
         position={Position.Left}
         className="custom-handle"
         connectionCount={1}
       />
-      {/* Outlier detection configuration form */}
-      <Form>
-        <Form.Group className="mb-4" controlId="outlierTechnique">
-          <Form.Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Select Outlier Technique
-          </Form.Label>
+
+      <NodeSection label="Detection technique">
           <Select
             size="sm"
             data-testid="Select outlier"
@@ -253,42 +218,21 @@ function OutliersNode({ id, data }) {
             className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
             classNames={{
               input:
-                "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                "rounded-xl border border-slate-300 bg-white text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white",
               dropdown:
-                "dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
-              item: `
-                  dark:data-[hover]:bg-gray-700 !important
-                  data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
-                  data-[selected]:text-black dark:data-[selected]:text-white
-                `,
+                "bg-white dark:bg-gray-900 text-black dark:text-white border border-slate-300 dark:border-gray-700",
+              option:
+                "hover:bg-slate-100 dark:hover:bg-gray-800 data-[checked]:bg-amber-50 data-[checked]:text-slate-900 dark:data-[checked]:bg-amber-500/15 dark:data-[checked]:text-white",
             }}
           />
-        </Form.Group>
-      </Form>
+      </NodeSection>
 
-      {/* Button to apply the outlier detection */}
-      <div className="w-full">
-        <Button
-          variant="subtle"
-          size="sm"
-          color="grey"
-          disabled={!tableRef.current}
-          onClick={requestOutliers}
-          className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${
-            !tableRef.current ? "" : "dark:text-white"
-          }`}
-        >
-          Apply Outliers
-        </Button>
-      </div>
-
-      {/* Handle for outgoing connections */}
       <Handle
         type="source"
         position={Position.Right}
         className="custom-handle"
       />
-    </Card>
+    </NodeShell>
   );
 }
 

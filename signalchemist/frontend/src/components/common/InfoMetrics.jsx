@@ -1,103 +1,93 @@
 import { memo } from "react";
 import PropTypes from "prop-types";
 import { Popover, Text } from "@mantine/core";
+
 import LoaderMessage from "./LoaderMessage";
 
-/**
- * MetricCards Component
- *
- * Renders a responsive grid of metric cards, each displaying a metric name and its formatted value.
- * On hover or click, a tooltip (Popover) is shown with additional details.
- *
- * @component
- * @param {Object} props
- * @param {Object.<string, { value: number, description: string }>} props.metrics
- */
-const MetricCards = ({ metrics }) => {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
-      {Object.entries(metrics).map(([name, { value, description }], index) => {
-        const metricValue = value.toFixed(4);
-        return (
-          <div key={name} className="flex justify-center items-center">
-            <Popover
-              position="top"
-              withArrow
-              shadow="md"
-              width={220}
-              arrowSize={12}
-              arrowRadius={3}
-            >
-              <Popover.Target>
-                <div className="bg-white dark:bg-gray-900 shadow-xl rounded-lg p-6 cursor-pointer hover:scale-105 transform transition-all ease-in-out border-0 dark:border dark:border-gray-600">
-                  <div className="flex flex-col items-center text-center">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                      {name}
-                    </h3>
-                    <div className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
-                      <span className="text-teal-500">{metricValue}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Metric {index + 1}
-                    </p>
-                  </div>
-                </div>
-              </Popover.Target>
-              <Popover.Dropdown className="bg-blue-50 dark:bg-[#1e3a8a] text-blue-600 dark:text-white rounded-lg shadow-lg text-sm p-4 border-0">
-                <Text size="sm" className="font-bold text-lg dark:text-white">
+const MetricCards = ({ metrics }) => (
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    {Object.entries(metrics).map(([name, { value, description }], index) => (
+      <Popover
+        key={name}
+        position="top"
+        withArrow
+        shadow="md"
+        width={220}
+        arrowSize={10}
+      >
+        <Popover.Target>
+          <button
+            type="button"
+            className="rounded-[1rem] bg-slate-50/70 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-800/70"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                   {name}
-                </Text>
-                <Text
-                  size="xs"
-                  className="text-gray-500 dark:text-gray-400 mb-2"
-                >
-                  {description}
-                </Text>
-              </Popover.Dropdown>
-            </Popover>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+                </h3>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Metric {index + 1}
+                </p>
+              </div>
+              <span className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">
+                {value.toFixed(4)}
+              </span>
+            </div>
+          </button>
+        </Popover.Target>
+        <Popover.Dropdown className="rounded-xl border border-slate-200 bg-white p-4 text-slate-800 shadow-lg dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+          <Text size="sm" className="font-semibold dark:text-white">
+            {name}
+          </Text>
+          <Text size="xs" className="mt-1 text-slate-500 dark:text-slate-400">
+            {description}
+          </Text>
+        </Popover.Dropdown>
+      </Popover>
+    ))}
+  </div>
+);
 
-/**
- * InfoMetrics Component
- *
- * Displays two metric panels side-by-side: one for original metrics and one for processed metrics.
- *
- * @component
- * @param {Object} props - Component props.
- * @param {Object.<string, { value: number, description: string }>} [props.metricsOriginal] - Metrics of the original signal.
- * @param {Object.<string, { value: number, description: string }>} [props.metricsProcessed] - Metrics of the processed signal.
- * @param {boolean} [props.isRequesting=false] - Whether the processed metrics are being requested or calculated.
- */
+const MetricsPanel = ({ title, content }) => (
+  <div>
+    <div className="mb-4">
+      <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+        {title}
+      </h2>
+    </div>
+    {content}
+  </div>
+);
+
 const InfoMetrics = memo(
-  ({ metricsOriginal, metricsProcessed, isRequesting = false }) => {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
-        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-          {metricsOriginal ? (
+  ({ metricsOriginal, metricsProcessed, isRequesting = false }) => (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <MetricsPanel
+        title="Original Metrics"
+        content={
+          metricsOriginal ? (
             <MetricCards metrics={metricsOriginal} />
           ) : (
             <LoaderMessage message="Calculating..." />
-          )}
-        </div>
-        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-          {isRequesting ? (
+          )
+        }
+      />
+      <MetricsPanel
+        title="Processed Metrics"
+        content={
+          isRequesting ? (
             <LoaderMessage message="Processing request..." />
           ) : metricsProcessed ? (
             <MetricCards metrics={metricsProcessed} />
           ) : (
-            <div className="p-5 text-center text-gray-500 dark:text-gray-400">
+            <div className="rounded-[1rem] bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500 dark:bg-gray-800/70 dark:text-slate-400">
               Please run processing to see results.
             </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+          )
+        }
+      />
+    </div>
+  )
 );
 
 MetricCards.propTypes = {
@@ -107,6 +97,11 @@ MetricCards.propTypes = {
       description: PropTypes.string.isRequired,
     })
   ).isRequired,
+};
+
+MetricsPanel.propTypes = {
+  title: PropTypes.string.isRequired,
+  content: PropTypes.node.isRequired,
 };
 
 InfoMetrics.propTypes = {
@@ -122,7 +117,13 @@ InfoMetrics.propTypes = {
       description: PropTypes.string.isRequired,
     })
   ),
-  isRequesting: PropTypes.bool.isRequired,
+  isRequesting: PropTypes.bool,
+};
+
+InfoMetrics.defaultProps = {
+  metricsOriginal: null,
+  metricsProcessed: null,
+  isRequesting: false,
 };
 
 export default InfoMetrics;

@@ -97,7 +97,7 @@ describe("ResamplingNode", () => {
     );
 
     expect(screen.getByText(/Interpolation technique/i)).toBeInTheDocument();
-    expect(screen.getByText(/New rate/i)).toBeInTheDocument();
+    expect(screen.getByText(/Target sampling rate/i)).toBeInTheDocument();
   });
 
   it("deletes node", async () => {

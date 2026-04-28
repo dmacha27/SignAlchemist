@@ -1,199 +1,188 @@
 import numpy as np
-import neurokit2 as nk
-from scipy.stats import skew
-from scipy.signal import find_peaks, filtfilt
+from scipy.signal import filtfilt, find_peaks
 
 
-def bvp_skewness(signal, fs=None):
+def bottcher_quality(eda, stamps=None, fs=4):
     """
-    Elgendi, M. (2016). Optimal signal quality index for photoplethysmogram signals. Bioengineering, 3(4), 21
+    Python implementation of the WEAR-DataQuality EDA metric by Böttcher et al.
+
+    Higher scores indicate better quality.
     """
+    eda = np.asarray(eda, dtype=float)
 
-    return np.abs(skew(signal))
-
-
-def bvp_skewness(signal, fs=64, W=2):
-    """
-    Elgendi, M. (2016). Optimal signal quality index for photoplethysmogram signals. Bioengineering, 3(4), 21
-    """
-
-    skewness = []
-    window_size = fs * W
-
-    for i in range(len(signal) - window_size + 1):
-        skewness.append(np.abs(skew(signal[i : i + window_size])))
-    return np.mean(skewness)
-
-
-def bvp_quality(data, fs=64, MinPeakDistance=None, MinPeakHeight=0):
-    if MinPeakDistance is None:
-        MinPeakDistance = max(1, round(fs / 240))
-
-    def normalize_mean_peak_height(data, MinPeakDistance, MinPeakHeight):
-        data = data - np.mean(data)
-        pks, _ = find_peaks(data, distance=MinPeakDistance, height=MinPeakHeight)
-        dataout = data / np.mean(data[pks])
-        return dataout
-
-    signal = normalize_mean_peak_height(data, MinPeakDistance, MinPeakHeight)
-    pks, _ = find_peaks(signal, distance=MinPeakDistance, height=MinPeakHeight)
-    Q_PHV = np.var(signal[pks])
-    return Q_PHV
-
-
-def gsr_quality(eda, fs=4):
-    """
-    Python implementation of Matlab code in Github.
-
-    Böttcher, S., Vieluf, S., Bruno, E., Joseph, B.,
-    Epitashvili, N., Biondi, A., ... & Loddenkemper, T. (2022).
-    Data quality evaluation in wearable monitoring. Scientific reports, 12(1), 21412.
-    """
-
-    quality = {}
-
-    quality["metric1"] = eda
-    quality["values1"] = eda >= 0.05
-
-    def getRAC(signal, T=2):
-        intervals = range(0, len(signal), T * fs)
+    def get_rac(signal, window_seconds=2):
+        window_samples = int(window_seconds * fs)
+        intervals = range(0, len(signal), window_samples)
         rac = np.full(len(signal), np.nan)
 
-        for ix in intervals:
-            if (ix + T * fs - 1) >= len(signal):
+        for start in intervals:
+            if (start + window_samples) >= len(signal):
                 continue
 
-            windowdata = signal[ix : ix + T * fs]
-            imin = np.argmin(windowdata)
-            vmin = windowdata[imin]
+            window = signal[start : start + window_samples]
+            min_index = np.argmin(window)
+            min_value = window[min_index]
+            max_index = np.argmax(window)
+            max_value = window[max_index]
 
-            imax = np.argmax(windowdata)
-            vmax = windowdata[imax]
+            if min_index < max_index:
+                rac[start] = (max_value - min_value) / (abs(min_value) + 1e-20)
+            elif min_index > max_index:
+                rac[start] = (min_value - max_value) / (abs(max_value) + 1e-20)
 
-            if imin < imax:
-                rac[ix] = (vmax - vmin) / (abs(vmin) + 1e-10)  # Avoid zero division
-            elif imin > imax:
-                rac[ix] = (vmin - vmax) / (abs(vmax) + 1e-10)
-
-        last = np.nan
-
-        # Fill missing with previous
-        for i in range(len(rac)):
-            if not np.isnan(rac[i]):
-                last = rac[i]
+        last_value = np.nan
+        for index in range(len(rac)):
+            if not np.isnan(rac[index]):
+                last_value = rac[index]
             else:
-                rac[i] = last
+                rac[index] = last_value
 
         return rac
 
-    quality["metric2"] = getRAC(eda)
-    quality["values2"] = abs(quality["metric2"]) < 0.2
+    def get_windowed_mm_score(score, window_seconds=60):
+        moving_window = int(window_seconds * fs)
+        cumsum = np.cumsum(np.insert(score, 0, 0))
+        head_mean = (cumsum[moving_window:] - cumsum[:-moving_window]) / moving_window
+        tail_means = np.array(
+            [np.mean(score[-i:]) for i in range(moving_window - 1, 0, -1)]
+        )
+        score_mm = np.concatenate((head_mean, tail_means))
+        max_length = min(len(score), len(stamps)) if stamps is not None else len(score)
+        return score_mm[:max_length:moving_window]
 
-    quality["values"] = quality["values1"] & quality["values2"]
-
-    # Moving/Rolling mean
-    moving_window = 60 * fs
-
-    w_real = moving_window + 1
-    cumsum = np.cumsum(np.insert(quality["values"], 0, 0))
-    rolling_mean = (cumsum[w_real:] - cumsum[:-w_real]) / float(w_real)
-    for i in range(moving_window, 0, -1):
-        rolling_mean = np.append(rolling_mean, np.mean(quality["values"][-i:]))
-
-    mean_score = np.mean(rolling_mean[0:len(rolling_mean):moving_window])
-
-    return mean_score
+    quality_values = (eda >= 0.05) & (np.abs(get_rac(eda)) < 0.2)
+    score_windowed = get_windowed_mm_score(quality_values)
+    return float(np.mean(score_windowed))
 
 
-def gsr_automated(data_EDA_uS, fs=4):
-    QA_filter_window_EDA_sec = None
+def kleckner_quality(
+    data_eda_us,
+    fs=4,
+    data_time_sec=None,
+    data_temperature_c=None,
+    qa_filter_window_eda_sec=None,
+    qa_eda_floor=0.05,
+    qa_eda_ceiling=60,
+    qa_eda_max_slope_us_per_sec=10,
+    qa_temperature_c_min=30,
+    qa_temperature_c_max=40,
+    qa_radius_to_spread_invalid_datum_sec=5,
+):
+    """
+    Python implementation of the automated EDAQA metric by Kleckner et al.
 
-    QA_EDA_floor = 0.05
-    QA_EDA_ceiling = 60
-    QA_EDA_max_slope_uS_per_sec = 10
-    QA_radius_to_spread_invalid_datum_sec = 5
+    Higher scores indicate better quality.
+    """
+    data_eda_us = np.asarray(data_eda_us, dtype=float)
+    data_time_sec = [] if data_time_sec is None else list(data_time_sec)
 
-    sampling_period_EDA = 1 / fs  # None
-
-    # Rule 1: EDA is out of range (not within 0.05–60 μS)
-    if QA_filter_window_EDA_sec:
-        windowSize = QA_filter_window_EDA_sec / sampling_period_EDA
-        b = (1 / windowSize) * np.ones((int(windowSize),))
-        a = 1
-        data_EDA_uS_filtered = filtfilt(b, a, data_EDA_uS)
+    if data_temperature_c is None or len(data_temperature_c) == 0:
+        qa_temperature_c_min = 0
+        qa_temperature_c_max = 1
+        data_temperature_c = 0.5 * np.ones(len(data_eda_us))
     else:
-        data_EDA_uS_filtered = data_EDA_uS
+        data_temperature_c = np.asarray(data_temperature_c, dtype=float)
+        if qa_temperature_c_min >= qa_temperature_c_max:
+            raise ValueError("Temperature min must be less than temperature max")
 
-    # Calculate instantaneous slope for Rule 2
-    data_Q_EDA_uS_per_sec_filtered_QA = np.insert(
-        (np.diff(data_EDA_uS_filtered) / sampling_period_EDA), 0, 0
+    if (
+        (len(data_time_sec) != 0 and len(data_eda_us) != len(data_time_sec))
+        or (len(data_temperature_c) != 0 and len(data_eda_us) != len(data_temperature_c))
+        or (
+            len(data_time_sec) != 0
+            and len(data_temperature_c) != 0
+            and len(data_time_sec) != len(data_temperature_c)
+        )
+    ):
+        raise ValueError(
+            "Input data must all be the same length. If you do not have temperature or time data, use []"
+        )
+
+    if qa_eda_floor >= qa_eda_ceiling:
+        raise ValueError("EDA floor must be less than EDA ceiling")
+
+    sampling_period_eda = (
+        float(data_time_sec[1] - data_time_sec[0]) if len(data_time_sec) > 1 else 1 / fs
     )
 
-    # Implementation of EDA rules 1, 2, and (not) 3
-    EDA_datum_invalid_123 = (
-        (data_EDA_uS_filtered < QA_EDA_floor)
-        | (data_EDA_uS_filtered > QA_EDA_ceiling)
-        | (abs(data_Q_EDA_uS_per_sec_filtered_QA) > QA_EDA_max_slope_uS_per_sec)
-    )
+    if qa_filter_window_eda_sec:
+        window_size = qa_filter_window_eda_sec / sampling_period_eda
+        kernel = (1 / window_size) * np.ones(int(window_size))
+        data_eda_us_filtered = filtfilt(kernel, 1, data_eda_us)
+        data_temperature_c_filtered = filtfilt(kernel, 1, data_temperature_c)
 
-    QA_radius_to_spread_invalid_datum_Ndata = int(
-        QA_radius_to_spread_invalid_datum_sec / sampling_period_EDA
-    )
-
-    EDA_datum_invalid = EDA_datum_invalid_123.copy()
-    for d in range(len(EDA_datum_invalid_123)):
-        if EDA_datum_invalid_123[d]:
-            EDA_datum_invalid[d : d + QA_radius_to_spread_invalid_datum_Ndata] = 1
-
-            EDA_datum_invalid[
-                max(0, d - QA_radius_to_spread_invalid_datum_Ndata + 1) : d
-            ] = 1
-
-    return np.mean(~EDA_datum_invalid)
-
-
-def gsr_automated_2secs(data_EDA_uS, fs=4):
-    QA_filter_window_EDA_sec = 2
-
-    QA_EDA_floor = 0.05
-    QA_EDA_ceiling = 60
-    QA_EDA_max_slope_uS_per_sec = 10
-    QA_radius_to_spread_invalid_datum_sec = 5
-
-    sampling_period_EDA = 1 / fs  # None
-
-    # Rule 1: EDA is out of range (not within 0.05–60 μS)
-    if QA_filter_window_EDA_sec:
-        windowSize = QA_filter_window_EDA_sec / sampling_period_EDA
-        b = (1 / windowSize) * np.ones((int(windowSize),))
-        a = 1
-        data_EDA_uS_filtered = filtfilt(b, a, data_EDA_uS)
+        if np.sum(~np.isnan(data_temperature_c_filtered)) == 0:
+            data_temperature_c_filtered = data_temperature_c
     else:
-        data_EDA_uS_filtered = data_EDA_uS
+        data_eda_us_filtered = data_eda_us
+        data_temperature_c_filtered = data_temperature_c
 
-    # Calculate instantaneous slope for Rule 2
-    data_Q_EDA_uS_per_sec_filtered_QA = np.insert(
-        (np.diff(data_EDA_uS_filtered) / sampling_period_EDA), 0, 0
+    data_q_eda_us_per_sec_filtered_qa = np.insert(
+        np.diff(data_eda_us_filtered) / sampling_period_eda,
+        0,
+        0,
     )
 
-    # Implementation of EDA rules 1, 2, and (not) 3
-    EDA_datum_invalid_123 = (
-        (data_EDA_uS_filtered < QA_EDA_floor)
-        | (data_EDA_uS_filtered > QA_EDA_ceiling)
-        | (abs(data_Q_EDA_uS_per_sec_filtered_QA) > QA_EDA_max_slope_uS_per_sec)
+    eda_datum_invalid_123 = (
+        (data_eda_us_filtered < qa_eda_floor)
+        | (data_eda_us_filtered > qa_eda_ceiling)
+        | (np.abs(data_q_eda_us_per_sec_filtered_qa) > qa_eda_max_slope_us_per_sec)
+        | (data_temperature_c_filtered < qa_temperature_c_min)
+        | (data_temperature_c_filtered > qa_temperature_c_max)
     )
 
-    QA_radius_to_spread_invalid_datum_Ndata = int(
-        QA_radius_to_spread_invalid_datum_sec / sampling_period_EDA
+    spread_samples = int(qa_radius_to_spread_invalid_datum_sec / sampling_period_eda)
+    eda_datum_invalid = eda_datum_invalid_123.copy()
+
+    for index, is_invalid in enumerate(eda_datum_invalid_123):
+        if not is_invalid:
+            continue
+        eda_datum_invalid[index : index + spread_samples] = 1
+        eda_datum_invalid[max(0, index - spread_samples + 1) : index] = 1
+
+    return float(np.mean(~eda_datum_invalid))
+
+
+def kleckner_quality_filter(data_eda_us, fs=4):
+    """
+    Kleckner quality metric with the 2-second pre-filter variant.
+    """
+    return kleckner_quality(
+        data_eda_us,
+        fs=fs,
+        qa_filter_window_eda_sec=2,
     )
 
-    EDA_datum_invalid = EDA_datum_invalid_123.copy()
-    for d in range(len(EDA_datum_invalid_123)):
-        if EDA_datum_invalid_123[d]:
-            EDA_datum_invalid[d : d + QA_radius_to_spread_invalid_datum_Ndata] = 1
 
-            EDA_datum_invalid[
-                max(0, d - QA_radius_to_spread_invalid_datum_Ndata + 1) : d
-            ] = 1
+def maki_quality(data, fs=64, min_peak_distance=60 / 240, min_peak_height=0):
+    """
+    Python implementation of the Q_PHV reliability metric by Maki et al.
 
-    return np.mean(~EDA_datum_invalid)
+    Lower scores indicate more stable pulse heights and therefore better quality.
+    """
+    data = np.asarray(data, dtype=float)
+    min_peak_distance_samples = max(1, int(round(min_peak_distance * fs)))
+
+    def normalize_mean_peak_height(values):
+        centered = values - np.mean(values)
+        peak_indices, _ = find_peaks(
+            centered,
+            height=min_peak_height,
+            distance=min_peak_distance_samples,
+        )
+        peaks = centered[peak_indices]
+        if peaks.size == 0 or np.isclose(np.mean(peaks), 0):
+            raise ValueError("Unable to normalize signal: no valid peaks found.")
+        return centered / np.mean(peaks)
+
+    normalized_signal = normalize_mean_peak_height(data)
+    peak_indices, _ = find_peaks(
+        normalized_signal,
+        height=min_peak_height,
+        distance=min_peak_distance_samples,
+    )
+    peaks = normalized_signal[peak_indices]
+    if peaks.size <= 1:
+        return 0.0
+
+    return float(np.var(peaks, ddof=1))

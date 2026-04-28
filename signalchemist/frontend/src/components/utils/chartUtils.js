@@ -1,10 +1,16 @@
 /**
- * handleResetZoom function resets the zoom on the provided chart by setting the x and y scale min/max to undefined.
+ * Reset zoom for Chart.js or bridge-based chart wrappers.
  *
- * @param {Object} chart - The chart object to reset the zoom on.
+ * @param {Object} chart
  */
 export function handleResetZoom(chart) {
   if (!chart) return;
+
+  if (chart.__kind === "echarts" && typeof chart.resetZoom === "function") {
+    chart.resetZoom();
+    return;
+  }
+
   chart.config.options.scales.x.min = undefined;
   chart.config.options.scales.x.max = undefined;
   chart.config.options.scales.y.min = undefined;
@@ -13,13 +19,19 @@ export function handleResetZoom(chart) {
 }
 
 /**
- * handleResetStyle function resets the chart's styling to the provided color.
+ * Reset style for Chart.js or bridge-based chart wrappers.
  *
- * @param {Object} chart - The chart object to reset the style on.
- * @param {string} color - The color to apply to the chart's points and segments.
+ * @param {Object} chart
+ * @param {string} color
  */
 export function handleResetStyle(chart, color) {
   if (!chart) return;
+
+  if (chart.__kind === "echarts" && typeof chart.resetStyle === "function") {
+    chart.resetStyle(color);
+    return;
+  }
+
   const dataset = chart.data.datasets[0];
   dataset.pointBackgroundColor = dataset.data.map(() => color);
   dataset.pointBorderColor = dataset.data.map(() => color);
@@ -32,15 +44,23 @@ export function handleResetStyle(chart, color) {
 }
 
 /**
- * exportToPNG function exports the chart as a PNG image.
+ * Export chart as PNG for Chart.js or ECharts bridges.
  *
- * @param {Object} chart - The chart object to export as an image.
- * @param {string} [filename='chart.png'] - The filename for the exported PNG image.
+ * @param {Object} chart
+ * @param {string} [filename='chart.png']
  */
 export function exportToPNG(chart, filename = "chart.png") {
   if (!chart) return;
 
-  const imageUrl = chart.toBase64Image();
+  let imageUrl = null;
+  if (chart.__kind === "echarts" && typeof chart.toBase64Image === "function") {
+    imageUrl = chart.toBase64Image();
+  } else if (typeof chart.toBase64Image === "function") {
+    imageUrl = chart.toBase64Image();
+  }
+
+  if (!imageUrl) return;
+
   const link = document.createElement("a");
   link.href = imageUrl;
   link.download =
@@ -52,14 +72,6 @@ export function exportToPNG(chart, filename = "chart.png") {
 
 const MAX_DATA_LENGTH = 5000;
 
-/**
- * Updates the dataset's styles to highlight a specific data point.
- *
- * @param {Object} dataset - The dataset to update.
- * @param {number} pointIndex - The index of the point to highlight.
- * @param {string} highlightColor - The color used to highlight the selected point.
- * @param {string} actualColor - The color used for the non-selected points.
- */
 export function updateDatasetStyles(
   dataset,
   pointIndex,
@@ -76,16 +88,14 @@ export function updateDatasetStyles(
 }
 
 /**
- * Processes a Chart.js chart instance to highlight a selected data point and adjust the X axis range.
+ * Highlight point for Chart.js or ECharts bridges.
  *
- * Idea from: https://stackoverflow.com/questions/70987757/change-color-of-a-single-point-by-clicking-on-it-chart-js
- *
- * @param {Object} chart - The Chart.js instance to update.
- * @param {number} pointIndex - The index of the selected point.
- * @param {number} xvalue - The X-axis value of the selected point.
- * @param {string} highlightColor - The color used to highlight the selected point.
- * @param {number} zoomRange - The range used to zoom the X-axis around the selected point.
- * @param {Object} chartRef - A ref to the main chart for data correspondence validation.
+ * @param {Object} chart
+ * @param {number} pointIndex
+ * @param {number} xvalue
+ * @param {string} highlightColor
+ * @param {number} zoomRange
+ * @param {Object} chartRef
  */
 export function processChartHighlight(
   chart,
@@ -95,20 +105,21 @@ export function processChartHighlight(
   zoomRange,
   chartRef
 ) {
+  if (!chart) return;
+
+  if (chart.__kind === "echarts" && typeof chart.highlightPoint === "function") {
+    chart.highlightPoint(pointIndex, xvalue, highlightColor, zoomRange, chartRef);
+    return;
+  }
+
   const dataset = chart.data.datasets[0];
   const actualColor = chart.config.options.actualColor;
 
-  // Skip if dataset is too large or data length mismatch (to optimize performance)
   if (dataset.data.length > MAX_DATA_LENGTH) return;
-  if (chartRef.current.data.datasets[0].data.length !== dataset.data.length)
-    return;
+  if (chartRef.current.data.datasets[0].data.length !== dataset.data.length) return;
 
-  // Update dataset styles to highlight the selected point
   updateDatasetStyles(dataset, pointIndex, highlightColor, actualColor);
-
-  // Adjust X axis range to center around the selected timestamp
   chart.config.options.scales.x.min = xvalue - zoomRange;
   chart.config.options.scales.x.max = xvalue + zoomRange;
-
   chart.update();
 }

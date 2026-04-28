@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Handle,
   Position,
@@ -6,13 +6,13 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { Card, Button, Select, Tooltip } from "@mantine/core";
+import { Select } from "@mantine/core";
 import FilterFields from "../../common/FilterFields";
-import { FaFilter, FaTrash, FaEye } from "react-icons/fa";
-import ExecutionIcon from "../../common/ExecutionIcon";
+import { FaFilter } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 import { diff, average } from "../../utils/dataUtils";
+import { NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 
 const filtersFields = {
   butterworth: {
@@ -104,6 +104,64 @@ function FilteringNode({ id, data }) {
     windowSizeRef.current = null;
   }
 
+  const requestFilter = useCallback(async () => {
+    const table = tableRef.current;
+    const samplingRate = samplingRateRef.current;
+
+    if (!table) return;
+
+    setExecutionState("running");
+
+    const formData = new FormData();
+
+    const signalOnly = table.slice(1); // Exclude headers
+
+    formData.append("signal", JSON.stringify(signalOnly));
+    formData.append("sampling_rate", Math.round(samplingRate));
+
+    const filterConfig = {
+      method: filter,
+      ...fields,
+    };
+
+    formData.append("filter_config", JSON.stringify(filterConfig));
+
+    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
+    window.dispatchEvent(event);
+
+    try {
+      const response = await fetch("/api/filtering", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(errorData.error);
+        toast.error(errorData.error);
+        throw new Error(errorData.error);
+      }
+
+      const result = await response.json();
+
+      const new_table = [table[0]].concat(result.data); // Add headers back
+
+      updateNodeData(id, (prev) => ({
+        ...prev,
+        table: new_table,
+      }));
+
+      setExecutionState("executed");
+      return new_table;
+    } catch (error) {
+      console.error("Failed to apply filter:", error);
+      toast.error("Failed to apply filter");
+
+      setExecutionState("error");
+      return null;
+    }
+  }, [fields, filter, id, targetNodeId, updateNodeData]);
+
   useEffect(() => {
     /**
      * Handler to delete the current node's table and propagate the event to the next node.
@@ -160,7 +218,7 @@ function FilteringNode({ id, data }) {
         handleDeleteTable
       );
     };
-  }, [targetNodeId, filter, fields, id]);
+  }, [id, requestFilter, targetNodeId, updateNodeData]);
 
   /**
    * Trigger a delete event when filter configuration changes.
@@ -169,68 +227,6 @@ function FilteringNode({ id, data }) {
     const event = new CustomEvent(`delete-source-tables${id}`);
     window.dispatchEvent(event);
   }, [filter, fields, id]);
-
-  /**
-   * Makes a request to the server to filter the table data.
-   * @returns {Array} The new filtered table.
-   */
-  const requestFilter = async () => {
-    const table = tableRef.current;
-    const samplingRate = samplingRateRef.current;
-
-    if (!table) return;
-
-    setExecutionState("running");
-
-    const formData = new FormData();
-
-    const signalOnly = table.slice(1); // Exclude headers
-
-    formData.append("signal", JSON.stringify(signalOnly));
-    formData.append("sampling_rate", Math.round(samplingRate));
-
-    const filterConfig = {
-      method: filter,
-      ...fields,
-    };
-
-    formData.append("filter_config", JSON.stringify(filterConfig));
-
-    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-    window.dispatchEvent(event);
-
-    try {
-      const response = await fetch("/api/filtering", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(errorData.error);
-        toast.error(errorData.error);
-        throw new Error(errorData.error);
-      }
-
-      const result = await response.json();
-
-      const new_table = [table[0]].concat(result.data); // Add headers back
-
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: new_table,
-      }));
-
-      setExecutionState("executed");
-      return new_table;
-    } catch (error) {
-      console.error("Failed to apply filter:", error);
-      toast.error("Failed to apply filter");
-
-      setExecutionState("error");
-      return null;
-    }
-  };
 
   /**
    * Handle changes in the filter fields.
@@ -242,68 +238,43 @@ function FilteringNode({ id, data }) {
   };
 
   return (
-    <Card className="bg-white dark:bg-gray-900 shadow-lg dark:shadow-xl rounded-lg p-4 mt-2 relative overflow-visible border-0 dark:border dark:border-gray-700">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <FaFilter className="text-green-600" size={20} />
-          <span className="font-bold text-lg text-gray-800 dark:text-white">
-            Filtering
-          </span>
-
-          {/* Node execution state icon */}
-          <Tooltip label={executionState} withArrow position="bottom">
-            <div
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                toast.custom(
-                  <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
-                    <div>Status:</div>
-                    <div>
-                      <ExecutionIcon executionState={executionState} />
-                    </div>
-                    <div>{executionState}</div>
-                  </div>
-                );
-              }}
-            >
-              <ExecutionIcon executionState={executionState} />
-            </div>
-          </Tooltip>
-
-          {/* Button to see the node output */}
-          <Tooltip label="See output" withArrow position="bottom">
-            <div
-              data-testid={`output${id}`}
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                if (currentNodeData?.data?.table) {
-                  data.setChartDataProcessed(currentNodeData.data.table);
-                } else {
-                  console.error("Execute node first");
-                  toast.error("Execute node first");
-                }
-              }}
-            >
-              <FaEye className="text-black dark:text-white" />
-            </div>
-          </Tooltip>
-
-          {/* Button to delete the node */}
-          <Tooltip label="Delete node" withArrow position="bottom">
-            <div
-              data-testid={`delete${id}`}
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                data.deleteNode(id);
-              }}
-            >
-              <FaTrash className="text-red-500" />
-            </div>
-          </Tooltip>
-        </div>
-      </div>
-
+    <NodeShell
+      icon={<FaFilter />}
+      title="Filtering"
+      eyebrow="Node"
+      accent="emerald"
+      executionState={executionState}
+      onStatusClick={() => {
+        toast.custom(
+          <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
+            <div>Status:</div>
+            <div>{executionState}</div>
+          </div>
+        );
+      }}
+      onOutputClick={() => {
+        if (currentNodeData?.data?.table) {
+          data.setChartDataProcessed(currentNodeData.data.table);
+        } else {
+          console.error("Execute node first");
+          toast.error("Execute node first");
+        }
+      }}
+      onDeleteClick={() => {
+        data.deleteNode(id);
+      }}
+      outputTestId={`output${id}`}
+      deleteTestId={`delete${id}`}
+      footer={
+        <NodeRunButton
+          disabled={!tableRef.current}
+          onClick={requestFilter}
+          accent="emerald"
+        >
+          Filter
+        </NodeRunButton>
+      }
+    >
       <HandleLimit
         type="target"
         position={Position.Left}
@@ -311,13 +282,7 @@ function FilteringNode({ id, data }) {
         connectionCount={1}
       />
 
-      <div className="p-4 space-y-2">
-        <label
-          htmlFor="filterTechnique"
-          className="block font-medium text-black dark:text-white"
-        >
-          Filtering technique
-        </label>
+      <NodeSection label="Filtering technique">
         <Select
           size="sm"
           data-testid="Select filter"
@@ -335,38 +300,22 @@ function FilteringNode({ id, data }) {
           className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
           classNames={{
             input:
-              "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+              "rounded-xl border border-slate-300 bg-white text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white",
             dropdown:
-              "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
-            option: `
-                                      hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white
-                                      data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600
-                                      data-[selected]:text-black dark:data-[selected]:text-white
-                                    `,
+              "bg-white dark:bg-gray-900 text-black dark:text-white border border-slate-300 dark:border-gray-700",
+            option:
+              "hover:bg-slate-100 dark:hover:bg-gray-800 data-[checked]:bg-emerald-50 data-[checked]:text-slate-900 dark:data-[checked]:bg-emerald-500/15 dark:data-[checked]:text-white",
           }}
         />
+      </NodeSection>
 
+      <NodeSection label="Parameters">
         <FilterFields
           filter={filter}
           fields={fields}
           onFieldChange={handleFieldChange}
         />
-      </div>
-
-      {/* Button */}
-      <div className="w-full">
-        <Button
-          variant="subtle"
-          size="sm"
-          disabled={!tableRef.current}
-          onClick={requestFilter}
-          className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${
-            !tableRef.current ? "" : "dark:text-white"
-          }`}
-        >
-          Filter
-        </Button>
-      </div>
+      </NodeSection>
 
       <Handle
         type="source"
@@ -374,7 +323,7 @@ function FilteringNode({ id, data }) {
         id="output"
         className="custom-handle"
       />
-    </Card>
+    </NodeShell>
   );
 }
 

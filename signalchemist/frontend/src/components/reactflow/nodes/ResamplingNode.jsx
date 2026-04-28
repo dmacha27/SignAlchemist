@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Handle,
   Position,
@@ -6,13 +6,12 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { Card, Button, Select, Tooltip } from "@mantine/core";
-import { Form } from "react-bootstrap";
-import { FaChartLine, FaTrash, FaEye } from "react-icons/fa";
-import ExecutionIcon from "../../common/ExecutionIcon";
+import { Select } from "@mantine/core";
+import { FaChartLine } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 import { diff, average } from "../../utils/dataUtils";
+import { NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 
 /**
  * ResamplingNode component
@@ -69,6 +68,56 @@ function ResamplingNode({ id, data }) {
     samplingRateRef.current = null;
   }
 
+  const requestResample = useCallback(async () => {
+    const table = tableRef.current;
+    const samplingRate = samplingRateRef.current;
+
+    if (!table) return;
+
+    setExecutionState("running");
+
+    const formData = new FormData();
+    formData.append("signal", JSON.stringify(table.slice(1))); // Append the table data (excluding the first row which is assumed to be headers)
+    formData.append("interpolation_technique", interpolationTechnique);
+    formData.append("source_sampling_rate", parseFloat(samplingRate));
+    formData.append("target_sampling_rate", parseFloat(targetSamplingRate));
+
+    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
+    window.dispatchEvent(event);
+
+    try {
+      const response = await fetch("/api/resampling", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(errorData.error);
+        toast.error(errorData.error);
+        throw new Error(errorData.error);
+      }
+
+      const result = await response.json();
+
+      const new_table = [table[0]].concat(result.data); // Combine the original header with the resampled data
+
+      updateNodeData(id, (prev) => ({
+        ...prev,
+        table: new_table,
+      }));
+
+      setExecutionState("executed");
+      return new_table;
+    } catch (error) {
+      console.error("Failed to apply resampling:", error);
+      toast.error("Failed to apply resampling");
+
+      setExecutionState("error");
+      return null;
+    }
+  }, [id, interpolationTechnique, targetNodeId, targetSamplingRate, updateNodeData]);
+
   useEffect(() => {
     /**
      * Handler to delete the current node's table and propagate the event to the next node.
@@ -120,7 +169,7 @@ function ResamplingNode({ id, data }) {
         handleDeleteTable
       );
     };
-  }, [targetNodeId, interpolationTechnique, targetSamplingRate, id]);
+  }, [id, requestResample, targetNodeId, updateNodeData]);
 
   /**
    * Trigger a delete event when form is changed.
@@ -130,123 +179,44 @@ function ResamplingNode({ id, data }) {
     window.dispatchEvent(event);
   }, [interpolationTechnique, targetSamplingRate, id]);
 
-  /**
-   * Makes a request to the server to resample the table data.
-   * @returns {Array} The new resampled table.
-   */
-  const requestResample = async () => {
-    const table = tableRef.current;
-    const samplingRate = samplingRateRef.current;
-
-    if (!table) return;
-
-    setExecutionState("running");
-
-    const formData = new FormData();
-    formData.append("signal", JSON.stringify(table.slice(1))); // Append the table data (excluding the first row which is assumed to be headers)
-    formData.append("interpolation_technique", interpolationTechnique);
-    formData.append("source_sampling_rate", parseFloat(samplingRate));
-    formData.append("target_sampling_rate", parseFloat(targetSamplingRate));
-
-    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-    window.dispatchEvent(event);
-
-    try {
-      const response = await fetch("/api/resampling", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(errorData.error);
-        toast.error(errorData.error);
-        throw new Error(errorData.error);
-      }
-
-      const result = await response.json();
-
-      const new_table = [table[0]].concat(result.data); // Combine the original header with the resampled data
-
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: new_table,
-      }));
-
-      setExecutionState("executed");
-      return new_table;
-    } catch (error) {
-      console.error("Failed to apply resampling:", error);
-      toast.error("Failed to apply resampling");
-
-      setExecutionState("error");
-      return null;
-    }
-  };
-
   return (
-    <Card className="bg-white dark:bg-gray-900 shadow-lg dark:shadow-xl rounded-lg p-4 mt-2 relative overflow-visible border-0 dark:border dark:border-gray-700">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <FaChartLine className="text-blue-600" size={20} />
-          <span className="font-bold text-lg text-gray-800 dark:text-white">
-            Resampling
-          </span>
-
-          {/* Node execution state icon */}
-          <Tooltip label={executionState} withArrow position="bottom">
-            <div
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                toast.custom(
-                  <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
-                    <div>Status:</div>
-                    <div>
-                      <ExecutionIcon executionState={executionState} />
-                    </div>
-                    <div>{executionState}</div>
-                  </div>
-                );
-              }}
-            >
-              <ExecutionIcon executionState={executionState} />
-            </div>
-          </Tooltip>
-
-          {/* Button to see the node output */}
-          <Tooltip label="See output" withArrow position="bottom">
-            <div
-              data-testid={`output${id}`}
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                if (currentNodeData?.data?.table) {
-                  data.setChartDataProcessed(currentNodeData.data.table);
-                } else {
-                  console.error("Execute node first");
-                  toast.error("Execute node first");
-                }
-              }}
-            >
-              <FaEye className="text-black dark:text-white" />
-            </div>
-          </Tooltip>
-
-          {/* Button to delete the node */}
-          <Tooltip label="Delete node" withArrow position="bottom">
-            <div
-              data-testid={`delete${id}`}
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                data.deleteNode(id);
-              }}
-            >
-              <FaTrash className="text-red-500" />
-            </div>
-          </Tooltip>
-        </div>
-      </div>
-
+    <NodeShell
+      icon={<FaChartLine />}
+      title="Resampling"
+      eyebrow="Node"
+      accent="cyan"
+      executionState={executionState}
+      onStatusClick={() => {
+        toast.custom(
+          <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
+            <div>Status:</div>
+            <div>{executionState}</div>
+          </div>
+        );
+      }}
+      onOutputClick={() => {
+        if (currentNodeData?.data?.table) {
+          data.setChartDataProcessed(currentNodeData.data.table);
+        } else {
+          console.error("Execute node first");
+          toast.error("Execute node first");
+        }
+      }}
+      onDeleteClick={() => {
+        data.deleteNode(id);
+      }}
+      outputTestId={`output${id}`}
+      deleteTestId={`delete${id}`}
+      footer={
+        <NodeRunButton
+          disabled={!tableRef.current}
+          onClick={requestResample}
+          accent="cyan"
+        >
+          Resample
+        </NodeRunButton>
+      }
+    >
       <HandleLimit
         type="target"
         position={Position.Left}
@@ -254,19 +224,13 @@ function ResamplingNode({ id, data }) {
         connectionCount={1}
       />
 
-      {/* Form */}
-      <Form>
-        <Form.Group className="mb-4" controlId="interpTechnique">
-          <Form.Label className="text-uppercase text-sm font-medium text-muted dark:text-gray-300 mb-2">
-            Interpolation technique
-          </Form.Label>
+      <NodeSection label="Interpolation technique">
           <Select
             size="sm"
             data-testid="Select interpolation"
             value={interpolationTechnique}
             onChange={(value) => {
               if (value) {
-                console.log(value);
                 setInterpolationTechnique(value);
               }
             }}
@@ -277,22 +241,16 @@ function ResamplingNode({ id, data }) {
             className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
             classNames={{
               input:
-                "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                "rounded-xl border border-slate-300 bg-white text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white",
               dropdown:
-                "dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
-              item: `
-                  dark:data-[hover]:bg-gray-700 !important
-                  data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600 
-                  data-[selected]:text-black dark:data-[selected]:text-white
-                `,
+                "bg-white dark:bg-gray-900 text-black dark:text-white border border-slate-300 dark:border-gray-700",
+              option:
+                "hover:bg-slate-100 dark:hover:bg-gray-800 data-[checked]:bg-cyan-50 data-[checked]:text-slate-900 dark:data-[checked]:bg-cyan-500/15 dark:data-[checked]:text-white",
             }}
           />
-        </Form.Group>
+      </NodeSection>
 
-        <Form.Group className="mb-4" controlId="samplingRate">
-          <Form.Label className="text-uppercase text-sm font-medium text-muted dark:text-gray-300 mb-2">
-            New rate (Hz)
-          </Form.Label>
+      <NodeSection label="Target sampling rate">
           <input
             type="number"
             step={1}
@@ -310,32 +268,16 @@ function ResamplingNode({ id, data }) {
                 setTargetSamplingRate(1);
               }
             }}
-            className="w-full text-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 text-black dark:text-white"
+            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white"
           />
-        </Form.Group>
-      </Form>
-
-      {/* Button */}
-      <div className="w-full">
-        <Button
-          variant="subtle"
-          size="sm"
-          disabled={!tableRef.current}
-          onClick={requestResample}
-          className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${
-            !tableRef.current ? "" : "dark:text-white"
-          }`}
-        >
-          Resample
-        </Button>
-      </div>
+      </NodeSection>
 
       <Handle
         type="source"
         position={Position.Right}
         className="custom-handle"
       />
-    </Card>
+    </NodeShell>
   );
 }
 

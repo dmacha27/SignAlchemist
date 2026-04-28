@@ -3,6 +3,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Processing from "./Processing";
 import { ThemeContext } from "../contexts/ThemeContext";
 
+jest.mock("./common/SignalTabs", () => () => <div>SignalTabs</div>);
+
 const mockChartRef = {
   config: { options: {} },
   update: jest.fn(),

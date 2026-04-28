@@ -7,7 +7,12 @@ import neurokit2
 import numpy as np
 import scipy
 
-from app.metrics import *
+from app.metrics import (
+    bottcher_quality,
+    kleckner_quality,
+    kleckner_quality_filter,
+    maki_quality,
+)
 from app.outliers import *
 
 import json
@@ -213,26 +218,28 @@ def get_metrics(
     except Exception as e:
         return {"error": f"Invalid signal format: {e}"}
 
+    signal_type = signal_type.upper()
+
     if signal_type == "EDA":
         return {
             "Böttcher et al. (2022)": {
-                "value": gsr_quality(values, fs=sampling_rate),
-                "description": "Evaluates EDA signal quality using amplitude thresholding and RAC (range of absolute change) stability over 2-second windows, as per Böttcher et al. (2022).",
+                "value": bottcher_quality(values, fs=sampling_rate),
+                "description": "EDA quality score based on amplitude plausibility and RAC stability. Higher is better.",
             },
-            "Kleckner et al. (2017)": {
-                "value": gsr_automated_2secs(values, fs=sampling_rate),
-                "description": "Assesses EDA signal quality using automated heuristics described by Kleckner et al. (2017), typically over short 2-second windows.",
+            "Kleckner et al. (2017) Raw": {
+                "value": kleckner_quality(values, fs=sampling_rate),
+                "description": "Automated EDA quality score using range, slope and artifact spreading rules on the raw signal. Higher is better.",
+            },
+            "Kleckner et al. (2017) 2s Filter": {
+                "value": kleckner_quality_filter(values, fs=sampling_rate),
+                "description": "Automated EDA quality score using the same range, slope and artifact spreading rules after a 2-second pre-filter. Higher is better.",
             },
         }
     elif signal_type == "PPG":
         return {
-            "Mohamed Elgendi (2016)": {
-                "value": bvp_skewness(values, fs=sampling_rate, W=2),
-                "description": "Skewness is a measure of the symmetry (or the lack of it) of a probability distribution.",
-            },
             "Maki et al. (2020)": {
-                "value": bvp_quality(values, fs=sampling_rate),
-                "description": "Quantifies the consistency of peak amplitudes in a BVP/PPG signal, with lower PHV values indicating higher signal reliability.",
+                "value": maki_quality(values, fs=sampling_rate),
+                "description": "Q_PHV pulse-height variability metric based on beat-to-beat pulse height variation. Lower is better.",
             }
         }
     else:

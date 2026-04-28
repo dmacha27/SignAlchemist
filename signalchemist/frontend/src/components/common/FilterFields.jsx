@@ -4,19 +4,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter/dist/cjs/pr
 import { materialDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { FaInfo, FaCheck, FaRegCopy } from "react-icons/fa";
 
-import {
-  Modal,
-  Button,
-  Group,
-  Tooltip,
-  Text,
-  NumberInput,
-  Checkbox,
-  Textarea,
-  Stack,
-  Box,
-  Code,
-} from "@mantine/core";
+import { Modal, Button, Group, Tooltip, Text, NumberInput, Checkbox, Textarea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
@@ -184,10 +172,13 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
 
         if (field !== "python") {
           return (
-            <div key={field} className="mb-4">
+            <div
+              key={field}
+              className="rounded-[1rem] border border-slate-200 bg-slate-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/70"
+            >
               <label
                 htmlFor={field}
-                className="block mb-1 font-medium text-black dark:text-white"
+                className="block mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300"
               >
                 {field.charAt(0).toUpperCase() + field.slice(1)}
               </label>
@@ -209,10 +200,9 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
                     !enabledFields[field]
                   }
                   style={{ flex: 1 }}
-                  className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
                   classNames={{
                     input:
-                      "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                      "rounded-xl border border-slate-300 bg-white text-slate-900 shadow-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white",
                   }}
                 />
 
@@ -228,9 +218,12 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
           );
         } else {
           return (
-            <div key={field}>
+            <div
+              key={field}
+              className="rounded-[1rem] border border-slate-200 bg-slate-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/70"
+            >
               <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-gray-700 dark:text-white">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
                   Python code
                 </span>
                 <Button variant="subtle" size="xs" onClick={open} title="Info">
@@ -245,7 +238,7 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
                 autosize
                 classNames={{
                   input:
-                    "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                    "rounded-xl border border-slate-300 bg-white text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white",
                 }}
               />
             </div>

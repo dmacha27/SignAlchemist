@@ -96,7 +96,7 @@ describe("OutliersNode", () => {
       </ThemeContext.Provider>
     );
 
-    expect(screen.getByText(/Outlier technique/i)).toBeInTheDocument();
+    expect(screen.getByText(/Detection technique/i)).toBeInTheDocument();
   });
 
   it("deletes node", async () => {

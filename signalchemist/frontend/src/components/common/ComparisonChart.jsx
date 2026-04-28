@@ -1,268 +1,212 @@
-import { memo, useRef, useEffect, useMemo, useContext } from "react";
+import { memo, useContext, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { Line } from "react-chartjs-2";
-import "chartjs-adapter-date-fns";
-
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale,
-} from "chart.js";
-import zoomPlugin from "chartjs-plugin-zoom";
-import { FaSearch, FaDownload, FaImage, FaHandPaper } from "react-icons/fa";
-import { Menu, Button } from "@mantine/core";
-import Draggable from "react-draggable";
-
-ChartJS.register(
-  zoomPlugin,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale
-);
-
-import { handleResetZoom, exportToPNG } from "../utils/chartUtils";
+import ReactECharts from "echarts-for-react";
+import { Button, Menu } from "@mantine/core";
+import { FaCircleNotch, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
-import ErrorBoundary from "./ErrorBoundary";
+import { exportToPNG, handleResetStyle, handleResetZoom } from "../utils/chartUtils";
+import { ChartFrame } from "./chartShell";
+import { toRgba } from "./echartsBridge";
 
 const MAX_DATA_LENGTH = 5000;
+const chartActionButtonClass =
+  "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
 
-const baseChartOptions = {
-  label: "comparison",
-  responsive: true,
-  plugins: {
-    legend: {
-      display: true,
-    },
-    tooltip: {
-      mode: "nearest",
-      intersect: true,
-      backgroundColor: "#fff",
-      titleColor: "#222",
-      bodyColor: "#333",
-      borderColor: "#ccc",
-      borderWidth: 1,
-    },
-  },
-  scales: {
-    x: {
-      type: "time",
-      position: "bottom",
-      time: {
-        unit: "second",
-        tooltipFormat: "dd MMM yyyy HH:mm:ss",
-        displayFormats: {
-          minute: "HH:mm",
-          hour: "HH:mm",
-          day: "MMM d",
+const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => {
+  const theme = useContext(ThemeContext);
+  const isDark = theme?.isDarkMode ?? false;
+  const chartComponentRef = useRef(null);
+  const bridgeRef = useRef(null);
+  const [focusedIndex, setFocusedIndex] = useState(null);
+  const [zoomWindow, setZoomWindow] = useState(null);
+
+  const [headers1, ...rows1] = table1;
+  const rows2 = table2.slice(1);
+  const points1 = useMemo(() => rows1.map(([x, y]) => [x * 1000, y]), [rows1]);
+  const points2 = useMemo(() => rows2.map(([x, y]) => [x * 1000, y]), [rows2]);
+  const xAxisType = rows1[0][0] === 0 && rows2[0][0] === 0 ? "value" : "time";
+  const isLargeDataset = rows1.length > MAX_DATA_LENGTH || rows2.length > MAX_DATA_LENGTH;
+  const minX = points1[0]?.[0] ?? 0;
+  const maxX = points1[points1.length - 1]?.[0] ?? 0;
+  const zoomRangeX = Math.max((maxX - minX) * 0.02, 1);
+
+  const option = useMemo(() => {
+    const focus1 = focusedIndex !== null && points1[focusedIndex] ? [points1[focusedIndex]] : [];
+    const focus2 = focusedIndex !== null && points2[focusedIndex] ? [points2[focusedIndex]] : [];
+    const axisColor = isDark ? "#94a3b8" : "#475569";
+    const axisLineColor = isDark ? "#475569" : "#94a3b8";
+    const splitLineColor = isDark ? "rgba(148,163,184,0.14)" : "rgba(148,163,184,0.28)";
+    const tooltipBackground = isDark ? "#020617" : "#ffffff";
+    const tooltipBorder = isDark ? "#334155" : "#cbd5e1";
+    const tooltipText = isDark ? "#e2e8f0" : "#0f172a";
+
+    return {
+      animation: false,
+      backgroundColor: "transparent",
+      grid: { left: 64, right: 24, top: 32, bottom: 56 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: {
+          type: "line",
+          snap: true,
+          lineStyle: { color: "#f97316", width: 1 },
         },
+        backgroundColor: tooltipBackground,
+        borderColor: tooltipBorder,
+        borderWidth: 1,
+        textStyle: { color: tooltipText },
       },
-      title: {
-        display: true,
-        text: "(ms)",
-        color: "#111",
-        font: { size: 14, weight: "bold" },
+      legend: {
+        show: true,
+        top: 0,
+        right: 8,
+        textStyle: { color: axisColor, fontSize: 11 },
       },
-    },
-    y: {
-      ticks: { color: "#444" },
-      title: {
-        display: true,
-        text: "Value",
-        color: "#111",
-        font: { size: 14, weight: "bold" },
+      xAxis: {
+        type: xAxisType,
+        min: zoomWindow?.[0],
+        max: zoomWindow?.[1],
+        splitNumber: 6,
+        axisLine: { lineStyle: { color: axisLineColor, width: 1 } },
+        axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
+        axisLabel: { color: axisColor, margin: 12 },
+        splitLine: { show: true, lineStyle: { color: splitLineColor } },
+        name: xAxisType === "value" ? `${headers1[0]} (ms)` : `${headers1[0]} (date)`,
+        nameLocation: "middle",
+        nameGap: 34,
+        nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
       },
-    },
-  },
-};
-
-/**
- * ComparisonChart component renders a line chart that compares two datasets over time or values.
- *
- * @param {Object} props - The props for the component.
- * @param {Array} props.table1 - The first dataset, a 2D array where each sub-array represents a pair of x and y values.
- * @param {Array} props.table2 - The second dataset, a 2D array where each sub-array represents a pair of x and y values.
- * @param {string} [props.name1="Original"] - The label for the first dataset.
- * @param {string} props.name2 - The label for the second dataset.
- *
- */
-const ComparisonChart = memo(
-  ({ table1, table2, name2, name1 = "Original" }) => {
-    const chartRef = useRef(null);
-    const draggableRef = useRef(null);
-
-    const [headers1, ...rows1] = table1;
-    const rows2 = table2.slice(1);
-
-    const isLargeDataset =
-      rows1.length > MAX_DATA_LENGTH || rows2.length > MAX_DATA_LENGTH;
-
-    const shouldCaptureImage = useRef(true);
-    useEffect(() => {
-      shouldCaptureImage.current = true;
-    }, [table1, table2]);
-
-    const { isDarkMode: isDark } = useContext(ThemeContext);
-
-    const chartOptions = useMemo(
-      () => ({
-        ...baseChartOptions,
-        plugins: {
-          ...baseChartOptions.plugins,
-          legend: {
-            display: true,
-            labels: {
-              color: isDark ? "#ffffff" : "#000000",
-            },
-          },
-          tooltip: {
-            ...baseChartOptions.plugins.tooltip,
-            backgroundColor: isDark ? "#333" : "#fff",
-            titleColor: isDark ? "#fff" : "#222",
-            bodyColor: isDark ? "#ddd" : "#333",
-            borderColor: isDark ? "#555" : "#ccc",
-          },
-          zoom: {
-            pan: {
-              enabled: !isLargeDataset,
-              mode: "x",
-            },
-            zoom: {
-              wheel: { enabled: !isLargeDataset },
-              pinch: { enabled: !isLargeDataset },
-              mode: "x",
-            },
-          },
-        },
-        scales: {
-          ...baseChartOptions.scales,
-          x: {
-            ...baseChartOptions.scales.x,
-            type:
-              rows1[0][0] === 0.0 && rows2[0][0] === 0.0 ? "linear" : "time",
-            ticks: { color: isDark ? "#ffffff" : "#000000" },
-            grid: { color: isDark ? "#444444" : "#e5e5e5" },
-            title: {
-              ...baseChartOptions.scales.x.title,
-              text:
-                rows1[0][0] === 0.0
-                  ? `${headers1[0]} (ms)`
-                  : `${headers1[0]} (date)`,
-              color: isDark ? "#ffffff" : "#000000",
-            },
-          },
-          y: {
-            ...baseChartOptions.scales.y,
-            ticks: { color: isDark ? "#ffffff" : "#444444" },
-            grid: { color: isDark ? "#444444" : "#e5e5e5" },
-            title: {
-              ...baseChartOptions.scales.y.title,
-              text: `${headers1[1]}`,
-              color: isDark ? "#ffffff" : "#000000",
-            },
-          },
-        },
-      }),
-      [isDark, isLargeDataset]
-    );
-
-    useEffect(() => {
-      if (!chartRef.current) return;
-      chartRef.current.update();
-    }, [isDark]);
-
-    const chartData = {
-      datasets: [
+      yAxis: {
+        type: "value",
+        splitNumber: 6,
+        axisLine: { lineStyle: { color: axisLineColor, width: 1 } },
+        axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
+        axisLabel: { color: axisColor, margin: 10 },
+        splitLine: { show: true, lineStyle: { color: splitLineColor } },
+        name: headers1[1],
+        nameLocation: "middle",
+        nameGap: 46,
+        nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
+      },
+      dataZoom: isLargeDataset ? [] : [{ type: "inside", xAxisIndex: 0, filterMode: "none" }],
+      series: [
         {
-          label: name1,
-          data: rows1.map(([x, y]) => ({ x: x * 1000, y })),
-          borderColor: "#2196f3",
-          pointRadius: isLargeDataset ? 0 : 2,
-          pointBackgroundColor: "#2196f3",
-          fill: false,
+          name: name1,
+          type: "line",
+          data: points1,
+          showSymbol: false,
+          smooth: 0.05,
+          lineStyle: { color: "#38bdf8", width: 2.2 },
+          areaStyle: { color: toRgba("#38bdf8", isDark ? 0.04 : 0.08) },
         },
         {
-          label: name2,
-          data: rows2.map(([x, y]) => ({ x: x * 1000, y })),
-          borderColor: "#50C878",
-          pointRadius: isLargeDataset ? 0 : 2,
-          pointBackgroundColor: "#50C878",
-          fill: false,
+          name: name2,
+          type: "line",
+          data: points2,
+          showSymbol: false,
+          smooth: 0.05,
+          lineStyle: { color: "#34d399", width: 2.2 },
+          areaStyle: { color: toRgba("#34d399", isDark ? 0.03 : 0.07) },
+        },
+        {
+          type: "scatter",
+          data: focus1,
+          symbolSize: 8,
+          itemStyle: { color: "#f97316" },
+          silent: true,
+        },
+        {
+          type: "scatter",
+          data: focus2,
+          symbolSize: 8,
+          itemStyle: { color: "#f97316" },
+          silent: true,
         },
       ],
     };
+  }, [focusedIndex, headers1, isDark, isLargeDataset, name1, name2, points1, points2, xAxisType, zoomWindow]);
 
-    return (
-      <div className="text-center py-4 px-2">
-        <div className="relative">
-          <ErrorBoundary>
-            <Line ref={chartRef} data={chartData} options={chartOptions} />
-          </ErrorBoundary>
-          <Draggable
-            bounds="parent"
-            nodeRef={draggableRef}
-            handle=".drag-handle"
-          >
-            <div ref={draggableRef} className="absolute top-0 right-0 z-10">
-              <div className="relative inline-block group">
-                <Menu shadow="md" width={100}>
-                  <Menu.Target>
-                    <Button size="xs" variant="light" aria-label="export">
-                      <FaDownload />
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown className="bg-white dark:bg-gray-900 dark:border-gray-600">
-                    <Menu.Label className="text-black dark:text-white">
-                      Export as
-                    </Menu.Label>
-                    <Menu.Item
-                      leftSection={<FaImage size={12} />}
-                      onClick={() => exportToPNG(chartRef.current)}
-                      className="text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      PNG
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
+  bridgeRef.current = {
+    __kind: "echarts",
+    toBase64Image: () =>
+      chartComponentRef.current
+        ?.getEchartsInstance()
+        ?.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: isDark ? "#020617" : "#ffffff" }),
+    resetZoom: () => setZoomWindow(null),
+    resetStyle: () => setFocusedIndex(null),
+  };
 
-                <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full w-6 h-6 shadow-md border border-gray-300 dark:border-gray-600">
-                  <FaHandPaper size={12} />
-                </div>
-              </div>
-            </div>
-          </Draggable>
+  const handleClick = (params) => {
+    if (typeof params.dataIndex !== "number") return;
+    const xValue = points1[params.dataIndex]?.[0];
+    setFocusedIndex(params.dataIndex);
+    setZoomWindow([xValue - zoomRangeX, xValue + zoomRangeX]);
+  };
+
+  return (
+    <ChartFrame
+      badge="Compare"
+      title={`${name1} / ${name2}`}
+      toolbar={
+        <div className="flex items-center gap-2">
+          {!isLargeDataset ? (
+            <>
+              <button onClick={() => handleResetZoom(bridgeRef.current)} className={chartActionButtonClass}>
+                <FaSearch /> Reset Zoom
+              </button>
+              <button onClick={() => handleResetStyle(bridgeRef.current, "#38bdf8")} className={chartActionButtonClass}>
+                <FaCircleNotch /> Reset Style
+              </button>
+            </>
+          ) : null}
+          <Menu shadow="md" width={100}>
+            <Menu.Target>
+              <Button
+                size="xs"
+                variant="subtle"
+                aria-label="export"
+                className="rounded-full border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                <FaDownload size={12} />
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>Export as</Menu.Label>
+              <Menu.Item leftSection={<FaImage size={12} />} onClick={() => exportToPNG(bridgeRef.current)}>
+                PNG
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </div>
-
-        {isLargeDataset ? (
-          <div className="w-3/4 mx-auto mt-3 bg-yellow-100 text-yellow-800 p-4 rounded-md">
-            <strong>Too much data</strong> – interaction is disabled to improve
-            performance.
-          </div>
-        ) : (
-          <div className="flex justify-center gap-4 mt-3">
-            <button
-              onClick={() => handleResetZoom(chartRef.current)}
-              className="mt-3 flex items-center gap-2 mx-auto px-6 py-2 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium"
-            >
-              <FaSearch /> Reset Zoom
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-);
+      }
+      canvas={
+        <div className="relative min-h-[360px] overflow-hidden rounded-[0.7rem] border border-slate-200 bg-white p-1 dark:border-gray-800 dark:bg-slate-950">
+          <ReactECharts
+            ref={chartComponentRef}
+            option={option}
+            notMerge
+            lazyUpdate
+            style={{ height: 360, width: "100%" }}
+            onEvents={{ click: handleClick }}
+          />
+        </div>
+      }
+      notice={
+        isLargeDataset ? (
+          <>
+            Large dataset. Interaction off.
+          </>
+        ) : null
+      }
+      controls={
+        isLargeDataset ? (
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Export is still available.</p>
+        ) : null
+      }
+    />
+  );
+});
 
 ComparisonChart.propTypes = {
   table1: PropTypes.arrayOf(

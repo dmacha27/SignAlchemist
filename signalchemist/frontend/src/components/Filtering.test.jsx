@@ -3,6 +3,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Filtering from "./Filtering";
 import { ThemeContext } from "../contexts/ThemeContext";
 
+jest.mock("./common/SignalTabs", () => () => <div>SignalTabs</div>);
+
 const mockChartRef = {
   config: { options: {} },
   update: jest.fn(),
@@ -137,6 +139,8 @@ describe("Filtering", () => {
       expect(elements.length).toBe(0);
     });
 
+    await screen.findByText(/metricA/i);
+
     expect(await screen.findByText(/metricA/i)).toBeInTheDocument();
   });
 
@@ -184,6 +188,8 @@ describe("Filtering", () => {
       expect(elements.length).toBe(0);
     });
 
+    await screen.findByText(/metricA/i);
+
     const orderInput = screen.getByPlaceholderText("Enter order");
 
     fireEvent.change(orderInput, { target: { value: "4" } });
@@ -208,6 +214,8 @@ describe("Filtering", () => {
       expect(elements.length).toBe(0);
     });
 
+    await screen.findByText(/metricA/i);
+
     const button = screen.getByRole("button", { name: /execute filter/i });
     fireEvent.click(button);
 
@@ -215,8 +223,15 @@ describe("Filtering", () => {
       expect(screen.queryByText(/Processing request/i)).not.toBeInTheDocument();
     });
 
-    // First call was metrics for original data
-    expect(global.fetch).toHaveBeenCalledTimes(3);
+    await waitFor(() => {
+      expect(
+        global.fetch.mock.calls.filter(([url]) => url.includes("/api/filtering"))
+      ).toHaveLength(1);
+      expect(
+        global.fetch.mock.calls.filter(([url]) => url.includes("/api/metrics"))
+          .length
+      ).toBeGreaterThanOrEqual(1);
+    });
 
     // /api/filtering
     const firstCall = global.fetch.mock.calls[1];
@@ -255,6 +270,8 @@ describe("Filtering", () => {
       expect(elements.length).toBe(0);
     });
 
+    await screen.findByText(/metricA/i);
+
     const button = screen.getByRole("button", { name: /execute filter/i });
     fireEvent.click(button);
 
@@ -262,7 +279,9 @@ describe("Filtering", () => {
       expect(screen.queryByText(/Processing request/i)).not.toBeInTheDocument();
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Filtering failed");
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Filtering failed");
+    });
 
     consoleErrorSpy.mockRestore();
   });
@@ -312,6 +331,8 @@ describe("Filtering", () => {
       expect(elements.length).toBe(0);
     });
 
+    await screen.findByText(/metricA/i);
+
     const button = screen.getByRole("button", { name: /execute filter/i });
     fireEvent.click(button);
 
@@ -319,7 +340,9 @@ describe("Filtering", () => {
       expect(screen.queryByText(/Processing request/i)).not.toBeInTheDocument();
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Metrics failed");
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Metrics failed");
+    });
 
     consoleErrorSpy.mockRestore();
   });

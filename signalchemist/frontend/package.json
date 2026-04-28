@@ -15,6 +15,7 @@
     "@img-comparison-slider/react": "^8.0.2",
     "@mantine/core": "^7.17.7",
     "@mantine/hooks": "^7.17.7",
+    "@spaceymonk/react-radial-menu": "^2.1.0",
     "@xyflow/react": "^12.10.2",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
@@ -22,6 +23,8 @@
     "chartjs-plugin-zoom": "^2.2.0",
     "date-fns": "^4.1.0",
     "driver.js": "^1.4.0",
+    "echarts": "^6.0.0",
+    "echarts-for-react": "^3.0.6",
     "fft-js": "^0.0.12",
     "framer-motion": "^12.38.0",
     "primereact": "^10.9.7",
@@ -29,7 +32,6 @@
     "react": "^19.2.5",
     "react-bootstrap": "^2.10.9",
     "react-chartjs-2": "^5.3.1",
-    "react-circular-menu": "^2.4.26",
     "react-dom": "^19.2.5",
     "react-draggable": "^4.5.0",
     "react-hot-toast": "^2.6.0",
@@ -38,8 +40,7 @@
     "react-parallax-tilt": "^1.7.323",
     "react-range-slider-input": "^3.3.5",
     "react-router-dom": "^7.14.1",
-    "react-syntax-highlighter": "^16.1.1",
-    "styled-components": "^6.4.0"
+    "react-syntax-highlighter": "^16.1.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.2",

@@ -2,6 +2,7 @@ import { render, screen } from "../../test-utils";
 import SignalTabs from "./SignalTabs";
 import { FaRobot } from "react-icons/fa";
 import { ThemeContext } from "../../contexts/ThemeContext";
+import userEvent from "@testing-library/user-event";
 
 // https://stackoverflow.com/a/47058957
 // These componentes are tested individually
@@ -44,22 +45,21 @@ describe("SignalTabs", () => {
         <SignalTabs {...baseProps}/>
       </ThemeContext.Provider>
     );
-    expect(screen.getByText("Charts")).toBeInTheDocument();
+    expect(screen.getByText("Signal")).toBeInTheDocument();
     expect(screen.getByText("Spectrum")).toBeInTheDocument();
-
-    expect(screen.getAllByText("Original Signal")).toHaveLength(2);
-    expect(screen.getAllByText("Processed Signal")).toHaveLength(2);
+    expect(screen.getByText("Side by side")).toBeInTheDocument();
+    expect(screen.getByText("Compare")).toBeInTheDocument();
 
     // These componentes are tested individually
     expect(screen.getAllByText("CustomChart")).toHaveLength(2);
-    expect(screen.getAllByText("SpectrumChart")).toHaveLength(2);
-    expect(screen.getAllByText("ComparisonChart")).toHaveLength(1);
-    expect(screen.getAllByText("ComparisonSpectrumChart")).toHaveLength(1);
+    expect(screen.queryByText("SpectrumChart")).not.toBeInTheDocument();
+    expect(screen.queryByText("ComparisonChart")).not.toBeInTheDocument();
+    expect(screen.queryByText("ComparisonSpectrumChart")).not.toBeInTheDocument();
   });
 
   it("renders loader when isRequesting is true", () => {
     render(<SignalTabs {...baseProps} isRequesting={true} />);
-    expect(screen.getAllByText("Processing request...")).toHaveLength(4);
+    expect(screen.getByText("Processing request...")).toBeInTheDocument();
   });
 
   it("renders loader message when chartDataOriginal is missing", () => {
@@ -70,7 +70,7 @@ describe("SignalTabs", () => {
         isRequesting={false}
       />
     );
-    expect(screen.getAllByText("Waiting for request...")).toHaveLength(2);
+    expect(screen.getByText("Waiting for request...")).toBeInTheDocument();
   });
 
   it("renders request message when chartDataProcessed is missing", () => {
@@ -82,7 +82,22 @@ describe("SignalTabs", () => {
       />
     );
     expect(
-      screen.getAllByText("Please run processing to see results.")
-    ).toHaveLength(4);
+      screen.queryByText("Please run processing to see results.")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Please run processing to see processed results.")
+    ).toBeInTheDocument();
+  });
+
+  it("switches to spectrum and compare views", async () => {
+    const user = userEvent.setup();
+
+    render(<SignalTabs {...baseProps} />);
+
+    await user.click(screen.getByRole("button", { name: /Spectrum/i }));
+    expect(screen.getAllByText("SpectrumChart")).toHaveLength(2);
+
+    await user.click(screen.getByRole("button", { name: /Compare/i }));
+    expect(screen.getByText("ComparisonSpectrumChart")).toBeInTheDocument();
   });
 });
