@@ -17,6 +17,8 @@ import {
   FaRocket,
   FaTrash,
   FaEye,
+  FaFileExport,
+  FaFileImport,
 } from "react-icons/fa";
 import {
   ReactFlow,
@@ -46,15 +48,50 @@ export const ProcessingFlowSection = ({
   nodeTypes,
   onConnect,
   isDark,
+  isCanvasDragOver,
+  onCanvasDragOver,
+  onCanvasDragLeave,
+  onCanvasDrop,
+  exportPipeline,
+  importPipeline,
 }) => (
   <WorkspaceCard
     title="Pipeline Flow"
     description="Build a visual processing chain and inspect each transformation on the graph."
     icon={<FaProjectDiagram />}
+    actions={(
+      <div className="flex items-center gap-2">
+        <WorkspaceSecondaryButton
+          title="Export pipeline"
+          onClick={exportPipeline}
+          className="px-3 py-2 text-xs"
+        >
+          <FaFileExport />
+          Export
+        </WorkspaceSecondaryButton>
+        <WorkspaceSecondaryButton
+          title="Import pipeline"
+          onClick={importPipeline}
+          className="px-3 py-2 text-xs"
+        >
+          <FaFileImport />
+          Import
+        </WorkspaceSecondaryButton>
+      </div>
+    )}
   >
     <WorkspaceInnerCard className="p-0 overflow-hidden">
       {chartDataOriginal ? (
-        <div className="h-[560px] overflow-hidden rounded-[1rem]">
+        <div
+          className={`relative h-[560px] overflow-hidden rounded-[1rem] transition ${
+            isCanvasDragOver
+              ? "ring-2 ring-cyan-400 ring-offset-2 ring-offset-white dark:ring-cyan-500 dark:ring-offset-slate-950"
+              : ""
+          }`}
+          onDragOver={onCanvasDragOver}
+          onDragLeave={onCanvasDragLeave}
+          onDrop={onCanvasDrop}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -81,13 +118,12 @@ export const ProcessingFlowSection = ({
             />
             <Controls
               position="top-left"
-              className="rounded-2xl border border-slate-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-950"
+              className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-950"
               showInteractive={false}
             />
             <Panel position="top-right">
-              <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-md dark:border-gray-700 dark:bg-slate-950 dark:text-slate-300">
-                Drag nodes, connect handles, zoom the canvas, then run the
-                pipeline.
+              <div className="rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-slate-950/95 dark:text-slate-300">
+                Drop nodes here, connect them, then run the pipeline.
               </div>
             </Panel>
             <MiniMap
@@ -106,6 +142,13 @@ export const ProcessingFlowSection = ({
               backgroundColor={isDark ? "#111827" : "#ffffff"}
             />
           </ReactFlow>
+          {isCanvasDragOver ? (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-cyan-500/8">
+              <div className="rounded-full border border-cyan-300 bg-white/95 px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm dark:border-cyan-700 dark:bg-slate-950/95 dark:text-cyan-300">
+                Drop node
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : (
         <LoaderMessage message="Loading flow..." />
@@ -117,6 +160,7 @@ export const ProcessingFlowSection = ({
 export const ProcessingSidebar = ({
   samplingRate,
   addNode,
+  onNodeDragStart,
   deleteSourceTablesAndExecute,
   confirmationOpened,
   setConfirmationOpened,
@@ -131,37 +175,68 @@ export const ProcessingSidebar = ({
   >
     <WorkspaceInnerCard>
       <div className="flex flex-col gap-3">
-        <WorkspaceSecondaryButton
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Click to add, or drag a node card into the canvas.
+        </p>
+
+        <button
+          type="button"
           title="Add resampling node"
+          draggable
+          onDragStart={(event) => onNodeDragStart(event, "ResamplingNode")}
           onClick={() =>
             addNode("ResamplingNode", {
               samplingRate,
             })
           }
+          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
         >
-          <FaChartLine />
-          Resampling
-        </WorkspaceSecondaryButton>
+          <span className="inline-flex items-center gap-2">
+            <FaChartLine />
+            Resampling
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Drag
+          </span>
+        </button>
 
-        <WorkspaceSecondaryButton
+        <button
+          type="button"
           title="Add outlier detection node"
+          draggable
+          onDragStart={(event) => onNodeDragStart(event, "OutliersNode")}
           onClick={() => addNode("OutliersNode")}
+          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
         >
-          <FaBullseye />
-          Outliers
-        </WorkspaceSecondaryButton>
+          <span className="inline-flex items-center gap-2">
+            <FaBullseye />
+            Outliers
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Drag
+          </span>
+        </button>
 
-        <WorkspaceSecondaryButton
+        <button
+          type="button"
           title="Add filtering node"
+          draggable
+          onDragStart={(event) => onNodeDragStart(event, "FilteringNode")}
           onClick={() =>
             addNode("FilteringNode", {
               samplingRate,
             })
           }
+          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
         >
-          <FaFilter />
-          Filtering
-        </WorkspaceSecondaryButton>
+          <span className="inline-flex items-center gap-2">
+            <FaFilter />
+            Filtering
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Drag
+          </span>
+        </button>
 
         <div className="my-1 border-t border-slate-200 dark:border-gray-700" />
 
@@ -279,6 +354,12 @@ ProcessingFlowSection.propTypes = {
   nodeTypes: PropTypes.object.isRequired,
   onConnect: PropTypes.func.isRequired,
   isDark: PropTypes.bool.isRequired,
+  isCanvasDragOver: PropTypes.bool.isRequired,
+  onCanvasDragOver: PropTypes.func.isRequired,
+  onCanvasDragLeave: PropTypes.func.isRequired,
+  onCanvasDrop: PropTypes.func.isRequired,
+  exportPipeline: PropTypes.func.isRequired,
+  importPipeline: PropTypes.func.isRequired,
 };
 
 ProcessingFlowSection.defaultProps = {
@@ -288,6 +369,7 @@ ProcessingFlowSection.defaultProps = {
 ProcessingSidebar.propTypes = {
   samplingRate: PropTypes.number.isRequired,
   addNode: PropTypes.func.isRequired,
+  onNodeDragStart: PropTypes.func.isRequired,
   deleteSourceTablesAndExecute: PropTypes.func.isRequired,
   confirmationOpened: PropTypes.bool.isRequired,
   setConfirmationOpened: PropTypes.func.isRequired,

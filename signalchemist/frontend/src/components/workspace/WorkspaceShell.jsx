@@ -73,27 +73,37 @@ export const WorkspaceSection = ({ children, className = "" }) => (
   </section>
 );
 
-export const WorkspaceCard = ({ title, description, icon, children, className = "" }) => (
+export const WorkspaceCard = ({
+  title,
+  description,
+  icon,
+  actions = null,
+  children,
+  className = "",
+}) => (
   <div className={`${PAGE_CARD_CLASS} ${className}`.trim()}>
     {(title || description || icon) && (
-      <div className="mb-4 flex items-start gap-3">
-        {icon ? (
-          <div className="shrink-0 pt-0.5 text-lg text-cyan-600 dark:text-cyan-400">
-            {icon}
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3">
+          {icon ? (
+            <div className="shrink-0 pt-0.5 text-lg text-cyan-600 dark:text-cyan-400">
+              {icon}
+            </div>
+          ) : null}
+          <div className="min-w-0">
+            {title ? (
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                {title}
+              </h2>
+            ) : null}
+            {description ? (
+              <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300">
+                {description}
+              </p>
+            ) : null}
           </div>
-        ) : null}
-        <div className="min-w-0">
-          {title ? (
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-              {title}
-            </h2>
-          ) : null}
-          {description ? (
-            <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300">
-              {description}
-            </p>
-          ) : null}
         </div>
+        {actions ? <div className="shrink-0">{actions}</div> : null}
       </div>
     )}
     {children}
@@ -190,6 +200,7 @@ WorkspaceCard.propTypes = {
   title: PropTypes.string,
   description: PropTypes.string,
   icon: PropTypes.node,
+  actions: PropTypes.node,
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };
@@ -198,6 +209,7 @@ WorkspaceCard.defaultProps = {
   title: null,
   description: null,
   icon: null,
+  actions: null,
   className: "",
 };
 

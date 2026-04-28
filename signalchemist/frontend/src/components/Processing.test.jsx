@@ -151,8 +151,22 @@ async function setupFlow() {
   });
 }
 
+async function readBlobAsText(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Could not read blob"));
+    reader.readAsText(blob);
+  });
+}
+
 describe("Processing", () => {
   beforeEach(() => {
+    global.URL.createObjectURL = jest.fn(() => "blob:mock-pipeline");
+    global.URL.revokeObjectURL = jest.fn();
+    HTMLAnchorElement.prototype.click = jest.fn();
+
     global.fetch = jest.fn((url) => {
       if (url.includes("metrics")) {
         return Promise.resolve({
@@ -298,5 +312,105 @@ describe("Processing", () => {
         true
       );
     });
+  });
+
+  it("inserts a node on an existing edge", async () => {
+    await setupFlow();
+
+    const insertButtons = screen.getAllByRole("button", { name: /insert node/i });
+    fireEvent.click(insertButtons[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /insert filtering node/i })[0]);
+
+    await waitFor(() => {
+      const nodes = global.reactFlowInstance.getNodes();
+      expect(nodes).toHaveLength(6);
+    });
+
+    await waitFor(() => {
+      const edges = global.reactFlowInstance.getEdges();
+      expect(edges.some((edge) => edge.id === "xy-edge__1-3")).toBe(false);
+      expect(edges.some((edge) => edge.source === "1" && edge.target === "6")).toBe(true);
+      expect(edges.some((edge) => edge.source === "6" && edge.target === "3")).toBe(true);
+    });
+  });
+
+  it("exports the current pipeline to JSON", async () => {
+    await setupFlow();
+
+    fireEvent.click(screen.getByTitle("Export pipeline"));
+
+    expect(global.URL.createObjectURL).toHaveBeenCalledTimes(1);
+    expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledTimes(1);
+
+    const exportedBlob = global.URL.createObjectURL.mock.calls[0][0];
+    const exportedText = await readBlobAsText(exportedBlob);
+    const exportedPipeline = JSON.parse(exportedText);
+
+    expect(exportedPipeline.signalType).toBe("EDA");
+    expect(exportedPipeline.nodes).toHaveLength(3);
+    expect(exportedPipeline.edges).toHaveLength(2);
+    expect(exportedPipeline.nodes.map((node) => node.type)).toEqual(
+      expect.arrayContaining(["OutliersNode", "ResamplingNode", "FilteringNode"])
+    );
+  });
+
+  it("imports a pipeline from JSON", async () => {
+    await setupFlow();
+
+    const fileInput = document.querySelector('input[type="file"]');
+    const importedPipeline = {
+      signalType: "EDA",
+      nodes: [
+        {
+          id: "3",
+          type: "FilteringNode",
+          position: { x: 320, y: 110 },
+          data: {
+            samplingRate: 1,
+            filter: "fir",
+            fields: {
+              lowcut: 0.1,
+              highcut: 0.4,
+              python: "",
+            },
+          },
+        },
+      ],
+      edges: [
+        { source: "1", target: "3" },
+        { source: "3", target: "2" },
+      ],
+    };
+
+    await act(async () => {
+      fireEvent.change(fileInput, {
+        target: {
+          files: [
+            new File(
+              [JSON.stringify(importedPipeline)],
+              "pipeline.json",
+              { type: "application/json" }
+            ),
+          ],
+        },
+      });
+    });
+
+    await waitFor(() => {
+      const nodes = global.reactFlowInstance.getNodes();
+      expect(nodes).toHaveLength(3);
+    });
+
+    const importedNode = global.reactFlowInstance
+      .getNodes()
+      .find((node) => node.id === "3");
+
+    expect(importedNode.type).toBe("FilteringNode");
+    expect(importedNode.data.filter).toBe("fir");
+
+    const importedEdges = global.reactFlowInstance.getEdges();
+    expect(importedEdges).toHaveLength(2);
+    expect(importedEdges.some((edge) => edge.source === "1" && edge.target === "3")).toBe(true);
+    expect(importedEdges.some((edge) => edge.source === "3" && edge.target === "2")).toBe(true);
   });
 });

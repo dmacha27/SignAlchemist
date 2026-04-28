@@ -11,7 +11,7 @@ import { FaChartLine } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 import { diff, average } from "../../utils/dataUtils";
-import { NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
+import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 
 /**
  * ResamplingNode component
@@ -26,26 +26,26 @@ import { NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 function ResamplingNode({ id, data }) {
   const tableRef = useRef(null);
   const samplingRateRef = useRef(data.samplingRate);
+  const initialConfig = typeof data.technique === "string"
+    ? JSON.parse(data.technique)
+    : {
+        name: data.interpolationTechnique,
+        fields: { "Sampling rate": data.targetSamplingRate },
+      };
 
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
   const [interpolationTechnique, setInterpolationTechnique] =
-    useState("spline");
+    useState(initialConfig?.name ?? "spline");
   const [targetSamplingRate, setTargetSamplingRate] = useState(
-    data.samplingRate
+    initialConfig?.fields?.["Sampling rate"] ?? data.samplingRate
   );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({
     type: "target",
   });
-  data["technique"] = JSON.stringify({
-    name: interpolationTechnique,
-    fields: { "Sampling rate": targetSamplingRate },
-  });
-  data["target"] = targetNodeId;
-
   // Set source and target node IDs based on the current connections
   useEffect(() => {
     const sourceId = connections?.find((conn) => conn.target === id)?.source;
@@ -57,6 +57,7 @@ function ResamplingNode({ id, data }) {
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
   const incomingTable = sourceNodeData?.data?.table;
+  const outputTable = currentNodeData?.data?.table;
 
   if (incomingTable) {
     tableRef.current = incomingTable;
@@ -67,6 +68,29 @@ function ResamplingNode({ id, data }) {
     tableRef.current = null;
     samplingRateRef.current = null;
   }
+
+  useEffect(() => {
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      technique: JSON.stringify({
+        name: interpolationTechnique,
+        fields: { "Sampling rate": targetSamplingRate },
+      }),
+      target: targetNodeId,
+      interpolationTechnique,
+      targetSamplingRate,
+      samplingRate: data.samplingRate,
+      executionState,
+    }));
+  }, [
+    data.samplingRate,
+    executionState,
+    id,
+    interpolationTechnique,
+    targetNodeId,
+    targetSamplingRate,
+    updateNodeData,
+  ]);
 
   const requestResample = useCallback(async () => {
     const table = tableRef.current;
@@ -194,18 +218,9 @@ function ResamplingNode({ id, data }) {
           </div>
         );
       }}
-      onOutputClick={() => {
-        if (currentNodeData?.data?.table) {
-          data.setChartDataProcessed(currentNodeData.data.table);
-        } else {
-          console.error("Execute node first");
-          toast.error("Execute node first");
-        }
-      }}
       onDeleteClick={() => {
         data.deleteNode(id);
       }}
-      outputTestId={`output${id}`}
       deleteTestId={`delete${id}`}
       footer={
         <NodeRunButton
@@ -271,6 +286,17 @@ function ResamplingNode({ id, data }) {
             className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white"
           />
       </NodeSection>
+
+      <NodeOutputPreview
+        ready={Boolean(outputTable)}
+        rows={outputTable ? outputTable.length - 1 : 0}
+        onClick={() => {
+          if (outputTable) {
+            data.setChartDataProcessed(outputTable);
+          }
+        }}
+        accent="cyan"
+      />
 
       <Handle
         type="source"

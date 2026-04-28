@@ -10,7 +10,7 @@ import { Select } from "@mantine/core";
 import { FaBullseye } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
-import { NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
+import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 
 /**
  * OutliersNode component
@@ -25,19 +25,19 @@ import { NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
  */
 function OutliersNode({ id, data }) {
   const tableRef = useRef(null);
+  const initialConfig = typeof data.technique === "string"
+    ? JSON.parse(data.technique)
+    : { name: data.outlierTechnique };
 
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
-  const [outlierTechnique, setOutlierTechnique] = useState("hampel");
+  const [outlierTechnique, setOutlierTechnique] = useState(
+    initialConfig?.name ?? "hampel"
+  );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
-
-  data["technique"] = JSON.stringify({
-    name: outlierTechnique,
-  });
-  data["target"] = targetNodeId;
 
   // Update source and target node IDs when connections change
   useEffect(() => {
@@ -50,6 +50,19 @@ function OutliersNode({ id, data }) {
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
   tableRef.current = sourceNodeData?.data?.table;
+  const outputTable = currentNodeData?.data?.table;
+
+  useEffect(() => {
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      technique: JSON.stringify({
+        name: outlierTechnique,
+      }),
+      target: targetNodeId,
+      outlierTechnique,
+      executionState,
+    }));
+  }, [executionState, id, outlierTechnique, targetNodeId, updateNodeData]);
 
   const requestOutliers = useCallback(async () => {
     const table = tableRef.current;
@@ -171,18 +184,9 @@ function OutliersNode({ id, data }) {
           </div>
         );
       }}
-      onOutputClick={() => {
-        if (currentNodeData?.data?.table) {
-          data.setChartDataProcessed(currentNodeData.data.table);
-        } else {
-          console.error("Execute node first");
-          toast.error("Execute node first");
-        }
-      }}
       onDeleteClick={() => {
         data.deleteNode(id);
       }}
-      outputTestId={`output${id}`}
       deleteTestId={`delete${id}`}
       footer={
         <NodeRunButton
@@ -226,6 +230,17 @@ function OutliersNode({ id, data }) {
             }}
           />
       </NodeSection>
+
+      <NodeOutputPreview
+        ready={Boolean(outputTable)}
+        rows={outputTable ? outputTable.length - 1 : 0}
+        onClick={() => {
+          if (outputTable) {
+            data.setChartDataProcessed(outputTable);
+          }
+        }}
+        accent="amber"
+      />
 
       <Handle
         type="source"

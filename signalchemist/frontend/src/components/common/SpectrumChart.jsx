@@ -9,7 +9,7 @@ import { ThemeContext } from "../../contexts/ThemeContext";
 import { average, diff } from "../utils/dataUtils";
 import { exportToPNG, handleResetStyle, handleResetZoom } from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
-import { getCharts, registerChart, toRgba, unregisterChart } from "./echartsBridge";
+import { getCharts, registerChart, resetEchartsZoom, toRgba, unregisterChart } from "./echartsBridge";
 
 const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
@@ -155,6 +155,7 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
           ?.getEchartsInstance()
           ?.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: isDark ? "#020617" : "#ffffff" }),
       resetZoom: () => {
+        resetEchartsZoom(chartComponentRef.current?.getEchartsInstance?.());
         setXWindow(null);
         setYWindow(null);
       },

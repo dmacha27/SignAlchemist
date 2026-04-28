@@ -31,3 +31,11 @@ export function toRgba(hexColor, alpha) {
 
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
+
+export function resetEchartsZoom(instance) {
+  instance?.dispatchAction?.({
+    type: "dataZoom",
+    start: 0,
+    end: 100,
+  });
+}

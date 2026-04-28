@@ -12,7 +12,7 @@ import { FaFilter } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 import { diff, average } from "../../utils/dataUtils";
-import { NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
+import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 
 const filtersFields = {
   butterworth: {
@@ -53,6 +53,12 @@ const filtersFields = {
 function FilteringNode({ id, data }) {
   const tableRef = useRef(null);
   const samplingRateRef = useRef(data.samplingRate);
+  const initialConfig = typeof data.technique === "string"
+    ? JSON.parse(data.technique)
+    : {
+        name: data.filter,
+        fields: data.fields,
+      };
   const windowSizeRef = useRef(
     Math.round(data.samplingRate / 3) % 2 === 0
       ? Math.round(data.samplingRate / 3) + 1
@@ -64,17 +70,15 @@ function FilteringNode({ id, data }) {
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
-  const [filter, setFilter] = useState("butterworth");
-  const [fields, setFields] = useState(filtersFields[filter]);
+  const [filter, setFilter] = useState(initialConfig?.name ?? "butterworth");
+  const [fields, setFields] = useState(
+    initialConfig?.fields
+      ? { ...filtersFields[initialConfig.name], ...initialConfig.fields }
+      : filtersFields[initialConfig?.name ?? "butterworth"]
+  );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
-  const { python, ...rest } = fields;
-  data["technique"] = JSON.stringify({
-    name: filter,
-    fields: python == "" ? rest : { python: python },
-  });
-  data["target"] = targetNodeId;
 
   // Set source and target node IDs based on the current connections
   useEffect(() => {
@@ -87,6 +91,7 @@ function FilteringNode({ id, data }) {
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
   const incomingTable = sourceNodeData?.data?.table;
+  const outputTable = currentNodeData?.data?.table;
 
   if (incomingTable) {
     tableRef.current = incomingTable;
@@ -103,6 +108,30 @@ function FilteringNode({ id, data }) {
     samplingRateRef.current = null;
     windowSizeRef.current = null;
   }
+
+  useEffect(() => {
+    const { python, ...rest } = fields;
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      technique: JSON.stringify({
+        name: filter,
+        fields: python === "" ? rest : { python },
+      }),
+      target: targetNodeId,
+      filter,
+      fields,
+      samplingRate: data.samplingRate,
+      executionState,
+    }));
+  }, [
+    data.samplingRate,
+    executionState,
+    fields,
+    filter,
+    id,
+    targetNodeId,
+    updateNodeData,
+  ]);
 
   const requestFilter = useCallback(async () => {
     const table = tableRef.current;
@@ -252,18 +281,9 @@ function FilteringNode({ id, data }) {
           </div>
         );
       }}
-      onOutputClick={() => {
-        if (currentNodeData?.data?.table) {
-          data.setChartDataProcessed(currentNodeData.data.table);
-        } else {
-          console.error("Execute node first");
-          toast.error("Execute node first");
-        }
-      }}
       onDeleteClick={() => {
         data.deleteNode(id);
       }}
-      outputTestId={`output${id}`}
       deleteTestId={`delete${id}`}
       footer={
         <NodeRunButton
@@ -316,6 +336,17 @@ function FilteringNode({ id, data }) {
           onFieldChange={handleFieldChange}
         />
       </NodeSection>
+
+      <NodeOutputPreview
+        ready={Boolean(outputTable)}
+        rows={outputTable ? outputTable.length - 1 : 0}
+        onClick={() => {
+          if (outputTable) {
+            data.setChartDataProcessed(outputTable);
+          }
+        }}
+        accent="emerald"
+      />
 
       <Handle
         type="source"

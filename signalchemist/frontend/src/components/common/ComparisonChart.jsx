@@ -7,7 +7,7 @@ import { FaCircleNotch, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { exportToPNG, handleResetStyle, handleResetZoom } from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
-import { toRgba } from "./echartsBridge";
+import { resetEchartsZoom, toRgba } from "./echartsBridge";
 
 const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
@@ -133,7 +133,10 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
       chartComponentRef.current
         ?.getEchartsInstance()
         ?.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: isDark ? "#020617" : "#ffffff" }),
-    resetZoom: () => setZoomWindow(null),
+    resetZoom: () => {
+      resetEchartsZoom(chartComponentRef.current?.getEchartsInstance?.());
+      setZoomWindow(null);
+    },
     resetStyle: () => setFocusedIndex(null),
   };
 

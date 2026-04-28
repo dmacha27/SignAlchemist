@@ -9,7 +9,7 @@ import { ThemeContext } from "../../contexts/ThemeContext";
 import { average, diff } from "../utils/dataUtils";
 import { exportToPNG, handleResetStyle, handleResetZoom } from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
-import { toRgba } from "./echartsBridge";
+import { resetEchartsZoom, toRgba } from "./echartsBridge";
 
 const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
@@ -161,6 +161,7 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
         ?.getEchartsInstance()
         ?.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: isDark ? "#020617" : "#ffffff" }),
     resetZoom: () => {
+      resetEchartsZoom(chartComponentRef.current?.getEchartsInstance?.());
       setXWindow(null);
       setYWindow(null);
     },
