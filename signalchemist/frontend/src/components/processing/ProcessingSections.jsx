@@ -1,13 +1,5 @@
 import PropTypes from "prop-types";
 import {
-  Popover,
-  Button,
-  Text,
-  Group,
-  Collapse,
-  Menu,
-} from "@mantine/core";
-import {
   FaFilter,
   FaChevronDown,
   FaChevronUp,
@@ -33,6 +25,11 @@ import {
 
 import LoaderMessage from "../common/LoaderMessage";
 import PipelineSteps from "../common/PipelineSteps";
+import {
+  SimpleCollapse,
+  SimpleConfirm,
+  SimpleMenu,
+} from "../common/ui";
 import {
   WorkspaceCard,
   WorkspaceInnerCard,
@@ -63,7 +60,7 @@ export const ProcessingFlowSection = ({
     description="Build a visual processing chain and inspect each transformation on the graph."
     icon={<FaProjectDiagram />}
     actions={(
-      <div className="flex items-center gap-2">
+      <div className="flex w-full flex-wrap items-center justify-end gap-2">
         <WorkspaceSecondaryButton
           title="Export pipeline"
           onClick={exportPipeline}
@@ -80,8 +77,10 @@ export const ProcessingFlowSection = ({
           <FaFileImport />
           Import
         </WorkspaceSecondaryButton>
-        <Menu shadow="md" width={220} position="bottom-end">
-          <Menu.Target>
+        <SimpleMenu
+          label="Recommended pipelines"
+          widthClass="w-56"
+          trigger={(
             <button
               type="button"
               title="Recommended pipelines"
@@ -90,23 +89,20 @@ export const ProcessingFlowSection = ({
               <FaMagic />
               Presets
             </button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Label>Recommended pipelines</Menu.Label>
-            <Menu.Item
-              leftSection={<FaMagic size={12} />}
-              onClick={() => applyRecommendedPipeline("EDA")}
-            >
-              EDA / GSR
-            </Menu.Item>
-            <Menu.Item
-              leftSection={<FaMagic size={12} />}
-              onClick={() => applyRecommendedPipeline("PPG")}
-            >
-              PPG
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+          )}
+          items={[
+            {
+              label: "EDA / GSR",
+              icon: <FaMagic size={12} />,
+              onClick: () => applyRecommendedPipeline("EDA"),
+            },
+            {
+              label: "PPG",
+              icon: <FaMagic size={12} />,
+              onClick: () => applyRecommendedPipeline("PPG"),
+            },
+          ]}
+        />
       </div>
     )}
   >
@@ -279,54 +275,31 @@ export const ProcessingSidebar = ({
           Run Pipeline
         </WorkspacePrimaryButton>
 
-        <Popover
-          opened={confirmationOpened}
-          onClose={() => setConfirmationOpened(false)}
-          position="bottom-end"
-          withArrow
-          shadow="md"
-        >
-          <Popover.Target>
-            <Button
-              onClick={() => setConfirmationOpened((openState) => !openState)}
-              title="Restart flow"
-              className="w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700"
-            >
-              <span className="inline-flex items-center gap-2">
-                <FaTrash />
-                Clean Pipeline
-              </span>
-            </Button>
-          </Popover.Target>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setConfirmationOpened((openState) => !openState)}
+            title="Restart flow"
+            className="w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
+          >
+            <span className="inline-flex items-center gap-2">
+              <FaTrash />
+              Clean Pipeline
+            </span>
+          </button>
 
-          <Popover.Dropdown className="w-64 rounded-xl border bg-white p-4 text-gray-800 shadow-md dark:bg-gray-900 dark:text-white">
-            <Text className="mb-2 font-semibold dark:text-white">
-              Confirm reset
-            </Text>
-            <Text className="mb-3 text-sm text-gray-600 dark:text-gray-300">
-              Are you sure you want to clean the pipeline?
-            </Text>
-            <Group justify="right" gap="sm">
-              <Button
-                variant="default"
-                size="xs"
-                onClick={() => setConfirmationOpened(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                color="red"
-                size="xs"
-                onClick={() => {
-                  cleanFlow();
-                  setConfirmationOpened(false);
-                }}
-              >
-                Yes, clean
-              </Button>
-            </Group>
-          </Popover.Dropdown>
-        </Popover>
+          <SimpleConfirm
+            open={confirmationOpened}
+            title="Confirm reset"
+            description="Are you sure you want to clean the pipeline?"
+            onCancel={() => setConfirmationOpened(false)}
+            onConfirm={() => {
+              cleanFlow();
+              setConfirmationOpened(false);
+            }}
+            confirmLabel="Yes, clean"
+          />
+        </div>
 
         <button
           title="Go to charts"
@@ -363,14 +336,9 @@ export const ProcessingSteps = ({ opened, toggle, nodes }) => (
       </button>
     </div>
 
-    <Collapse
-      in={opened}
-      transitionDuration={300}
-      transitionTimingFunction="linear"
-      className="pt-1"
-    >
+    <SimpleCollapse open={opened}>
       {nodes.length > 0 ? <PipelineSteps nodes={nodes} /> : null}
-    </Collapse>
+    </SimpleCollapse>
   </div>
 );
 

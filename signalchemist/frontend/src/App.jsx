@@ -6,7 +6,6 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { MantineProvider } from "@mantine/core";
 import PropTypes from "prop-types";
 
 import "./App.css";
@@ -106,15 +105,11 @@ const App = () => {
   };
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
-      <MantineProvider
-        withGlobalStyles
-        withNormalizeCSS
-        theme={{ colorScheme: isDarkMode ? "dark" : "light" }}
+      <div
+        data-theme={isDarkMode ? "dark" : "light"}
+        className="App user-select-none bg-white text-black dark:bg-gray-900 dark:text-white"
+        style={{ position: "relative", minHeight: "100vh" }}
       >
-        <div
-          className="App user-select-none bg-white text-black dark:bg-gray-900 dark:text-white"
-          style={{ position: "relative", minHeight: "100vh" }}
-        >
           <Toaster
             toastOptions={{
               style: {
@@ -217,8 +212,7 @@ const App = () => {
               onNavigate={handleNavigate}
             />
           )}
-        </div>
-      </MantineProvider>
+      </div>
     </ThemeContext.Provider>
   );
 };

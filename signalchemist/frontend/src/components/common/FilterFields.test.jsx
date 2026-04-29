@@ -41,7 +41,7 @@ describe("FilterFields", () => {
     );
 
     expect(screen.getByLabelText(/Order/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Order/i)).toHaveValue("2"); // Default value
+    expect(screen.getByLabelText(/Order/i)).toHaveValue(2);
 
     expect(screen.getByLabelText(/Lowcut/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Lowcut/i)).toBeDisabled();
@@ -100,7 +100,7 @@ describe("FilterFields", () => {
 
     expect(onFieldChange).toHaveBeenCalledWith("order", ""); // First it tries to set wrong value
 
-    fireEvent.blur(orderInput); // User loses focus on the input
+    fireEvent.blur(orderInput, { target: { value: "" } });
     expect(onFieldChange).toHaveBeenCalledWith("order", 1); // Empty input is forbidden, then force value of 1
   });
 

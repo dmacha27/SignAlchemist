@@ -1,13 +1,13 @@
 import { memo, useContext, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import ReactECharts from "echarts-for-react";
-import { Button, Menu } from "@mantine/core";
 import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { exportToPNG, handleResetStyle, handleResetZoom, processChartHighlight } from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
 import { getCharts, registerChart, resetEchartsZoom, toRgba, unregisterChart } from "./echartsBridge";
+import { SimpleMenu } from "./ui";
 
 const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
@@ -353,24 +353,24 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
               </button>
             </>
           ) : null}
-          <Menu shadow="md" width={100}>
-            <Menu.Target>
-              <Button
-                size="xs"
-                variant="subtle"
+          <SimpleMenu
+            widthClass="w-28"
+            label="Export as"
+            trigger={(
+              <button
+                type="button"
                 aria-label="export"
-                className="rounded-full border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
               >
                 <FaDownload size={12} />
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Label>Export as</Menu.Label>
-              <Menu.Item leftSection={<FaImage size={12} />} onClick={() => exportToPNG(bridgeRef.current)}>
-                PNG
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+              </button>
+            )}
+            items={[{
+              label: "PNG",
+              icon: <FaImage size={12} />,
+              onClick: () => exportToPNG(bridgeRef.current),
+            }]}
+          />
         </div>
       }
       canvas={

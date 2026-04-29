@@ -2,7 +2,6 @@ import { memo, useContext, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { fft, util as fftUtil } from "fft-js";
 import ReactECharts from "echarts-for-react";
-import { Button, Group, Menu, NumberInput, Tooltip } from "@mantine/core";
 import { FaCircleNotch, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
@@ -10,14 +9,16 @@ import { average, diff } from "../utils/dataUtils";
 import { exportToPNG, handleResetStyle, handleResetZoom } from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
 import { resetEchartsZoom, toRgba } from "./echartsBridge";
+import {
+  SimpleMenu,
+  SimpleTooltip,
+  uiCompactInputClass,
+  uiGhostButtonClass,
+} from "./ui";
 
 const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
   "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
-const chartInputClassNames = {
-  input:
-    "h-7 rounded-full border-slate-300 bg-white px-2.5 text-[10px] font-medium text-slate-800 placeholder:text-slate-400 focus:border-slate-500 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:placeholder:text-slate-500",
-};
 
 function nextPowerOfTwo(n) {
   return Math.pow(2, Math.ceil(Math.log2(n)));
@@ -212,19 +213,24 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
               </button>
             </>
           ) : null}
-          <Menu shadow="md" width={100}>
-            <Menu.Target>
-              <Button size="xs" variant="subtle" aria-label="export" className="rounded-full border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800">
+          <SimpleMenu
+            widthClass="w-28"
+            label="Export as"
+            trigger={(
+              <button
+                type="button"
+                aria-label="export"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
                 <FaDownload size={12} />
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Label>Export as</Menu.Label>
-              <Menu.Item leftSection={<FaImage size={12} />} onClick={() => exportToPNG(bridgeRef.current)}>
-                PNG
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+              </button>
+            )}
+            items={[{
+              label: "PNG",
+              icon: <FaImage size={12} />,
+              onClick: () => exportToPNG(bridgeRef.current),
+            }]}
+          />
         </div>
       }
       canvas={
@@ -245,29 +251,52 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
         ) : (
           <div className="overflow-x-auto">
             <div className="flex min-w-max flex-nowrap items-center justify-end gap-2">
-              <Tooltip label="Focus the comparison around one frequency value." withArrow>
+              <SimpleTooltip label="Focus the comparison around one frequency value.">
                 <div className="flex flex-nowrap items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
                   <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
                     X Focus
                   </span>
-                  <Group gap={6} wrap="nowrap">
-                    <NumberInput placeholder="Go to X" size="xs" style={{ width: 82 }} classNames={chartInputClassNames} hideControls step={0.001} precision={3} min={minXValue} max={maxXValue} onChange={(value) => setGoToX(value)} />
-                    <Button size="compact-xs" radius="xl" onClick={handleGoToX} aria-label="go-x">Go</Button>
-                  </Group>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      placeholder="Go to X"
+                      className={uiCompactInputClass}
+                      style={{ width: 82 }}
+                      step="0.001"
+                      min={minXValue}
+                      max={maxXValue}
+                      onChange={(event) => setGoToX(event.target.value === "" ? null : Number(event.target.value))}
+                    />
+                    <button type="button" className={uiGhostButtonClass} onClick={handleGoToX} aria-label="go-x">Go</button>
+                  </div>
                 </div>
-              </Tooltip>
-              <Tooltip label="Highlight and zoom the comparison around an amplitude band." withArrow>
+              </SimpleTooltip>
+              <SimpleTooltip label="Highlight and zoom the comparison around an amplitude band.">
                 <div className="flex flex-nowrap items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
                   <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
                     Y Band
                   </span>
-                  <Group gap={6} wrap="nowrap">
-                    <NumberInput placeholder="Y min" size="xs" style={{ width: 70 }} classNames={chartInputClassNames} hideControls precision={3} step={0.001} min={-Infinity} max={Infinity} onChange={(value) => setYMin(value)} />
-                    <NumberInput placeholder="Y max" size="xs" style={{ width: 70 }} classNames={chartInputClassNames} hideControls precision={3} step={0.001} min={-Infinity} max={Infinity} onChange={(value) => setYMax(value)} />
-                    <Button size="compact-xs" radius="xl" onClick={handleYMinMax} aria-label="go-y">Go</Button>
-                  </Group>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      placeholder="Y min"
+                      className={uiCompactInputClass}
+                      style={{ width: 70 }}
+                      step="0.001"
+                      onChange={(event) => setYMin(event.target.value === "" ? null : Number(event.target.value))}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Y max"
+                      className={uiCompactInputClass}
+                      style={{ width: 70 }}
+                      step="0.001"
+                      onChange={(event) => setYMax(event.target.value === "" ? null : Number(event.target.value))}
+                    />
+                    <button type="button" className={uiGhostButtonClass} onClick={handleYMinMax} aria-label="go-y">Go</button>
+                  </div>
                 </div>
-              </Tooltip>
+              </SimpleTooltip>
             </div>
           </div>
         )

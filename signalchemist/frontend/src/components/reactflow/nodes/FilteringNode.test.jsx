@@ -101,7 +101,7 @@ describe("FilteringNode", () => {
     );
 
     expect(screen.getByText(/Filtering technique/i)).toBeInTheDocument();
-    expect(screen.getByText(/Python code/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Info/i })).toBeInTheDocument();
   });
 
   it("deletes node", async () => {
@@ -301,10 +301,10 @@ describe("FilteringNode", () => {
       </ThemeContext.Provider>
     );
 
-    await fireEvent.click(screen.getByTestId("Select filter"));
-
-    await fireEvent.click((await screen.findByText(/Fir/i)).parentElement);
-    expect(screen.getByTestId("Select filter")).toHaveValue("FIR");
+    fireEvent.change(screen.getByTestId("Select filter"), {
+      target: { value: "fir" },
+    });
+    expect(screen.getByTestId("Select filter")).toHaveValue("fir");
 
     await waitFor(() => {
       // Fir does not have order parameter

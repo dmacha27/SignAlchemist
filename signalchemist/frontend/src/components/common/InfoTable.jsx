@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 import PropTypes from "prop-types";
-import { Table, Pagination } from "@mantine/core";
 import { diff, average } from "../utils/dataUtils.js";
+import { SimplePagination } from "./ui";
 
 /**
  * InfoTable component renders a table displaying signal data and additional information like duration and sampling rate.
@@ -34,7 +34,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
   );
 
   const rows = paginatedData.map((row, index) => (
-    <Table.Tr
+    <tr
       key={`${index + 1}`}
       className={`border border-gray-200 dark:border-gray-600 ${
         index % 2 === 0
@@ -42,16 +42,16 @@ const InfoTable = memo(({ table, onlyTable }) => {
           : "bg-gray-100 dark:bg-gray-700"
       }`}
     >
-      <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+      <td className="text-black dark:text-white border border-gray-200 px-3 py-2 dark:border-gray-600">
         {(page - 1) * rowsPerPage + index + 1}
-      </Table.Td>
-      <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+      </td>
+      <td className="text-black dark:text-white border border-gray-200 px-3 py-2 dark:border-gray-600">
         {row[0].toFixed(4)}
-      </Table.Td>
-      <Table.Td className="text-black dark:text-white border border-gray-200 dark:border-gray-600">
+      </td>
+      <td className="text-black dark:text-white border border-gray-200 px-3 py-2 dark:border-gray-600">
         {row[1].toFixed(4)}
-      </Table.Td>
-    </Table.Tr>
+      </td>
+    </tr>
   ));
 
   return (
@@ -76,30 +76,28 @@ const InfoTable = memo(({ table, onlyTable }) => {
         </div>
       )}
       <div className="shadow-md rounded-xl border border-gray-200 dark:border dark:border-gray-600 p-2 bg-white dark:bg-gray-900">
-        <Table
-          highlightOnHover
-          withColumnBorders={false}
-          withRowBorders={false}
-        >
-          <Table.Thead className="bg-white dark:bg-gray-800">
-            <Table.Tr className="border border-gray-200 dark:border-gray-600">
-              <Table.Th className="border border-gray-200 dark:border-r dark:border-gray-600 text-black dark:text-white">
-                #
-              </Table.Th>
-              <Table.Th className="border border-gray-200 dark:border-r dark:border-gray-600 text-black dark:text-white">
-                {headers[0]}
-              </Table.Th>
-              <Table.Th className="border border-gray-200 dark:border-gray-600 text-black dark:text-white">
-                {headers[1]}
-              </Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[320px] border-collapse">
+            <thead className="bg-white dark:bg-gray-800">
+              <tr className="border border-gray-200 dark:border-gray-600">
+                <th className="border border-gray-200 px-3 py-2 text-left dark:border-r dark:border-gray-600 text-black dark:text-white">
+                  #
+                </th>
+                <th className="border border-gray-200 px-3 py-2 text-left dark:border-r dark:border-gray-600 text-black dark:text-white">
+                  {headers[0]}
+                </th>
+                <th className="border border-gray-200 px-3 py-2 text-left dark:border-gray-600 text-black dark:text-white">
+                  {headers[1]}
+                </th>
+              </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>
 
         {totalPages > 1 && (
-          <div className="flex justify-center mt-4">
-            <Pagination value={page} onChange={setPage} total={totalPages} />
+          <div className="mt-4 overflow-x-auto">
+            <SimplePagination page={page} onChange={setPage} totalPages={totalPages} />
           </div>
         )}
       </div>

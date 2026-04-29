@@ -6,12 +6,12 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { Select } from "@mantine/core";
 import { FaChartLine } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 import { diff, average } from "../../utils/dataUtils";
 import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
+import { uiSelectClass } from "../../common/ui";
 
 /**
  * ResamplingNode component
@@ -240,29 +240,20 @@ function ResamplingNode({ id, data }) {
       />
 
       <NodeSection label="Interpolation technique">
-          <Select
-            size="sm"
+          <select
             data-testid="Select interpolation"
             value={interpolationTechnique}
-            onChange={(value) => {
+            onChange={(event) => {
+              const value = event.target.value;
               if (value) {
                 setInterpolationTechnique(value);
               }
             }}
-            data={[
-              { value: "spline", label: "Spline" },
-              { value: "1d", label: "Interp1d" },
-            ]}
-            className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
-            classNames={{
-              input:
-                "rounded-xl border border-slate-300 bg-white text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white",
-              dropdown:
-                "bg-white dark:bg-gray-900 text-black dark:text-white border border-slate-300 dark:border-gray-700",
-              option:
-                "hover:bg-slate-100 dark:hover:bg-gray-800 data-[checked]:bg-cyan-50 data-[checked]:text-slate-900 dark:data-[checked]:bg-cyan-500/15 dark:data-[checked]:text-white",
-            }}
-          />
+            className={uiSelectClass}
+          >
+            <option value="spline">Spline</option>
+            <option value="1d">Interp1d</option>
+          </select>
       </NodeSection>
 
       <NodeSection label="Target sampling rate">

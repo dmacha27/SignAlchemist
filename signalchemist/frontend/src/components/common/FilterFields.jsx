@@ -4,10 +4,13 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter/dist/cjs/pr
 import { materialDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { FaInfo, FaCheck, FaRegCopy } from "react-icons/fa";
 
-import { Modal, Button, Group, Tooltip, Text, NumberInput, Checkbox, Textarea } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-
 import { ThemeContext } from "../../contexts/ThemeContext";
+import {
+  SimpleDialog,
+  SimpleTooltip,
+  uiButtonClass,
+  uiCompactInputClass,
+} from "./ui";
 
 /**
  * InfoModal component displays a modal with Python function information and example code.
@@ -32,20 +35,7 @@ const InfoModal = ({ opened, close }) => {
   const { isDarkMode: isDark } = useContext(ThemeContext);
 
   return (
-    <Modal
-      opened={opened}
-      onClose={close}
-      title="Python Info"
-      size="lg"
-      centered
-      withCloseButton
-      classNames={{
-        header:
-          "bg-white dark:bg-gray-900 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700",
-        body: "bg-white dark:bg-gray-900 text-gray-800 dark:text-white",
-        title: "text-gray-800 dark:text-white",
-      }}
-    >
+    <SimpleDialog open={opened} onClose={close} title="Python Info">
       <div className="overflow-x-hidden text-gray-800 dark:text-white">
         <h3 className="text-xl font-semibold mb-4">filter_signal function</h3>
 
@@ -104,12 +94,9 @@ const InfoModal = ({ opened, close }) => {
                 {content}
               </SyntaxHighlighter>
 
-              <Tooltip
-                label={copied ? "Copied!" : "Copy"}
-                position="top-end"
-                withArrow
-              >
+              <SimpleTooltip label={copied ? "Copied!" : "Copy"}>
                 <button
+                  type="button"
                   className="absolute top-2 right-2 cursor-pointer text-gray-500 dark:text-gray-100"
                   onClick={handleCopy}
                   title="Copy"
@@ -120,18 +107,22 @@ const InfoModal = ({ opened, close }) => {
                     <FaRegCopy className="text-gray-500" />
                   )}
                 </button>
-              </Tooltip>
+              </SimpleTooltip>
             </div>
           </li>
         </ol>
 
-        <Group justify="flex-end" className="mt-6">
-          <Button variant="light" color="red" onClick={close}>
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            className="btn min-h-0 h-auto rounded-xl border-0 bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-none hover:bg-red-700"
+            onClick={close}
+          >
             Close
-          </Button>
-        </Group>
+          </button>
+        </div>
       </div>
-    </Modal>
+    </SimpleDialog>
   );
 };
 
@@ -143,7 +134,7 @@ const InfoModal = ({ opened, close }) => {
  * @param {function} props.onFieldChange - A callback function to handle field value changes.
  */
 const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) => {
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
   const [enabledFields, setEnabledFields] = useState({});
 
   useEffect(() => {
@@ -171,7 +162,7 @@ const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) 
 
   return (
     <>
-      <InfoModal opened={opened} close={close} />
+      <InfoModal opened={opened} close={() => setOpened(false)} />
 
       {Object.entries(fieldDefinitions).map(([field, fieldDefinition]) => {
         const fieldValue = fields[field];
@@ -188,35 +179,36 @@ const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) 
               >
                 {fieldDefinition.label}
               </label>
-              <Group align="center" spacing="sm">
-                <NumberInput
+              <div className="flex items-center gap-3">
+                <input
                   key={`${filter}_${field}`}
                   id={field}
+                  type="number"
                   placeholder={`Enter ${field}`}
-                  value={fieldValue}
+                  value={fieldValue ?? ""}
                   min={fieldDefinition.min ?? 0}
                   onBlur={(event) => {
-                    if (event.target.value === "") {
+                    if (event.target.value === "" || Number.isNaN(Number(event.target.value))) {
                       onFieldChange(field, fieldDefinition.min ?? 1);
                     }
                   }}
-                  onChange={(value) => onFieldChange(field, value)}
-                  disabled={fieldDefinition.optional && !enabledFields[field]}
-                  style={{ flex: 1 }}
-                  classNames={{
-                    input:
-                      "rounded-xl border border-slate-300 bg-white text-slate-900 shadow-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white",
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    onFieldChange(field, nextValue === "" ? "" : Number(nextValue));
                   }}
+                  disabled={fieldDefinition.optional && !enabledFields[field]}
+                  className={`flex-1 ${uiCompactInputClass}`}
                 />
 
                 {fieldDefinition.optional && (
-                  <Checkbox
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-sm"
                     checked={!!enabledFields[field]}
                     onChange={(e) => onCheckboxChange(field, e.target.checked)}
-                    size="md"
                   />
                 )}
-              </Group>
+              </div>
             </div>
           );
         } else {
@@ -229,20 +221,21 @@ const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) 
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
                   {fieldDefinition.label}
                 </span>
-                <Button variant="subtle" size="xs" onClick={open} title="Info">
+                <button
+                  type="button"
+                  className={`${uiButtonClass} px-2 py-1 text-xs`}
+                  onClick={() => setOpened(true)}
+                  title="Info"
+                >
                   <FaInfo /> Info
-                </Button>
+                </button>
               </div>
-              <Textarea
+              <textarea
                 key={`${filter}_${field}`}
                 value={fieldValue}
                 onChange={(e) => onFieldChange(field, e.target.value)}
-                minRows={3}
-                autosize
-                classNames={{
-                  input:
-                    "rounded-xl border border-slate-300 bg-white text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white",
-                }}
+                rows={4}
+                className="textarea textarea-bordered min-h-[110px] w-full rounded-xl border-slate-300 bg-white text-sm text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
               />
             </div>
           );

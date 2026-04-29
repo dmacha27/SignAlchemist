@@ -6,11 +6,11 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { Select } from "@mantine/core";
 import { FaBullseye } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
+import { uiSelectClass } from "../../common/ui";
 
 /**
  * OutliersNode component
@@ -206,29 +206,20 @@ function OutliersNode({ id, data }) {
       />
 
       <NodeSection label="Detection technique">
-          <Select
-            size="sm"
+          <select
             data-testid="Select outlier"
             value={outlierTechnique}
-            onChange={(value) => {
+            onChange={(event) => {
+              const value = event.target.value;
               if (value) {
                 setOutlierTechnique(value);
               }
             }}
-            data={[
-              { value: "hampel", label: "Hampel" },
-              { value: "iqr", label: "IQR" },
-            ]}
-            className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
-            classNames={{
-              input:
-                "rounded-xl border border-slate-300 bg-white text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white",
-              dropdown:
-                "bg-white dark:bg-gray-900 text-black dark:text-white border border-slate-300 dark:border-gray-700",
-              option:
-                "hover:bg-slate-100 dark:hover:bg-gray-800 data-[checked]:bg-amber-50 data-[checked]:text-slate-900 dark:data-[checked]:bg-amber-500/15 dark:data-[checked]:text-white",
-            }}
-          />
+            className={uiSelectClass}
+          >
+            <option value="hampel">Hampel</option>
+            <option value="iqr">IQR</option>
+          </select>
       </NodeSection>
 
       <NodeOutputPreview

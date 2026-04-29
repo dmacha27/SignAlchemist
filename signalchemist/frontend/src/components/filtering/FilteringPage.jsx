@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
-import { Select } from "@mantine/core";
 import { FaFilter, FaSignal, FaTools } from "react-icons/fa";
 import toast from "react-hot-toast";
 
@@ -30,6 +29,7 @@ import {
   filterDefinitions,
   getFilterOptions,
 } from "./filteringConfig";
+import { uiSelectClass } from "../common/ui";
 
 const FilteringPage = () => {
   const location = useLocation();
@@ -187,26 +187,25 @@ const FilteringPage = () => {
               >
                 Filtering technique
               </label>
-              <Select
-                size="sm"
+              <select
+                id="filterTechnique"
                 data-testid="Select filter"
                 value={filter}
-                onChange={(value) => {
+                onChange={(event) => {
+                  const value = event.target.value;
                   if (value) {
                     setFilter(value);
                     setFields(defaultFields[value]);
                   }
                 }}
-                data={getFilterOptions()}
-                classNames={{
-                  input:
-                    "rounded-xl border border-slate-300 bg-white text-slate-900 shadow-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white",
-                  dropdown:
-                    "rounded-xl border border-slate-300 bg-white text-slate-900 shadow-lg dark:border-gray-600 dark:bg-gray-900 dark:text-white",
-                  option:
-                    "hover:bg-slate-100 dark:hover:bg-gray-800 data-[selected]:bg-slate-900 data-[selected]:text-white dark:data-[selected]:bg-white dark:data-[selected]:text-slate-900",
-                }}
-              />
+                className={uiSelectClass}
+              >
+                {getFilterOptions().map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
 
               <FilterFields
                 filter={filter}

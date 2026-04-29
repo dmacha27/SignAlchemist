@@ -1,4 +1,3 @@
-import { Popover, Text } from "@mantine/core";
 import PropTypes from "prop-types";
 import {
   FaArrowRight,
@@ -57,18 +56,14 @@ const TechniqueFields = ({ fields }) => (
         >
           <span className="font-semibold">{capitalize(key)}:</span>
           {isLong ? (
-            <Popover width={300} trapFocus position="bottom" withArrow shadow="md">
-              <Popover.Target>
-                <Text size="xs" className="cursor-pointer font-medium">
-                  Click
-                </Text>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <Text size="sm" className="break-words">
-                  {valueStr}
-                </Text>
-              </Popover.Dropdown>
-            </Popover>
+            <details className="dropdown dropdown-end">
+              <summary className="cursor-pointer list-none text-xs font-medium">
+                View
+              </summary>
+              <div className="dropdown-content z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900">
+                <p className="break-words">{valueStr}</p>
+              </div>
+            </details>
           ) : (
             <span>{valueStr}</span>
           )}
@@ -80,7 +75,7 @@ const TechniqueFields = ({ fields }) => (
 
 const PipelineSteps = ({ nodes }) => {
   if (!Array.isArray(nodes) || nodes.length === 0) {
-    return <Text>No steps to display.</Text>;
+    return <p>No steps to display.</p>;
   }
 
   const dictNodes = {};

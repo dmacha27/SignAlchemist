@@ -83,8 +83,8 @@ export const WorkspaceCard = ({
 }) => (
   <div className={`${PAGE_CARD_CLASS} ${className}`.trim()}>
     {(title || description || icon) && (
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-3">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           {icon ? (
             <div className="shrink-0 pt-0.5 text-lg text-cyan-600 dark:text-cyan-400">
               {icon}
@@ -103,7 +103,7 @@ export const WorkspaceCard = ({
             ) : null}
           </div>
         </div>
-        {actions ? <div className="shrink-0">{actions}</div> : null}
+        {actions ? <div className="flex w-full justify-end md:w-auto md:shrink-0">{actions}</div> : null}
       </div>
     )}
     {children}

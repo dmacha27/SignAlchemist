@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
-import { Button, Tooltip } from "@mantine/core";
 import { FaEye, FaTrash } from "react-icons/fa";
 
 import ExecutionIcon from "../../common/ExecutionIcon";
+import { SimpleTooltip } from "../../common/ui";
 
 const accentStyles = {
   cyan: {
@@ -43,7 +43,7 @@ const accentStyles = {
 };
 
 const StatusPill = ({ executionState, onClick }) => (
-  <Tooltip label={executionState} withArrow position="bottom">
+  <SimpleTooltip label={executionState}>
     <button
       type="button"
       onClick={onClick}
@@ -52,7 +52,7 @@ const StatusPill = ({ executionState, onClick }) => (
     >
       <ExecutionIcon executionState={executionState} />
     </button>
-  </Tooltip>
+  </SimpleTooltip>
 );
 
 StatusPill.propTypes = {
@@ -68,7 +68,7 @@ const IconAction = ({
   className = "",
   dataTestId,
 }) => (
-  <Tooltip label={label} withArrow position="bottom">
+  <SimpleTooltip label={label}>
     <button
       type="button"
       title={title}
@@ -79,7 +79,7 @@ const IconAction = ({
     >
       {icon}
     </button>
-  </Tooltip>
+  </SimpleTooltip>
 );
 
 IconAction.propTypes = {
@@ -209,15 +209,14 @@ export const NodeRunButton = ({ children, disabled, onClick, accent = "slate" })
   const palette = accentStyles[accent] ?? accentStyles.slate;
 
   return (
-    <Button
-      variant="filled"
-      size="sm"
+    <button
+      type="button"
       disabled={disabled}
       onClick={onClick}
       className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm disabled:cursor-not-allowed disabled:opacity-50 ${palette.button}`}
     >
       {children}
-    </Button>
+    </button>
   );
 };
 

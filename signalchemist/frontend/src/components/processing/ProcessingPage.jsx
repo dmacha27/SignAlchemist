@@ -7,7 +7,6 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useDisclosure } from "@mantine/hooks";
 import { usePapaParse } from "react-papaparse";
 import { useLocation } from "react-router-dom";
 import {
@@ -141,7 +140,7 @@ const ProcessingPage = () => {
   const [metricsOriginal, setMetricsOriginal] = useState(null);
   const [metricsProcessed, setMetricsProcessed] = useState(null);
   const [confirmationOpened, setConfirmationOpened] = useState(false);
-  const [opened, { toggle }] = useDisclosure(true);
+  const [opened, setOpened] = useState(true);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [lastId, setLastId] = useState(0);
@@ -650,7 +649,11 @@ const ProcessingPage = () => {
         </WorkspaceSection>
       </div>
 
-      <ProcessingSteps opened={opened} toggle={toggle} nodes={nodes} />
+      <ProcessingSteps
+        opened={opened}
+        toggle={() => setOpened((current) => !current)}
+        nodes={nodes}
+      />
 
       {signalType !== "OTHER" && (
         <WorkspaceSection>

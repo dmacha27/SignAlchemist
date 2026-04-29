@@ -1,24 +1,17 @@
 import { memo } from "react";
 import PropTypes from "prop-types";
-import { Popover, Text } from "@mantine/core";
 
 import LoaderMessage from "./LoaderMessage";
+import { SimpleTooltip } from "./ui";
 
 const MetricCards = ({ metrics }) => (
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
     {Object.entries(metrics).map(([name, { value, description }], index) => (
-      <Popover
-        key={name}
-        position="top"
-        withArrow
-        shadow="md"
-        width={220}
-        arrowSize={10}
-      >
-        <Popover.Target>
+      <SimpleTooltip key={name} label={description}>
           <button
             type="button"
             className="rounded-[1rem] bg-slate-50/70 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-800/70"
+            title={description}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -34,16 +27,7 @@ const MetricCards = ({ metrics }) => (
               </span>
             </div>
           </button>
-        </Popover.Target>
-        <Popover.Dropdown className="rounded-xl border border-slate-200 bg-white p-4 text-slate-800 shadow-lg dark:border-gray-700 dark:bg-gray-900 dark:text-white">
-          <Text size="sm" className="font-semibold dark:text-white">
-            {name}
-          </Text>
-          <Text size="xs" className="mt-1 text-slate-500 dark:text-slate-400">
-            {description}
-          </Text>
-        </Popover.Dropdown>
-      </Popover>
+      </SimpleTooltip>
     ))}
   </div>
 );
