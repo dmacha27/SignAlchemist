@@ -206,17 +206,23 @@ export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
               <SimpleMenu
                 widthClass="w-56"
                 label="Sample files"
-                trigger={(
+                trigger={
                   <button
                     type="button"
                     className="sample-list h-7 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-700 shadow-none transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
                   >
                     More samples
                   </button>
-                )}
+                }
                 items={[
-                  { label: "EDA.csv", onClick: () => loadSampleFile("EDA.csv") },
-                  { label: "PPG.csv", onClick: () => loadSampleFile("PPG.csv") },
+                  {
+                    label: "EDA.csv",
+                    onClick: () => loadSampleFile("EDA.csv"),
+                  },
+                  {
+                    label: "PPG.csv",
+                    onClick: () => loadSampleFile("PPG.csv"),
+                  },
                 ]}
               />
             </div>
@@ -327,7 +333,9 @@ export const DatasetConfigurationCard = ({
             <select
               id="timestampColumn"
               value={timestampColumn}
-              onChange={(event) => onTimestampChange(parseInt(event.target.value, 10))}
+              onChange={(event) =>
+                onTimestampChange(parseInt(event.target.value, 10))
+              }
               className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-cyan-400 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white"
             >
               {timestampOptions.map((option) => (
@@ -356,7 +364,9 @@ export const DatasetConfigurationCard = ({
               value={samplingRate || ""}
               onChange={(event) => onSamplingRateChange(event.target.value)}
               onBlur={(event) => {
-                const normalizedValue = normalizeSamplingRateOnBlur(event.target.value);
+                const normalizedValue = normalizeSamplingRateOnBlur(
+                  event.target.value,
+                );
                 event.target.value = normalizedValue;
                 onSamplingRateChange(normalizedValue);
               }}
@@ -386,6 +396,16 @@ export const DatasetConfigurationCard = ({
           </FieldCard>
         </div>
       </form>
+      {samplingRate && timestampColumn !== headers.length - 1 ? (
+        <div className="my-2 flex justify-center">
+          <div
+            id="samplingRateBadge"
+            className="inline-flex w-fit items-center rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-lg"
+          >
+            Detected sampling rate of {samplingRate} Hz
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -412,66 +432,66 @@ const FieldCard = ({
   </div>
 );
 
-export const NextStepCard = ({ canLaunchUtility, onLaunchUtility }) => (
-  <div className={`tuto-next-step ${OUTER_CARD_CLASS}`}>
-    <SectionHeader
-      step={4}
-      title="Next step"
-      titleTag="h3"
-      description="Choose the utility once the dataset is ready."
-    />
+export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
+  const pendingChecks = checks.filter((check) => !check.complete);
 
-    <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-gray-700">
-      <div className="rounded-xl bg-slate-50 px-4 py-2 text-sm text-slate-600 dark:bg-gray-800 dark:text-slate-300">
-        {canLaunchUtility
-          ? "Everything is ready. Choose where you want to continue."
-          : "Complete signal type, timestamps, sampling rate and signal values to continue."}
-      </div>
-      <div className="grid gap-2 sm:grid-cols-3">
-        {["Resampling", "Filtering", "Processing"].map((label) => (
-          <button
-            key={label}
-            type="button"
-            onClick={() => onLaunchUtility(`/${label.toLowerCase()}`)}
-            disabled={!canLaunchUtility}
-            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
-          >
-            {label}
-          </button>
-        ))}
+  return (
+    <div className={`tuto-next-step ${OUTER_CARD_CLASS}`}>
+      <SectionHeader
+        step={4}
+        title="Next step"
+        titleTag="h3"
+        description="Choose the utility once the dataset is ready."
+      />
+
+      <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-gray-700">
+        <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-gray-800 dark:text-slate-300">
+          {canLaunchUtility ? (
+            "Everything is ready. Choose where you want to continue."
+          ) : (
+            <div className="flex flex-wrap items-center gap-2 text-[12px]">
+              <span className="font-medium text-slate-500 dark:text-slate-400">
+                Missing:
+              </span>
+              {pendingChecks.map((check) => (
+                <span
+                  key={check.label}
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300"
+                >
+                  {check.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {["Resampling", "Filtering", "Processing"].map((label) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => onLaunchUtility(`/${label.toLowerCase()}`)}
+              disabled={!canLaunchUtility}
+              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const SignalPreviewCard = ({
   chartDataOriginal,
   fileRows,
-  samplingRate,
-  headers,
-  timestampColumn,
   cropValues,
   onCropChange,
   onApplyCrop,
   hasAppliedCrop,
 }) => (
   <div className="tuto-chart">
-    <SectionHeader
-      title="Signal preview"
-      description={null}
-      aside={
-        samplingRate && timestampColumn !== headers.length - 1 ? (
-          <div
-            id="samplingRateBadge"
-            className="inline-flex w-fit items-center rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-lg"
-          >
-            Detected sampling rate of {samplingRate} Hz
-          </div>
-        ) : null
-      }
-    />
-
-    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white dark:border-gray-700 dark:bg-gray-950">
+    <div>
       {chartDataOriginal && fileRows ? (
         <div className="px-3 pb-3 pt-2">
           <CustomChart table={chartDataOriginal} />
@@ -491,19 +511,33 @@ export const SignalPreviewCard = ({
       )}
 
       {fileRows ? (
-        <div className="tuto-range-slider border-t border-slate-200 px-4 py-3 dark:border-gray-800">
+        <div className="tuto-range-slider px-4 py-3">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
-              {cropValues ? `Rows ${cropValues[0] + 1} - ${cropValues[1]}` : "Rows"}
+              {cropValues
+                ? `Rows ${cropValues[0] + 1} - ${cropValues[1]}`
+                : "Rows"}
             </div>
-            <button
-              type="button"
-              onClick={onApplyCrop}
-              disabled={!cropValues || hasAppliedCrop}
-              className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
-            >
-              Preview
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onCropChange([0, fileRows.length]);
+                  onApplyCrop();
+                }}
+                className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={onApplyCrop}
+                disabled={!cropValues || hasAppliedCrop}
+                className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+              >
+                Crop
+              </button>
+            </div>
           </div>
 
           <RangeSlider
@@ -513,7 +547,7 @@ export const SignalPreviewCard = ({
             step={1}
             min={0}
             max={fileRows.length}
-            defaultValue={[0, fileRows.length]}
+            value={cropValues || [0, fileRows.length]}
             onInput={onCropChange}
           />
         </div>
@@ -524,11 +558,7 @@ export const SignalPreviewCard = ({
 
 export const PreviewWorkspaceCard = ({ children }) => (
   <div className={OUTER_CARD_CLASS}>
-    <SectionHeader
-      step={3}
-      title="Preview"
-      description={null}
-    />
+    <SectionHeader step={3} title="Preview" description={null} />
     <div className="space-y-5">{children}</div>
   </div>
 );
@@ -546,7 +576,8 @@ CSVUploader.propTypes = {
 DatasetConfigurationCard.propTypes = {
   signalType: PropTypes.string.isRequired,
   timestampColumn: PropTypes.number.isRequired,
-  signalValues: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  signalValues: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
+    .isRequired,
   samplingRate: PropTypes.number,
   headers: PropTypes.arrayOf(PropTypes.string).isRequired,
   onSignalTypeChange: PropTypes.func.isRequired,
@@ -576,15 +607,18 @@ FieldCard.defaultProps = {
 
 NextStepCard.propTypes = {
   canLaunchUtility: PropTypes.bool.isRequired,
+  checks: PropTypes.arrayOf(
+    PropTypes.shape({
+      label: PropTypes.string.isRequired,
+      complete: PropTypes.bool.isRequired,
+    }),
+  ).isRequired,
   onLaunchUtility: PropTypes.func.isRequired,
 };
 
 SignalPreviewCard.propTypes = {
   chartDataOriginal: PropTypes.array,
   fileRows: PropTypes.array,
-  samplingRate: PropTypes.number,
-  headers: PropTypes.arrayOf(PropTypes.string).isRequired,
-  timestampColumn: PropTypes.number.isRequired,
   cropValues: PropTypes.arrayOf(PropTypes.number),
   onCropChange: PropTypes.func.isRequired,
   onApplyCrop: PropTypes.func.isRequired,
@@ -594,7 +628,6 @@ SignalPreviewCard.propTypes = {
 SignalPreviewCard.defaultProps = {
   chartDataOriginal: null,
   fileRows: null,
-  samplingRate: null,
   cropValues: null,
 };
 

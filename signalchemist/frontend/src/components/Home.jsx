@@ -58,7 +58,7 @@ const Home = () => {
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [cropValues, setCropValues] = useState(null);
   const [previewCropValues, setPreviewCropValues] = useState(null);
-
+  
   useEffect(() => {
     const preview = buildChartPreview({
       fileRows,
@@ -125,6 +125,29 @@ const Home = () => {
     signalValues !== "" &&
     !!samplingRate;
 
+  const nextStepChecks = [
+    {
+      label: "Upload a CSV or load a sample",
+      complete: !!file,
+    },
+    {
+      label: "Choose a signal type",
+      complete: !!signalType,
+    },
+    {
+      label: "Select the timestamp column",
+      complete: timestampColumn >= 0,
+    },
+    {
+      label: "Select the signal values column",
+      complete: signalValues !== -1 && signalValues !== "",
+    },
+    {
+      label: "Set or detect the sampling rate",
+      complete: !!samplingRate,
+    },
+  ];
+
   const launchUtility = async (path) => {
     if (!canLaunchUtility) {
       return;
@@ -182,6 +205,7 @@ const Home = () => {
 
               <NextStepCard
                 canLaunchUtility={canLaunchUtility}
+                checks={nextStepChecks}
                 onLaunchUtility={launchUtility}
               />
             </div>
@@ -191,9 +215,6 @@ const Home = () => {
                 <SignalPreviewCard
                   chartDataOriginal={chartDataOriginal}
                   fileRows={fileRows}
-                  samplingRate={samplingRate}
-                  headers={headers}
-                  timestampColumn={timestampColumn}
                   cropValues={cropValues}
                   onCropChange={setCropValues}
                   onApplyCrop={() => setPreviewCropValues(cropValues)}

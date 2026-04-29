@@ -149,6 +149,11 @@ const ProcessingPage = () => {
   const lastIdRef = useRef(0);
   const lastSidebarDropAtRef = useRef(0);
   const importInputRef = useRef(null);
+  const scrollToCharts = useCallback(() => {
+    document.getElementById("charts")?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, []);
 
   const nodeTypes = {
     InputSignal,
@@ -180,10 +185,10 @@ const ProcessingPage = () => {
       id: "2",
       type: "OutputSignal",
       position: { x: 1100, y: 150 },
-      data: { setChartDataProcessed },
+      data: { setChartDataProcessed, scrollToCharts },
       deletable: false,
     },
-  ]), [chartDataOriginal]);
+  ]), [chartDataOriginal, scrollToCharts]);
 
   const getExportableNodeData = useCallback((node) => {
     if (node.type === "ResamplingNode") {
@@ -623,11 +628,7 @@ const ProcessingPage = () => {
           confirmationOpened={confirmationOpened}
           setConfirmationOpened={setConfirmationOpened}
           cleanFlow={cleanFlow}
-          scrollToCharts={() =>
-            document.getElementById("charts")?.scrollIntoView({
-              behavior: "smooth",
-            })
-          }
+          scrollToCharts={scrollToCharts}
         />
         <input
           ref={importInputRef}

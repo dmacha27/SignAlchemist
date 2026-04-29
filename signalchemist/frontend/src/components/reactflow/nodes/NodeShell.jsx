@@ -248,7 +248,7 @@ export const NodeOutputPreview = ({
     <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-2 dark:border-gray-800">
       <div className="min-w-0 text-[11px] text-slate-500 dark:text-slate-400">
         <span className="font-semibold text-slate-700 dark:text-slate-200">
-          Preview ready
+          View ready
         </span>
         {` · ${rows} rows`}
       </div>
@@ -258,7 +258,7 @@ export const NodeOutputPreview = ({
         className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${palette.button}`}
       >
         <FaEye size={11} />
-        Preview
+        See
       </button>
     </div>
   );

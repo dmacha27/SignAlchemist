@@ -210,6 +210,7 @@ const App = () => {
               isOpen={isNavMenuOpen}
               onToggle={() => setIsNavMenuOpen((prev) => !prev)}
               onNavigate={handleNavigate}
+              onNavigateHome={() => navigate("/")}
             />
           )}
       </div>

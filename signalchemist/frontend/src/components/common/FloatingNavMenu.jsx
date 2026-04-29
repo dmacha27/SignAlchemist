@@ -10,14 +10,6 @@ import {
 
 const actions = [
   {
-    key: "home",
-    label: "Home",
-    description: "Reset and upload again",
-    icon: FaHome,
-    path: "/",
-    testId: "home",
-  },
-  {
     key: "resampling",
     label: "Resampling",
     description: "Open resampling tools",
@@ -43,7 +35,7 @@ const actions = [
 const MotionDiv = motion.div;
 const MotionButton = motion.button;
 
-const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate }) => (
+const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate, onNavigateHome }) => (
   <div className="fixed bottom-5 right-5 z-[1081]">
     <div className="relative flex w-44 flex-col items-end gap-2">
       <AnimatePresence>
@@ -105,21 +97,34 @@ const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate }) => (
         ) : null}
       </AnimatePresence>
 
-      <MotionButton
-        type="button"
-        aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
-        onClick={onToggle}
-        animate={{
-          rotate: isOpen ? 45 : 0,
-          boxShadow: isDark
-            ? "0 22px 45px rgba(2,6,23,0.42)"
-            : "0 22px 45px rgba(15,23,42,0.22)",
-        }}
-        transition={{ type: "spring", stiffness: 350, damping: 22 }}
-        className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-      >
-        <FaPlus className="text-sm" />
-      </MotionButton>
+      <div className="flex items-center gap-2">
+        {onNavigateHome && (
+          <button
+            type="button"
+            aria-label="Go to Home"
+            title="Reset and upload again"
+            onClick={onNavigateHome}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+          >
+            <FaHome className="text-xs" />
+          </button>
+        )}
+        <MotionButton
+          type="button"
+          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          onClick={onToggle}
+          animate={{
+            rotate: isOpen ? 45 : 0,
+            boxShadow: isDark
+              ? "0 22px 45px rgba(2,6,23,0.42)"
+              : "0 22px 45px rgba(15,23,42,0.22)",
+          }}
+          transition={{ type: "spring", stiffness: 350, damping: 22 }}
+          className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+        >
+          <FaPlus className="text-sm" />
+        </MotionButton>
+      </div>
     </div>
   </div>
 );
@@ -129,6 +134,11 @@ FloatingNavMenu.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onToggle: PropTypes.func.isRequired,
   onNavigate: PropTypes.func.isRequired,
+  onNavigateHome: PropTypes.func,
+};
+
+FloatingNavMenu.defaultProps = {
+  onNavigateHome: null,
 };
 
 export default FloatingNavMenu;

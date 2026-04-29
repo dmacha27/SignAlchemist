@@ -4,7 +4,12 @@ import { FaArrowCircleDown } from "react-icons/fa";
 
 import DownloadSignal from "../../common/DownloadSignal";
 import HandleLimit from "../edges/HandleLimit";
-import { NodeDataTable, NodeSection, NodeShell } from "./NodeShell";
+import {
+  NodeDataTable,
+  NodeOutputPreview,
+  NodeSection,
+  NodeShell,
+} from "./NodeShell";
 
 /**
  * OutputSignal component
@@ -32,6 +37,11 @@ function OutputSignal({ id, data }) {
     data.setChartDataProcessed(table);
   }, [sourceId, sourceNodeData, data, table]);
 
+  const handleSee = () => {
+    data.setChartDataProcessed(table);
+    data.scrollToCharts?.();
+  };
+
   return (
     <NodeShell
       icon={<FaArrowCircleDown />}
@@ -47,6 +57,13 @@ function OutputSignal({ id, data }) {
           emptyMessage="Waiting for processed signal..."
         />
       </NodeSection>
+
+      <NodeOutputPreview
+        ready={Boolean(table)}
+        rows={table ? table.length - 1 : 0}
+        onClick={handleSee}
+        accent="emerald"
+      />
 
       <HandleLimit
         type="target"

@@ -42,9 +42,9 @@ const DownloadSignal = memo(({ table, name }) => {
   };
 
   return (
-    <div className="mt-3 rounded-[1rem] bg-slate-50/80 p-4 text-slate-900 dark:bg-gray-950/60 dark:text-white">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <label className="inline-flex items-center gap-2 text-sm">
+    <div className="mt-3 w-full min-w-0 rounded-[1rem] bg-slate-50/80 p-4 text-slate-900 dark:bg-gray-950/60 dark:text-white">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2">
+        <label className="inline-flex min-w-0 items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={onlySignal}
@@ -53,7 +53,7 @@ const DownloadSignal = memo(({ table, name }) => {
           />
           Only signal
         </label>
-        <label className="inline-flex items-center gap-2 text-sm">
+        <label className="inline-flex min-w-0 items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={withHeader}
@@ -62,7 +62,7 @@ const DownloadSignal = memo(({ table, name }) => {
           />
           Include header
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="text-sm font-medium">Sep</span>
           <input
             type="text"
@@ -74,11 +74,13 @@ const DownloadSignal = memo(({ table, name }) => {
         <select
           value={extension}
           onChange={(event) => setExtension(event.target.value)}
-          className="rounded-md border border-slate-300 bg-white p-1.5 text-sm font-medium text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          className="w-full min-w-0 rounded-md border border-slate-300 bg-white p-1.5 text-sm font-medium text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
         >
           <option value="csv">csv</option>
           <option value="txt">txt</option>
         </select>
+      </div>
+      <div className="flex justify-end">
         <button
           onClick={handleDownload}
           disabled={!!error}

@@ -7,9 +7,14 @@ import PropTypes from "prop-types";
  * @param {string} props.message - The message to display below the loading spinner.
  */
 const LoaderMessage = memo(({ message }) => (
-  <div className="text-center">
-    <span className="loader"></span>
-    <p className="mt-2 text-gray-600 dark:text-gray-300">{message}</p>
+  <div className="flex min-h-[140px] flex-col items-center justify-center gap-3 bg-base-100/85 px-6 py-8 text-center text-base-content">
+    <span
+      className="loading loading-spinner loading-lg text-cyan-500"
+      aria-hidden="true"
+    ></span>
+    <div className="space-y-1">
+      <p className="text-sm font-semibold text-base-content">{message}</p>
+    </div>
   </div>
 ));
 
