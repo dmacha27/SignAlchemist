@@ -19,6 +19,9 @@ const mockEchartsInstance = {
       mockZrOn(eventName, handler);
       mockZrHandlers[eventName] = handler;
     },
+    off: (eventName) => {
+      delete mockZrHandlers[eventName];
+    },
   }),
   containPixel: () => true,
   convertFromPixel: () => [2000, 0],
@@ -36,8 +39,7 @@ jest.mock("echarts-for-react", () => {
       <div
         data-testid="mock-echart"
         onClick={() => onEvents?.click?.({ dataIndex: 2 })}
-        onMouseMove={() => onEvents?.mousemove?.({ dataIndex: 2 })}
-        onMouseOut={() => onEvents?.globalout?.()}
+        onMouseMove={() => onEvents?.mousemove?.({ dataIndex: 2, value: [2000, 2.2] })}
       />
     );
   });
@@ -51,6 +53,14 @@ const mockEDA = [
   [3, 2.5],
   [4, 3.3],
   [5, 3.5],
+  [6, 4.4],
+];
+
+const mockResampledEDA = [
+  ["Timestamp", "Gsr"],
+  [0, 1.1],
+  [2, 2.2],
+  [4, 3.3],
   [6, 4.4],
 ];
 
@@ -139,9 +149,10 @@ describe("CustomChart", () => {
     const charts = screen.getAllByTestId("mock-echart");
     act(() => {
       fireEvent.mouseMove(charts[0]);
+      mockZrHandlers.mousemove?.({ offsetX: 120, offsetY: 40 });
     });
     act(() => {
-      fireEvent.mouseOut(charts[0]);
+      fireEvent.mouseLeave(charts[0].parentElement);
     });
 
     expect(mockDispatchAction).toHaveBeenCalledWith(
@@ -149,6 +160,42 @@ describe("CustomChart", () => {
     );
     expect(mockDispatchAction).toHaveBeenCalledWith(
       expect.objectContaining({ type: "hideTip" })
+    );
+  });
+
+  it("syncs hover by x value when split charts have different lengths", () => {
+    render(
+      <>
+        <CustomChart table={mockEDA} />
+        <CustomChart table={mockResampledEDA} />
+      </>
+    );
+
+    const charts = screen.getAllByTestId("mock-echart");
+    act(() => {
+      mockZrHandlers.mousemove?.({ offsetX: 120, offsetY: 40 });
+    });
+
+    expect(mockDispatchAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "showTip",
+        dataIndex: 1,
+      })
+    );
+  });
+
+  it("shows tooltip when hovering the plot area away from an exact point", () => {
+    render(<CustomChart table={mockEDA} />);
+
+    act(() => {
+      mockZrHandlers.mousemove?.({ offsetX: 160, offsetY: 140 });
+    });
+
+    expect(mockDispatchAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "showTip",
+        dataIndex: 2,
+      })
     );
   });
 });

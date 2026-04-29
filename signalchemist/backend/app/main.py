@@ -53,6 +53,28 @@ def check_max_samples(length: int, operation: str):
     return None
 
 
+def sanitize_filter_config(config: dict) -> dict:
+    return {
+        key: value
+        for key, value in config.items()
+        if key != "python" and value is not None
+    }
+
+
+def apply_builtin_filter(values, sampling_rate: int, config: dict):
+    method = config.get("method")
+
+    if method == "gaussian":
+        sigma = config.get("sigma", 100)
+        return scipy.ndimage.gaussian_filter1d(values, sigma=sigma)
+
+    return neurokit2.signal_filter(
+        values,
+        sampling_rate=sampling_rate,
+        **config
+    )
+
+
 @app.get("/", tags=["System"])
 def read_root():
     return {"message": "Welcome to the SignAlchemist API"}
@@ -176,11 +198,11 @@ async def filtering(
             except Exception as e:
                 return JSONResponse(content={"error": str(e)}, status_code=400)
         else:
-            del config["python"]
-            new_values = neurokit2.signal_filter(
+            sanitized_config = sanitize_filter_config(config)
+            new_values = apply_builtin_filter(
                 data[:, 1],
                 sampling_rate=sampling_rate,
-                **config
+                config=sanitized_config
             )
 
         new_data = np.stack((data[:, 0], new_values), axis=1)

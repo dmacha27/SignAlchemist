@@ -13,6 +13,42 @@ const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
   "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
 
+function findClosestPointIndex(points, xValue) {
+  if (!points.length || typeof xValue !== "number" || Number.isNaN(xValue)) {
+    return -1;
+  }
+
+  let low = 0;
+  let high = points.length - 1;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const currentX = points[mid][0];
+
+    if (currentX === xValue) {
+      return mid;
+    }
+
+    if (currentX < xValue) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  if (low >= points.length) {
+    return points.length - 1;
+  }
+
+  if (high < 0) {
+    return 0;
+  }
+
+  return Math.abs(points[low][0] - xValue) < Math.abs(points[high][0] - xValue)
+    ? low
+    : high;
+}
+
 const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
@@ -223,6 +259,17 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
           dataIndex: index,
         });
       },
+      showTooltipAtX: (xValue) => {
+        const closestIndex = findClosestPointIndex(points, xValue);
+        if (closestIndex < 0) return;
+
+        setHoverIndex(closestIndex);
+        chartComponentRef.current?.getEchartsInstance()?.dispatchAction({
+          type: "showTip",
+          seriesIndex: 0,
+          dataIndex: closestIndex,
+        });
+      },
       hideTooltip: () => {
         setHoverIndex(null);
         chartComponentRef.current?.getEchartsInstance()?.dispatchAction({
@@ -231,8 +278,13 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
       },
       highlightPoint: (pointIndex, xvalue, _highlightColor, zoomRange, chartRef) => {
         if (points.length > MAX_DATA_LENGTH) return;
-        if (chartRef.current?.dataLength !== points.length) return;
-        setFocusedIndex(pointIndex);
+        const resolvedIndex =
+          chartRef.current?.dataLength === points.length
+            ? pointIndex
+            : findClosestPointIndex(points, xvalue);
+        if (resolvedIndex < 0 || resolvedIndex >= points.length) return;
+
+        setFocusedIndex(resolvedIndex);
         setZoomWindow([xvalue - zoomRange, xvalue + zoomRange]);
       },
     };
@@ -244,19 +296,22 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
   }, [isDark, points]);
 
   const handleMouseMove = (params) => {
-    if (typeof params.dataIndex !== "number") return;
+    const xValue =
+      Array.isArray(params.value) && typeof params.value[0] === "number"
+        ? params.value[0]
+        : points[params.dataIndex]?.[0];
+    if (typeof xValue !== "number" || Number.isNaN(xValue)) return;
+
     getCharts("signal").forEach((chart) => {
-      if (chart !== bridgeRef.current && chart.dataLength === points.length) {
-        chart.showTooltip(params.dataIndex);
+      if (chart !== bridgeRef.current) {
+        chart.showTooltipAtX?.(xValue);
       }
     });
   };
 
-  const handleMouseOut = () => {
+  const handleMouseLeave = () => {
     getCharts("signal").forEach((chart) => {
-      if (chart !== bridgeRef.current) {
-        chart.hideTooltip();
-      }
+      chart.hideTooltip?.();
     });
   };
 
@@ -319,7 +374,10 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
         </div>
       }
       canvas={
-        <div className="relative min-h-[360px] overflow-hidden rounded-[0.7rem] border border-slate-200 bg-white p-1 dark:border-gray-800 dark:bg-slate-950">
+        <div
+          className="relative min-h-[360px] overflow-hidden rounded-[0.7rem] border border-slate-200 bg-white p-1 dark:border-gray-800 dark:bg-slate-950"
+          onMouseLeave={handleMouseLeave}
+        >
           <ReactECharts
             ref={chartComponentRef}
             option={option}
@@ -329,7 +387,6 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
             onEvents={{
               click: handlePointClick,
               mousemove: handleMouseMove,
-              globalout: handleMouseOut,
             }}
           />
         </div>

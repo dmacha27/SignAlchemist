@@ -23,6 +23,7 @@ import OutliersNode from "../reactflow/nodes/OutliersNode";
 import FilteringNode from "../reactflow/nodes/FilteringNode";
 import ButtonEdge from "../reactflow/edges/ButtonEdge";
 import SignalTabs from "../common/SignalTabs";
+import SignalSummary from "../common/SignalSummary";
 import { ThemeContext } from "../../contexts/ThemeContext";
 import {
   WorkspacePage,
@@ -38,6 +39,95 @@ import {
   ProcessingSidebar,
   ProcessingSteps,
 } from "./ProcessingSections";
+
+const recommendedPipelines = {
+  EDA: {
+    signalType: "EDA",
+    nodes: [
+      {
+        id: "3",
+        type: "ResamplingNode",
+        position: { x: 240, y: 150 },
+        data: {
+          samplingRate: 15,
+          interpolationTechnique: "spline",
+          targetSamplingRate: 15,
+        },
+      },
+      {
+        id: "4",
+        type: "OutliersNode",
+        position: { x: 500, y: 150 },
+        data: {
+          outlierTechnique: "iqr",
+        },
+      },
+      {
+        id: "5",
+        type: "FilteringNode",
+        position: { x: 760, y: 150 },
+        data: {
+          samplingRate: 15,
+          filter: "gaussian",
+          fields: {
+            sigma: 100,
+            python: "",
+          },
+        },
+      },
+    ],
+    edges: [
+      { source: "1", target: "3" },
+      { source: "3", target: "4" },
+      { source: "4", target: "5" },
+      { source: "5", target: "2" },
+    ],
+  },
+  PPG: {
+    signalType: "PPG",
+    nodes: [
+      {
+        id: "3",
+        type: "ResamplingNode",
+        position: { x: 240, y: 150 },
+        data: {
+          samplingRate: 50,
+          interpolationTechnique: "spline",
+          targetSamplingRate: 50,
+        },
+      },
+      {
+        id: "4",
+        type: "OutliersNode",
+        position: { x: 500, y: 150 },
+        data: {
+          outlierTechnique: "iqr",
+        },
+      },
+      {
+        id: "5",
+        type: "FilteringNode",
+        position: { x: 760, y: 150 },
+        data: {
+          samplingRate: 50,
+          filter: "butterworth",
+          fields: {
+            order: 5,
+            lowcut: 1,
+            highcut: 15,
+            python: "",
+          },
+        },
+      },
+    ],
+    edges: [
+      { source: "1", target: "3" },
+      { source: "3", target: "4" },
+      { source: "4", target: "5" },
+      { source: "5", target: "2" },
+    ],
+  },
+};
 
 const ProcessingPage = () => {
   const location = useLocation();
@@ -267,6 +357,69 @@ const ProcessingPage = () => {
     importInputRef.current?.click();
   }, []);
 
+  const applyPipelineDefinition = useCallback((parsed, successMessage) => {
+    if (!Array.isArray(parsed?.nodes) || !Array.isArray(parsed?.edges)) {
+      throw new Error("Invalid pipeline file");
+    }
+
+    const validNodeTypes = new Set([
+      "ResamplingNode",
+      "FilteringNode",
+      "OutliersNode",
+    ]);
+    const importedNodes = parsed.nodes
+      .filter(
+        (node) =>
+          node &&
+          node.id !== "1" &&
+          node.id !== "2" &&
+          validNodeTypes.has(node.type)
+      )
+      .map((node) => ({
+        id: String(node.id),
+        type: node.type,
+        position: node.position ?? { x: 500, y: 120 },
+        data: {
+          ...node.data,
+          deleteNode,
+          setChartDataProcessed,
+        },
+      }));
+
+    const validNodeIds = new Set(["1", "2", ...importedNodes.map((node) => node.id)]);
+    const importedEdges = parsed.edges
+      .filter(
+        (edge) =>
+          edge &&
+          validNodeIds.has(String(edge.source)) &&
+          validNodeIds.has(String(edge.target))
+      )
+      .map((edge) =>
+        buildEdge({
+          id: edge.id ?? `xy-edge__${edge.source}-${edge.target}`,
+          source: String(edge.source),
+          target: String(edge.target),
+        })
+      );
+
+    const nextNodes = [...buildBaseNodes(), ...importedNodes];
+    const maxId = nextNodes.reduce((highest, node) => {
+      const numericId = Number.parseInt(node.id, 10);
+      return Number.isNaN(numericId) ? highest : Math.max(highest, numericId);
+    }, 2);
+
+    setNodes(nextNodes);
+    setEdges(importedEdges);
+    setChartDataProcessed(null);
+    setMetricsProcessed(null);
+    setLastId(maxId);
+    lastIdRef.current = maxId;
+
+    if (successMessage) {
+      toast.success(successMessage);
+    }
+  }, [buildBaseNodes, buildEdge, setEdges, setNodes]);
+
   const handleImportPipeline = useCallback(async (event) => {
     const fileToImport = event.target.files?.[0];
     event.target.value = "";
@@ -288,65 +441,21 @@ const ProcessingPage = () => {
       if (!Array.isArray(parsed?.nodes) || !Array.isArray(parsed?.edges)) {
         throw new Error("Invalid pipeline file");
       }
-
-      const validNodeTypes = new Set([
-        "ResamplingNode",
-        "FilteringNode",
-        "OutliersNode",
-      ]);
-      const importedNodes = parsed.nodes
-        .filter(
-          (node) =>
-            node &&
-            node.id !== "1" &&
-            node.id !== "2" &&
-            validNodeTypes.has(node.type)
-        )
-        .map((node) => ({
-          id: String(node.id),
-          type: node.type,
-          position: node.position ?? { x: 500, y: 120 },
-          data: {
-            ...node.data,
-            deleteNode,
-            setChartDataProcessed,
-          },
-        }));
-
-      const validNodeIds = new Set(["1", "2", ...importedNodes.map((node) => node.id)]);
-      const importedEdges = parsed.edges
-        .filter(
-          (edge) =>
-            edge &&
-            validNodeIds.has(String(edge.source)) &&
-            validNodeIds.has(String(edge.target))
-        )
-        .map((edge) =>
-          buildEdge({
-            id: edge.id ?? `xy-edge__${edge.source}-${edge.target}`,
-            source: String(edge.source),
-            target: String(edge.target),
-          })
-        );
-
-      const nextNodes = [...buildBaseNodes(), ...importedNodes];
-      const maxId = nextNodes.reduce((highest, node) => {
-        const numericId = Number.parseInt(node.id, 10);
-        return Number.isNaN(numericId) ? highest : Math.max(highest, numericId);
-      }, 2);
-
-      setNodes(nextNodes);
-      setEdges(importedEdges);
-      setChartDataProcessed(null);
-      setMetricsProcessed(null);
-      setLastId(maxId);
-      lastIdRef.current = maxId;
-      toast.success("Pipeline imported");
+      applyPipelineDefinition(parsed, "Pipeline imported");
     } catch (error) {
       console.error(error.message);
       toast.error("Invalid pipeline file");
     }
-  }, [buildBaseNodes, buildEdge, setEdges, setNodes]);
+  }, [applyPipelineDefinition]);
+
+  const applyRecommendedPipeline = useCallback((presetKey) => {
+    const preset = recommendedPipelines[presetKey];
+    if (!preset) {
+      return;
+    }
+
+    applyPipelineDefinition(preset, `${presetKey} pipeline loaded`);
+  }, [applyPipelineDefinition]);
 
   const deleteSourceTablesAndExecute = () => {
     const deleteEvent = new CustomEvent("delete-source-tables0");
@@ -478,6 +587,7 @@ const ProcessingPage = () => {
         title="Signal Processing"
         description="Design a custom visual pipeline with resampling, filtering, and outlier steps, then inspect the resulting signal and metrics."
         badge={`Signal type: ${signalType}`}
+        action={<SignalSummary table={chartDataOriginal} />}
       />
 
       <WorkspaceSection className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -497,6 +607,7 @@ const ProcessingPage = () => {
           onCanvasDrop={handleCanvasDrop}
           exportPipeline={exportPipeline}
           importPipeline={importPipeline}
+          applyRecommendedPipeline={applyRecommendedPipeline}
         />
 
         <ProcessingSidebar

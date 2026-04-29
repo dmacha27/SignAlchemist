@@ -142,13 +142,19 @@ const InfoModal = ({ opened, close }) => {
  * @param {Object} props.fields - An object containing the filter fields and their configuration.
  * @param {function} props.onFieldChange - A callback function to handle field value changes.
  */
-const FilterFields = memo(({ filter, fields, onFieldChange }) => {
+const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [enabledFields, setEnabledFields] = useState({});
 
   useEffect(() => {
-    setEnabledFields({});
-  }, [filter]);
+    const nextEnabledFields = Object.fromEntries(
+      Object.entries(fieldDefinitions)
+        .filter(([, definition]) => definition.optional)
+        .map(([fieldName]) => [fieldName, fields[fieldName] !== null])
+    );
+
+    setEnabledFields(nextEnabledFields);
+  }, [fieldDefinitions, fields, filter]);
 
   const onCheckboxChange = (field, checked) => {
     setEnabledFields((prev) => ({
@@ -167,10 +173,10 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
     <>
       <InfoModal opened={opened} close={close} />
 
-      {Object.keys(fields).map((field) => {
-        const fieldConfig = fields[field];
+      {Object.entries(fieldDefinitions).map(([field, fieldDefinition]) => {
+        const fieldValue = fields[field];
 
-        if (field !== "python") {
+        if (fieldDefinition.type !== "textarea") {
           return (
             <div
               key={field}
@@ -180,25 +186,22 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
                 htmlFor={field}
                 className="block mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300"
               >
-                {field.charAt(0).toUpperCase() + field.slice(1)}
+                {fieldDefinition.label}
               </label>
               <Group align="center" spacing="sm">
                 <NumberInput
                   key={`${filter}_${field}`}
                   id={field}
                   placeholder={`Enter ${field}`}
-                  value={fieldConfig}
-                  min={0.01}
+                  value={fieldValue}
+                  min={fieldDefinition.min ?? 0}
                   onBlur={(event) => {
                     if (event.target.value === "") {
-                      onFieldChange(field, 1);
+                      onFieldChange(field, fieldDefinition.min ?? 1);
                     }
                   }}
                   onChange={(value) => onFieldChange(field, value)}
-                  disabled={
-                    (field === "lowcut" || field === "highcut") &&
-                    !enabledFields[field]
-                  }
+                  disabled={fieldDefinition.optional && !enabledFields[field]}
                   style={{ flex: 1 }}
                   classNames={{
                     input:
@@ -206,7 +209,7 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
                   }}
                 />
 
-                {(field === "lowcut" || field === "highcut") && (
+                {fieldDefinition.optional && (
                   <Checkbox
                     checked={!!enabledFields[field]}
                     onChange={(e) => onCheckboxChange(field, e.target.checked)}
@@ -224,7 +227,7 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
-                  Python code
+                  {fieldDefinition.label}
                 </span>
                 <Button variant="subtle" size="xs" onClick={open} title="Info">
                   <FaInfo /> Info
@@ -232,7 +235,7 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
               </div>
               <Textarea
                 key={`${filter}_${field}`}
-                value={fieldConfig.value}
+                value={fieldValue}
                 onChange={(e) => onFieldChange(field, e.target.value)}
                 minRows={3}
                 autosize
@@ -255,12 +258,9 @@ InfoModal.propTypes = {
 };
 
 FilterFields.propTypes = {
-  fields: PropTypes.objectOf(
-    PropTypes.shape({
-      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-        .isRequired,
-    })
-  ).isRequired,
+  filter: PropTypes.string.isRequired,
+  fields: PropTypes.object.isRequired,
+  fieldDefinitions: PropTypes.object.isRequired,
   onFieldChange: PropTypes.func.isRequired,
 };
 

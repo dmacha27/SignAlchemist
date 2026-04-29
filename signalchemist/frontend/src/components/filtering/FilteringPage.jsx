@@ -11,6 +11,7 @@ import DownloadSignal from "../common/DownloadSignal";
 import InfoTable from "../common/InfoTable";
 import FilterFields from "../common/FilterFields";
 import LoaderMessage from "../common/LoaderMessage";
+import SignalSummary from "../common/SignalSummary";
 import {
   WorkspacePage,
   WorkspaceHero,
@@ -24,7 +25,11 @@ import {
   buildUtilitySourceData,
   requestSignalMetrics,
 } from "../workspace/utilityData";
-import { filtersFields } from "./filteringConfig";
+import {
+  createFilterDefaults,
+  filterDefinitions,
+  getFilterOptions,
+} from "./filteringConfig";
 
 const FilteringPage = () => {
   const location = useLocation();
@@ -40,18 +45,10 @@ const FilteringPage = () => {
   const [metricsFiltered, setMetricsFiltered] = useState(null);
   const [filter, setFilter] = useState("butterworth");
 
-  const defaultFields = useMemo(() => {
-    const windowSizeBase = Math.round(samplingRate / 3);
-    const windowSize = windowSizeBase % 2 === 0 ? windowSizeBase + 1 : windowSizeBase;
-
-    return {
-      ...filtersFields,
-      savgol: {
-        ...filtersFields.savgol,
-        window_size: windowSize,
-      },
-    };
-  }, [samplingRate]);
+  const defaultFields = useMemo(
+    () => createFilterDefaults(samplingRate),
+    [samplingRate]
+  );
 
   const [fields, setFields] = useState(defaultFields[filter]);
 
@@ -160,6 +157,7 @@ const FilteringPage = () => {
         title="Filtering"
         description="Inspect the original signal, configure the filtering technique, and compare the filtered output before downloading it."
         badge={`Signal type: ${signalType}`}
+        action={<SignalSummary table={chartDataOriginal} />}
       />
 
       <WorkspaceSection className="grid items-start gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.7fr)_minmax(0,0.95fr)]">
@@ -199,10 +197,7 @@ const FilteringPage = () => {
                     setFields(defaultFields[value]);
                   }
                 }}
-                data={Object.keys(defaultFields).map((key) => ({
-                  value: key,
-                  label: key.charAt(0).toUpperCase() + key.slice(1),
-                }))}
+                data={getFilterOptions()}
                 classNames={{
                   input:
                     "rounded-xl border border-slate-300 bg-white text-slate-900 shadow-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white",
@@ -216,6 +211,7 @@ const FilteringPage = () => {
               <FilterFields
                 filter={filter}
                 fields={fields}
+                fieldDefinitions={filterDefinitions[filter].fields}
                 onFieldChange={handleFieldChange}
               />
 

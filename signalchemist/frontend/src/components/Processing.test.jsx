@@ -413,4 +413,40 @@ describe("Processing", () => {
     expect(importedEdges.some((edge) => edge.source === "1" && edge.target === "3")).toBe(true);
     expect(importedEdges.some((edge) => edge.source === "3" && edge.target === "2")).toBe(true);
   });
+
+  it("loads the recommended EDA pipeline", async () => {
+    render(
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <ThemeContext.Provider value={mockTheme}>
+          <Routes>
+            <Route path="/processing" element={<Processing />} />
+          </Routes>
+        </ThemeContext.Provider>
+      </MemoryRouter>
+    );
+
+    await screen.findByText(/Signal Processing/);
+    await screen.findByText("metricA");
+
+    fireEvent.click(screen.getByTitle("Recommended pipelines"));
+    fireEvent.click(await screen.findByText("EDA / GSR"));
+
+    await waitFor(() => {
+      const nodes = global.reactFlowInstance.getNodes();
+      expect(nodes).toHaveLength(5);
+    });
+
+    const nodes = global.reactFlowInstance.getNodes();
+    const filteringNode = nodes.find((node) => node.type === "FilteringNode");
+    const resamplingNode = nodes.find((node) => node.type === "ResamplingNode");
+    const outliersNode = nodes.find((node) => node.type === "OutliersNode");
+
+    expect(resamplingNode.data.targetSamplingRate).toBe(15);
+    expect(outliersNode.data.outlierTechnique).toBe("iqr");
+    expect(filteringNode.data.filter).toBe("gaussian");
+    expect(filteringNode.data.fields.sigma).toBe(100);
+
+    const edges = global.reactFlowInstance.getEdges();
+    expect(edges).toHaveLength(4);
+  });
 });

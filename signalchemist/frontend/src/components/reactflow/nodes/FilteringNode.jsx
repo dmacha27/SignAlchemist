@@ -13,32 +13,11 @@ import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
 import { diff, average } from "../../utils/dataUtils";
 import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
-
-const filtersFields = {
-  butterworth: {
-    order: 2,
-    lowcut: null,
-    highcut: null,
-    python: "",
-  },
-  bessel: {
-    lowcut: null,
-    highcut: null,
-    python: "",
-  },
-  fir: {
-    lowcut: null,
-    highcut: null,
-    python: "",
-  },
-  savgol: {
-    order: 2,
-    lowcut: null,
-    highcut: null,
-    window_size: 999,
-    python: "",
-  },
-};
+import {
+  createFilterDefaults,
+  filterDefinitions,
+  getFilterOptions,
+} from "../../filtering/filteringConfig";
 
 /**
  * FilteringNode component
@@ -59,13 +38,7 @@ function FilteringNode({ id, data }) {
         name: data.filter,
         fields: data.fields,
       };
-  const windowSizeRef = useRef(
-    Math.round(data.samplingRate / 3) % 2 === 0
-      ? Math.round(data.samplingRate / 3) + 1
-      : Math.round(data.samplingRate / 3)
-  );
-
-  filtersFields.savgol.window_size = windowSizeRef.current;
+  const filterDefaultsRef = useRef(createFilterDefaults(data.samplingRate));
 
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
@@ -73,8 +46,11 @@ function FilteringNode({ id, data }) {
   const [filter, setFilter] = useState(initialConfig?.name ?? "butterworth");
   const [fields, setFields] = useState(
     initialConfig?.fields
-      ? { ...filtersFields[initialConfig.name], ...initialConfig.fields }
-      : filtersFields[initialConfig?.name ?? "butterworth"]
+      ? {
+          ...filterDefaultsRef.current[initialConfig.name],
+          ...initialConfig.fields,
+        }
+      : filterDefaultsRef.current[initialConfig?.name ?? "butterworth"]
   );
   const [executionState, setExecutionState] = useState("waiting");
 
@@ -99,14 +75,11 @@ function FilteringNode({ id, data }) {
     samplingRateRef.current =
       1 / average(diff(incomingTable.slice(1).map((x) => x[0])));
 
-    windowSizeRef.current = Math.round(samplingRateRef.current / 3);
-    if (windowSizeRef.current % 2 === 0) {
-      windowSizeRef.current += 1;
-    }
+    filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
   } else {
     tableRef.current = null;
     samplingRateRef.current = null;
-    windowSizeRef.current = null;
+    filterDefaultsRef.current = createFilterDefaults(data.samplingRate);
   }
 
   useEffect(() => {
@@ -220,10 +193,7 @@ function FilteringNode({ id, data }) {
         samplingRateRef.current =
           1 / average(diff(table_source.slice(1).map((x) => x[0])));
 
-        windowSizeRef.current = Math.round(samplingRateRef.current / 3);
-        if (windowSizeRef.current % 2 === 0) {
-          windowSizeRef.current += 1;
-        }
+        filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
 
         const new_table = await requestFilter();
 
@@ -310,13 +280,10 @@ function FilteringNode({ id, data }) {
           onChange={(value) => {
             if (value) {
               setFilter(value);
-              setFields(filtersFields[value]);
+              setFields(filterDefaultsRef.current[value]);
             }
           }}
-          data={Object.keys(filtersFields).map((key) => ({
-            value: key,
-            label: key.charAt(0).toUpperCase() + key.slice(1),
-          }))}
+          data={getFilterOptions()}
           className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
           classNames={{
             input:
@@ -333,6 +300,7 @@ function FilteringNode({ id, data }) {
         <FilterFields
           filter={filter}
           fields={fields}
+          fieldDefinitions={filterDefinitions[filter].fields}
           onFieldChange={handleFieldChange}
         />
       </NodeSection>

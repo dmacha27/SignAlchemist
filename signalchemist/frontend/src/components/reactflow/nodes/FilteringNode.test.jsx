@@ -304,7 +304,7 @@ describe("FilteringNode", () => {
     await fireEvent.click(screen.getByTestId("Select filter"));
 
     await fireEvent.click((await screen.findByText(/Fir/i)).parentElement);
-    expect(screen.getByTestId("Select filter")).toHaveValue("Fir");
+    expect(screen.getByTestId("Select filter")).toHaveValue("FIR");
 
     await waitFor(() => {
       // Fir does not have order parameter
