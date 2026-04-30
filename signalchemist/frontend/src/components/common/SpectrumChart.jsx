@@ -2,7 +2,7 @@ import { memo, useContext, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { fft, util as fftUtil } from "fft-js";
 import ReactECharts from "echarts-for-react";
-import { FaDownload, FaImage, FaSearch, FaSlidersH } from "react-icons/fa";
+import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { average, diff } from "../utils/dataUtils";
@@ -269,7 +269,7 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
                 <FaSearch /> Reset Zoom
               </button>
               <button onClick={() => handleResetStyle(bridgeRef.current, defaultColor)} className={chartActionButtonClass}>
-                <FaSlidersH /> Reset Style
+                <FaCrosshairs /> Reset Style
               </button>
             </>
           ) : null}

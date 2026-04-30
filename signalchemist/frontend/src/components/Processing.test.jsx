@@ -334,6 +334,27 @@ describe("Processing", () => {
     });
   });
 
+  it("inserts a peaks node on an existing edge", async () => {
+    await setupFlow();
+
+    const insertButtons = screen.getAllByRole("button", { name: /insert node/i });
+    fireEvent.click(insertButtons[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /insert peaks node/i })[0]);
+
+    await waitFor(() => {
+      const nodes = global.reactFlowInstance.getNodes();
+      expect(nodes).toHaveLength(6);
+      expect(nodes.some((node) => node.type === "PeaksNode")).toBe(true);
+    });
+
+    await waitFor(() => {
+      const edges = global.reactFlowInstance.getEdges();
+      expect(edges.some((edge) => edge.id === "xy-edge__1-3")).toBe(false);
+      expect(edges.some((edge) => edge.source === "1" && edge.target === "6")).toBe(true);
+      expect(edges.some((edge) => edge.source === "6" && edge.target === "3")).toBe(true);
+    });
+  });
+
   it("exports the current pipeline to JSON", async () => {
     await setupFlow();
 
@@ -448,5 +469,52 @@ describe("Processing", () => {
 
     const edges = global.reactFlowInstance.getEdges();
     expect(edges).toHaveLength(4);
+  });
+
+  it("loads the recommended PPG + Heart Rate pipeline", async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[{
+          pathname: "/processing",
+          state: {
+            file: new File([csvContent], "mock.csv", { type: "text/csv" }),
+            signalType: "PPG",
+            timestampColumn: 0,
+            samplingRate: 1,
+            signalValues: 1,
+          },
+        }]}
+      >
+        <ThemeContext.Provider value={mockTheme}>
+          <Routes>
+            <Route path="/processing" element={<Processing />} />
+          </Routes>
+        </ThemeContext.Provider>
+      </MemoryRouter>
+    );
+
+    await screen.findByText(/Signal Processing/);
+    await screen.findByText("metricA");
+
+    fireEvent.click(screen.getByTitle("Recommended pipelines"));
+    fireEvent.click(await screen.findByText("PPG + Heart Rate"));
+
+    await waitFor(() => {
+      const nodes = global.reactFlowInstance.getNodes();
+      expect(nodes).toHaveLength(6);
+    });
+
+    const nodes = global.reactFlowInstance.getNodes();
+    const filteringNode = nodes.find((node) => node.type === "FilteringNode");
+    const heartRateNode = nodes.find((node) => node.type === "HeartRateNode");
+
+    expect(filteringNode.data.filter).toBe("butterworth");
+    expect(filteringNode.data.fields.order).toBe(5);
+    expect(heartRateNode.data.method).toBe("emotibit");
+
+    const edges = global.reactFlowInstance.getEdges();
+    expect(edges).toHaveLength(5);
+    expect(edges.some((edge) => edge.source === "5" && edge.target === "6")).toBe(true);
+    expect(edges.some((edge) => edge.source === "6" && edge.target === "2")).toBe(true);
   });
 });

@@ -27,7 +27,7 @@ export const WorkspaceHero = ({
           className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
         >
           <FaArrowLeft size={11} />
-          Back to Home
+          Home
         </Link>
         <div className="mt-4 flex items-center gap-3">
           <div className="text-[1.8rem] text-cyan-600 dark:text-cyan-400">
@@ -46,7 +46,7 @@ export const WorkspaceHero = ({
 
       <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3.5 dark:border-gray-700 dark:bg-gray-900">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-          Current Context
+          Context
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white dark:bg-white dark:text-slate-900">
@@ -57,8 +57,7 @@ export const WorkspaceHero = ({
           <div className="mt-4">{action}</div>
         ) : (
           <p className="mt-4 text-sm leading-5 text-slate-600 dark:text-slate-300">
-            Review the original signal, configure the operation, and compare the
-            result before downloading or continuing.
+            Configure the operation and review the result.
           </p>
         )}
       </div>

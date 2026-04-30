@@ -1,7 +1,7 @@
 import { memo, useContext, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import ReactECharts from "echarts-for-react";
-import { FaCircleNotch, FaDownload, FaImage, FaSearch } from "react-icons/fa";
+import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { exportToPNG, handleResetStyle, handleResetZoom } from "../utils/chartUtils";
@@ -159,7 +159,7 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
                 <FaSearch /> Reset Zoom
               </button>
               <button onClick={() => handleResetStyle(bridgeRef.current, "#38bdf8")} className={chartActionButtonClass}>
-                <FaCircleNotch /> Reset Style
+                <FaCrosshairs /> Reset Style
               </button>
             </>
           ) : null}

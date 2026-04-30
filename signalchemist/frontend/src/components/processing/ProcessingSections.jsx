@@ -3,8 +3,6 @@ import {
   FaFilter,
   FaChevronDown,
   FaChevronUp,
-  FaChartLine,
-  FaBullseye,
   FaProjectDiagram,
   FaSquare,
   FaRocket,
@@ -33,9 +31,43 @@ import {
 import {
   WorkspaceCard,
   WorkspaceInnerCard,
-  WorkspacePrimaryButton,
   WorkspaceSecondaryButton,
 } from "../workspace/WorkspaceShell";
+import {
+  getNodeDefinition,
+  INSERTABLE_NODE_TYPES,
+} from "./nodeRegistry";
+
+const NODE_CATEGORY_ORDER = ["Preprocessing", "Analysis"];
+
+const NodePaletteButton = ({ nodeType, definition, addNode, onNodeDragStart }) => {
+  const Icon = definition?.icon;
+
+  return (
+    <button
+      type="button"
+      title={definition.buttonTitle}
+      draggable
+      onDragStart={(event) => onNodeDragStart(event, nodeType)}
+      onClick={() => addNode(nodeType)}
+      className="group flex w-full items-center gap-2 rounded-[0.85rem] border border-slate-200 bg-white px-2.5 py-2 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600 dark:hover:bg-gray-800"
+    >
+      <div className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-700 transition group-hover:bg-slate-200 dark:bg-gray-800 dark:text-slate-100 dark:group-hover:bg-gray-700">
+        {Icon ? <Icon /> : null}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[12px] font-semibold text-slate-800 dark:text-slate-100">
+          {definition.label}
+        </div>
+      </div>
+
+      <div className="shrink-0 text-[11px] font-semibold text-slate-400 dark:text-slate-300">
+        +
+      </div>
+    </button>
+  );
+};
 
 export const ProcessingFlowSection = ({
   chartDataOriginal,
@@ -57,7 +89,7 @@ export const ProcessingFlowSection = ({
 }) => (
   <WorkspaceCard
     title="Pipeline Flow"
-    description="Build a visual processing chain and inspect each transformation on the graph."
+    description="Pipeline graph."
     icon={<FaProjectDiagram />}
     actions={(
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
@@ -100,6 +132,11 @@ export const ProcessingFlowSection = ({
               label: "PPG",
               icon: <FaMagic size={12} />,
               onClick: () => applyRecommendedPipeline("PPG"),
+            },
+            {
+              label: "PPG + Heart Rate",
+              icon: <FaMagic size={12} />,
+              onClick: () => applyRecommendedPipeline("PPG_HR"),
             },
           ]}
         />
@@ -149,7 +186,7 @@ export const ProcessingFlowSection = ({
             />
             <Panel position="top-right">
               <div className="rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-slate-950/95 dark:text-slate-300">
-                Drop nodes here, connect them, then run the pipeline.
+                Add and connect nodes here.
               </div>
             </Panel>
             <MiniMap
@@ -157,12 +194,14 @@ export const ProcessingFlowSection = ({
               pannable
               position="bottom-left"
               nodeColor={(node) => {
-                if (node.type === "InputSignal") return isDark ? "#22d3ee" : "#0891b2";
-                if (node.type === "OutputSignal") return isDark ? "#34d399" : "#059669";
-                if (node.type === "FilteringNode") return isDark ? "#34d399" : "#10b981";
-                if (node.type === "ResamplingNode") return isDark ? "#38bdf8" : "#0284c7";
-                if (node.type === "OutliersNode") return isDark ? "#fbbf24" : "#d97706";
-                return isDark ? "#e5e7eb" : "#cbd5e1";
+                const definition = getNodeDefinition(node.type);
+                if (!definition?.minimapColor) {
+                  return isDark ? "#e5e7eb" : "#cbd5e1";
+                }
+
+                return isDark
+                  ? definition.minimapColor.dark
+                  : definition.minimapColor.light;
               }}
               maskColor={isDark ? "#020617a8" : "#f8fafcbf"}
               backgroundColor={isDark ? "#111827" : "#ffffff"}
@@ -184,7 +223,6 @@ export const ProcessingFlowSection = ({
 );
 
 export const ProcessingSidebar = ({
-  samplingRate,
   addNode,
   onNodeDragStart,
   deleteSourceTablesAndExecute,
@@ -194,97 +232,69 @@ export const ProcessingSidebar = ({
   scrollToCharts,
 }) => (
   <WorkspaceCard
-    title="Pipeline Nodes"
-    description="Add operations, execute the pipeline, or reset the current graph."
+    title="Nodes"
     icon={<FaSquare />}
-    className="xl:sticky xl:top-4 xl:self-start"
+    className="xl:sticky xl:top-4 xl:self-start xl:max-w-[232px]"
   >
     <WorkspaceInnerCard>
       <div className="flex flex-col gap-3">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Click to add, or drag a node card into the canvas.
-        </p>
+        {NODE_CATEGORY_ORDER.map((category) => {
+          const categoryNodeTypes = INSERTABLE_NODE_TYPES.filter(
+            (nodeType) => getNodeDefinition(nodeType)?.category === category
+          );
 
-        <button
-          type="button"
-          title="Add resampling node"
-          draggable
-          onDragStart={(event) => onNodeDragStart(event, "ResamplingNode")}
-          onClick={() =>
-            addNode("ResamplingNode", {
-              samplingRate,
-            })
+          if (!categoryNodeTypes.length) {
+            return null;
           }
-          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
-        >
-          <span className="inline-flex items-center gap-2">
-            <FaChartLine />
-            Resampling
-          </span>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-            Drag
-          </span>
-        </button>
 
-        <button
-          type="button"
-          title="Add outlier detection node"
-          draggable
-          onDragStart={(event) => onNodeDragStart(event, "OutliersNode")}
-          onClick={() => addNode("OutliersNode")}
-          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
-        >
-          <span className="inline-flex items-center gap-2">
-            <FaBullseye />
-            Outliers
-          </span>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-            Drag
-          </span>
-        </button>
-
-        <button
-          type="button"
-          title="Add filtering node"
-          draggable
-          onDragStart={(event) => onNodeDragStart(event, "FilteringNode")}
-          onClick={() =>
-            addNode("FilteringNode", {
-              samplingRate,
-            })
-          }
-          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
-        >
-          <span className="inline-flex items-center gap-2">
-            <FaFilter />
-            Filtering
-          </span>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-            Drag
-          </span>
-        </button>
+          return (
+            <div key={category}>
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  {category}
+                </h3>
+                <div className="h-px flex-1 bg-slate-200 dark:bg-gray-700" />
+              </div>
+              <div className="space-y-1.5">
+                {categoryNodeTypes.map((nodeType) => {
+                  const definition = getNodeDefinition(nodeType);
+                  return (
+                    <NodePaletteButton
+                      key={nodeType}
+                      nodeType={nodeType}
+                      definition={definition}
+                      addNode={addNode}
+                      onNodeDragStart={onNodeDragStart}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
 
         <div className="my-1 border-t border-slate-200 dark:border-gray-700" />
 
-        <WorkspacePrimaryButton
+        <button
+          type="button"
           title="Start-end execution"
           onClick={deleteSourceTablesAndExecute}
-          className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:text-white dark:hover:bg-red-700"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700"
         >
           <FaRocket />
-          Run Pipeline
-        </WorkspacePrimaryButton>
+          Run
+        </button>
 
         <div className="space-y-2">
           <button
             type="button"
             onClick={() => setConfirmationOpened((openState) => !openState)}
             title="Restart flow"
-            className="w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
+            className="w-full rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700"
           >
             <span className="inline-flex items-center gap-2">
               <FaTrash />
-              Clean Pipeline
+              Clean
             </span>
           </button>
 
@@ -304,7 +314,7 @@ export const ProcessingSidebar = ({
         <button
           title="Go to charts"
           onClick={scrollToCharts}
-          className="mx-auto inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
+          className="mx-auto inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
         >
           <FaEye />
           Charts
@@ -323,7 +333,7 @@ export const ProcessingSteps = ({ opened, toggle, nodes }) => (
           Active pipeline
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Current connected path from input to output.
+          Connected path from input to output.
         </p>
       </div>
       <button
@@ -366,7 +376,6 @@ ProcessingFlowSection.defaultProps = {
 };
 
 ProcessingSidebar.propTypes = {
-  samplingRate: PropTypes.number.isRequired,
   addNode: PropTypes.func.isRequired,
   onNodeDragStart: PropTypes.func.isRequired,
   deleteSourceTablesAndExecute: PropTypes.func.isRequired,
@@ -374,6 +383,18 @@ ProcessingSidebar.propTypes = {
   setConfirmationOpened: PropTypes.func.isRequired,
   cleanFlow: PropTypes.func.isRequired,
   scrollToCharts: PropTypes.func.isRequired,
+};
+
+NodePaletteButton.propTypes = {
+  nodeType: PropTypes.string.isRequired,
+  definition: PropTypes.shape({
+    icon: PropTypes.elementType,
+    label: PropTypes.string.isRequired,
+    category: PropTypes.string.isRequired,
+    buttonTitle: PropTypes.string.isRequired,
+  }).isRequired,
+  addNode: PropTypes.func.isRequired,
+  onNodeDragStart: PropTypes.func.isRequired,
 };
 
 ProcessingSteps.propTypes = {

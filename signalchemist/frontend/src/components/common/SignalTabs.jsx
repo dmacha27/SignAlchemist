@@ -99,6 +99,7 @@ const SignalTabs = ({
   rightIcon,
   chartDataOriginal,
   chartDataProcessed,
+  processedAnnotationPoints = [],
   isRequesting = false,
 }) => {
   const [analysisView, setAnalysisView] = useState("signal");
@@ -111,7 +112,11 @@ const SignalTabs = ({
     isSpectrum ? (
       <SpectrumChart table={data} defaultColor="#10b981" />
     ) : (
-      <CustomChart table={data} defaultColor="#10b981" />
+      <CustomChart
+        table={data}
+        defaultColor="#10b981"
+        annotationPoints={processedAnnotationPoints}
+      />
     );
   const renderComparison = (originalData, processedData) =>
     isSpectrum ? (
@@ -236,12 +241,16 @@ SignalTabs.propTypes = {
   rightIcon: PropTypes.element.isRequired,
   chartDataOriginal: PropTypes.array,
   chartDataProcessed: PropTypes.array,
+  processedAnnotationPoints: PropTypes.arrayOf(
+    PropTypes.arrayOf(PropTypes.number)
+  ),
   isRequesting: PropTypes.bool,
 };
 
 SignalTabs.defaultProps = {
   chartDataOriginal: null,
   chartDataProcessed: null,
+  processedAnnotationPoints: [],
   isRequesting: false,
 };
 

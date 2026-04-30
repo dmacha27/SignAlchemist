@@ -49,7 +49,12 @@ function findClosestPointIndex(points, xValue) {
     : high;
 }
 
-const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
+const CustomChart = memo(({
+  table,
+  defaultColor = "#2196f3",
+  annotationPoints = [],
+  annotationColor = "#f97316",
+}) => {
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
   const chartComponentRef = useRef(null);
@@ -58,13 +63,21 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
   const [zoomWindow, setZoomWindow] = useState(null);
   const [hoverIndex, setHoverIndex] = useState(null);
 
-  const [headers, ...rows] = table;
-  const points = useMemo(() => rows.map(([x, y]) => [x * 1000, y]), [rows]);
+  const [headers = ["time", "value"], ...rows] = table ?? [["time", "value"]];
+  const points = useMemo(
+    () => rows.map(([x, y]) => [x * 1000, y]),
+    [rows]
+  );
+  const annotations = useMemo(
+    () => annotationPoints.map(([x, y]) => [x * 1000, y]),
+    [annotationPoints]
+  );
 
-  const xAxisType = rows[0][0] === 0 ? "value" : "time";
+  const hasRows = rows.length > 0;
+  const xAxisType = hasRows && rows[0] && rows[0][0] === 0 ? "value" : "time";
   const isLargeDataset = rows.length > MAX_DATA_LENGTH;
   const minX = points[0]?.[0] ?? 0;
-  const maxX = points[points.length - 1]?.[0] ?? 0;
+  const maxX = points[points.length - 1]?.[0] ?? 6000;
   const zoomRangeX = Math.max((maxX - minX) * 0.02, 1);
 
   const option = useMemo(() => {
@@ -110,8 +123,8 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
       },
       xAxis: {
         type: xAxisType,
-        min: zoomWindow?.[0],
-        max: zoomWindow?.[1],
+        min: zoomWindow?.[0] ?? (hasRows ? undefined : minX),
+        max: zoomWindow?.[1] ?? (hasRows ? undefined : maxX),
         splitNumber: 6,
         axisLine: {
           lineStyle: { color: axisLineColor, width: 1 },
@@ -143,6 +156,8 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
       },
       yAxis: {
         type: "value",
+        min: hasRows ? undefined : 0,
+        max: hasRows ? undefined : 1,
         splitNumber: 6,
         axisLine: {
           lineStyle: { color: axisLineColor, width: 1 },
@@ -186,17 +201,20 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
           data: points,
           showSymbol: false,
           symbol: "circle",
+          silent: !hasRows,
           lineStyle: {
             color: defaultColor,
             width: 2.3,
             cap: "round",
             join: "round",
+            opacity: hasRows ? 1 : 0,
           },
           emphasis: {
             focus: "series",
           },
           areaStyle: {
             color: toRgba(defaultColor, isDark ? 0.08 : 0.12),
+            opacity: hasRows ? 1 : 0,
           },
           smooth: 0.05,
           markPoint: highlightedPoint
@@ -227,9 +245,21 @@ const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
           },
           silent: true,
         },
+        {
+          type: "scatter",
+          data: annotations,
+          symbol: "diamond",
+          symbolSize: 10,
+          itemStyle: {
+            color: annotationColor,
+            borderColor: isDark ? "#020617" : "#ffffff",
+            borderWidth: 1.5,
+          },
+          silent: true,
+        },
       ],
     };
-  }, [defaultColor, focusedIndex, headers, hoverIndex, isDark, isLargeDataset, points, xAxisType, zoomWindow]);
+  }, [annotationColor, annotations, defaultColor, focusedIndex, hasRows, headers, hoverIndex, isDark, isLargeDataset, maxX, minX, points, xAxisType, zoomWindow]);
 
   useEffect(() => {
     const bridge = {
@@ -412,6 +442,16 @@ CustomChart.propTypes = {
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number]))
   ).isRequired,
   defaultColor: PropTypes.string,
+  annotationPoints: PropTypes.arrayOf(
+    PropTypes.arrayOf(PropTypes.number)
+  ),
+  annotationColor: PropTypes.string,
+};
+
+CustomChart.defaultProps = {
+  defaultColor: "#2196f3",
+  annotationPoints: [],
+  annotationColor: "#f97316",
 };
 
 export default CustomChart;

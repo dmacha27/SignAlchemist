@@ -7,6 +7,7 @@ import neurokit2
 import numpy as np
 import scipy
 
+from app.hr import compute_emotibit_heart_rate, compute_neurokit_heart_rate
 from app.metrics import (
     bottcher_quality,
     kleckner_quality,
@@ -73,6 +74,41 @@ def apply_builtin_filter(values, sampling_rate: int, config: dict):
         sampling_rate=sampling_rate,
         **config
     )
+
+
+def apply_normalization(values, method: str):
+    if method == "zscore":
+        mean = np.mean(values)
+        std = np.std(values)
+        if std == 0:
+            return np.zeros_like(values, dtype=np.float64)
+        return (values - mean) / std
+
+    if method == "minmax":
+        min_value = np.min(values)
+        max_value = np.max(values)
+        value_range = max_value - min_value
+        if value_range == 0:
+            return np.zeros_like(values, dtype=np.float64)
+        return (values - min_value) / value_range
+
+    raise ValueError("Invalid normalization method")
+
+
+def build_peak_payload(data, peak_indices):
+    return [
+        {
+            "index": int(index),
+            "timestamp": float(data[index, 0]),
+            "value": float(data[index, 1]),
+            "height": float(data[index, 1]),
+        }
+        for index in peak_indices
+    ]
+
+
+def build_series_payload(data):
+    return [[float(row[0]), float(row[1])] for row in data]
 
 
 @app.get("/", tags=["System"])
@@ -207,6 +243,157 @@ async def filtering(
 
         new_data = np.stack((data[:, 0], new_values), axis=1)
         return JSONResponse(content={"data": new_data.tolist()})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+
+
+@app.options("/normalization", include_in_schema=False)
+async def options_normalization():
+    return {"message": "Preflight OPTIONS request handled"}
+
+
+@app.post("/normalization", summary="Normalize a signal", tags=["Preprocessing"])
+async def normalization(
+    signal: str = Form(...,
+                       description="JSON-encoded list of `[timestamp, value]` pairs."),
+    normalization_method: str = Form(
+        ..., description="Normalization method: `'zscore'` or `'minmax'`."),
+):
+    """
+    Normalize a signal using a standard scaling strategy.
+    """
+    try:
+        data = np.array(json.loads(signal), dtype=np.float64)
+        values = data[:, 1]
+
+        error = check_max_samples(len(values), "Normalization")
+        if error:
+            return error
+
+        normalized_values = apply_normalization(values, normalization_method)
+        new_data = np.stack((data[:, 0], normalized_values), axis=1)
+        return JSONResponse(content={"data": new_data.tolist()})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+
+
+@app.options("/peaks", include_in_schema=False)
+async def options_peaks():
+    return {"message": "Preflight OPTIONS request handled"}
+
+
+@app.post("/peaks", summary="Detect peaks in a signal", tags=["Analysis"])
+async def peaks(
+    signal: str = Form(...,
+                       description="JSON-encoded list of `[timestamp, value]` pairs."),
+    sampling_rate: int = Form(..., description="Sampling rate of the input signal in Hz."),
+    detector: str = Form(
+        "scipy", description="Peak detector backend: `'scipy'` or `'neurokit'`."),
+    signal_type: str = Form(
+        "OTHER", description="Signal type used to select NeuroKit-specific detection logic."),
+    min_distance_seconds: float = Form(
+        0.0, description="Minimum distance between peaks, in seconds."),
+    height: float | None = Form(
+        None, description="Minimum height required for a peak."),
+):
+    """
+    Detect peaks in a signal using SciPy peak detection.
+    """
+    try:
+        data = np.array(json.loads(signal), dtype=np.float64)
+        values = data[:, 1]
+
+        error = check_max_samples(len(values), "Peak detection")
+        if error:
+            return error
+
+        detector = detector.lower()
+        signal_type = signal_type.upper()
+
+        if detector == "neurokit":
+            if signal_type == "PPG":
+                cleaned = neurokit2.ppg_clean(values, sampling_rate=sampling_rate)
+                info = neurokit2.ppg_findpeaks(cleaned, sampling_rate=sampling_rate)
+                peak_indices = np.asarray(info["PPG_Peaks"], dtype=int)
+                peaks_data = build_peak_payload(data, peak_indices)
+            elif signal_type == "EDA":
+                cleaned = neurokit2.eda_clean(values, sampling_rate=sampling_rate)
+                phasic = neurokit2.eda_phasic(cleaned, sampling_rate=sampling_rate)
+                phasic_values = np.asarray(phasic["EDA_Phasic"].values, dtype=np.float64)
+                info = neurokit2.eda_findpeaks(
+                    phasic_values,
+                    sampling_rate=sampling_rate,
+                    method="neurokit",
+                )
+                peak_indices = np.asarray(info["SCR_Peaks"], dtype=int)
+                peaks_data = build_peak_payload(data, peak_indices)
+            else:
+                info = neurokit2.signal_findpeaks(values, relative_height_min=0)
+                peak_indices = np.asarray(info["Peaks"], dtype=int)
+                peaks_data = build_peak_payload(data, peak_indices)
+        elif detector == "scipy":
+            min_distance_samples = max(
+                1,
+                int(round(max(min_distance_seconds, 0) * sampling_rate))
+            )
+
+            peak_indices, properties = scipy.signal.find_peaks(
+                values,
+                distance=min_distance_samples,
+                height=height,
+            )
+            peaks_data = build_peak_payload(data, peak_indices)
+        else:
+            return JSONResponse(content={"error": "Invalid peak detector"}, status_code=400)
+
+        return JSONResponse(content={"peaks": peaks_data})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+
+
+@app.options("/hr", include_in_schema=False)
+async def options_hr():
+    return {"message": "Preflight OPTIONS request handled"}
+
+
+@app.post("/hr", summary="Estimate heart rate from a PPG signal", tags=["Analysis"])
+async def heart_rate(
+    signal: str = Form(...,
+                       description="JSON-encoded list of `[timestamp, value]` pairs."),
+    sampling_rate: int = Form(..., description="Sampling rate of the input signal in Hz."),
+    signal_type: str = Form(
+        ..., description="Signal type. Heart rate analysis is only supported for `'PPG'`."),
+    method: str = Form(
+        "emotibit", description="Heart rate backend: `'emotibit'` or `'neurokit'`."),
+):
+    try:
+        data = np.array(json.loads(signal), dtype=np.float64)
+
+        error = check_max_samples(len(data), "Heart rate")
+        if error:
+            return error
+
+        if signal_type.upper() != "PPG":
+            return JSONResponse(
+                content={"error": "Heart rate analysis is only available for PPG signals."},
+                status_code=400
+            )
+
+        method = method.lower()
+        if method == "emotibit":
+            heart_rate_data = compute_emotibit_heart_rate(data, sampling_rate)
+        elif method == "neurokit":
+            heart_rate_data = compute_neurokit_heart_rate(data, sampling_rate)
+        else:
+            return JSONResponse(
+                content={"error": "Invalid heart rate method"},
+                status_code=400
+            )
+
+        return JSONResponse(content={
+            "data": build_series_payload(heart_rate_data),
+            "beat_count": int(len(heart_rate_data)),
+        })
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=400)
 

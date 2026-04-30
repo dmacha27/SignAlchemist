@@ -2,6 +2,7 @@ const PYTHON_FIELD = {
   label: "Python code",
   type: "textarea",
   defaultValue: "",
+  tooltip: "Optional custom Python function. If you use this field, it overrides the built-in filter settings.",
 };
 
 export const filterDefinitions = {
@@ -13,6 +14,7 @@ export const filterDefinitions = {
         type: "number",
         defaultValue: 2,
         min: 1,
+        tooltip: "Controls how sharp the filter response is. Higher values usually mean a steeper filter.",
       },
       lowcut: {
         label: "Lowcut",
@@ -20,6 +22,7 @@ export const filterDefinitions = {
         defaultValue: null,
         min: 0.01,
         optional: true,
+        tooltip: "Lower cutoff frequency in Hz. Frequencies below this value are attenuated.",
       },
       highcut: {
         label: "Highcut",
@@ -27,6 +30,7 @@ export const filterDefinitions = {
         defaultValue: null,
         min: 0.01,
         optional: true,
+        tooltip: "Upper cutoff frequency in Hz. Frequencies above this value are attenuated.",
       },
       python: PYTHON_FIELD,
     },
@@ -40,6 +44,7 @@ export const filterDefinitions = {
         defaultValue: null,
         min: 0.01,
         optional: true,
+        tooltip: "Lower cutoff frequency in Hz. Frequencies below this value are attenuated.",
       },
       highcut: {
         label: "Highcut",
@@ -47,6 +52,7 @@ export const filterDefinitions = {
         defaultValue: null,
         min: 0.01,
         optional: true,
+        tooltip: "Upper cutoff frequency in Hz. Frequencies above this value are attenuated.",
       },
       python: PYTHON_FIELD,
     },
@@ -60,6 +66,7 @@ export const filterDefinitions = {
         defaultValue: null,
         min: 0.01,
         optional: true,
+        tooltip: "Lower cutoff frequency in Hz. Frequencies below this value are attenuated.",
       },
       highcut: {
         label: "Highcut",
@@ -67,6 +74,7 @@ export const filterDefinitions = {
         defaultValue: null,
         min: 0.01,
         optional: true,
+        tooltip: "Upper cutoff frequency in Hz. Frequencies above this value are attenuated.",
       },
       python: PYTHON_FIELD,
     },
@@ -79,6 +87,7 @@ export const filterDefinitions = {
         type: "number",
         defaultValue: 2,
         min: 1,
+        tooltip: "Polynomial order used for local smoothing. Higher values preserve more shape but can overfit noise.",
       },
       lowcut: {
         label: "Lowcut",
@@ -86,6 +95,7 @@ export const filterDefinitions = {
         defaultValue: null,
         min: 0.01,
         optional: true,
+        tooltip: "Lower cutoff frequency in Hz. Frequencies below this value are attenuated.",
       },
       highcut: {
         label: "Highcut",
@@ -93,12 +103,14 @@ export const filterDefinitions = {
         defaultValue: null,
         min: 0.01,
         optional: true,
+        tooltip: "Upper cutoff frequency in Hz. Frequencies above this value are attenuated.",
       },
       window_size: {
         label: "Window size",
         type: "number",
         defaultValue: 999,
         min: 3,
+        tooltip: "Number of samples used in each smoothing window. Larger windows produce stronger smoothing.",
       },
       python: PYTHON_FIELD,
     },
@@ -111,6 +123,7 @@ export const filterDefinitions = {
         type: "number",
         defaultValue: 100,
         min: 0.01,
+        tooltip: "Controls how wide the Gaussian smoothing kernel is. Larger values smooth more aggressively.",
       },
       python: PYTHON_FIELD,
     },

@@ -6,10 +6,16 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { FaBullseye } from "react-icons/fa";
+import { FaBalanceScale } from "react-icons/fa";
 import toast from "react-hot-toast";
+
 import HandleLimit from "../edges/HandleLimit";
-import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
+import {
+  NodeOutputPreview,
+  NodeRunButton,
+  NodeSection,
+  NodeShell,
+} from "./NodeShell";
 import { uiSelectClass } from "../../common/ui";
 import { parseTechniqueConfig } from "../../processing/processingNodeUtils";
 import {
@@ -17,36 +23,24 @@ import {
   getDeleteTablesEventName,
   getExecuteEventName,
 } from "../../processing/processingEvents";
-import { requestOutliers as requestOutliersData } from "../../processing/processingRequests";
+import { requestNormalization as requestNormalizationData } from "../../processing/processingRequests";
 
-/**
- * OutliersNode component
- *
- * This component represents a node in a flow diagram responsible for detecting and managing outliers in signal data.
- *
- * @component
- * @param {Object} props - Component properties
- * @param {string} props.id - Unique identifier for the node
- * @param {Object} props.data - Additional data, including methods to delete nodes and update chart data
- * @returns {JSX.Element} Visual and functional representation of the outlier detection node
- */
-function OutliersNode({ id, data }) {
+function NormalizationNode({ id, data }) {
   const tableRef = useRef(null);
   const initialConfig = parseTechniqueConfig(data.technique, {
-    name: data.outlierTechnique,
+    name: data.normalizationMethod,
   });
 
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
-  const [outlierTechnique, setOutlierTechnique] = useState(
-    initialConfig?.name ?? "hampel"
+  const [normalizationMethod, setNormalizationMethod] = useState(
+    initialConfig?.name ?? "zscore"
   );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
 
-  // Update source and target node IDs when connections change
   useEffect(() => {
     const sourceId = connections?.find((conn) => conn.target === id)?.source;
     const targetId = connections?.find((conn) => conn.source === id)?.target;
@@ -67,55 +61,51 @@ function OutliersNode({ id, data }) {
     updateNodeData(id, (prev) => ({
       ...prev,
       technique: JSON.stringify({
-        name: outlierTechnique,
+        name: normalizationMethod,
       }),
       target: targetNodeId,
-      outlierTechnique,
+      normalizationMethod,
       executionState,
     }));
-  }, [executionState, id, outlierTechnique, targetNodeId, updateNodeData]);
+  }, [executionState, id, normalizationMethod, targetNodeId, updateNodeData]);
 
-  const requestOutliers = useCallback(async () => {
+  const requestNormalization = useCallback(async () => {
     const table = tableRef.current;
     if (!table) return;
 
     setExecutionState("running");
 
-    const signalOnly = table.slice(1); // Exclude headers
+    const signalOnly = table.slice(1);
 
     if (targetNodeId) {
       dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
     }
 
     try {
-      const result = await requestOutliersData({
+      const payload = await requestNormalizationData({
         signal: signalOnly,
-        outlierTechnique,
+        normalizationMethod,
       });
 
-      const new_table = [table[0]].concat(result.data); // Add headers back
+      const newTable = [table[0]].concat(payload.data);
 
       updateNodeData(id, (prev) => ({
         ...prev,
-        table: new_table,
+        table: newTable,
       }));
 
       setExecutionState("executed");
-      return new_table;
+      return newTable;
     } catch (error) {
-      const message = error.message || "Failed to apply outliers";
+      const message = error.message || "Failed to apply normalization";
       console.error(message);
       toast.error(message);
-
       setExecutionState("error");
       return null;
     }
-  }, [id, outlierTechnique, targetNodeId, updateNodeData]);
+  }, [id, normalizationMethod, targetNodeId, updateNodeData]);
 
   useEffect(() => {
-    /**
-     * Deletes the current node's table and notifies the next node.
-     */
     const handleDeleteTable = () => {
       updateNodeData(id, (prev) => ({
         ...prev,
@@ -129,21 +119,17 @@ function OutliersNode({ id, data }) {
       }
     };
 
-    /**
-     * Handles execution request: applies outlier detection to incoming table.
-     * @param {Event} e - The event containing the table data.
-     */
     const handleExecute = async (e) => {
-      const table_source = e.detail.table;
+      const sourceTable = e.detail.table;
 
-      if (table_source) {
-        tableRef.current = table_source;
+      if (sourceTable) {
+        tableRef.current = sourceTable;
 
-        const new_table = await requestOutliers();
+        const newTable = await requestNormalization();
 
-        if (targetNodeId && new_table) {
+        if (targetNodeId && newTable) {
           dispatchWindowEvent(getExecuteEventName(targetNodeId), {
-            table: new_table,
+            table: newTable,
           });
         }
       }
@@ -153,25 +139,21 @@ function OutliersNode({ id, data }) {
     window.addEventListener(getDeleteTablesEventName(id), handleDeleteTable);
 
     return () => {
-      // Clean up events when dependencies change (avoid multiple listeners of the same type)
       window.removeEventListener(getExecuteEventName(id), handleExecute);
       window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
     };
-  }, [id, requestOutliers, targetNodeId, updateNodeData]);
+  }, [id, requestNormalization, targetNodeId, updateNodeData]);
 
-  /**
-   * Trigger a delete event when filter configuration changes.
-   */
   useEffect(() => {
     dispatchWindowEvent(getDeleteTablesEventName(id));
-  }, [outlierTechnique, id]);
+  }, [normalizationMethod, id]);
 
   return (
     <NodeShell
-      icon={<FaBullseye />}
-      title="Outlier Detection"
+      icon={<FaBalanceScale />}
+      title="Normalization"
       eyebrow="Node"
-      accent="amber"
+      accent="violet"
       executionState={executionState}
       onStatusClick={() => {
         toast.custom(
@@ -185,15 +167,15 @@ function OutliersNode({ id, data }) {
         data.deleteNode(id);
       }}
       deleteTestId={`delete${id}`}
-      footer={
+      footer={(
         <NodeRunButton
           disabled={!tableRef.current}
-          onClick={requestOutliers}
-          accent="amber"
+          onClick={requestNormalization}
+          accent="violet"
         >
-          Apply Outliers
+          Normalize
         </NodeRunButton>
-      }
+      )}
     >
       <HandleLimit
         type="target"
@@ -203,25 +185,25 @@ function OutliersNode({ id, data }) {
       />
 
       <NodeSection
-        label="Detection technique"
-        tooltip="Choose how anomalous samples are identified before they are corrected or removed."
-        fieldId="outliers-detection-technique"
+        label="Normalization method"
+        tooltip="Choose how the signal values are rescaled before the next processing step."
+        fieldId="normalization-method"
       >
-          <select
-            id="outliers-detection-technique"
-            data-testid="Select outlier"
-            value={outlierTechnique}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (value) {
-                setOutlierTechnique(value);
-              }
-            }}
-            className={uiSelectClass}
-          >
-            <option value="hampel">Hampel</option>
-            <option value="iqr">IQR</option>
-          </select>
+        <select
+          id="normalization-method"
+          data-testid="Select normalization"
+          value={normalizationMethod}
+          onChange={(event) => {
+            const value = event.target.value;
+            if (value) {
+              setNormalizationMethod(value);
+            }
+          }}
+          className={uiSelectClass}
+        >
+          <option value="zscore">Z-score</option>
+          <option value="minmax">Min-max</option>
+        </select>
       </NodeSection>
 
       <NodeOutputPreview
@@ -232,7 +214,7 @@ function OutliersNode({ id, data }) {
             data.showProcessedPreview(outputTable);
           }
         }}
-        accent="amber"
+        accent="violet"
       />
 
       <Handle
@@ -244,4 +226,4 @@ function OutliersNode({ id, data }) {
   );
 }
 
-export default OutliersNode;
+export default NormalizationNode;

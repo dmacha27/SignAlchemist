@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { FaEye, FaTrash } from "react-icons/fa";
 
 import ExecutionIcon from "../../common/ExecutionIcon";
-import { SimpleTooltip } from "../../common/ui";
+import { FormFieldLabel, SimpleTooltip } from "../../common/ui";
 
 const accentStyles = {
   cyan: {
@@ -32,6 +32,13 @@ const accentStyles = {
     icon: "text-violet-600 dark:text-violet-300",
     button:
       "bg-violet-600 text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400",
+  },
+  rose: {
+    badge:
+      "bg-rose-500/12 text-rose-700 ring-rose-500/20 dark:bg-rose-400/12 dark:text-rose-200 dark:ring-rose-400/20",
+    icon: "text-rose-600 dark:text-rose-300",
+    button:
+      "bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400",
   },
   slate: {
     badge:
@@ -181,14 +188,25 @@ NodeShell.defaultProps = {
   footer: null,
 };
 
-export const NodeSection = ({ label, children, compact = false }) => (
+export const NodeSection = ({
+  label,
+  tooltip,
+  fieldId,
+  children,
+  compact = false,
+}) => (
   <div
     className={`rounded-[0.95rem] bg-slate-50/80 ${compact ? "p-3" : "p-3.5"} dark:bg-slate-900/80`}
   >
     {label ? (
-      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-        {label}
-      </label>
+      <div className="mb-2">
+        <FormFieldLabel
+          htmlFor={fieldId}
+          label={label}
+          tooltip={tooltip}
+          className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
+        />
+      </div>
     ) : null}
     {children}
   </div>
@@ -196,12 +214,16 @@ export const NodeSection = ({ label, children, compact = false }) => (
 
 NodeSection.propTypes = {
   label: PropTypes.string,
+  tooltip: PropTypes.string,
+  fieldId: PropTypes.string,
   children: PropTypes.node.isRequired,
   compact: PropTypes.bool,
 };
 
 NodeSection.defaultProps = {
   label: null,
+  tooltip: null,
+  fieldId: undefined,
   compact: false,
 };
 

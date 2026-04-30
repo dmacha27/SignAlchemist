@@ -17,6 +17,8 @@ import About from "./components/About";
 import Processing from "./components/Processing";
 import Resampling from "./components/Resampling";
 import Filtering from "./components/Filtering";
+import Hr from "./components/Hr";
+import Peaks from "./components/Peaks";
 import FloatingNavMenu from "./components/common/FloatingNavMenu";
 import NotFound from "./components/common/NotFound";
 
@@ -156,6 +158,24 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Filtering />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/peaks"
+              element={
+                <ProtectedRoute>
+                  <Peaks />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/hr"
+              element={
+                <ProtectedRoute>
+                  <Hr />
                 </ProtectedRoute>
               }
             />

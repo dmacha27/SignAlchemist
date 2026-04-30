@@ -1,47 +1,45 @@
 import PropTypes from "prop-types";
-import {
-  FaArrowRight,
-  FaBullseye,
-  FaChartLine,
-  FaFilter,
-  FaSignInAlt,
-  FaSignOutAlt,
-} from "react-icons/fa";
+import { FaArrowRight } from "react-icons/fa";
+import { getNodeDefinition } from "../processing/nodeRegistry";
 
-const NODE_META = {
-  InputSignal: {
-    label: "InputSignal",
-    icon: <FaSignInAlt size={13} />,
-    tone:
-      "border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200",
-  },
-  ResamplingNode: {
-    label: "ResamplingNode",
-    icon: <FaChartLine size={13} />,
-    tone:
-      "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200",
-  },
-  FilteringNode: {
-    label: "FilteringNode",
-    icon: <FaFilter size={13} />,
-    tone:
-      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200",
-  },
-  OutliersNode: {
-    label: "OutliersNode",
-    icon: <FaBullseye size={13} />,
-    tone:
-      "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200",
-  },
-  OutputSignal: {
-    label: "OutputSignal",
-    icon: <FaSignOutAlt size={13} />,
-    tone:
-      "border-slate-200 bg-slate-50 text-slate-700 dark:border-gray-700 dark:bg-slate-900 dark:text-slate-200",
-  },
+const capitalize = (str) => {
+  if (typeof str !== "string" || str.length === 0) {
+    return "";
+  }
+
+  return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+const getTechniqueInfo = (node) => {
+  if (!node.data?.technique) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(node.data.technique);
+    const techniqueName = parsed.name ?? parsed.detector ?? parsed.method ?? null;
+    if (!techniqueName) {
+      return null;
+    }
+
+    const fields = parsed.fields ?? {};
+    if (parsed.detector) {
+      fields.detector = parsed.detector;
+    }
+    if (parsed.minDistanceSeconds !== undefined && parsed.minDistanceSeconds !== "") {
+      fields.minDistanceSeconds = parsed.minDistanceSeconds;
+    }
+    if (parsed.height !== undefined && parsed.height !== "") {
+      fields.height = parsed.height;
+    }
+    return {
+      name: techniqueName,
+      fields,
+    };
+  } catch {
+    return null;
+  }
+};
 
 const TechniqueFields = ({ fields }) => (
   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -102,10 +100,10 @@ const PipelineSteps = ({ nodes }) => {
     <div className="rounded-[1.35rem] bg-white p-4 dark:bg-gray-900">
       <div className="flex flex-wrap items-stretch gap-3">
         {connectedNodes.map((node, index) => {
-          const meta = NODE_META[node.type] ?? NODE_META.OutputSignal;
-          const techniqueObj = node.data?.technique
-            ? JSON.parse(node.data.technique)
-            : null;
+          const definition =
+            getNodeDefinition(node.type) ?? getNodeDefinition("OutputSignal");
+          const SummaryIcon = definition?.summaryIcon ?? definition?.icon;
+          const techniqueObj = getTechniqueInfo(node);
 
           return (
             <div key={node.id} className="flex items-center gap-3">
@@ -115,9 +113,9 @@ const PipelineSteps = ({ nodes }) => {
                     <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-400">
                       Step {index + 1}
                     </div>
-                    <div className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${meta.tone}`}>
-                      {meta.icon}
-                      {meta.label}
+                    <div className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${definition?.summaryTone ?? ""}`}>
+                      {SummaryIcon ? <SummaryIcon size={13} /> : null}
+                      {definition?.summaryLabel ?? node.type}
                     </div>
                   </div>
                 </div>

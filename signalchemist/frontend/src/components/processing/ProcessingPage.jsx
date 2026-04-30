@@ -10,6 +10,7 @@ import "@xyflow/react/dist/style.css";
 import { usePapaParse } from "react-papaparse";
 import { useLocation } from "react-router-dom";
 import {
+  FaHeartbeat,
   FaWaveSquare,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -20,6 +21,9 @@ import OutputSignal from "../reactflow/nodes/OutputSignal";
 import ResamplingNode from "../reactflow/nodes/ResamplingNode";
 import OutliersNode from "../reactflow/nodes/OutliersNode";
 import FilteringNode from "../reactflow/nodes/FilteringNode";
+import NormalizationNode from "../reactflow/nodes/NormalizationNode";
+import PeaksNode from "../reactflow/nodes/PeaksNode";
+import HeartRateNode from "../reactflow/nodes/HeartRateNode";
 import ButtonEdge from "../reactflow/edges/ButtonEdge";
 import SignalTabs from "../common/SignalTabs";
 import SignalSummary from "../common/SignalSummary";
@@ -38,6 +42,17 @@ import {
   ProcessingSidebar,
   ProcessingSteps,
 } from "./ProcessingSections";
+import {
+  getExportableNodeData as getExportableNodeDataFromRegistry,
+  getRuntimeDataForNode,
+  IMPORTABLE_NODE_TYPES,
+  isInsertableNodeType,
+} from "./nodeRegistry";
+import {
+  dispatchWindowEvent,
+  ROOT_DELETE_EVENT,
+  START_EXECUTE_EVENT,
+} from "./processingEvents";
 
 const recommendedPipelines = {
   EDA: {
@@ -126,6 +141,66 @@ const recommendedPipelines = {
       { source: "5", target: "2" },
     ],
   },
+  PPG_HR: {
+    signalType: "PPG",
+    nodes: [
+      {
+        id: "3",
+        type: "ResamplingNode",
+        position: { x: 220, y: 150 },
+        data: {
+          samplingRate: 50,
+          interpolationTechnique: "spline",
+          targetSamplingRate: 50,
+        },
+      },
+      {
+        id: "4",
+        type: "OutliersNode",
+        position: { x: 460, y: 150 },
+        data: {
+          outlierTechnique: "iqr",
+        },
+      },
+      {
+        id: "5",
+        type: "FilteringNode",
+        position: { x: 700, y: 150 },
+        data: {
+          samplingRate: 50,
+          filter: "butterworth",
+          fields: {
+            order: 5,
+            lowcut: 1,
+            highcut: 15,
+            python: "",
+          },
+        },
+      },
+      {
+        id: "6",
+        type: "HeartRateNode",
+        position: { x: 940, y: 150 },
+        data: {
+          method: "emotibit",
+        },
+      },
+    ],
+    edges: [
+      { source: "1", target: "3" },
+      { source: "3", target: "4" },
+      { source: "4", target: "5" },
+      { source: "5", target: "6" },
+      { source: "6", target: "2" },
+    ],
+  },
+};
+
+const DEFAULT_PREVIEW_META = {
+  annotationPoints: [],
+  title: "Processed",
+  iconKey: "signal",
+  computeMetrics: true,
 };
 
 const ProcessingPage = () => {
@@ -137,13 +212,13 @@ const ProcessingPage = () => {
 
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [chartDataProcessed, setChartDataProcessed] = useState(null);
+  const [previewMeta, setPreviewMeta] = useState(DEFAULT_PREVIEW_META);
   const [metricsOriginal, setMetricsOriginal] = useState(null);
   const [metricsProcessed, setMetricsProcessed] = useState(null);
   const [confirmationOpened, setConfirmationOpened] = useState(false);
   const [opened, setOpened] = useState(true);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [lastId, setLastId] = useState(0);
   const [isCanvasDragOver, setIsCanvasDragOver] = useState(false);
   const { screenToFlowPosition } = useReactFlow();
   const lastIdRef = useRef(0);
@@ -154,6 +229,15 @@ const ProcessingPage = () => {
       behavior: "smooth",
     });
   }, []);
+  const showProcessedPreview = useCallback((table, annotationPoints = [], options = {}) => {
+    setChartDataProcessed(table ?? null);
+    setPreviewMeta({
+      annotationPoints,
+      title: options.title ?? DEFAULT_PREVIEW_META.title,
+      iconKey: options.iconKey ?? DEFAULT_PREVIEW_META.iconKey,
+      computeMetrics: options.computeMetrics ?? DEFAULT_PREVIEW_META.computeMetrics,
+    });
+  }, []);
 
   const nodeTypes = {
     InputSignal,
@@ -161,11 +245,19 @@ const ProcessingPage = () => {
     OutliersNode,
     ResamplingNode,
     FilteringNode,
+    NormalizationNode,
+    PeaksNode,
+    HeartRateNode,
   };
 
   const edgeTypes = {
     ButtonEdge,
   };
+
+  const nodeContext = useCallback(() => ({
+    samplingRate,
+    signalType,
+  }), [samplingRate, signalType]);
 
   const buildEdge = useCallback((params) => ({
     ...params,
@@ -185,38 +277,14 @@ const ProcessingPage = () => {
       id: "2",
       type: "OutputSignal",
       position: { x: 1100, y: 150 },
-      data: { setChartDataProcessed, scrollToCharts },
+      data: { showProcessedPreview, scrollToCharts },
       deletable: false,
     },
-  ]), [chartDataOriginal, scrollToCharts]);
+  ]), [chartDataOriginal, scrollToCharts, showProcessedPreview]);
 
   const getExportableNodeData = useCallback((node) => {
-    if (node.type === "ResamplingNode") {
-      return {
-        samplingRate: node.data?.samplingRate ?? samplingRate,
-        interpolationTechnique:
-          node.data?.interpolationTechnique ?? "spline",
-        targetSamplingRate:
-          node.data?.targetSamplingRate ?? samplingRate,
-      };
-    }
-
-    if (node.type === "FilteringNode") {
-      return {
-        samplingRate: node.data?.samplingRate ?? samplingRate,
-        filter: node.data?.filter ?? "butterworth",
-        fields: node.data?.fields ?? null,
-      };
-    }
-
-    if (node.type === "OutliersNode") {
-      return {
-        outlierTechnique: node.data?.outlierTechnique ?? "hampel",
-      };
-    }
-
-    return {};
-  }, [samplingRate]);
+    return getExportableNodeDataFromRegistry(node, nodeContext());
+  }, [nodeContext]);
 
   useEffect(() => {
     if (!file) {
@@ -251,7 +319,7 @@ const ProcessingPage = () => {
   }, [file, readString, timestampColumn, signalValues, samplingRate, signalType]);
 
   useEffect(() => {
-    if (!chartDataProcessed) {
+    if (!chartDataProcessed || !previewMeta.computeMetrics) {
       setMetricsProcessed(null);
       return;
     }
@@ -266,7 +334,7 @@ const ProcessingPage = () => {
         console.error(error.message);
         toast.error(error.message);
       });
-  }, [chartDataProcessed, signalType, samplingRate]);
+  }, [chartDataProcessed, previewMeta.computeMetrics, signalType, samplingRate]);
 
   useEffect(() => {
     if (!chartDataOriginal) {
@@ -276,11 +344,17 @@ const ProcessingPage = () => {
     const initialNodes = buildBaseNodes();
 
     setNodes(initialNodes);
-    setLastId(initialNodes.length);
     lastIdRef.current = initialNodes.length;
   }, [buildBaseNodes, chartDataOriginal, setNodes]);
 
-  const addNode = (type, options = {}) => {
+  const deleteNode = useCallback((id) => {
+    setNodes((currentNodes) => currentNodes.filter((node) => node.id !== id));
+    setEdges((currentEdges) =>
+      currentEdges.filter((edge) => edge.source !== id && edge.target !== id)
+    );
+  }, [setEdges, setNodes]);
+
+  const addNode = useCallback((type, options = {}) => {
     const {
       position = { x: 500, y: 120 },
       ...restOptions
@@ -293,23 +367,16 @@ const ProcessingPage = () => {
       type,
       position,
       data: {
+        ...getRuntimeDataForNode(type, nodeContext()),
         ...restOptions,
         deleteNode,
-        setChartDataProcessed,
+        showProcessedPreview,
       },
     };
 
     setNodes((previousNodes) => [...previousNodes, newNode]);
-    setLastId(lastIdRef.current);
     return newId;
-  };
-
-  const deleteNode = (id) => {
-    setNodes((currentNodes) => currentNodes.filter((node) => node.id !== id));
-    setEdges((currentEdges) =>
-      currentEdges.filter((edge) => edge.source !== id && edge.target !== id)
-    );
-  };
+  }, [deleteNode, nodeContext, setNodes, showProcessedPreview]);
 
   const onConnect = useCallback((params) => {
     setEdges((currentEdges) =>
@@ -320,9 +387,9 @@ const ProcessingPage = () => {
   const cleanFlow = () => {
     setNodes((previousNodes) => previousNodes.slice(0, 2));
     setEdges([]);
-    setLastId(2);
     lastIdRef.current = 2;
     setChartDataProcessed(null);
+    setPreviewMeta(DEFAULT_PREVIEW_META);
     setMetricsProcessed(null);
   };
 
@@ -366,27 +433,23 @@ const ProcessingPage = () => {
       throw new Error("Invalid pipeline file");
     }
 
-    const validNodeTypes = new Set([
-      "ResamplingNode",
-      "FilteringNode",
-      "OutliersNode",
-    ]);
     const importedNodes = parsed.nodes
       .filter(
         (node) =>
           node &&
           node.id !== "1" &&
           node.id !== "2" &&
-          validNodeTypes.has(node.type)
+          IMPORTABLE_NODE_TYPES.includes(node.type)
       )
       .map((node) => ({
         id: String(node.id),
         type: node.type,
         position: node.position ?? { x: 500, y: 120 },
         data: {
+          ...getRuntimeDataForNode(node.type, nodeContext()),
           ...node.data,
           deleteNode,
-          setChartDataProcessed,
+          showProcessedPreview,
         },
       }));
 
@@ -415,14 +478,22 @@ const ProcessingPage = () => {
     setNodes(nextNodes);
     setEdges(importedEdges);
     setChartDataProcessed(null);
+    setPreviewMeta(DEFAULT_PREVIEW_META);
     setMetricsProcessed(null);
-    setLastId(maxId);
     lastIdRef.current = maxId;
 
     if (successMessage) {
       toast.success(successMessage);
     }
-  }, [buildBaseNodes, buildEdge, setEdges, setNodes]);
+  }, [
+    buildBaseNodes,
+    buildEdge,
+    deleteNode,
+    nodeContext,
+    setEdges,
+    setNodes,
+    showProcessedPreview,
+  ]);
 
   const handleImportPipeline = useCallback(async (event) => {
     const fileToImport = event.target.files?.[0];
@@ -462,8 +533,7 @@ const ProcessingPage = () => {
   }, [applyPipelineDefinition]);
 
   const deleteSourceTablesAndExecute = () => {
-    const deleteEvent = new CustomEvent("delete-source-tables0");
-    window.dispatchEvent(deleteEvent);
+    dispatchWindowEvent(ROOT_DELETE_EVENT);
 
     const updatedNodes = nodes.map((node) => {
       if (node.id !== "1" && node.id !== "2") {
@@ -482,8 +552,7 @@ const ProcessingPage = () => {
       return;
     }
 
-    const executeEvent = new CustomEvent("start-execute");
-    window.dispatchEvent(executeEvent);
+    dispatchWindowEvent(START_EXECUTE_EVENT);
   };
 
   const handleCanvasDragOver = useCallback((event) => {
@@ -501,7 +570,7 @@ const ProcessingPage = () => {
     setIsCanvasDragOver(false);
 
     const nodeType = event.dataTransfer.getData("application/x-signalchemist-node");
-    if (!nodeType) {
+    if (!nodeType || !isInsertableNodeType(nodeType)) {
       return;
     }
 
@@ -510,35 +579,29 @@ const ProcessingPage = () => {
       y: event.clientY,
     });
 
-    const nodeOptions = {};
-    if (nodeType === "ResamplingNode" || nodeType === "FilteringNode") {
-      nodeOptions.samplingRate = samplingRate;
-    }
     lastSidebarDropAtRef.current = Date.now();
 
     addNode(nodeType, {
-      ...nodeOptions,
       position,
     });
-  }, [samplingRate, screenToFlowPosition]);
+  }, [addNode, screenToFlowPosition]);
 
   const handleSidebarAddNode = useCallback((nodeType) => {
     if (Date.now() - lastSidebarDropAtRef.current < 250) {
       return;
     }
 
-    const nodeOptions = {};
-    if (nodeType === "ResamplingNode" || nodeType === "FilteringNode") {
-      nodeOptions.samplingRate = samplingRate;
-    }
-
-    addNode(nodeType, nodeOptions);
-  }, [samplingRate]);
+    addNode(nodeType);
+  }, [addNode]);
 
   useEffect(() => {
     const handleInsertNodeOnEdge = (event) => {
       const { edgeId, sourceId, targetId, nodeType } = event.detail || {};
       if (!edgeId || !sourceId || !targetId || !nodeType) {
+        return;
+      }
+
+      if (!isInsertableNodeType(nodeType)) {
         return;
       }
 
@@ -553,12 +616,11 @@ const ProcessingPage = () => {
         y: (sourceNode.position.y + targetNode.position.y) / 2,
       };
 
-      const nodeOptions = { position };
-      if (nodeType === "ResamplingNode" || nodeType === "FilteringNode") {
-        nodeOptions.samplingRate = samplingRate;
+      if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
+        return;
       }
 
-      const insertedNodeId = addNode(nodeType, nodeOptions);
+      const insertedNodeId = addNode(nodeType, { position });
 
       setEdges((currentEdges) => {
         const filteredEdges = currentEdges.filter((edge) => edge.id !== edgeId);
@@ -582,19 +644,19 @@ const ProcessingPage = () => {
     return () => {
       window.removeEventListener("insert-node-on-edge", handleInsertNodeOnEdge);
     };
-  }, [addNode, buildEdge, nodes, samplingRate]);
+  }, [addNode, buildEdge, nodes, setEdges]);
 
   return (
     <WorkspacePage>
       <WorkspaceHero
         icon={<FaWaveSquare />}
         title="Signal Processing"
-        description="Design a custom visual pipeline with resampling, filtering, and outlier steps, then inspect the resulting signal and metrics."
+        description="Build and run a processing pipeline."
         badge={`Signal type: ${signalType}`}
         action={<SignalSummary table={chartDataOriginal} />}
       />
 
-      <WorkspaceSection className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <WorkspaceSection className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_232px]">
         <ProcessingFlowSection
           chartDataOriginal={chartDataOriginal}
           nodes={nodes}
@@ -615,7 +677,6 @@ const ProcessingPage = () => {
         />
 
         <ProcessingSidebar
-          samplingRate={samplingRate}
           addNode={handleSidebarAddNode}
           onNodeDragStart={(event, nodeType) => {
             event.dataTransfer.setData(
@@ -642,10 +703,15 @@ const ProcessingPage = () => {
       <div id="charts">
         <WorkspaceSection>
           <SignalTabs
-            rightTitle="Processed"
-            rightIcon={<FaWaveSquare className="my-auto text-emerald-500" />}
+            rightTitle={previewMeta.title}
+            rightIcon={
+              previewMeta.iconKey === "heart"
+                ? <FaHeartbeat className="my-auto text-red-500" />
+                : <FaWaveSquare className="my-auto text-emerald-500" />
+            }
             chartDataOriginal={chartDataOriginal}
             chartDataProcessed={chartDataProcessed}
+            processedAnnotationPoints={previewMeta.annotationPoints}
           />
         </WorkspaceSection>
       </div>

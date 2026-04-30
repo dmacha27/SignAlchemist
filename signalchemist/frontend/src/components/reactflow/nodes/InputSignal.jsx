@@ -1,8 +1,20 @@
 import { useEffect } from "react";
-import { Handle, Position, useNodeConnections } from "@xyflow/react";
+import {
+  Handle,
+  Position,
+  useNodeConnections,
+  useReactFlow,
+} from "@xyflow/react";
 import { FaWaveSquare } from "react-icons/fa";
 
 import { NodeDataTable, NodeSection, NodeShell } from "./NodeShell";
+import {
+  dispatchWindowEvent,
+  getDeleteTablesEventName,
+  getExecuteEventName,
+  ROOT_DELETE_EVENT,
+  START_EXECUTE_EVENT,
+} from "../../processing/processingEvents";
 
 /**
  * InputSignal component
@@ -17,6 +29,7 @@ import { NodeDataTable, NodeSection, NodeShell } from "./NodeShell";
 function InputSignal({ id, data }) {
   const headers = data.table[0];
   const table = data.table;
+  const { updateNodeData } = useReactFlow();
 
   const outgoingConnections = useNodeConnections({
     type: "source",
@@ -26,34 +39,40 @@ function InputSignal({ id, data }) {
   const targetNodeId = outgoingConnections?.find(
     (conn) => conn.source === id
   )?.target;
-  data["target"] = targetNodeId;
+
+  useEffect(() => {
+    updateNodeData(id, (previous) => ({
+      ...previous,
+      target: targetNodeId,
+    }));
+  }, [id, targetNodeId, updateNodeData]);
 
   useEffect(() => {
     /**
      * Handler to propagate the table deletion event.
      */
     const handleDeleteTable = () => {
-      const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-      window.dispatchEvent(event);
+      if (targetNodeId) {
+        dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+      }
     };
 
     /**
      * Handler to propagate the node execution event.
      */
     const handleExecute = () => {
-      const event = new CustomEvent(`execute-node${targetNodeId}`, {
-        detail: { table: table },
-      });
-      window.dispatchEvent(event);
+      if (targetNodeId) {
+        dispatchWindowEvent(getExecuteEventName(targetNodeId), { table });
+      }
     };
 
-    window.addEventListener("start-execute", handleExecute);
-    window.addEventListener("delete-source-tables0", handleDeleteTable);
+    window.addEventListener(START_EXECUTE_EVENT, handleExecute);
+    window.addEventListener(ROOT_DELETE_EVENT, handleDeleteTable);
 
     return () => {
       // Clean up events when unmount or targetNodeId changes (avoid multiple listeners of the same type)
-      window.removeEventListener("start-execute", handleExecute);
-      window.removeEventListener("delete-source-tables0", handleDeleteTable);
+      window.removeEventListener(START_EXECUTE_EVENT, handleExecute);
+      window.removeEventListener(ROOT_DELETE_EVENT, handleDeleteTable);
     };
   }, [targetNodeId, table]);
 

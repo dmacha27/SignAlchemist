@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Position, useNodeConnections, useNodesData } from "@xyflow/react";
 import { FaArrowCircleDown } from "react-icons/fa";
 
@@ -10,6 +10,7 @@ import {
   NodeSection,
   NodeShell,
 } from "./NodeShell";
+import { buildPeakMarkers } from "../../peaks/peaksShared";
 
 /**
  * OutputSignal component
@@ -31,14 +32,28 @@ function OutputSignal({ id, data }) {
   )?.source;
   const sourceNodeData = useNodesData(sourceId);
   const table = sourceNodeData?.data?.table;
+  const peaks = useMemo(
+    () => sourceNodeData?.data?.peaks ?? [],
+    [sourceNodeData?.data?.peaks]
+  );
+  const outputKind = sourceNodeData?.data?.outputKind ?? null;
 
   // Update the global chart data when source data changes
   useEffect(() => {
-    data.setChartDataProcessed(table);
-  }, [sourceId, sourceNodeData, data, table]);
+    if (outputKind === "heartRate") {
+      data.showProcessedPreview(table, [], { computeMetrics: false });
+      return;
+    }
+
+    data.showProcessedPreview(table, buildPeakMarkers(peaks));
+  }, [data, outputKind, peaks, sourceId, sourceNodeData, table]);
 
   const handleSee = () => {
-    data.setChartDataProcessed(table);
+    if (outputKind === "heartRate") {
+      data.showProcessedPreview(table, [], { computeMetrics: false });
+    } else {
+      data.showProcessedPreview(table, buildPeakMarkers(peaks));
+    }
     data.scrollToCharts?.();
   };
 

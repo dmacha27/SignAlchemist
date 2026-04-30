@@ -18,6 +18,13 @@ import {
   filterDefinitions,
   getFilterOptions,
 } from "../../filtering/filteringConfig";
+import { parseTechniqueConfig } from "../../processing/processingNodeUtils";
+import {
+  dispatchWindowEvent,
+  getDeleteTablesEventName,
+  getExecuteEventName,
+} from "../../processing/processingEvents";
+import { requestFiltering } from "../../processing/processingRequests";
 
 /**
  * FilteringNode component
@@ -32,12 +39,10 @@ import {
 function FilteringNode({ id, data }) {
   const tableRef = useRef(null);
   const samplingRateRef = useRef(data.samplingRate);
-  const initialConfig = typeof data.technique === "string"
-    ? JSON.parse(data.technique)
-    : {
-        name: data.filter,
-        fields: data.fields,
-      };
+  const initialConfig = parseTechniqueConfig(data.technique, {
+    name: data.filter,
+    fields: data.fields,
+  });
   const filterDefaultsRef = useRef(createFilterDefaults(data.samplingRate));
 
   const { updateNodeData } = useReactFlow();
@@ -69,18 +74,19 @@ function FilteringNode({ id, data }) {
   const incomingTable = sourceNodeData?.data?.table;
   const outputTable = currentNodeData?.data?.table;
 
-  if (incomingTable) {
-    tableRef.current = incomingTable;
+  useEffect(() => {
+    if (incomingTable) {
+      tableRef.current = incomingTable;
+      samplingRateRef.current =
+        1 / average(diff(incomingTable.slice(1).map((x) => x[0])));
+      filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
+      return;
+    }
 
-    samplingRateRef.current =
-      1 / average(diff(incomingTable.slice(1).map((x) => x[0])));
-
-    filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
-  } else {
     tableRef.current = null;
     samplingRateRef.current = null;
     filterDefaultsRef.current = createFilterDefaults(data.samplingRate);
-  }
+  }, [data.samplingRate, incomingTable]);
 
   useEffect(() => {
     const { python, ...rest } = fields;
@@ -114,37 +120,23 @@ function FilteringNode({ id, data }) {
 
     setExecutionState("running");
 
-    const formData = new FormData();
-
     const signalOnly = table.slice(1); // Exclude headers
-
-    formData.append("signal", JSON.stringify(signalOnly));
-    formData.append("sampling_rate", Math.round(samplingRate));
 
     const filterConfig = {
       method: filter,
       ...fields,
     };
 
-    formData.append("filter_config", JSON.stringify(filterConfig));
-
-    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-    window.dispatchEvent(event);
+    if (targetNodeId) {
+      dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+    }
 
     try {
-      const response = await fetch("/api/filtering", {
-        method: "POST",
-        body: formData,
+      const result = await requestFiltering({
+        signal: signalOnly,
+        samplingRate,
+        filterConfig,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(errorData.error);
-        toast.error(errorData.error);
-        throw new Error(errorData.error);
-      }
-
-      const result = await response.json();
 
       const new_table = [table[0]].concat(result.data); // Add headers back
 
@@ -156,8 +148,9 @@ function FilteringNode({ id, data }) {
       setExecutionState("executed");
       return new_table;
     } catch (error) {
-      console.error("Failed to apply filter:", error);
-      toast.error("Failed to apply filter");
+      const message = error.message || "Failed to apply filter";
+      console.error(message);
+      toast.error(message);
 
       setExecutionState("error");
       return null;
@@ -176,8 +169,9 @@ function FilteringNode({ id, data }) {
 
       setExecutionState("waiting");
 
-      const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-      window.dispatchEvent(event);
+      if (targetNodeId) {
+        dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+      }
     };
 
     /**
@@ -198,24 +192,20 @@ function FilteringNode({ id, data }) {
         const new_table = await requestFilter();
 
         if (targetNodeId && new_table) {
-          const customEvent = new CustomEvent(`execute-node${targetNodeId}`, {
-            detail: { table: new_table },
+          dispatchWindowEvent(getExecuteEventName(targetNodeId), {
+            table: new_table,
           });
-          window.dispatchEvent(customEvent);
         }
       }
     };
 
-    window.addEventListener(`execute-node${id}`, handleExecute);
-    window.addEventListener(`delete-source-tables${id}`, handleDeleteTable);
+    window.addEventListener(getExecuteEventName(id), handleExecute);
+    window.addEventListener(getDeleteTablesEventName(id), handleDeleteTable);
 
     return () => {
       // Clean up events when dependencies change (avoid multiple listeners of the same type)
-      window.removeEventListener(`execute-node${id}`, handleExecute);
-      window.removeEventListener(
-        `delete-source-tables${id}`,
-        handleDeleteTable
-      );
+      window.removeEventListener(getExecuteEventName(id), handleExecute);
+      window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
     };
   }, [id, requestFilter, targetNodeId, updateNodeData]);
 
@@ -223,8 +213,7 @@ function FilteringNode({ id, data }) {
    * Trigger a delete event when filter configuration changes.
    */
   useEffect(() => {
-    const event = new CustomEvent(`delete-source-tables${id}`);
-    window.dispatchEvent(event);
+    dispatchWindowEvent(getDeleteTablesEventName(id));
   }, [filter, fields, id]);
 
   /**
@@ -272,8 +261,13 @@ function FilteringNode({ id, data }) {
         connectionCount={1}
       />
 
-      <NodeSection label="Filtering technique">
+      <NodeSection
+        label="Filtering technique"
+        tooltip="Select the family of filter you want to apply to the signal."
+        fieldId="filtering-technique"
+      >
         <select
+          id="filtering-technique"
           data-testid="Select filter"
           value={filter}
           onChange={(event) => {
@@ -293,21 +287,21 @@ function FilteringNode({ id, data }) {
         </select>
       </NodeSection>
 
-      <NodeSection label="Parameters">
+      <div>
         <FilterFields
           filter={filter}
           fields={fields}
           fieldDefinitions={filterDefinitions[filter].fields}
           onFieldChange={handleFieldChange}
         />
-      </NodeSection>
+      </div>
 
       <NodeOutputPreview
         ready={Boolean(outputTable)}
         rows={outputTable ? outputTable.length - 1 : 0}
         onClick={() => {
           if (outputTable) {
-            data.setChartDataProcessed(outputTable);
+            data.showProcessedPreview(outputTable);
           }
         }}
         accent="emerald"

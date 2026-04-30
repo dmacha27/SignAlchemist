@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
+import { FaQuestionCircle } from "react-icons/fa";
 
 export const uiInputClass =
   "input input-bordered h-10 w-full rounded-xl border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-400 dark:border-gray-600 dark:bg-gray-900 dark:text-white";
@@ -28,6 +29,42 @@ export const SimpleTooltip = ({ label, children }) => (
 SimpleTooltip.propTypes = {
   label: PropTypes.string.isRequired,
   children: PropTypes.node.isRequired,
+};
+
+export const FormFieldLabel = ({
+  htmlFor,
+  label,
+  tooltip = null,
+  className = "block text-sm font-semibold text-slate-700 dark:text-slate-200",
+}) => (
+  <label htmlFor={htmlFor} className={className}>
+    <span className="inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      {tooltip ? (
+        <SimpleTooltip label={tooltip}>
+          <span
+            className="inline-flex cursor-help text-[11px] text-slate-400 dark:text-slate-500"
+            aria-label={`${label} help`}
+          >
+            <FaQuestionCircle />
+          </span>
+        </SimpleTooltip>
+      ) : null}
+    </span>
+  </label>
+);
+
+FormFieldLabel.propTypes = {
+  htmlFor: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  tooltip: PropTypes.string,
+  className: PropTypes.string,
+};
+
+FormFieldLabel.defaultProps = {
+  tooltip: null,
+  className:
+    "block text-sm font-semibold text-slate-700 dark:text-slate-200",
 };
 
 export const SimpleMenu = ({ trigger, label, items, widthClass = "w-44" }) => {

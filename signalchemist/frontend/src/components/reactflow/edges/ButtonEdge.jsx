@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { FaBullseye, FaChartLine, FaFilter, FaPlus, FaTrash } from "react-icons/fa";
+import { FaPlus, FaTrash } from "react-icons/fa";
 
 import {
   BaseEdge,
@@ -8,6 +8,11 @@ import {
   useReactFlow,
   useNodesData,
 } from "@xyflow/react";
+import {
+  getNodeDefinition,
+  INSERTABLE_NODE_TYPES,
+  isInsertableNodeType,
+} from "../../processing/nodeRegistry";
 
 function ButtonEdge({
   id,
@@ -59,6 +64,11 @@ function ButtonEdge({
           : "#0f172a";
 
   const handleInsert = (nodeType) => {
+    if (!isInsertableNodeType(nodeType)) {
+      setMenuOpen(false);
+      return;
+    }
+
     window.dispatchEvent(
       new CustomEvent("insert-node-on-edge", {
         detail: {
@@ -97,30 +107,22 @@ function ButtonEdge({
           <div className="flex flex-col items-center gap-1.5">
             {menuOpen ? (
               <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-1 shadow-sm dark:border-gray-700 dark:bg-slate-950">
-                <button
-                  type="button"
-                  onClick={() => handleInsert("ResamplingNode")}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full text-cyan-600 transition hover:bg-cyan-50 dark:text-cyan-300 dark:hover:bg-cyan-500/10"
-                  aria-label="insert resampling node"
-                >
-                  <FaChartLine size={12} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInsert("OutliersNode")}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full text-amber-600 transition hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10"
-                  aria-label="insert outliers node"
-                >
-                  <FaBullseye size={12} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInsert("FilteringNode")}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full text-emerald-600 transition hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
-                  aria-label="insert filtering node"
-                >
-                  <FaFilter size={12} />
-                </button>
+                {INSERTABLE_NODE_TYPES.map((nodeType) => {
+                  const definition = getNodeDefinition(nodeType);
+                  const Icon = definition?.icon;
+
+                  return (
+                    <button
+                      key={nodeType}
+                      type="button"
+                      onClick={() => handleInsert(nodeType)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                      aria-label={definition?.insertAriaLabel}
+                    >
+                      {Icon ? <Icon size={12} /> : null}
+                    </button>
+                  );
+                })}
               </div>
             ) : null}
 

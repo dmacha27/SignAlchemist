@@ -215,6 +215,9 @@ const Home = () => {
                 <SignalPreviewCard
                   chartDataOriginal={chartDataOriginal}
                   fileRows={fileRows}
+                  headers={headers}
+                  timestampColumn={timestampColumn}
+                  signalValues={signalValues}
                   cropValues={cropValues}
                   onCropChange={setCropValues}
                   onApplyCrop={() => setPreviewCropValues(cropValues)}

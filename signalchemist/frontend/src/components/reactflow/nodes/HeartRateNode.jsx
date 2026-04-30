@@ -6,10 +6,16 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { FaBullseye } from "react-icons/fa";
+import { FaHeartbeat } from "react-icons/fa";
 import toast from "react-hot-toast";
+
 import HandleLimit from "../edges/HandleLimit";
-import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
+import {
+  NodeOutputPreview,
+  NodeRunButton,
+  NodeSection,
+  NodeShell,
+} from "./NodeShell";
 import { uiSelectClass } from "../../common/ui";
 import { parseTechniqueConfig } from "../../processing/processingNodeUtils";
 import {
@@ -17,36 +23,28 @@ import {
   getDeleteTablesEventName,
   getExecuteEventName,
 } from "../../processing/processingEvents";
-import { requestOutliers as requestOutliersData } from "../../processing/processingRequests";
+import {
+  getDefaultHeartRateMethod,
+  requestHeartRateAnalysis,
+} from "../../hr/hrShared";
 
-/**
- * OutliersNode component
- *
- * This component represents a node in a flow diagram responsible for detecting and managing outliers in signal data.
- *
- * @component
- * @param {Object} props - Component properties
- * @param {string} props.id - Unique identifier for the node
- * @param {Object} props.data - Additional data, including methods to delete nodes and update chart data
- * @returns {JSX.Element} Visual and functional representation of the outlier detection node
- */
-function OutliersNode({ id, data }) {
+function HeartRateNode({ id, data }) {
   const tableRef = useRef(null);
   const initialConfig = parseTechniqueConfig(data.technique, {
-    name: data.outlierTechnique,
+    method: data.method,
   });
 
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
-  const [outlierTechnique, setOutlierTechnique] = useState(
-    initialConfig?.name ?? "hampel"
+  const [method, setMethod] = useState(
+    initialConfig?.method ?? getDefaultHeartRateMethod()
   );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
+  const isPpg = data.signalType === "PPG";
 
-  // Update source and target node IDs when connections change
   useEffect(() => {
     const sourceId = connections?.find((conn) => conn.target === id)?.source;
     const targetId = connections?.find((conn) => conn.source === id)?.target;
@@ -58,6 +56,7 @@ function OutliersNode({ id, data }) {
   const sourceNodeData = useNodesData(sourceNodeId);
   const incomingTable = sourceNodeData?.data?.table;
   const outputTable = currentNodeData?.data?.table;
+  const beatCount = currentNodeData?.data?.beatCount ?? 0;
 
   useEffect(() => {
     tableRef.current = incomingTable ?? null;
@@ -66,60 +65,59 @@ function OutliersNode({ id, data }) {
   useEffect(() => {
     updateNodeData(id, (prev) => ({
       ...prev,
-      technique: JSON.stringify({
-        name: outlierTechnique,
-      }),
+      technique: JSON.stringify({ method }),
       target: targetNodeId,
-      outlierTechnique,
+      method,
       executionState,
     }));
-  }, [executionState, id, outlierTechnique, targetNodeId, updateNodeData]);
+  }, [executionState, id, method, targetNodeId, updateNodeData]);
 
-  const requestOutliers = useCallback(async () => {
+  const requestHeartRate = useCallback(async () => {
     const table = tableRef.current;
-    if (!table) return;
+    if (!table || !isPpg) {
+      return null;
+    }
 
     setExecutionState("running");
-
-    const signalOnly = table.slice(1); // Exclude headers
 
     if (targetNodeId) {
       dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
     }
 
     try {
-      const result = await requestOutliersData({
-        signal: signalOnly,
-        outlierTechnique,
+      const result = await requestHeartRateAnalysis({
+        signal: table.slice(1),
+        samplingRate: data.samplingRate,
+        signalType: data.signalType,
+        method,
       });
-
-      const new_table = [table[0]].concat(result.data); // Add headers back
+      const nextHeartRateTable = [["Timestamp", "Heart Rate"], ...result.data];
 
       updateNodeData(id, (prev) => ({
         ...prev,
-        table: new_table,
+        table: nextHeartRateTable,
+        beatCount: result.beatCount,
+        outputKind: "heartRate",
       }));
 
       setExecutionState("executed");
-      return new_table;
+      return { table: nextHeartRateTable };
     } catch (error) {
-      const message = error.message || "Failed to apply outliers";
+      const message = error.message || "Failed to compute heart rate";
       console.error(message);
       toast.error(message);
-
       setExecutionState("error");
       return null;
     }
-  }, [id, outlierTechnique, targetNodeId, updateNodeData]);
+  }, [data.samplingRate, data.signalType, id, isPpg, method, targetNodeId, updateNodeData]);
 
   useEffect(() => {
-    /**
-     * Deletes the current node's table and notifies the next node.
-     */
     const handleDeleteTable = () => {
       updateNodeData(id, (prev) => ({
         ...prev,
         table: null,
+        beatCount: 0,
+        outputKind: null,
       }));
 
       setExecutionState("waiting");
@@ -129,23 +127,21 @@ function OutliersNode({ id, data }) {
       }
     };
 
-    /**
-     * Handles execution request: applies outlier detection to incoming table.
-     * @param {Event} e - The event containing the table data.
-     */
-    const handleExecute = async (e) => {
-      const table_source = e.detail.table;
+    const handleExecute = async (event) => {
+      const sourceTable = event.detail.table;
 
-      if (table_source) {
-        tableRef.current = table_source;
+      if (!sourceTable) {
+        return;
+      }
 
-        const new_table = await requestOutliers();
+      tableRef.current = sourceTable;
 
-        if (targetNodeId && new_table) {
-          dispatchWindowEvent(getExecuteEventName(targetNodeId), {
-            table: new_table,
-          });
-        }
+      const result = await requestHeartRate();
+
+      if (targetNodeId && result?.table) {
+        dispatchWindowEvent(getExecuteEventName(targetNodeId), {
+          table: result.table,
+        });
       }
     };
 
@@ -153,25 +149,21 @@ function OutliersNode({ id, data }) {
     window.addEventListener(getDeleteTablesEventName(id), handleDeleteTable);
 
     return () => {
-      // Clean up events when dependencies change (avoid multiple listeners of the same type)
       window.removeEventListener(getExecuteEventName(id), handleExecute);
       window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
     };
-  }, [id, requestOutliers, targetNodeId, updateNodeData]);
+  }, [id, requestHeartRate, targetNodeId, updateNodeData]);
 
-  /**
-   * Trigger a delete event when filter configuration changes.
-   */
   useEffect(() => {
     dispatchWindowEvent(getDeleteTablesEventName(id));
-  }, [outlierTechnique, id]);
+  }, [id, method]);
 
   return (
     <NodeShell
-      icon={<FaBullseye />}
-      title="Outlier Detection"
-      eyebrow="Node"
-      accent="amber"
+      icon={<FaHeartbeat />}
+      title="Heart Rate"
+      eyebrow="Analysis"
+      accent="rose"
       executionState={executionState}
       onStatusClick={() => {
         toast.custom(
@@ -185,15 +177,15 @@ function OutliersNode({ id, data }) {
         data.deleteNode(id);
       }}
       deleteTestId={`delete${id}`}
-      footer={
+      footer={(
         <NodeRunButton
-          disabled={!tableRef.current}
-          onClick={requestOutliers}
-          accent="amber"
+          disabled={!tableRef.current || !isPpg}
+          onClick={requestHeartRate}
+          accent="rose"
         >
-          Apply Outliers
+          Compute HR
         </NodeRunButton>
-      }
+      )}
     >
       <HandleLimit
         type="target"
@@ -202,26 +194,39 @@ function OutliersNode({ id, data }) {
         connectionCount={1}
       />
 
+      {!isPpg ? (
+        <NodeSection compact>
+          <p className="text-sm text-amber-700 dark:text-amber-200">
+            Heart rate analysis is only available for PPG signals.
+          </p>
+        </NodeSection>
+      ) : null}
+
       <NodeSection
-        label="Detection technique"
-        tooltip="Choose how anomalous samples are identified before they are corrected or removed."
-        fieldId="outliers-detection-technique"
+        label="Method"
+        tooltip="Choose between the EmotiBit-style beat-to-beat estimate and NeuroKit's PPG rate pipeline."
+        fieldId="heart-rate-method"
       >
-          <select
-            id="outliers-detection-technique"
-            data-testid="Select outlier"
-            value={outlierTechnique}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (value) {
-                setOutlierTechnique(value);
-              }
-            }}
-            className={uiSelectClass}
-          >
-            <option value="hampel">Hampel</option>
-            <option value="iqr">IQR</option>
-          </select>
+        <select
+          id="heart-rate-method"
+          value={method}
+          onChange={(event) => setMethod(event.target.value)}
+          className={uiSelectClass}
+        >
+          <option value="emotibit">EmotiBit</option>
+          <option value="neurokit">NeuroKit</option>
+        </select>
+      </NodeSection>
+
+      <NodeSection compact>
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="font-semibold text-slate-700 dark:text-slate-200">
+            Beats used
+          </span>
+          <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            {beatCount}
+          </span>
+        </div>
       </NodeSection>
 
       <NodeOutputPreview
@@ -229,10 +234,14 @@ function OutliersNode({ id, data }) {
         rows={outputTable ? outputTable.length - 1 : 0}
         onClick={() => {
           if (outputTable) {
-            data.showProcessedPreview(outputTable);
+            data.showProcessedPreview(outputTable, [], {
+              title: "Heart Rate",
+              iconKey: "heart",
+              computeMetrics: false,
+            });
           }
         }}
-        accent="amber"
+        accent="rose"
       />
 
       <Handle
@@ -244,4 +253,4 @@ function OutliersNode({ id, data }) {
   );
 }
 
-export default OutliersNode;
+export default HeartRateNode;

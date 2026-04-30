@@ -8,7 +8,6 @@ import RangeSlider from "react-range-slider-input";
 import { TbHelpSquareRoundedFilled } from "react-icons/tb";
 import { FaArrowRight, FaFlask, FaUpload } from "react-icons/fa";
 
-import LoaderMessage from "../common/LoaderMessage";
 import CustomChart from "../common/CustomChart";
 import {
   NO_TIMESTAMPS_LABEL,
@@ -464,12 +463,12 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
             </div>
           )}
         </div>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {["Resampling", "Filtering", "Processing"].map((label) => (
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+          {["Resampling", "Filtering", "Peaks", "HR", "Processing"].map((label) => (
             <button
               key={label}
               type="button"
-              onClick={() => onLaunchUtility(`/${label.toLowerCase()}`)}
+              onClick={() => onLaunchUtility(label === "HR" ? "/hr" : `/${label.toLowerCase()}`)}
               disabled={!canLaunchUtility}
               className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
             >
@@ -485,80 +484,109 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
 export const SignalPreviewCard = ({
   chartDataOriginal,
   fileRows,
+  headers,
+  timestampColumn,
+  signalValues,
   cropValues,
   onCropChange,
   onApplyCrop,
   hasAppliedCrop,
-}) => (
-  <div className="tuto-chart">
-    <div>
-      {chartDataOriginal && fileRows ? (
+}) => {
+  const parsedSignalIndex =
+    signalValues === "" ? -1 : parseInt(signalValues, 10);
+  const hasSelectedTimestamp =
+    Array.isArray(headers) &&
+    timestampColumn >= 0 &&
+    timestampColumn < headers.length;
+  const hasSelectedSignal =
+    Array.isArray(headers) &&
+    parsedSignalIndex >= 0 &&
+    parsedSignalIndex < headers.length;
+  const previewHeaders = [
+    hasSelectedTimestamp
+      ? headers[timestampColumn] === NO_TIMESTAMPS_LABEL
+        ? "Time"
+        : headers[timestampColumn]
+      : "Time",
+    hasSelectedSignal ? headers[parsedSignalIndex] : "Value",
+  ];
+  const previewMessage = !fileRows
+    ? "Waiting for file..."
+    : !chartDataOriginal
+      ? "Waiting for parameters..."
+      : null;
+  const previewTable = chartDataOriginal ?? [previewHeaders];
+
+  return (
+    <div className="tuto-chart">
+      <div>
         <div className="px-3 pb-3 pt-2">
-          <CustomChart table={chartDataOriginal} />
-        </div>
-      ) : (
-        <div className="p-4">
-          {fileRows ? (
-            <div className="rounded-[1rem] bg-slate-50/80 p-4 dark:bg-gray-950/60">
-              <LoaderMessage message="Waiting for parameters..." />
-            </div>
-          ) : (
-            <div className="rounded-[1rem] bg-slate-50/80 p-4 dark:bg-gray-950/60">
-              <LoaderMessage message="Waiting for file..." />
-            </div>
-          )}
-        </div>
-      )}
-
-      {fileRows ? (
-        <div className="tuto-range-slider px-4 py-3">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
-              {cropValues
-                ? `Rows ${cropValues[0] + 1} - ${cropValues[1]}`
-                : "Rows"}
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  onCropChange([0, fileRows.length]);
-                  onApplyCrop();
-                }}
-                className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={onApplyCrop}
-                disabled={!cropValues || hasAppliedCrop}
-                className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
-              >
-                Crop
-              </button>
-            </div>
+          <div className="relative">
+            <CustomChart table={previewTable} />
+            {previewMessage ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6">
+                <div className="rounded-full border border-slate-200/80 bg-white/90 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/90 dark:text-slate-300">
+                  {previewMessage}
+                </div>
+              </div>
+            ) : null}
           </div>
-
-          <RangeSlider
-            key={fileRows.length}
-            className="my-1"
-            id="range-slider"
-            step={1}
-            min={0}
-            max={fileRows.length}
-            value={cropValues || [0, fileRows.length]}
-            onInput={onCropChange}
-          />
         </div>
-      ) : null}
+
+        {fileRows ? (
+          <div className="tuto-range-slider px-4 py-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
+                {cropValues
+                  ? `Rows ${cropValues[0] + 1} - ${cropValues[1]}`
+                  : "Rows"}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onCropChange([0, fileRows.length]);
+                    onApplyCrop();
+                  }}
+                  className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={onApplyCrop}
+                  disabled={!cropValues || hasAppliedCrop}
+                  className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+                >
+                  Crop
+                </button>
+              </div>
+            </div>
+
+            <RangeSlider
+              key={fileRows.length}
+              className="my-1"
+              id="range-slider"
+              step={1}
+              min={0}
+              max={fileRows.length}
+              value={cropValues || [0, fileRows.length]}
+              onInput={onCropChange}
+            />
+          </div>
+        ) : null}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const PreviewWorkspaceCard = ({ children }) => (
   <div className={OUTER_CARD_CLASS}>
-    <SectionHeader step={3} title="Preview" description={null} />
+    <SectionHeader
+      step={3}
+      title="Preview"
+      description="Visualize and crop your signal data before proceeding."
+    />
     <div className="space-y-5">{children}</div>
   </div>
 );
@@ -619,6 +647,9 @@ NextStepCard.propTypes = {
 SignalPreviewCard.propTypes = {
   chartDataOriginal: PropTypes.array,
   fileRows: PropTypes.array,
+  headers: PropTypes.arrayOf(PropTypes.string),
+  timestampColumn: PropTypes.number,
+  signalValues: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   cropValues: PropTypes.arrayOf(PropTypes.number),
   onCropChange: PropTypes.func.isRequired,
   onApplyCrop: PropTypes.func.isRequired,
@@ -628,6 +659,9 @@ SignalPreviewCard.propTypes = {
 SignalPreviewCard.defaultProps = {
   chartDataOriginal: null,
   fileRows: null,
+  headers: [],
+  timestampColumn: -1,
+  signalValues: -1,
   cropValues: null,
 };
 

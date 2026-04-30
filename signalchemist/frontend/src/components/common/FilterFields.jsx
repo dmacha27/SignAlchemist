@@ -8,6 +8,7 @@ import { ThemeContext } from "../../contexts/ThemeContext";
 import {
   SimpleDialog,
   SimpleTooltip,
+  FormFieldLabel,
   uiButtonClass,
   uiCompactInputClass,
 } from "./ui";
@@ -173,12 +174,14 @@ const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) 
               key={field}
               className="rounded-[1rem] border border-slate-200 bg-slate-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/70"
             >
-              <label
-                htmlFor={field}
-                className="block mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300"
-              >
-                {fieldDefinition.label}
-              </label>
+              <div className="mb-2">
+                <FormFieldLabel
+                  htmlFor={field}
+                  label={fieldDefinition.label}
+                  tooltip={fieldDefinition.tooltip}
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
+                />
+              </div>
               <div className="flex items-center gap-3">
                 <input
                   key={`${filter}_${field}`}
@@ -218,9 +221,12 @@ const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) 
               className="rounded-[1rem] border border-slate-200 bg-slate-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/70"
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
-                  {fieldDefinition.label}
-                </span>
+                <FormFieldLabel
+                  htmlFor={field}
+                  label={fieldDefinition.label}
+                  tooltip={fieldDefinition.tooltip}
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
+                />
                 <button
                   type="button"
                   className={`${uiButtonClass} px-2 py-1 text-xs`}
@@ -231,6 +237,7 @@ const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) 
                 </button>
               </div>
               <textarea
+                id={field}
                 key={`${filter}_${field}`}
                 value={fieldValue}
                 onChange={(e) => onFieldChange(field, e.target.value)}

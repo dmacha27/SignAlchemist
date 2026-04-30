@@ -12,6 +12,13 @@ import HandleLimit from "../edges/HandleLimit";
 import { diff, average } from "../../utils/dataUtils";
 import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 import { uiSelectClass } from "../../common/ui";
+import { parseTechniqueConfig } from "../../processing/processingNodeUtils";
+import { requestResampling } from "../../processing/processingRequests";
+import {
+  dispatchWindowEvent,
+  getDeleteTablesEventName,
+  getExecuteEventName,
+} from "../../processing/processingEvents";
 
 /**
  * ResamplingNode component
@@ -26,12 +33,10 @@ import { uiSelectClass } from "../../common/ui";
 function ResamplingNode({ id, data }) {
   const tableRef = useRef(null);
   const samplingRateRef = useRef(data.samplingRate);
-  const initialConfig = typeof data.technique === "string"
-    ? JSON.parse(data.technique)
-    : {
-        name: data.interpolationTechnique,
-        fields: { "Sampling rate": data.targetSamplingRate },
-      };
+  const initialConfig = parseTechniqueConfig(data.technique, {
+    name: data.interpolationTechnique,
+    fields: { "Sampling rate": data.targetSamplingRate },
+  });
 
   const { updateNodeData } = useReactFlow();
   const [sourceNodeId, setSourceNodeId] = useState(null);
@@ -59,15 +64,12 @@ function ResamplingNode({ id, data }) {
   const incomingTable = sourceNodeData?.data?.table;
   const outputTable = currentNodeData?.data?.table;
 
-  if (incomingTable) {
-    tableRef.current = incomingTable;
-
-    samplingRateRef.current =
-      1 / average(diff(incomingTable.slice(1).map((x) => x[0])));
-  } else {
-    tableRef.current = null;
-    samplingRateRef.current = null;
-  }
+  useEffect(() => {
+    tableRef.current = incomingTable ?? null;
+    samplingRateRef.current = incomingTable
+      ? 1 / average(diff(incomingTable.slice(1).map((x) => x[0])))
+      : null;
+  }, [incomingTable]);
 
   useEffect(() => {
     updateNodeData(id, (prev) => ({
@@ -94,35 +96,21 @@ function ResamplingNode({ id, data }) {
 
   const requestResample = useCallback(async () => {
     const table = tableRef.current;
-    const samplingRate = samplingRateRef.current;
 
     if (!table) return;
 
     setExecutionState("running");
 
-    const formData = new FormData();
-    formData.append("signal", JSON.stringify(table.slice(1))); // Append the table data (excluding the first row which is assumed to be headers)
-    formData.append("interpolation_technique", interpolationTechnique);
-    formData.append("source_sampling_rate", parseFloat(samplingRate));
-    formData.append("target_sampling_rate", parseFloat(targetSamplingRate));
-
-    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-    window.dispatchEvent(event);
+    if (targetNodeId) {
+      dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+    }
 
     try {
-      const response = await fetch("/api/resampling", {
-        method: "POST",
-        body: formData,
+      const result = await requestResampling({
+        signal: table.slice(1),
+        interpolationTechnique,
+        targetSamplingRate,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(errorData.error);
-        toast.error(errorData.error);
-        throw new Error(errorData.error);
-      }
-
-      const result = await response.json();
 
       const new_table = [table[0]].concat(result.data); // Combine the original header with the resampled data
 
@@ -134,8 +122,9 @@ function ResamplingNode({ id, data }) {
       setExecutionState("executed");
       return new_table;
     } catch (error) {
-      console.error("Failed to apply resampling:", error);
-      toast.error("Failed to apply resampling");
+      const message = error.message || "Failed to apply resampling";
+      console.error(message);
+      toast.error(message);
 
       setExecutionState("error");
       return null;
@@ -154,8 +143,9 @@ function ResamplingNode({ id, data }) {
 
       setExecutionState("waiting");
 
-      const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-      window.dispatchEvent(event);
+      if (targetNodeId) {
+        dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+      }
     };
 
     /**
@@ -174,24 +164,20 @@ function ResamplingNode({ id, data }) {
         const new_table = await requestResample();
 
         if (targetNodeId && new_table) {
-          const customEvent = new CustomEvent(`execute-node${targetNodeId}`, {
-            detail: { table: new_table },
+          dispatchWindowEvent(getExecuteEventName(targetNodeId), {
+            table: new_table,
           });
-          window.dispatchEvent(customEvent);
         }
       }
     };
 
-    window.addEventListener(`execute-node${id}`, handleExecute);
-    window.addEventListener(`delete-source-tables${id}`, handleDeleteTable);
+    window.addEventListener(getExecuteEventName(id), handleExecute);
+    window.addEventListener(getDeleteTablesEventName(id), handleDeleteTable);
 
     return () => {
       // Clean up events when dependencies change (avoid multiple listeners of the same type)
-      window.removeEventListener(`execute-node${id}`, handleExecute);
-      window.removeEventListener(
-        `delete-source-tables${id}`,
-        handleDeleteTable
-      );
+      window.removeEventListener(getExecuteEventName(id), handleExecute);
+      window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
     };
   }, [id, requestResample, targetNodeId, updateNodeData]);
 
@@ -199,8 +185,7 @@ function ResamplingNode({ id, data }) {
    * Trigger a delete event when form is changed.
    */
   useEffect(() => {
-    const event = new CustomEvent(`delete-source-tables${id}`);
-    window.dispatchEvent(event);
+    dispatchWindowEvent(getDeleteTablesEventName(id));
   }, [interpolationTechnique, targetSamplingRate, id]);
 
   return (
@@ -239,8 +224,13 @@ function ResamplingNode({ id, data }) {
         connectionCount={1}
       />
 
-      <NodeSection label="Interpolation technique">
+      <NodeSection
+        label="Interpolation technique"
+        tooltip="How new in-between samples are estimated when changing the sampling rate."
+        fieldId="resampling-interpolation-technique"
+      >
           <select
+            id="resampling-interpolation-technique"
             data-testid="Select interpolation"
             value={interpolationTechnique}
             onChange={(event) => {
@@ -256,8 +246,13 @@ function ResamplingNode({ id, data }) {
           </select>
       </NodeSection>
 
-      <NodeSection label="Target sampling rate">
+      <NodeSection
+        label="Target sampling rate"
+        tooltip="Target number of samples per second after resampling."
+        fieldId="resampling-target-sampling-rate"
+      >
           <input
+            id="resampling-target-sampling-rate"
             type="number"
             step={1}
             min={1}
@@ -283,7 +278,7 @@ function ResamplingNode({ id, data }) {
         rows={outputTable ? outputTable.length - 1 : 0}
         onClick={() => {
           if (outputTable) {
-            data.setChartDataProcessed(outputTable);
+            data.showProcessedPreview(outputTable);
           }
         }}
         accent="cyan"
