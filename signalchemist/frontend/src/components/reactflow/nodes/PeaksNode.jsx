@@ -8,6 +8,7 @@ import {
 } from "@xyflow/react";
 import { FaBullseye } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { inferSamplingRate } from "../../utils/dataUtils";
 
 import HandleLimit from "../edges/HandleLimit";
 import {
@@ -114,9 +115,10 @@ function PeaksNode({ id, data }) {
     }
 
     try {
+      const samplingRate = inferSamplingRate(table) ?? data.samplingRate;
       const detectedPeaks = await requestPeaksDetection({
         signal: table.slice(1),
-        samplingRate: data.samplingRate,
+        samplingRate,
         detector,
         signalType: data.signalType,
         minDistanceSeconds,

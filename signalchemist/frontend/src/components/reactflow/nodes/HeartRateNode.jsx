@@ -8,6 +8,7 @@ import {
 } from "@xyflow/react";
 import { FaHeartbeat } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { inferSamplingRate } from "../../utils/dataUtils";
 
 import HandleLimit from "../edges/HandleLimit";
 import {
@@ -85,9 +86,10 @@ function HeartRateNode({ id, data }) {
     }
 
     try {
+      const samplingRate = inferSamplingRate(table) ?? data.samplingRate;
       const result = await requestHeartRateAnalysis({
         signal: table.slice(1),
-        samplingRate: data.samplingRate,
+        samplingRate,
         signalType: data.signalType,
         method,
       });

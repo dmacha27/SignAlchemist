@@ -32,7 +32,7 @@ export async function requestPeaksDetection({
 }) {
   const formData = new FormData();
   formData.append("signal", JSON.stringify(signal));
-  formData.append("sampling_rate", samplingRate);
+  formData.append("sampling_rate", Math.round(samplingRate));
   formData.append("detector", detector);
   formData.append("signal_type", signalType || "OTHER");
 

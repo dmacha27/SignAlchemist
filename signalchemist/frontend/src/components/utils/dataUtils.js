@@ -62,3 +62,19 @@ export const diff = (A) => {
  * @see https://stackoverflow.com/q/29544371
  */
 export const average = (array) => array.reduce((a, b) => a + b) / array.length;
+
+export const inferSamplingRate = (table) => {
+  if (!table || table.length <= 2) {
+    return null;
+  }
+
+  const timestamps = table.slice(1).map((row) => row[0]);
+  const deltas = diff(timestamps);
+
+  if (deltas.length === 0) {
+    return null;
+  }
+
+  const samplingRate = 1 / average(deltas);
+  return Number.isFinite(samplingRate) ? Math.round(samplingRate) : null;
+};
