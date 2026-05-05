@@ -2,7 +2,7 @@ import { generateDataOriginal } from "../utils/dataUtils";
 import {
   createFormData,
   postFormData,
-} from "@/lib/apiClient";
+} from "@/apiClient";
 
 export const readCsvFile = (file, readString) =>
   new Promise((resolve, reject) => {
