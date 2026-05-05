@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  FaChartBar,
   FaChartLine,
   FaFilter,
   FaHeartbeat,
@@ -49,6 +50,13 @@ const actions = [
     icon: FaProjectDiagram,
     path: "/processing",
     featured: true,
+  },
+  {
+    key: "batch",
+    label: "Batch",
+    description: "Open batch processing",
+    icon: FaChartBar,
+    path: "/batch",
   },
 ];
 

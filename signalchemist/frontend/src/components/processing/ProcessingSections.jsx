@@ -1,8 +1,6 @@
 import PropTypes from "prop-types";
 import {
   FaFilter,
-  FaChevronDown,
-  FaChevronUp,
   FaProjectDiagram,
   FaSquare,
   FaRocket,
@@ -22,9 +20,7 @@ import {
 } from "@xyflow/react";
 
 import LoaderMessage from "../common/LoaderMessage";
-import PipelineSteps from "../common/PipelineSteps";
 import {
-  SimpleCollapse,
   SimpleConfirm,
   SimpleMenu,
 } from "../common/ui";
@@ -325,34 +321,6 @@ export const ProcessingSidebar = ({
   </WorkspaceCard>
 );
 
-export const ProcessingSteps = ({ opened, toggle, nodes }) => (
-  <div className="mt-10">
-    <div className="mx-auto mb-6 h-px w-16 rounded-full bg-cyan-300/90 dark:bg-cyan-700/80" />
-    <div className="mb-3 flex items-center justify-between gap-3">
-      <div>
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-          Active pipeline
-        </h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Connected path from input to output.
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={toggle}
-        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
-      >
-        {opened ? "Hide" : "Show"}
-        {opened ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
-      </button>
-    </div>
-
-    <SimpleCollapse open={opened}>
-      {nodes.length > 0 ? <PipelineSteps nodes={nodes} /> : null}
-    </SimpleCollapse>
-  </div>
-);
-
 ProcessingFlowSection.propTypes = {
   chartDataOriginal: PropTypes.array,
   nodes: PropTypes.array.isRequired,
@@ -396,10 +364,4 @@ NodePaletteButton.propTypes = {
   }).isRequired,
   addNode: PropTypes.func.isRequired,
   onNodeDragStart: PropTypes.func.isRequired,
-};
-
-ProcessingSteps.propTypes = {
-  opened: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  nodes: PropTypes.array.isRequired,
 };

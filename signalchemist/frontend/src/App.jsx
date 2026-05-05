@@ -15,6 +15,7 @@ import "primereact/resources/themes/lara-light-indigo/theme.css";
 import Home from "./components/Home";
 import About from "./components/About";
 import Processing from "./components/Processing";
+import Batch from "./components/Batch";
 import Resampling from "./components/Resampling";
 import Filtering from "./components/Filtering";
 import Hr from "./components/Hr";
@@ -143,6 +144,8 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route path="/batch" element={<Batch />} />
 
             <Route
               path="/resampling"

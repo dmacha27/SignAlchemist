@@ -40,7 +40,6 @@ import {
 import {
   ProcessingFlowSection,
   ProcessingSidebar,
-  ProcessingSteps,
 } from "./ProcessingSections";
 import {
   getExportableNodeData as getExportableNodeDataFromRegistry,
@@ -216,7 +215,6 @@ const ProcessingPage = () => {
   const [metricsOriginal, setMetricsOriginal] = useState(null);
   const [metricsProcessed, setMetricsProcessed] = useState(null);
   const [confirmationOpened, setConfirmationOpened] = useState(false);
-  const [opened, setOpened] = useState(true);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isCanvasDragOver, setIsCanvasDragOver] = useState(false);
@@ -715,13 +713,6 @@ const ProcessingPage = () => {
           />
         </WorkspaceSection>
       </div>
-
-      <ProcessingSteps
-        opened={opened}
-        toggle={() => setOpened((current) => !current)}
-        nodes={nodes}
-      />
-
       {signalType !== "OTHER" && (
         <WorkspaceSection>
           <InfoMetrics

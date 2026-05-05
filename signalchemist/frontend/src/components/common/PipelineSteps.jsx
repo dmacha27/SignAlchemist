@@ -12,7 +12,52 @@ const capitalize = (str) => {
 
 const getTechniqueInfo = (node) => {
   if (!node.data?.technique) {
-    return null;
+    const fieldsByType = {
+      ResamplingNode: {
+        name: node.data?.interpolationTechnique,
+        fields: {
+          samplingRate: node.data?.samplingRate,
+          targetSamplingRate: node.data?.targetSamplingRate,
+        },
+      },
+      OutliersNode: {
+        name: node.data?.outlierTechnique,
+        fields: {},
+      },
+      FilteringNode: {
+        name: node.data?.filter,
+        fields: node.data?.fields ?? {},
+      },
+      NormalizationNode: {
+        name: node.data?.normalizationMethod,
+        fields: {},
+      },
+      PeaksNode: {
+        name: node.data?.detector,
+        fields: {
+          minDistanceSeconds: node.data?.minDistanceSeconds,
+          height: node.data?.height,
+        },
+      },
+      HeartRateNode: {
+        name: node.data?.method,
+        fields: {},
+      },
+    };
+
+    const fallbackInfo = fieldsByType[node.type];
+    if (!fallbackInfo?.name) {
+      return null;
+    }
+
+    return {
+      name: fallbackInfo.name,
+      fields: Object.fromEntries(
+        Object.entries(fallbackInfo.fields).filter(([, value]) => (
+          value !== undefined && value !== null && value !== ""
+        ))
+      ),
+    };
   }
 
   try {
@@ -71,11 +116,7 @@ const TechniqueFields = ({ fields }) => (
   </div>
 );
 
-const PipelineSteps = ({ nodes }) => {
-  if (!Array.isArray(nodes) || nodes.length === 0) {
-    return <p>No steps to display.</p>;
-  }
-
+const getConnectedNodes = (nodes, edges) => {
   const dictNodes = {};
   nodes.forEach((element) => {
     if (element?.id) {
@@ -83,18 +124,39 @@ const PipelineSteps = ({ nodes }) => {
     }
   });
 
+  const edgeMap = new Map();
+  if (Array.isArray(edges)) {
+    edges.forEach((edge) => {
+      if (edge?.source && edge?.target) {
+        edgeMap.set(String(edge.source), String(edge.target));
+      }
+    });
+  }
+
   const connectedNodes = [];
   const visited = new Set();
   let currentNodeId = "1";
 
   while (currentNodeId && !visited.has(currentNodeId)) {
     const current = dictNodes[currentNodeId];
-    if (!current) break;
+    if (!current) {
+      break;
+    }
 
     connectedNodes.push(current);
     visited.add(currentNodeId);
-    currentNodeId = current.data?.target;
+    currentNodeId = current.data?.target ?? edgeMap.get(currentNodeId);
   }
+
+  return connectedNodes;
+};
+
+const PipelineSteps = ({ nodes, edges = null }) => {
+  if (!Array.isArray(nodes) || nodes.length === 0) {
+    return <p>No steps to display.</p>;
+  }
+
+  const connectedNodes = getConnectedNodes(nodes, edges);
 
   return (
     <div className="rounded-[1.35rem] bg-white p-4 dark:bg-gray-900">
@@ -173,6 +235,16 @@ PipelineSteps.propTypes = {
       data: PropTypes.object,
     })
   ).isRequired,
+  edges: PropTypes.arrayOf(
+    PropTypes.shape({
+      source: PropTypes.string.isRequired,
+      target: PropTypes.string.isRequired,
+    })
+  ),
+};
+
+PipelineSteps.defaultProps = {
+  edges: null,
 };
 
 export default PipelineSteps;
