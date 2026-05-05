@@ -233,6 +233,7 @@ export const ProcessingSidebar = ({
 }) => (
   <WorkspaceCard
     title="Nodes"
+    description="Click to add or drag into the flow."
     icon={<FaSquare />}
     className="xl:sticky xl:top-4 xl:self-start xl:max-w-[232px]"
   >

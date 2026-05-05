@@ -5,10 +5,11 @@ import {
   FaChartLine,
   FaFilter,
   FaHeartbeat,
-  FaSearch,
   FaSignInAlt,
   FaWaveSquare,
 } from "react-icons/fa";
+
+import { FaMountainSun } from "react-icons/fa6";
 
 const buildInputRuntimeData = () => ({});
 
@@ -131,7 +132,7 @@ export const NODE_DEFINITIONS = {
     description: "Detect relevant peaks",
     category: "Analysis",
     summaryLabel: "PeaksNode",
-    icon: FaSearch,
+    icon: FaMountainSun,
     insertable: true,
     buttonTitle: "Add peak detection node",
     insertAriaLabel: "insert peaks node",

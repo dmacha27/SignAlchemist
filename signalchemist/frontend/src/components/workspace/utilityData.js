@@ -46,7 +46,7 @@ export const requestSignalMetrics = async ({
   const formData = new FormData();
   formData.append("signal", JSON.stringify(signal.slice(1)));
   formData.append("signal_type", signalType);
-  formData.append("sampling_rate", samplingRate);
+  formData.append("sampling_rate", String(samplingRate));
 
   const response = await fetch("/api/metrics", {
     method: "POST",

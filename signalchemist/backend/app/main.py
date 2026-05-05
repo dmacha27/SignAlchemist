@@ -54,6 +54,17 @@ def check_max_samples(length: int, operation: str):
     return None
 
 
+def validate_sampling_rate(sampling_rate: float, operation: str):
+    if not np.isfinite(sampling_rate) or sampling_rate <= 0:
+        return JSONResponse(
+            content={
+                "error": f"{operation} requires a valid sampling rate greater than 0."
+            },
+            status_code=400,
+        )
+    return None
+
+
 def sanitize_filter_config(config: dict) -> dict:
     return {
         key: value
@@ -62,7 +73,7 @@ def sanitize_filter_config(config: dict) -> dict:
     }
 
 
-def apply_builtin_filter(values, sampling_rate: int, config: dict):
+def apply_builtin_filter(values, sampling_rate: float, config: dict):
     method = config.get("method")
 
     if method == "gaussian":
@@ -203,7 +214,7 @@ async def options_filtering():
 async def filtering(
     signal: str = Form(...,
                        description="JSON-encoded list of `[timestamp, value]` pairs."),
-    sampling_rate: int = Form(...,
+    sampling_rate: float = Form(...,
                               description="Sampling rate of the input signal in Hz."),
     filter_config: str = Form(
         ..., description="JSON-encoded dict including `method`, `lowcut`, `highcut`, `order`, or `python`."),
@@ -218,6 +229,10 @@ async def filtering(
         config = json.loads(filter_config)
         data = np.array(json.loads(signal))
         python_enabled = os.getenv("PYTHON_ENABLED") == "true"
+
+        sampling_rate_error = validate_sampling_rate(sampling_rate, "Filtering")
+        if sampling_rate_error:
+            return sampling_rate_error
 
         error = check_max_samples(len(data), "Filtering")
         if error:
@@ -286,7 +301,7 @@ async def options_peaks():
 async def peaks(
     signal: str = Form(...,
                        description="JSON-encoded list of `[timestamp, value]` pairs."),
-    sampling_rate: int = Form(..., description="Sampling rate of the input signal in Hz."),
+    sampling_rate: float = Form(..., description="Sampling rate of the input signal in Hz."),
     detector: str = Form(
         "scipy", description="Peak detector backend: `'scipy'` or `'neurokit'`."),
     signal_type: str = Form(
@@ -302,6 +317,10 @@ async def peaks(
     try:
         data = np.array(json.loads(signal), dtype=np.float64)
         values = data[:, 1]
+
+        sampling_rate_error = validate_sampling_rate(sampling_rate, "Peak detection")
+        if sampling_rate_error:
+            return sampling_rate_error
 
         error = check_max_samples(len(values), "Peak detection")
         if error:
@@ -360,7 +379,7 @@ async def options_hr():
 async def heart_rate(
     signal: str = Form(...,
                        description="JSON-encoded list of `[timestamp, value]` pairs."),
-    sampling_rate: int = Form(..., description="Sampling rate of the input signal in Hz."),
+    sampling_rate: float = Form(..., description="Sampling rate of the input signal in Hz."),
     signal_type: str = Form(
         ..., description="Signal type. Heart rate analysis is only supported for `'PPG'`."),
     method: str = Form(
@@ -368,6 +387,10 @@ async def heart_rate(
 ):
     try:
         data = np.array(json.loads(signal), dtype=np.float64)
+
+        sampling_rate_error = validate_sampling_rate(sampling_rate, "Heart rate")
+        if sampling_rate_error:
+            return sampling_rate_error
 
         error = check_max_samples(len(data), "Heart rate")
         if error:
@@ -409,7 +432,7 @@ def get_metrics(
                        description="JSON-encoded list of `[timestamp, value]` pairs."),
     signal_type: str = Form(...,
                             description="Signal type: `'EDA'` or `'PPG'`."),
-    sampling_rate: int = Form(..., description="Sampling rate in Hz."),
+    sampling_rate: float = Form(..., description="Sampling rate in Hz."),
 ):
     """
     Compute quality metrics for EDA or PPG signals based on literature.
@@ -419,6 +442,10 @@ def get_metrics(
     try:
         data = np.array(json.loads(signal))
         values = data[:, 1]
+
+        sampling_rate_error = validate_sampling_rate(sampling_rate, "Metrics")
+        if sampling_rate_error:
+            return sampling_rate_error
 
         error = check_max_samples(len(values), "Metrics")
         if error:

@@ -6,7 +6,15 @@ import { FileUpload } from "primereact/fileupload";
 import { usePapaParse } from "react-papaparse";
 import RangeSlider from "react-range-slider-input";
 import { TbHelpSquareRoundedFilled } from "react-icons/tb";
-import { FaArrowRight, FaFlask, FaUpload } from "react-icons/fa";
+import { FaArrowRight, FaCogs, FaFlask, FaUpload } from "react-icons/fa";
+import {
+  FaProjectDiagram,
+  FaChartLine,
+  FaFilter,
+  FaHeartbeat,
+} from "react-icons/fa";
+
+import { FaMountainSun } from "react-icons/fa6";
 
 import CustomChart from "../common/CustomChart";
 import {
@@ -22,6 +30,16 @@ const OUTER_CARD_CLASS =
   "rounded-[1.6rem] border border-slate-200/80 bg-white/85 p-3.5 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700 dark:bg-gray-900/85";
 const INNER_CARD_CLASS =
   "rounded-[1.15rem] border border-slate-200 bg-white p-2.5 dark:border-gray-700 dark:bg-gray-900";
+
+const utilityLabels = ["Resampling", "Filtering", "Peaks", "HR", "Processing"];
+
+const utilityIcons = {
+  Resampling: FaChartLine,
+  Filtering: FaFilter,
+  Peaks: FaMountainSun,
+  HR: FaHeartbeat,
+  Processing: FaProjectDiagram,
+};
 
 const StepBadge = ({ step }) => (
   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white dark:bg-white dark:text-slate-900">
@@ -464,17 +482,29 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
           )}
         </div>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-          {["Resampling", "Filtering", "Peaks", "HR", "Processing"].map((label) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => onLaunchUtility(label === "HR" ? "/hr" : `/${label.toLowerCase()}`)}
-              disabled={!canLaunchUtility}
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
-            >
-              {label}
-            </button>
-          ))}
+          {utilityLabels.map((label) => {
+            const Icon = utilityIcons[label];
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() =>
+                  onLaunchUtility(
+                    label === "HR" ? "/hr" : `/${label.toLowerCase()}`,
+                  )
+                }
+                disabled={!canLaunchUtility}
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 overflow-visible rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+              >
+                {Icon ? (
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-visible leading-none">
+                    <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                  </span>
+                ) : null}
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

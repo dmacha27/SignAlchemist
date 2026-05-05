@@ -1,4 +1,4 @@
-import { average, diff } from "../utils/dataUtils";
+import { inferSamplingRateFromTimestamps } from "../utils/dataUtils";
 
 export const MAX_DATA_LENGTH = 5000;
 export const NO_TIMESTAMPS_LABEL = "No timestamps";
@@ -205,8 +205,7 @@ export const buildChartPreview = ({
     .sort((a, b) => a[0] - b[0]);
 
   const xValues = pairedRows.map(([timestamp]) => timestamp);
-  const calculatedSamplingRate =
-    xValues.length > 1 ? parseInt((1 / average(diff(xValues))).toFixed(1)) : null;
+  const calculatedSamplingRate = inferSamplingRateFromTimestamps(xValues);
 
   previewTable.push(...pairedRows);
 

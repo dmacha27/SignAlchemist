@@ -6,7 +6,7 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { FaBullseye } from "react-icons/fa";
+import { FaMountainSun } from "react-icons/fa6";
 import toast from "react-hot-toast";
 import { inferSamplingRate } from "../../utils/dataUtils";
 
@@ -197,7 +197,7 @@ function PeaksNode({ id, data }) {
 
   return (
     <NodeShell
-      icon={<FaBullseye />}
+      icon={<FaMountainSun />}
       title="Peak Detection"
       eyebrow="Analysis"
       accent="rose"

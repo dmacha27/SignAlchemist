@@ -63,18 +63,28 @@ export const diff = (A) => {
  */
 export const average = (array) => array.reduce((a, b) => a + b) / array.length;
 
-export const inferSamplingRate = (table) => {
-  if (!table || table.length <= 2) {
+export const inferSamplingRateFromTimestamps = (timestamps) => {
+  if (!Array.isArray(timestamps) || timestamps.length < 2) {
     return null;
   }
 
-  const timestamps = table.slice(1).map((row) => row[0]);
-  const deltas = diff(timestamps);
+  const deltas = diff(timestamps).filter(
+    (delta) => Number.isFinite(delta) && delta > 0
+  );
 
   if (deltas.length === 0) {
     return null;
   }
 
   const samplingRate = 1 / average(deltas);
-  return Number.isFinite(samplingRate) ? Math.round(samplingRate) : null;
+  return Number.isFinite(samplingRate) && samplingRate > 0 ? samplingRate : null;
+};
+
+export const inferSamplingRate = (table) => {
+  if (!table || table.length <= 2) {
+    return null;
+  }
+
+  const timestamps = table.slice(1).map((row) => row[0]);
+  return inferSamplingRateFromTimestamps(timestamps);
 };

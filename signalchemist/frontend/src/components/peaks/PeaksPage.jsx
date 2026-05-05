@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
-import { FaBullseye, FaChartLine, FaSignal, FaTools } from "react-icons/fa";
+import { FaChartLine, FaSignal, FaTools } from "react-icons/fa";
+import { FaMountainSun } from "react-icons/fa6";
 import toast from "react-hot-toast";
 
 import CustomChart from "../common/CustomChart";
@@ -205,7 +206,7 @@ const PeaksPage = () => {
   return (
     <WorkspacePage>
       <WorkspaceHero
-        icon={<FaBullseye />}
+        icon={<FaMountainSun />}
         title="Peak Detection"
         description="Detect peaks in the signal."
         badge={`Signal type: ${signalType}`}
@@ -298,7 +299,7 @@ const PeaksPage = () => {
                 className="w-full"
                 onClick={requestPeaks}
               >
-                <FaBullseye />
+                <FaMountainSun />
                 Detect peaks
               </WorkspacePrimaryButton>
             </div>
@@ -308,7 +309,7 @@ const PeaksPage = () => {
         <WorkspaceCard
           title="Detected Peaks"
           description="Detected peaks."
-          icon={<FaBullseye />}
+          icon={<FaMountainSun />}
         >
           {isRequesting ? (
             <LoaderMessage message="Processing request..." />

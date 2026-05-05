@@ -10,7 +10,7 @@ import FilterFields from "../../common/FilterFields";
 import { FaFilter } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
-import { diff, average } from "../../utils/dataUtils";
+import { inferSamplingRate } from "../../utils/dataUtils";
 import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 import { uiSelectClass } from "../../common/ui";
 import {
@@ -78,7 +78,7 @@ function FilteringNode({ id, data }) {
     if (incomingTable) {
       tableRef.current = incomingTable;
       samplingRateRef.current =
-        1 / average(diff(incomingTable.slice(1).map((x) => x[0])));
+        inferSamplingRate(incomingTable) ?? data.samplingRate;
       filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
       return;
     }
@@ -185,7 +185,7 @@ function FilteringNode({ id, data }) {
         tableRef.current = table_source;
 
         samplingRateRef.current =
-          1 / average(diff(table_source.slice(1).map((x) => x[0])));
+          inferSamplingRate(table_source) ?? data.samplingRate;
 
         filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
 
@@ -207,7 +207,7 @@ function FilteringNode({ id, data }) {
       window.removeEventListener(getExecuteEventName(id), handleExecute);
       window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
     };
-  }, [id, requestFilter, targetNodeId, updateNodeData]);
+  }, [data.samplingRate, id, requestFilter, targetNodeId, updateNodeData]);
 
   /**
    * Trigger a delete event when filter configuration changes.

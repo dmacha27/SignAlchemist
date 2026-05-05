@@ -10,7 +10,7 @@ export async function requestHeartRateAnalysis({
 }) {
   const formData = new FormData();
   formData.append("signal", JSON.stringify(signal));
-  formData.append("sampling_rate", Math.round(samplingRate));
+  formData.append("sampling_rate", String(samplingRate));
   formData.append("signal_type", signalType || "OTHER");
   formData.append("method", method);
 

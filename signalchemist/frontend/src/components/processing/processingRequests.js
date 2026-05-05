@@ -49,7 +49,7 @@ export async function requestFiltering({
 }) {
   const formData = new FormData();
   formData.append("signal", JSON.stringify(signal));
-  formData.append("sampling_rate", Math.round(samplingRate));
+  formData.append("sampling_rate", String(samplingRate));
   formData.append("filter_config", JSON.stringify(filterConfig));
 
   const response = await fetch("/api/filtering", {

@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  FaBullseye,
   FaChartLine,
   FaFilter,
   FaHeartbeat,
@@ -9,6 +8,10 @@ import {
   FaPlus,
   FaProjectDiagram,
 } from "react-icons/fa";
+
+import {
+  FaMountainSun,
+} from "react-icons/fa6";
 
 const actions = [
   {
@@ -29,7 +32,7 @@ const actions = [
     key: "peaks",
     label: "Peaks",
     description: "Open peak detection",
-    icon: FaBullseye,
+    icon: FaMountainSun,
     path: "/peaks",
   },
   {

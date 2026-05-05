@@ -9,7 +9,7 @@ import {
 import { FaChartLine } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
-import { diff, average } from "../../utils/dataUtils";
+import { inferSamplingRate } from "../../utils/dataUtils";
 import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
 import { uiSelectClass } from "../../common/ui";
 import { parseTechniqueConfig } from "../../processing/processingNodeUtils";
@@ -67,9 +67,9 @@ function ResamplingNode({ id, data }) {
   useEffect(() => {
     tableRef.current = incomingTable ?? null;
     samplingRateRef.current = incomingTable
-      ? 1 / average(diff(incomingTable.slice(1).map((x) => x[0])))
+      ? inferSamplingRate(incomingTable) ?? data.samplingRate
       : null;
-  }, [incomingTable]);
+  }, [data.samplingRate, incomingTable]);
 
   useEffect(() => {
     updateNodeData(id, (prev) => ({
@@ -159,7 +159,7 @@ function ResamplingNode({ id, data }) {
         tableRef.current = table_source;
 
         samplingRateRef.current =
-          1 / average(diff(table_source.slice(1).map((x) => x[0])));
+          inferSamplingRate(table_source) ?? data.samplingRate;
 
         const new_table = await requestResample();
 
@@ -179,7 +179,7 @@ function ResamplingNode({ id, data }) {
       window.removeEventListener(getExecuteEventName(id), handleExecute);
       window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
     };
-  }, [id, requestResample, targetNodeId, updateNodeData]);
+  }, [data.samplingRate, id, requestResample, targetNodeId, updateNodeData]);
 
   /**
    * Trigger a delete event when form is changed.

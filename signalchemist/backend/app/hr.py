@@ -42,7 +42,7 @@ def _empty_heart_rate_result():
     return np.empty((0, 2), dtype=np.float64)
 
 
-def detect_ppg_peaks(values, sampling_rate: int):
+def detect_ppg_peaks(values, sampling_rate: float):
     cleaned = neurokit2.ppg_clean(values, sampling_rate=sampling_rate)
     info = neurokit2.ppg_findpeaks(
         cleaned,
@@ -52,7 +52,7 @@ def detect_ppg_peaks(values, sampling_rate: int):
     return np.asarray(info["PPG_Peaks"], dtype=int)
 
 
-def compute_emotibit_heart_rate(data, sampling_rate: int):
+def compute_emotibit_heart_rate(data, sampling_rate: float):
     if len(data) == 0:
         return _empty_heart_rate_result()
 
@@ -88,7 +88,7 @@ def compute_emotibit_heart_rate(data, sampling_rate: int):
     return np.column_stack((beat_timestamps, heart_rates))
 
 
-def compute_neurokit_heart_rate(data, sampling_rate: int):
+def compute_neurokit_heart_rate(data, sampling_rate: float):
     if len(data) == 0:
         return _empty_heart_rate_result()
 
