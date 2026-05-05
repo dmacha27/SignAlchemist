@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
 
 import { ThemeContext } from "../contexts/ThemeContext";
+import DatasetConfigurationCard from "./dataset/DatasetConfigurationCard";
 import {
   buildChartPreview,
   buildCroppedUtilityFile,
@@ -25,11 +26,16 @@ import { startHomeTour } from "./home/homeTour";
 import {
   HomeHero,
   CSVUploader,
-  DatasetConfigurationCard,
   NextStepCard,
   PreviewWorkspaceCard,
   SignalPreviewCard,
 } from "./home/HomeSections";
+import {
+  buildBatchNavigationState,
+  buildDatasetPreparationChecks,
+  buildUtilityNavigationState,
+  hasPreparedDataset,
+} from "./workspace/workspaceState";
 
 ChartJS.register(
   CategoryScale,
@@ -42,8 +48,6 @@ ChartJS.register(
 );
 
 const Home = () => {
-  window.history.replaceState({}, "");
-
   const navigate = useNavigate();
   const { readString } = usePapaParse();
   const { isDarkMode: isDark } = useContext(ThemeContext);
@@ -58,7 +62,11 @@ const Home = () => {
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [cropValues, setCropValues] = useState(null);
   const [previewCropValues, setPreviewCropValues] = useState(null);
-  
+
+  useEffect(() => {
+    window.history.replaceState({}, "");
+  }, []);
+
   useEffect(() => {
     const preview = buildChartPreview({
       fileRows,
@@ -117,38 +125,24 @@ const Home = () => {
     setPreviewCropValues(null);
   };
 
-  const canLaunchUtility =
-    !!file &&
-    !!signalType &&
-    timestampColumn >= 0 &&
-    signalValues !== -1 &&
-    signalValues !== "" &&
-    !!samplingRate;
-
-  const nextStepChecks = [
-    {
-      label: "Upload a CSV or load a sample",
-      complete: !!file,
-    },
-    {
-      label: "Choose a signal type",
-      complete: !!signalType,
-    },
-    {
-      label: "Select the timestamp column",
-      complete: timestampColumn >= 0,
-    },
-    {
-      label: "Select the signal values column",
-      complete: signalValues !== -1 && signalValues !== "",
-    },
-    {
-      label: "Set or detect the sampling rate",
-      complete: !!samplingRate,
-    },
-  ];
+  const currentDatasetState = {
+    file,
+    signalType,
+    timestampColumn,
+    signalValues,
+    samplingRate,
+  };
+  const canLaunchUtility = hasPreparedDataset(currentDatasetState);
+  const nextStepChecks = buildDatasetPreparationChecks(currentDatasetState);
 
   const launchUtility = async (path) => {
+    if (path === "/batch") {
+      navigate(path, {
+        state: buildBatchNavigationState(currentDatasetState),
+      });
+      return;
+    }
+
     if (!canLaunchUtility) {
       return;
     }
@@ -160,13 +154,10 @@ const Home = () => {
     });
 
     navigate(path, {
-      state: {
+      state: buildUtilityNavigationState({
+        ...currentDatasetState,
         file: preparedFile || file,
-        signalType,
-        timestampColumn,
-        samplingRate: parseInt(samplingRate, 10),
-        signalValues: parseInt(signalValues, 10),
-      },
+      }),
     });
   };
 

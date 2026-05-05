@@ -23,6 +23,7 @@
     "driver.js": "^1.4.0",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
+    "fflate": "^0.8.2",
     "fft-js": "^0.0.12",
     "framer-motion": "^12.38.0",
     "primereact": "^10.9.7",

@@ -5,7 +5,12 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-import { useEffect, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
 import PropTypes from "prop-types";
 
 import "./App.css";
@@ -13,15 +18,12 @@ import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 
 import Home from "./components/Home";
-import About from "./components/About";
-import Processing from "./components/Processing";
-import Batch from "./components/Batch";
-import Resampling from "./components/Resampling";
-import Filtering from "./components/Filtering";
-import Hr from "./components/Hr";
-import Peaks from "./components/Peaks";
 import FloatingNavMenu from "./components/common/FloatingNavMenu";
 import NotFound from "./components/common/NotFound";
+import {
+  canOpenWorkspacePath,
+  hasPreparedDataset,
+} from "./components/workspace/workspaceState";
 
 import { ThemeContext } from "./contexts/ThemeContext";
 
@@ -32,6 +34,14 @@ import {
   FaMoon,
   FaSun,
 } from "react-icons/fa";
+
+const About = lazy(() => import("./components/About"));
+const Processing = lazy(() => import("./components/Processing"));
+const Batch = lazy(() => import("./components/Batch"));
+const Resampling = lazy(() => import("./components/Resampling"));
+const Filtering = lazy(() => import("./components/Filtering"));
+const Hr = lazy(() => import("./components/Hr"));
+const Peaks = lazy(() => import("./components/Peaks"));
 
 // Get default system or prefered theme
 const getInitialTheme = () => {
@@ -49,10 +59,11 @@ const getInitialTheme = () => {
 // Redirect invalid routes to /home if no data is loaded
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
-  // Check if there is data loaded
-  if (!location.state) {
+
+  if (!hasPreparedDataset(location.state)) {
     return <Navigate to="/" replace />;
   }
+
   return children;
 };
 
@@ -60,6 +71,22 @@ const ProtectedRoute = ({ children }) => {
 ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
+
+const DocsRedirect = () => {
+  useEffect(() => {
+    window.location.href = "/docs/index.html";
+  }, []);
+
+  return null;
+};
+
+const RouteLoader = () => (
+  <div className="mx-auto flex min-h-[52vh] w-full max-w-7xl items-center justify-center px-4 py-10">
+    <div className="rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 text-sm font-medium text-slate-600 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
+      Loading workspace...
+    </div>
+  </div>
+);
 
 const App = () => {
   // Dark Theme toogle
@@ -88,10 +115,11 @@ const App = () => {
 
   const handleNavigate = (path) => {
     setIsNavMenuOpen(false);
-    if (location.state) {
+
+    if (canOpenWorkspacePath(path, location.state)) {
       navigate(path, { state: location.state });
     } else {
-      toast.error("No data detected");
+      toast.error("Load a CSV first to open this utility");
     }
   };
 
@@ -99,13 +127,6 @@ const App = () => {
   useEffect(() => {
     setIsNavMenuOpen(false);
   }, [location.pathname]);
-
-  const DocsRedirect = () => {
-    useEffect(() => {
-      window.location.href = "/docs/index.html";
-    }, []);
-    return null;
-  };
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
       <div
@@ -132,60 +153,62 @@ const App = () => {
           </button>
 
           {/* Navigation */}
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
+          <Suspense fallback={<RouteLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
 
-            <Route
-              path="/processing"
-              element={
-                <ProtectedRoute>
-                  <Processing />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/processing"
+                element={
+                  <ProtectedRoute>
+                    <Processing />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="/batch" element={<Batch />} />
+              <Route path="/batch" element={<Batch />} />
 
-            <Route
-              path="/resampling"
-              element={
-                <ProtectedRoute>
-                  <Resampling />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/resampling"
+                element={
+                  <ProtectedRoute>
+                    <Resampling />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/filtering"
-              element={
-                <ProtectedRoute>
-                  <Filtering />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/filtering"
+                element={
+                  <ProtectedRoute>
+                    <Filtering />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/peaks"
-              element={
-                <ProtectedRoute>
-                  <Peaks />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/peaks"
+                element={
+                  <ProtectedRoute>
+                    <Peaks />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/hr"
-              element={
-                <ProtectedRoute>
-                  <Hr />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/hr"
+                element={
+                  <ProtectedRoute>
+                    <Hr />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="/docs" element={<DocsRedirect />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="/docs" element={<DocsRedirect />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
 
           <footer className="pb-6 pt-10">
             <div className="mx-auto w-full max-w-screen-xl px-5 py-3">

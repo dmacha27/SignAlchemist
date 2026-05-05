@@ -9,6 +9,7 @@ import { TbHelpSquareRoundedFilled } from "react-icons/tb";
 import { FaArrowRight, FaCogs, FaFlask, FaUpload } from "react-icons/fa";
 import {
   FaProjectDiagram,
+  FaChartBar,
   FaChartLine,
   FaFilter,
   FaHeartbeat,
@@ -19,9 +20,7 @@ import { FaMountainSun } from "react-icons/fa6";
 import CustomChart from "../common/CustomChart";
 import {
   NO_TIMESTAMPS_LABEL,
-  SIGNAL_TYPE_OPTIONS,
   autoConfigureDataset,
-  normalizeSamplingRateOnBlur,
   parseCsvFile,
 } from "./homeUtils";
 import { SimpleMenu, SimpleTooltip } from "../common/ui";
@@ -31,15 +30,47 @@ const OUTER_CARD_CLASS =
 const INNER_CARD_CLASS =
   "rounded-[1.15rem] border border-slate-200 bg-white p-2.5 dark:border-gray-700 dark:bg-gray-900";
 
-const utilityLabels = ["Resampling", "Filtering", "Peaks", "HR", "Processing"];
-
-const utilityIcons = {
-  Resampling: FaChartLine,
-  Filtering: FaFilter,
-  Peaks: FaMountainSun,
-  HR: FaHeartbeat,
-  Processing: FaProjectDiagram,
-};
+const utilityItems = [
+  {
+    label: "Processing",
+    icon: FaProjectDiagram,
+    path: "/processing",
+    featured: true,
+    helper: "Build and validate a custom pipeline.",
+  },
+  {
+    label: "Batch",
+    icon: FaChartBar,
+    path: "/batch",
+    featured: true,
+    alwaysEnabled: true,
+    helper: "Run an exported pipeline on multiple CSV files.",
+  },
+  {
+    label: "Resampling",
+    icon: FaChartLine,
+    path: "/resampling",
+    helper: "Adjust the sampling rate of one signal.",
+  },
+  {
+    label: "Filtering",
+    icon: FaFilter,
+    path: "/filtering",
+    helper: "Apply a filter directly to the dataset.",
+  },
+  {
+    label: "Peaks",
+    icon: FaMountainSun,
+    path: "/peaks",
+    helper: "Detect relevant signal peaks.",
+  },
+  {
+    label: "HR",
+    icon: FaHeartbeat,
+    path: "/hr",
+    helper: "Estimate heart rate from PPG.",
+  },
+];
 
 const StepBadge = ({ step }) => (
   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white dark:bg-white dark:text-slate-900">
@@ -292,165 +323,10 @@ export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
   );
 });
 
-export const DatasetConfigurationCard = ({
-  signalType,
-  timestampColumn,
-  signalValues,
-  samplingRate,
-  headers,
-  onSignalTypeChange,
-  onTimestampChange,
-  onSignalValuesChange,
-  onSamplingRateChange,
-}) => {
-  const timestampOptions = headers.map((header, index) => ({
-    label: header,
-    value: index,
-  }));
-  const signalValueOptions = headers
-    .slice(0, -1)
-    .map((header, index) => ({ label: header, value: index }));
-  const samplingRateDisabled =
-    !headers.length || timestampColumn !== headers.length - 1;
-
-  return (
-    <div className={`config-fields ${OUTER_CARD_CLASS}`}>
-      <SectionHeader
-        step={2}
-        title="Configure dataset"
-        description="These values drive the preview and are passed to the selected utility exactly as before."
-      />
-
-      <form className="space-y-2.5">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <FieldCard
-            className="tuto-signalType"
-            label="Signal Type"
-            inputId="signalType"
-          >
-            <select
-              id="signalType"
-              value={signalType}
-              onChange={(event) => onSignalTypeChange(event.target.value)}
-              className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-cyan-400 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white"
-            >
-              {SIGNAL_TYPE_OPTIONS.map((option) => (
-                <option key={option || "empty"} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </FieldCard>
-
-          <FieldCard
-            className="tuto-timestampColumn"
-            label="Timestamp Column"
-            inputId="timestampColumn"
-          >
-            <select
-              id="timestampColumn"
-              value={timestampColumn}
-              onChange={(event) =>
-                onTimestampChange(parseInt(event.target.value, 10))
-              }
-              className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-cyan-400 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white"
-            >
-              {timestampOptions.map((option) => (
-                <option key={option.label} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </FieldCard>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <FieldCard
-            className="tuto-samplingRate"
-            label="Sampling Rate (Hz)"
-            inputId="samplingRate"
-            footer="Enabled when the file does not contain timestamps."
-            footerClassName="mt-1 text-[10px] leading-4 text-slate-500 dark:text-slate-400"
-          >
-            <input
-              type="number"
-              step={1}
-              min={1}
-              placeholder="Enter Hz"
-              id="samplingRate"
-              value={samplingRate || ""}
-              onChange={(event) => onSamplingRateChange(event.target.value)}
-              onBlur={(event) => {
-                const normalizedValue = normalizeSamplingRateOnBlur(
-                  event.target.value,
-                );
-                event.target.value = normalizedValue;
-                onSamplingRateChange(normalizedValue);
-              }}
-              disabled={samplingRateDisabled}
-              className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
-            />
-          </FieldCard>
-
-          <FieldCard
-            className="tuto-signalValues"
-            label="Signal Values"
-            inputId="signalValues"
-          >
-            <select
-              id="signalValues"
-              value={signalValues}
-              onChange={(event) => onSignalValuesChange(event.target.value)}
-              className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-cyan-400 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white"
-            >
-              <option value=""></option>
-              {signalValueOptions.map((option) => (
-                <option key={option.label} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </FieldCard>
-        </div>
-      </form>
-      {samplingRate && timestampColumn !== headers.length - 1 ? (
-        <div className="my-2 flex justify-center">
-          <div
-            id="samplingRateBadge"
-            className="inline-flex w-fit items-center rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-lg"
-          >
-            Detected sampling rate of {samplingRate} Hz
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-};
-
-const FieldCard = ({
-  className = "",
-  label,
-  inputId,
-  children,
-  footer,
-  footerClassName = "",
-}) => (
-  <div
-    className={`${className} flex min-h-[96px] flex-col justify-between rounded-[1.15rem] border border-slate-200 bg-slate-50/70 p-2.5 dark:border-gray-700 dark:bg-gray-800/70`}
-  >
-    <label
-      htmlFor={inputId}
-      className="block min-h-[32px] text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300"
-    >
-      {label}
-    </label>
-    {children}
-    {footer ? <p className={footerClassName}>{footer}</p> : null}
-  </div>
-);
-
 export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
   const pendingChecks = checks.filter((check) => !check.complete);
+  const featuredUtilities = utilityItems.filter((item) => item.featured);
+  const secondaryUtilities = utilityItems.filter((item) => !item.featured);
 
   return (
     <div className={`tuto-next-step ${OUTER_CARD_CLASS}`}>
@@ -481,30 +357,67 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
             </div>
           )}
         </div>
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-          {utilityLabels.map((label) => {
-            const Icon = utilityIcons[label];
-            return (
-              <button
-                key={label}
-                type="button"
-                onClick={() =>
-                  onLaunchUtility(
-                    label === "HR" ? "/hr" : `/${label.toLowerCase()}`,
-                  )
-                }
-                disabled={!canLaunchUtility}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 overflow-visible rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
-              >
-                {Icon ? (
-                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-visible leading-none">
-                    <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+        <div className="space-y-4">
+          <div className="grid gap-3 lg:grid-cols-2">
+            {featuredUtilities.map((item) => {
+              const Icon = item.icon;
+              const isDisabled = item.alwaysEnabled ? false : !canLaunchUtility;
+              const featuredClass = item.label === "Batch"
+                ? "border-cyan-200 bg-cyan-50/90 text-cyan-900 hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-100 dark:hover:bg-cyan-500/20"
+                : "border-amber-200 bg-amber-50/90 text-amber-900 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100 dark:hover:bg-amber-500/20";
+
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => onLaunchUtility(item.path)}
+                  disabled={isDisabled}
+                  className={`flex min-h-[88px] items-start gap-3 rounded-[1.15rem] border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:disabled:border-gray-700 dark:disabled:bg-gray-800 dark:disabled:text-gray-500 ${featuredClass}`}
+                >
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 text-[18px] shadow-sm dark:bg-gray-950/70">
+                    <Icon aria-hidden="true" />
                   </span>
-                ) : null}
-                <span>{label}</span>
-              </button>
-            );
-          })}
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">
+                      {item.label}
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 opacity-80">
+                      {item.helper}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              Single Utilities
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              {secondaryUtilities.map((item) => {
+                const Icon = item.icon;
+                const isDisabled = item.alwaysEnabled ? false : !canLaunchUtility;
+
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => onLaunchUtility(item.path)}
+                    disabled={isDisabled}
+                    className="inline-flex min-h-[52px] items-center justify-center gap-2 overflow-visible rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-100 dark:hover:border-gray-600 dark:hover:bg-gray-800 dark:disabled:border-gray-700 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+                  >
+                    {Icon ? (
+                      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-visible leading-none">
+                        <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                      </span>
+                    ) : null}
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -629,38 +542,6 @@ HomeHero.propTypes = {
 CSVUploader.propTypes = {
   onDatasetLoaded: PropTypes.func.isRequired,
   onDatasetCleared: PropTypes.func.isRequired,
-};
-
-DatasetConfigurationCard.propTypes = {
-  signalType: PropTypes.string.isRequired,
-  timestampColumn: PropTypes.number.isRequired,
-  signalValues: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
-    .isRequired,
-  samplingRate: PropTypes.number,
-  headers: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onSignalTypeChange: PropTypes.func.isRequired,
-  onTimestampChange: PropTypes.func.isRequired,
-  onSignalValuesChange: PropTypes.func.isRequired,
-  onSamplingRateChange: PropTypes.func.isRequired,
-};
-
-DatasetConfigurationCard.defaultProps = {
-  samplingRate: null,
-};
-
-FieldCard.propTypes = {
-  className: PropTypes.string,
-  label: PropTypes.string.isRequired,
-  inputId: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-  footer: PropTypes.string,
-  footerClassName: PropTypes.string,
-};
-
-FieldCard.defaultProps = {
-  className: "",
-  footer: null,
-  footerClassName: "",
 };
 
 NextStepCard.propTypes = {

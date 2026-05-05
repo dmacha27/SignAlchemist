@@ -163,34 +163,63 @@ SimpleMenu.defaultProps = {
 };
 
 export const SimpleDialog = ({ open, title, onClose, children }) => {
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [onClose, open]);
+
   if (!open) {
     return null;
   }
 
   return (
-    <div className="modal modal-open">
-      <div className="modal-box max-w-3xl rounded-2xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-slate-950/55 backdrop-blur-[1px]"
+        onClick={onClose}
+        aria-label="Close modal"
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="simple-dialog-title"
+        className="relative z-[91] w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+      >
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-gray-700">
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <h3 id="simple-dialog-title" className="text-lg font-semibold">
+            {title}
+          </h3>
           <button
             type="button"
             onClick={onClose}
-            className="btn btn-ghost btn-sm rounded-full"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
             aria-label="Close"
           >
             ✕
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="max-h-[calc(100vh-8rem)] overflow-y-auto p-5">
+          {children}
+        </div>
       </div>
-      <button
-        type="button"
-        className="modal-backdrop"
-        onClick={onClose}
-        aria-label="Close modal"
-      >
-        close
-      </button>
     </div>
   );
 };

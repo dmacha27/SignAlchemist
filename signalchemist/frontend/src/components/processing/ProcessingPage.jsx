@@ -13,7 +13,6 @@ import {
   FaHeartbeat,
   FaWaveSquare,
 } from "react-icons/fa";
-import toast from "react-hot-toast";
 
 import InfoMetrics from "../common/InfoMetrics";
 import InputSignal from "../reactflow/nodes/InputSignal";
@@ -34,10 +33,6 @@ import {
   WorkspaceSection,
 } from "../workspace/WorkspaceShell";
 import {
-  buildUtilitySourceData,
-  requestSignalMetrics,
-} from "../workspace/utilityData";
-import {
   ProcessingFlowSection,
   ProcessingSidebar,
 } from "./ProcessingSections";
@@ -52,154 +47,24 @@ import {
   ROOT_DELETE_EVENT,
   START_EXECUTE_EVENT,
 } from "./processingEvents";
+import {
+  useProcessingSignalData,
+} from "./useProcessingSignalData";
+import { useProcessingPipelineIO } from "./useProcessingPipelineIO";
 
-const recommendedPipelines = {
-  EDA: {
-    signalType: "EDA",
-    nodes: [
-      {
-        id: "3",
-        type: "ResamplingNode",
-        position: { x: 240, y: 150 },
-        data: {
-          samplingRate: 15,
-          interpolationTechnique: "spline",
-          targetSamplingRate: 15,
-        },
-      },
-      {
-        id: "4",
-        type: "OutliersNode",
-        position: { x: 500, y: 150 },
-        data: {
-          outlierTechnique: "iqr",
-        },
-      },
-      {
-        id: "5",
-        type: "FilteringNode",
-        position: { x: 760, y: 150 },
-        data: {
-          samplingRate: 15,
-          filter: "gaussian",
-          fields: {
-            sigma: 100,
-            python: "",
-          },
-        },
-      },
-    ],
-    edges: [
-      { source: "1", target: "3" },
-      { source: "3", target: "4" },
-      { source: "4", target: "5" },
-      { source: "5", target: "2" },
-    ],
-  },
-  PPG: {
-    signalType: "PPG",
-    nodes: [
-      {
-        id: "3",
-        type: "ResamplingNode",
-        position: { x: 240, y: 150 },
-        data: {
-          samplingRate: 50,
-          interpolationTechnique: "spline",
-          targetSamplingRate: 50,
-        },
-      },
-      {
-        id: "4",
-        type: "OutliersNode",
-        position: { x: 500, y: 150 },
-        data: {
-          outlierTechnique: "iqr",
-        },
-      },
-      {
-        id: "5",
-        type: "FilteringNode",
-        position: { x: 760, y: 150 },
-        data: {
-          samplingRate: 50,
-          filter: "butterworth",
-          fields: {
-            order: 5,
-            lowcut: 1,
-            highcut: 15,
-            python: "",
-          },
-        },
-      },
-    ],
-    edges: [
-      { source: "1", target: "3" },
-      { source: "3", target: "4" },
-      { source: "4", target: "5" },
-      { source: "5", target: "2" },
-    ],
-  },
-  PPG_HR: {
-    signalType: "PPG",
-    nodes: [
-      {
-        id: "3",
-        type: "ResamplingNode",
-        position: { x: 220, y: 150 },
-        data: {
-          samplingRate: 50,
-          interpolationTechnique: "spline",
-          targetSamplingRate: 50,
-        },
-      },
-      {
-        id: "4",
-        type: "OutliersNode",
-        position: { x: 460, y: 150 },
-        data: {
-          outlierTechnique: "iqr",
-        },
-      },
-      {
-        id: "5",
-        type: "FilteringNode",
-        position: { x: 700, y: 150 },
-        data: {
-          samplingRate: 50,
-          filter: "butterworth",
-          fields: {
-            order: 5,
-            lowcut: 1,
-            highcut: 15,
-            python: "",
-          },
-        },
-      },
-      {
-        id: "6",
-        type: "HeartRateNode",
-        position: { x: 940, y: 150 },
-        data: {
-          method: "emotibit",
-        },
-      },
-    ],
-    edges: [
-      { source: "1", target: "3" },
-      { source: "3", target: "4" },
-      { source: "4", target: "5" },
-      { source: "5", target: "6" },
-      { source: "6", target: "2" },
-    ],
-  },
+const NODE_TYPES = {
+  InputSignal,
+  OutputSignal,
+  OutliersNode,
+  ResamplingNode,
+  FilteringNode,
+  NormalizationNode,
+  PeaksNode,
+  HeartRateNode,
 };
 
-const DEFAULT_PREVIEW_META = {
-  annotationPoints: [],
-  title: "Processed",
-  iconKey: "signal",
-  computeMetrics: true,
+const EDGE_TYPES = {
+  ButtonEdge,
 };
 
 const ProcessingPage = () => {
@@ -209,11 +74,6 @@ const ProcessingPage = () => {
   const { readString } = usePapaParse();
   const { isDarkMode: isDark } = useContext(ThemeContext);
 
-  const [chartDataOriginal, setChartDataOriginal] = useState(null);
-  const [chartDataProcessed, setChartDataProcessed] = useState(null);
-  const [previewMeta, setPreviewMeta] = useState(DEFAULT_PREVIEW_META);
-  const [metricsOriginal, setMetricsOriginal] = useState(null);
-  const [metricsProcessed, setMetricsProcessed] = useState(null);
   const [confirmationOpened, setConfirmationOpened] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -222,35 +82,29 @@ const ProcessingPage = () => {
   const lastIdRef = useRef(0);
   const lastSidebarDropAtRef = useRef(0);
   const importInputRef = useRef(null);
+
+  const {
+    chartDataOriginal,
+    chartDataProcessed,
+    previewMeta,
+    metricsOriginal,
+    metricsProcessed,
+    resetProcessedPreview,
+    showProcessedPreview,
+  } = useProcessingSignalData({
+    file,
+    readString,
+    timestampColumn,
+    signalValues,
+    samplingRate,
+    signalType,
+  });
+
   const scrollToCharts = useCallback(() => {
     document.getElementById("charts")?.scrollIntoView({
       behavior: "smooth",
     });
   }, []);
-  const showProcessedPreview = useCallback((table, annotationPoints = [], options = {}) => {
-    setChartDataProcessed(table ?? null);
-    setPreviewMeta({
-      annotationPoints,
-      title: options.title ?? DEFAULT_PREVIEW_META.title,
-      iconKey: options.iconKey ?? DEFAULT_PREVIEW_META.iconKey,
-      computeMetrics: options.computeMetrics ?? DEFAULT_PREVIEW_META.computeMetrics,
-    });
-  }, []);
-
-  const nodeTypes = {
-    InputSignal,
-    OutputSignal,
-    OutliersNode,
-    ResamplingNode,
-    FilteringNode,
-    NormalizationNode,
-    PeaksNode,
-    HeartRateNode,
-  };
-
-  const edgeTypes = {
-    ButtonEdge,
-  };
 
   const nodeContext = useCallback(() => ({
     samplingRate,
@@ -285,56 +139,6 @@ const ProcessingPage = () => {
   }, [nodeContext]);
 
   useEffect(() => {
-    if (!file) {
-      return;
-    }
-
-    const loadOriginalData = async () => {
-      try {
-        const sourceData = await buildUtilitySourceData({
-          file,
-          readString,
-          timestampColumn,
-          signalValues,
-          samplingRate,
-        });
-
-        setChartDataOriginal(sourceData.chartData);
-
-        const metrics = await requestSignalMetrics({
-          signal: sourceData.chartData,
-          signalType,
-          samplingRate,
-        });
-        setMetricsOriginal(metrics);
-      } catch (error) {
-        console.error(error.message);
-        toast.error(error.message);
-      }
-    };
-
-    loadOriginalData();
-  }, [file, readString, timestampColumn, signalValues, samplingRate, signalType]);
-
-  useEffect(() => {
-    if (!chartDataProcessed || !previewMeta.computeMetrics) {
-      setMetricsProcessed(null);
-      return;
-    }
-
-    requestSignalMetrics({
-      signal: chartDataProcessed,
-      signalType,
-      samplingRate,
-    })
-      .then(setMetricsProcessed)
-      .catch((error) => {
-        console.error(error.message);
-        toast.error(error.message);
-      });
-  }, [chartDataProcessed, previewMeta.computeMetrics, signalType, samplingRate]);
-
-  useEffect(() => {
     if (!chartDataOriginal) {
       return;
     }
@@ -352,6 +156,13 @@ const ProcessingPage = () => {
     );
   }, [setEdges, setNodes]);
 
+  const buildNodeData = useCallback((type, data = {}) => ({
+    ...getRuntimeDataForNode(type, nodeContext()),
+    ...data,
+    deleteNode,
+    showProcessedPreview,
+  }), [deleteNode, nodeContext, showProcessedPreview]);
+
   const addNode = useCallback((type, options = {}) => {
     const {
       position = { x: 500, y: 120 },
@@ -364,17 +175,12 @@ const ProcessingPage = () => {
       id: newId,
       type,
       position,
-      data: {
-        ...getRuntimeDataForNode(type, nodeContext()),
-        ...restOptions,
-        deleteNode,
-        showProcessedPreview,
-      },
+      data: buildNodeData(type, restOptions),
     };
 
     setNodes((previousNodes) => [...previousNodes, newNode]);
     return newId;
-  }, [deleteNode, nodeContext, setNodes, showProcessedPreview]);
+  }, [buildNodeData, setNodes]);
 
   const onConnect = useCallback((params) => {
     setEdges((currentEdges) =>
@@ -382,155 +188,37 @@ const ProcessingPage = () => {
     );
   }, [buildEdge, setEdges]);
 
-  const cleanFlow = () => {
+  const cleanFlow = useCallback(() => {
     setNodes((previousNodes) => previousNodes.slice(0, 2));
     setEdges([]);
     lastIdRef.current = 2;
-    setChartDataProcessed(null);
-    setPreviewMeta(DEFAULT_PREVIEW_META);
-    setMetricsProcessed(null);
-  };
+    resetProcessedPreview();
+  }, [resetProcessedPreview, setEdges, setNodes]);
 
-  const exportPipeline = useCallback(() => {
-    const payload = {
-      signalType,
-      nodes: nodes
-        .filter((node) => node.id !== "1" && node.id !== "2")
-        .map((node) => ({
-          id: node.id,
-          type: node.type,
-          position: node.position,
-          data: getExportableNodeData(node),
-        })),
-      edges: edges.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-      })),
-    };
-
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
-    });
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = downloadUrl;
-    link.download = `signalchemist-pipeline-${signalType.toLowerCase()}.json`;
-    link.click();
-
-    window.URL.revokeObjectURL(downloadUrl);
-  }, [edges, getExportableNodeData, nodes, signalType]);
-
-  const importPipeline = useCallback(() => {
-    importInputRef.current?.click();
-  }, []);
-
-  const applyPipelineDefinition = useCallback((parsed, successMessage) => {
-    if (!Array.isArray(parsed?.nodes) || !Array.isArray(parsed?.edges)) {
-      throw new Error("Invalid pipeline file");
-    }
-
-    const importedNodes = parsed.nodes
-      .filter(
-        (node) =>
-          node &&
-          node.id !== "1" &&
-          node.id !== "2" &&
-          IMPORTABLE_NODE_TYPES.includes(node.type)
-      )
-      .map((node) => ({
-        id: String(node.id),
-        type: node.type,
-        position: node.position ?? { x: 500, y: 120 },
-        data: {
-          ...getRuntimeDataForNode(node.type, nodeContext()),
-          ...node.data,
-          deleteNode,
-          showProcessedPreview,
-        },
-      }));
-
-    const validNodeIds = new Set(["1", "2", ...importedNodes.map((node) => node.id)]);
-    const importedEdges = parsed.edges
-      .filter(
-        (edge) =>
-          edge &&
-          validNodeIds.has(String(edge.source)) &&
-          validNodeIds.has(String(edge.target))
-      )
-      .map((edge) =>
-        buildEdge({
-          id: edge.id ?? `xy-edge__${edge.source}-${edge.target}`,
-          source: String(edge.source),
-          target: String(edge.target),
-        })
-      );
-
-    const nextNodes = [...buildBaseNodes(), ...importedNodes];
-    const maxId = nextNodes.reduce((highest, node) => {
-      const numericId = Number.parseInt(node.id, 10);
-      return Number.isNaN(numericId) ? highest : Math.max(highest, numericId);
-    }, 2);
-
-    setNodes(nextNodes);
-    setEdges(importedEdges);
-    setChartDataProcessed(null);
-    setPreviewMeta(DEFAULT_PREVIEW_META);
-    setMetricsProcessed(null);
-    lastIdRef.current = maxId;
-
-    if (successMessage) {
-      toast.success(successMessage);
-    }
-  }, [
+  const {
+    exportPipeline,
+    importPipeline,
+    handleImportPipeline,
+    applyRecommendedPipeline,
+  } = useProcessingPipelineIO({
+    signalType,
+    nodes,
+    edges,
     buildBaseNodes,
     buildEdge,
-    deleteNode,
-    nodeContext,
-    setEdges,
+    buildNodeData,
+    getExportableNodeData,
+    importableNodeTypes: IMPORTABLE_NODE_TYPES,
     setNodes,
-    showProcessedPreview,
-  ]);
+    setEdges,
+    setLastId: (value) => {
+      lastIdRef.current = value;
+    },
+    resetProcessedPreview,
+    importInputRef,
+  });
 
-  const handleImportPipeline = useCallback(async (event) => {
-    const fileToImport = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!fileToImport) {
-      return;
-    }
-
-    try {
-      const raw = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Could not read pipeline file"));
-        reader.readAsText(fileToImport);
-      });
-      const parsed = JSON.parse(raw);
-
-      if (!Array.isArray(parsed?.nodes) || !Array.isArray(parsed?.edges)) {
-        throw new Error("Invalid pipeline file");
-      }
-      applyPipelineDefinition(parsed, "Pipeline imported");
-    } catch (error) {
-      console.error(error.message);
-      toast.error("Invalid pipeline file");
-    }
-  }, [applyPipelineDefinition]);
-
-  const applyRecommendedPipeline = useCallback((presetKey) => {
-    const preset = recommendedPipelines[presetKey];
-    if (!preset) {
-      return;
-    }
-
-    applyPipelineDefinition(preset, `${presetKey} pipeline loaded`);
-  }, [applyPipelineDefinition]);
-
-  const deleteSourceTablesAndExecute = () => {
+  const deleteSourceTablesAndExecute = useCallback(() => {
     dispatchWindowEvent(ROOT_DELETE_EVENT);
 
     const updatedNodes = nodes.map((node) => {
@@ -551,7 +239,7 @@ const ProcessingPage = () => {
     }
 
     dispatchWindowEvent(START_EXECUTE_EVENT);
-  };
+  }, [edges.length, nodes, setNodes]);
 
   const handleCanvasDragOver = useCallback((event) => {
     event.preventDefault();
@@ -659,10 +347,10 @@ const ProcessingPage = () => {
           chartDataOriginal={chartDataOriginal}
           nodes={nodes}
           edges={edges}
-          edgeTypes={edgeTypes}
+          edgeTypes={EDGE_TYPES}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          nodeTypes={nodeTypes}
+          nodeTypes={NODE_TYPES}
           onConnect={onConnect}
           isDark={isDark}
           isCanvasDragOver={isCanvasDragOver}

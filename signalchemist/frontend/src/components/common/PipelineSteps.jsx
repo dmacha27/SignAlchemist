@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { FaArrowRight } from "react-icons/fa";
-import { getNodeDefinition } from "../processing/nodeRegistry";
+import { getPipelineStepDefinition } from "./pipelineStepDefinitions";
 
 const capitalize = (str) => {
   if (typeof str !== "string" || str.length === 0) {
@@ -16,7 +16,6 @@ const getTechniqueInfo = (node) => {
       ResamplingNode: {
         name: node.data?.interpolationTechnique,
         fields: {
-          samplingRate: node.data?.samplingRate,
           targetSamplingRate: node.data?.targetSamplingRate,
         },
       },
@@ -163,7 +162,7 @@ const PipelineSteps = ({ nodes, edges = null }) => {
       <div className="flex flex-wrap items-stretch gap-3">
         {connectedNodes.map((node, index) => {
           const definition =
-            getNodeDefinition(node.type) ?? getNodeDefinition("OutputSignal");
+            getPipelineStepDefinition(node.type) ?? getPipelineStepDefinition("OutputSignal");
           const SummaryIcon = definition?.summaryIcon ?? definition?.icon;
           const techniqueObj = getTechniqueInfo(node);
 

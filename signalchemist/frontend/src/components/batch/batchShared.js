@@ -249,3 +249,47 @@ export const downloadTableAsCsv = (table, filename) => {
 
   URL.revokeObjectURL(url);
 };
+
+const buildCsvContent = (table) => table.map((row) => row.join(",")).join("\n");
+
+const sanitizeZipEntryName = (filename, fallbackIndex) => {
+  const baseName = filename
+    .replace(/\.csv$/i, "")
+    .replace(/[<>:"/\\|?*]/g, "_")
+    .split("")
+    .filter((character) => character.charCodeAt(0) >= 32)
+    .join("")
+    .trim();
+
+  return `${baseName || `processed_${fallbackIndex}`}_processed.csv`;
+};
+
+export const downloadBatchResultsAsZip = async (results, zipFilename = "signalchemist-batch-results.zip") => {
+  const successfulResults = results.filter(
+    (result) => result.status === "success" && Array.isArray(result.outputTable)
+  );
+
+  if (!successfulResults.length) {
+    throw new Error("There are no processed files to download yet");
+  }
+
+  const { zipSync, strToU8 } = await import("fflate");
+  const zipEntries = {};
+
+  successfulResults.forEach((result, index) => {
+    zipEntries[sanitizeZipEntryName(result.name, index + 1)] = strToU8(
+      buildCsvContent(result.outputTable)
+    );
+  });
+
+  const archive = zipSync(zipEntries, { level: 6 });
+  const blob = new Blob([archive], { type: "application/zip" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = zipFilename;
+  link.click();
+
+  URL.revokeObjectURL(url);
+};

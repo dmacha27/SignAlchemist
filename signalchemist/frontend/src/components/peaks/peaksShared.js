@@ -1,3 +1,8 @@
+import {
+  createFormData,
+  postFormData,
+} from "../../lib/apiClient";
+
 export function getDefaultMinDistance(signalType) {
   if (signalType === "PPG") {
     return "0.35";
@@ -30,29 +35,26 @@ export async function requestPeaksDetection({
   minDistanceSeconds,
   height,
 }) {
-  const formData = new FormData();
-  formData.append("signal", JSON.stringify(signal));
-  formData.append("sampling_rate", String(samplingRate));
-  formData.append("detector", detector);
-  formData.append("signal_type", signalType || "OTHER");
+  const formDataEntries = [
+    ["signal", JSON.stringify(signal)],
+    ["sampling_rate", String(samplingRate)],
+    ["detector", detector],
+    ["signal_type", signalType || "OTHER"],
+  ];
 
   if (detector === "scipy") {
-    formData.append("min_distance_seconds", minDistanceSeconds || "0");
+    formDataEntries.push(["min_distance_seconds", minDistanceSeconds || "0"]);
 
     if (height !== "") {
-      formData.append("height", height);
+      formDataEntries.push(["height", height]);
     }
   }
 
-  const response = await fetch("/api/peaks", {
-    method: "POST",
-    body: formData,
-  });
-
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || "Error detecting peaks.");
-  }
+  const payload = await postFormData(
+    "/api/peaks",
+    createFormData(formDataEntries),
+    "Error detecting peaks."
+  );
 
   return payload.peaks ?? [];
 }

@@ -1,45 +1,36 @@
-async function readJsonResponse(response, fallbackMessage) {
-  const payload = await response.json();
-
-  if (!response.ok) {
-    throw new Error(payload.error || fallbackMessage);
-  }
-
-  return payload;
-}
+import {
+  createFormData,
+  postFormData,
+} from "../../lib/apiClient";
 
 export async function requestResampling({
   signal,
   interpolationTechnique,
   targetSamplingRate,
 }) {
-  const formData = new FormData();
-  formData.append("signal", JSON.stringify(signal));
-  formData.append("interpolation_technique", interpolationTechnique);
-  formData.append("target_sampling_rate", parseFloat(targetSamplingRate));
-
-  const response = await fetch("/api/resampling", {
-    method: "POST",
-    body: formData,
-  });
-
-  return readJsonResponse(response, "Failed to apply resampling");
+  return postFormData(
+    "/api/resampling",
+    createFormData([
+      ["signal", JSON.stringify(signal)],
+      ["interpolation_technique", interpolationTechnique],
+      ["target_sampling_rate", parseFloat(targetSamplingRate)],
+    ]),
+    "Failed to apply resampling"
+  );
 }
 
 export async function requestOutliers({
   signal,
   outlierTechnique,
 }) {
-  const formData = new FormData();
-  formData.append("signal", JSON.stringify(signal));
-  formData.append("outlier_technique", outlierTechnique);
-
-  const response = await fetch("/api/outliers", {
-    method: "POST",
-    body: formData,
-  });
-
-  return readJsonResponse(response, "Failed to apply outliers");
+  return postFormData(
+    "/api/outliers",
+    createFormData([
+      ["signal", JSON.stringify(signal)],
+      ["outlier_technique", outlierTechnique],
+    ]),
+    "Failed to apply outliers"
+  );
 }
 
 export async function requestFiltering({
@@ -47,31 +38,27 @@ export async function requestFiltering({
   samplingRate,
   filterConfig,
 }) {
-  const formData = new FormData();
-  formData.append("signal", JSON.stringify(signal));
-  formData.append("sampling_rate", String(samplingRate));
-  formData.append("filter_config", JSON.stringify(filterConfig));
-
-  const response = await fetch("/api/filtering", {
-    method: "POST",
-    body: formData,
-  });
-
-  return readJsonResponse(response, "Failed to apply filter");
+  return postFormData(
+    "/api/filtering",
+    createFormData([
+      ["signal", JSON.stringify(signal)],
+      ["sampling_rate", String(samplingRate)],
+      ["filter_config", JSON.stringify(filterConfig)],
+    ]),
+    "Failed to apply filter"
+  );
 }
 
 export async function requestNormalization({
   signal,
   normalizationMethod,
 }) {
-  const formData = new FormData();
-  formData.append("signal", JSON.stringify(signal));
-  formData.append("normalization_method", normalizationMethod);
-
-  const response = await fetch("/api/normalization", {
-    method: "POST",
-    body: formData,
-  });
-
-  return readJsonResponse(response, "Failed to apply normalization");
+  return postFormData(
+    "/api/normalization",
+    createFormData([
+      ["signal", JSON.stringify(signal)],
+      ["normalization_method", normalizationMethod],
+    ]),
+    "Failed to apply normalization"
+  );
 }

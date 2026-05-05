@@ -13,19 +13,19 @@ export const startHomeTour = () => {
         popover: {
           title: "Welcome to SignAlchemist!",
           description: `
-            <p>SignAlchemist helps you preprocess physiological signals, mainly EDA and PPG.</p>
-            <p>We'll guide you through a quick tutorial—just follow the steps and click or perform the suggested actions.</p>
+            <p>SignAlchemist helps you prepare and process physiological signals, especially EDA and PPG.</p>
+            <p>This quick tour follows the current Home workflow: upload, configure, preview, crop and then choose the next utility.</p>
           `,
         },
       },
       {
         element: ".upload-card",
         popover: {
-          title: "Uploading Files",
+          title: "Upload Signal",
           description: `
-            <p>This is where you can upload the signal file you want to process.</p>
-            <p>EDA and PPG files are the main scope, but any time series data will also work.</p>
-            <p>Only CSV files are supported.</p>
+            <p>This card is the entry point for your dataset.</p>
+            <p>You can upload your own CSV or start with a sample file to explore the app faster.</p>
+            <p>The workflow is optimized for EDA and PPG, but other time series can work too.</p>
           `,
         },
       },
@@ -34,30 +34,30 @@ export const startHomeTour = () => {
         popover: {
           title: "Choose File",
           description: `
-            <p>Click this button to open your system's file selector and pick a file.</p>
-            <p>But not just yet! We have a simpler option for the tutorial.</p>
+            <p>Use this button to open the system file picker and select a CSV manually.</p>
+            <p>For the tutorial we will use a sample instead, so the whole flow is reproducible.</p>
           `,
         },
       },
       {
         element: ".p-fileupload-content",
         popover: {
-          title: "Drag & Drop",
-          description: `<p>Or, if you prefer, simply drag your CSV file directly into this panel.</p>`,
+          title: "Drag and Drop",
+          description: `<p>You can also drag a CSV file directly into this area if that is faster for you.</p>`,
         },
       },
       {
         element: ".sample-eda",
         popover: {
-          title: "Sample File",
-          description: `<p>You can also try one of our example files.</p>`,
+          title: "Quick Sample",
+          description: `<p>This button loads the bundled EDA sample in one click.</p>`,
         },
       },
       {
         element: ".sample-list",
         popover: {
           title: "Sample Files",
-          description: `<p>From this menu, you can select other sample files, like PPG examples, to see how different signals are handled.</p>`,
+          description: `<p>This menu gives you access to the other bundled examples, such as the PPG sample.</p>`,
         },
       },
       {
@@ -66,8 +66,8 @@ export const startHomeTour = () => {
         popover: {
           title: "Load Sample File",
           description: `
-            <p>For this tutorial, let’s use a sample EDA file.</p>
-            <p>Click this button to upload it. You won’t be able to continue until the file is fully uploaded.</p>
+            <p>For this tour, let’s use the EDA sample.</p>
+            <p>Click here to load it. The tutorial will continue once the file is available in the uploader.</p>
           `,
           onNextClick: () => {
             const uploadedFile = document.querySelector(".p-fileupload-filename");
@@ -82,18 +82,18 @@ export const startHomeTour = () => {
         popover: {
           title: "File Uploaded!",
           description: `
-            <p>Here’s your uploaded file.</p>
-            <p>If it shows 'Pending', it means some parameters still need configuration. You can remove the file and start over if needed.</p>
+            <p>Your file now appears here inside the uploader.</p>
+            <p>From this point, the next step is to review the dataset configuration and preview before jumping into any utility.</p>
           `,
         },
       },
       {
         element: ".config-fields",
         popover: {
-          title: "Configuration Fields",
+          title: "Configure Dataset",
           description: `
-            <p>Next, we’ll set the parameters for analyzing your signal.</p>
-            <p>Each field helps SignAlchemist understand your data better.</p>
+            <p>This card defines how SignAlchemist interprets the CSV.</p>
+            <p>These values also drive the preview and are passed to the next utility exactly as configured here.</p>
           `,
         },
       },
@@ -101,7 +101,7 @@ export const startHomeTour = () => {
         element: ".tuto-signalType",
         popover: {
           title: "Signal Type",
-          description: `<p>Select the type of signal you’re working with.</p><p>For this tutorial, choose 'EDA'.</p>`,
+          description: `<p>Select the type of signal you are working with.</p><p>For this tutorial, choose <strong>EDA</strong>.</p>`,
           onNextClick: () => {
             const value = document.getElementById("signalType")?.value;
             if (value === "EDA") {
@@ -115,9 +115,8 @@ export const startHomeTour = () => {
         popover: {
           title: "Timestamp Column",
           description: `
-            <p>Next, choose the column that contains timestamps. For this EDA sample, select 'Timestamp'.</p>
-            <p>If your file doesn’t have timestamps, select 'No timestamps'.</p>
-            <p>If you select 'No timestamps', the Sampling Rate field will become editable.</p>
+            <p>Select the column that stores timestamps. For this sample, choose <strong>Timestamp</strong>.</p>
+            <p>If a file has no timestamps, choose <strong>No timestamps</strong> and then provide the sampling rate manually.</p>
           `,
           onNextClick: () => {
             const select = document.getElementById("timestampColumn");
@@ -131,10 +130,10 @@ export const startHomeTour = () => {
       {
         element: ".tuto-chart",
         popover: {
-          title: "Chart Preview",
+          title: "Preview Workspace",
           description: `
-            <p>With the timestamp column selected, SignAlchemist can now start plotting your signal.</p>
-            <p>This chart gives you a preview of your data based on the current settings. Let's continue configuring the remaining parameters.</p>
+            <p>The preview updates with the current configuration so you can validate the signal before processing it.</p>
+            <p>This is especially useful for checking whether timestamps, columns and cropping are aligned with your expectations.</p>
           `,
         },
       },
@@ -143,9 +142,8 @@ export const startHomeTour = () => {
         popover: {
           title: "Sampling Rate",
           description: `
-            <p>If your file has no timestamps, enter the sampling rate (Hz) here.</p>
-            <p>Otherwise, SignAlchemist can calculate it automatically from the timestamps.</p>
-            <p>If you know both, it’s best to enter it manually to avoid inaccuracies.</p>
+            <p>If the file does not include timestamps, enter the sampling rate in Hz here.</p>
+            <p>When timestamps are available, SignAlchemist can infer it automatically from the data.</p>
           `,
         },
       },
@@ -154,8 +152,8 @@ export const startHomeTour = () => {
         popover: {
           title: "Signal Values",
           description: `
-            <p>Now, select the column containing the signal values you want to analyze.</p>
-            <p>For this EDA sample, choose 'Gsr'.</p>
+            <p>Select the column that contains the signal values you want to inspect and process.</p>
+            <p>For this EDA sample, choose <strong>Gsr</strong>.</p>
           `,
           onNextClick: () => {
             const select = document.getElementById("signalValues");
@@ -171,19 +169,19 @@ export const startHomeTour = () => {
         popover: {
           title: "Preview Range",
           description: `
-            <p>Use this integrated slider to choose which slice of the signal you want to inspect in the preview.</p>
-            <p>When you apply it, the preview updates and that same crop is what the utilities will receive next.</p>
+            <p>Use this slider to focus on a specific segment of the signal.</p>
+            <p>When you apply the crop, the preview updates and that same cropped range is what the single-file utilities receive next.</p>
           `,
         },
       },
       {
         element: ".tuto-next-step",
         popover: {
-          title: "You're all set!",
+          title: "Next Step",
           description: `
-            <p>When you’re ready, go to the "Next step" panel and choose one of the utility buttons: Resampling, Filtering, or Processing.</p>
-            <p>Those buttons become available once all required fields are configured.</p>
-            <p>Enjoy your signal processing journey!</p>
+            <p>This panel is now split between the main flows and the single utilities.</p>
+            <p><strong>Processing</strong> is the main interactive pipeline builder, and <strong>Batch</strong> lets you run an exported pipeline on multiple CSV files.</p>
+            <p>Below them you still have focused utilities like Resampling, Filtering, Peaks and HR for single-signal work.</p>
           `,
         },
       },

@@ -1,7 +1,5 @@
 import { useState, memo, useContext, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter/dist/cjs/prism";
-import { materialDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { FaInfo, FaCheck, FaRegCopy } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
@@ -23,6 +21,8 @@ import {
 const InfoModal = ({ opened, close }) => {
   const content =
     "def filter_signal(signal): \n\tnew_values = scipy.ndimage.gaussian_filter1d(signal, sigma=30) \n\treturn new_values";
+  const packageList =
+    "import numpy as np\nimport pandas as pd\nimport neurokit2\nimport scipy";
 
   const [copied, setCopied] = useState(false);
 
@@ -34,6 +34,9 @@ const InfoModal = ({ opened, close }) => {
 
   // Detect dark mode
   const { isDarkMode: isDark } = useContext(ThemeContext);
+  const codeBlockClassName = isDark
+    ? "mt-2 overflow-x-auto rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-sm text-gray-100"
+    : "mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-950 px-4 py-3 text-sm text-slate-100";
 
   return (
     <SimpleDialog open={opened} onClose={close} title="Python Info">
@@ -76,24 +79,16 @@ const InfoModal = ({ opened, close }) => {
           </li>
           <li>
             <strong>What packages can I use? (more to come):</strong>
-            <SyntaxHighlighter
-              language="python"
-              style={isDark ? materialDark : undefined}
-            >
-              {
-                "import numpy as np\nimport pandas as pd\nimport neurokit2\nimport scipy"
-              }
-            </SyntaxHighlighter>
+            <pre className={codeBlockClassName}>
+              <code>{packageList}</code>
+            </pre>
           </li>
           <li>
             <strong>Example (copy and paste to try!):</strong>
             <div className="relative">
-              <SyntaxHighlighter
-                language="python"
-                style={isDark ? materialDark : undefined}
-              >
-                {content}
-              </SyntaxHighlighter>
+              <pre className={codeBlockClassName}>
+                <code>{content}</code>
+              </pre>
 
               <SimpleTooltip label={copied ? "Copied!" : "Copy"}>
                 <button

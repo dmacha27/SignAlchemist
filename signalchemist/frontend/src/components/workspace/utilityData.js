@@ -1,4 +1,8 @@
 import { generateDataOriginal } from "../utils/dataUtils";
+import {
+  createFormData,
+  postFormData,
+} from "../../lib/apiClient";
 
 export const readCsvFile = (file, readString) =>
   new Promise((resolve, reject) => {
@@ -43,20 +47,13 @@ export const requestSignalMetrics = async ({
   signalType,
   samplingRate,
 }) => {
-  const formData = new FormData();
-  formData.append("signal", JSON.stringify(signal.slice(1)));
-  formData.append("signal_type", signalType);
-  formData.append("sampling_rate", String(samplingRate));
-
-  const response = await fetch("/api/metrics", {
-    method: "POST",
-    body: formData,
-  });
-
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error);
-  }
-
-  return payload;
+  return postFormData(
+    "/api/metrics",
+    createFormData([
+      ["signal", JSON.stringify(signal.slice(1))],
+      ["signal_type", signalType],
+      ["sampling_rate", String(samplingRate)],
+    ]),
+    "Failed to compute metrics"
+  );
 };
