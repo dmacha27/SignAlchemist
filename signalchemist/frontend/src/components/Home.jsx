@@ -10,7 +10,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import "driver.js/dist/driver.css";
 
 import { useNavigate } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
@@ -22,7 +21,6 @@ import {
   buildCroppedUtilityFile,
   normalizeSamplingRateInput,
 } from "./home/homeUtils";
-import { startHomeTour } from "./home/homeTour";
 import {
   HomeHero,
   CSVUploader,
@@ -164,7 +162,7 @@ const Home = () => {
   return (
     <div className="container mx-auto px-4 py-4">
       <div className="mx-auto max-w-7xl">
-        <HomeHero isDark={isDark} onStartTour={startHomeTour} />
+        <HomeHero isDark={isDark} />
 
         <section
           id="workspace"

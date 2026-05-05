@@ -5,7 +5,6 @@ import { PrimeReactProvider } from "primereact/api";
 import { FileUpload } from "primereact/fileupload";
 import { usePapaParse } from "react-papaparse";
 import RangeSlider from "react-range-slider-input";
-import { TbHelpSquareRoundedFilled } from "react-icons/tb";
 import { FaArrowRight, FaCogs, FaFlask, FaUpload } from "react-icons/fa";
 import {
   FaProjectDiagram,
@@ -23,12 +22,14 @@ import {
   autoConfigureDataset,
   parseCsvFile,
 } from "./homeUtils";
-import { SimpleMenu, SimpleTooltip } from "../common/ui";
+import { SimpleMenu } from "../common/ui";
 
 const OUTER_CARD_CLASS =
   "rounded-[1.6rem] border border-slate-200/80 bg-white/85 p-3.5 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700 dark:bg-gray-900/85";
 const INNER_CARD_CLASS =
   "rounded-[1.15rem] border border-slate-200 bg-white p-2.5 dark:border-gray-700 dark:bg-gray-900";
+const QUICK_STEP_CARD_CLASS =
+  "rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-600 dark:border-gray-700 dark:bg-gray-950 dark:text-slate-300";
 
 const utilityItems = [
   {
@@ -107,7 +108,7 @@ const SectionHeader = ({
   );
 };
 
-export const HomeHero = ({ isDark, onStartTour }) => (
+export const HomeHero = ({ isDark }) => (
   <header className="rounded-[1.75rem] border border-white/70 bg-white/80 px-5 py-4 shadow-[0_20px_55px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700 dark:bg-gray-950/75 md:px-6">
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start">
       <div>
@@ -135,46 +136,62 @@ export const HomeHero = ({ isDark, onStartTour }) => (
       </div>
 
       <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/85 p-3 dark:border-gray-700 dark:bg-gray-900/80">
-        <div className="flex flex-col gap-2.5 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-3">
           <div>
             <div className="flex items-center gap-3">
               <span className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white dark:bg-white dark:text-slate-900">
                 Quick Start
               </span>
-              <SimpleTooltip label="Onboarding Tutorial">
-                <button
-                  onClick={onStartTour}
-                  className="shake rounded-xl border border-slate-300 bg-white p-2 text-slate-700 transition hover:bg-slate-100 dark:border-gray-600 dark:bg-gray-950 dark:text-gray-100 dark:hover:bg-gray-800"
-                  aria-label="Open onboarding tutorial"
-                >
-                  <TbHelpSquareRoundedFilled size={22} />
-                </button>
-              </SimpleTooltip>
             </div>
-            <p className="mt-1.5 text-sm leading-5 text-slate-600 dark:text-slate-300">
-              Follow the tutorial or use one of the sample files to check the
-              full flow quickly.
-            </p>
           </div>
 
-          <div className="min-w-0 md:max-w-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-              Workflow
-            </p>
-            <div className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
-              {[
-                "Upload a CSV or load a sample.",
-                "Configure the dataset metadata.",
-                "Preview and crop the signal.",
-                "Select the utility for the next step.",
-              ].map((item, index) => (
-                <div key={item} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
-                    {index + 1}
-                  </span>
-                  <p>{item}</p>
+          <div>
+            <div className="grid gap-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+              <div className="grid gap-2">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {[
+                    "Load a sample or upload your own CSV.",
+                    "Configure signal type, columns and sampling rate.",
+                  ].map((item, index) => (
+                    <div
+                      key={item}
+                      className={`${QUICK_STEP_CARD_CLASS} flex items-start gap-3`}
+                    >
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
+                        {index + 1}
+                      </span>
+                      <p className="leading-5">{item}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <div
+                  className={`${QUICK_STEP_CARD_CLASS} flex items-start gap-3`}
+                >
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
+                    4
+                  </span>
+                  <p className="leading-5">
+                    Continue with `Processing`, `Batch` or a focused utility.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                className={`${QUICK_STEP_CARD_CLASS} flex h-full items-start gap-3`}
+              >
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
+                  3
+                </span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-800 dark:text-slate-100">
+                    Inspect and crop
+                  </p>
+                  <p className="mt-1 leading-5">
+                    Use the preview to validate the selected columns and trim
+                    the working range before you continue.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -337,8 +354,8 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
         description="Choose the utility once the dataset is ready."
       />
 
-      <div className="mt-4 flex flex-col gap-3 pt-1">
-        <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-gray-800 dark:text-slate-300">
+      <div className="mt-3 flex flex-col gap-2.5">
+        <div className="rounded-xl bg-slate-50 px-3 py-2 text-[13px] text-slate-600 dark:bg-gray-800 dark:text-slate-300">
           {canLaunchUtility ? (
             "Everything is ready. Choose where you want to continue."
           ) : (
@@ -372,16 +389,16 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
                   type="button"
                   onClick={() => onLaunchUtility(item.path)}
                   disabled={isDisabled}
-                  className={`flex min-h-[88px] items-start gap-3 rounded-[1.15rem] border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:disabled:border-gray-700 dark:disabled:bg-gray-800 dark:disabled:text-gray-500 ${featuredClass}`}
+                  className={`flex min-h-[64px] items-start gap-2.5 rounded-[1.05rem] border px-3.5 py-2 text-left transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:disabled:border-gray-700 dark:disabled:bg-gray-800 dark:disabled:text-gray-500 ${featuredClass}`}
                 >
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 text-[18px] shadow-sm dark:bg-gray-950/70">
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/75 text-[15px] shadow-sm dark:bg-gray-950/70">
                     <Icon aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-semibold">
+                    <span className="block text-[13px] font-semibold leading-4">
                       {item.label}
                     </span>
-                    <span className="mt-1 block text-xs leading-5 opacity-80">
+                    <span className="mt-0.5 block text-[11px] leading-4 opacity-80">
                       {item.helper}
                     </span>
                   </span>
@@ -391,7 +408,7 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
           </div>
 
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Single Utilities
             </p>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -405,11 +422,11 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
                     type="button"
                     onClick={() => onLaunchUtility(item.path)}
                     disabled={isDisabled}
-                    className="inline-flex min-h-[52px] items-center justify-center gap-2 overflow-visible rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-100 dark:hover:border-gray-600 dark:hover:bg-gray-800 dark:disabled:border-gray-700 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+                    className="inline-flex min-h-[40px] items-center justify-center gap-1.5 overflow-visible rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-100 dark:hover:border-gray-600 dark:hover:bg-gray-800 dark:disabled:border-gray-700 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
                   >
                     {Icon ? (
-                      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-visible leading-none">
-                        <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center overflow-visible leading-none">
+                        <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
                       </span>
                     ) : null}
                     <span>{item.label}</span>
@@ -536,7 +553,6 @@ export const PreviewWorkspaceCard = ({ children }) => (
 
 HomeHero.propTypes = {
   isDark: PropTypes.bool.isRequired,
-  onStartTour: PropTypes.func.isRequired,
 };
 
 CSVUploader.propTypes = {
