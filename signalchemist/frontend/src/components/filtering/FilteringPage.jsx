@@ -95,6 +95,11 @@ const FilteringPage = () => {
       return;
     }
 
+    if (filter === "python" && !fields.python?.trim()) {
+      toast.error("Python code is required for the Python filter");
+      return;
+    }
+
     setIsRequesting(true);
 
     try {

@@ -89,12 +89,11 @@ function FilteringNode({ id, data }) {
   }, [data.samplingRate, incomingTable]);
 
   useEffect(() => {
-    const { python, ...rest } = fields;
     updateNodeData(id, (prev) => ({
       ...prev,
       technique: JSON.stringify({
         name: filter,
-        fields: python === "" ? rest : { python },
+        fields,
       }),
       target: targetNodeId,
       filter,
@@ -117,6 +116,12 @@ function FilteringNode({ id, data }) {
     const samplingRate = samplingRateRef.current;
 
     if (!table) return;
+
+    if (filter === "python" && !fields.python?.trim()) {
+      toast.error("Python code is required for the Python filter");
+      setExecutionState("error");
+      return null;
+    }
 
     setExecutionState("running");
 

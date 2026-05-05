@@ -337,7 +337,7 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
         description="Choose the utility once the dataset is ready."
       />
 
-      <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-gray-700">
+      <div className="mt-4 flex flex-col gap-3 pt-1">
         <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-gray-800 dark:text-slate-300">
           {canLaunchUtility ? (
             "Everything is ready. Choose where you want to continue."

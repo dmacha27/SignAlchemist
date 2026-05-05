@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
+import { createPortal } from "react-dom";
 import { FaQuestionCircle } from "react-icons/fa";
 
 export const uiInputClass =
@@ -188,7 +189,7 @@ export const SimpleDialog = ({ open, title, onClose, children }) => {
     return null;
   }
 
-  return (
+  const dialog = (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
       <button
         type="button"
@@ -222,6 +223,12 @@ export const SimpleDialog = ({ open, title, onClose, children }) => {
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") {
+    return dialog;
+  }
+
+  return createPortal(dialog, document.body);
 };
 
 SimpleDialog.propTypes = {

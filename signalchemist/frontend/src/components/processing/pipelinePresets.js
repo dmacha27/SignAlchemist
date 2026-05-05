@@ -29,7 +29,6 @@ export const PIPELINE_PRESETS = {
           filter: "gaussian",
           fields: {
             sigma: 100,
-            python: "",
           },
         },
       },
@@ -73,7 +72,6 @@ export const PIPELINE_PRESETS = {
             order: 5,
             lowcut: 1,
             highcut: 15,
-            python: "",
           },
         },
       },
@@ -117,7 +115,6 @@ export const PIPELINE_PRESETS = {
             order: 5,
             lowcut: 1,
             highcut: 15,
-            python: "",
           },
         },
       },

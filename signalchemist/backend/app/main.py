@@ -217,7 +217,7 @@ async def filtering(
     sampling_rate: float = Form(...,
                               description="Sampling rate of the input signal in Hz."),
     filter_config: str = Form(
-        ..., description="JSON-encoded dict including `method`, `lowcut`, `highcut`, `order`, or `python`."),
+        ..., description="JSON-encoded dict including `method`, built-in parameters such as `lowcut`, `highcut`, `order`, or a `python` function body when `method` is `python`."),
 ):
     """
     Filter a signal using a predefined or custom method.
@@ -237,6 +237,9 @@ async def filtering(
         error = check_max_samples(len(data), "Filtering")
         if error:
             return error
+
+        if config.get("method") == "python" and not config.get("python"):
+            return JSONResponse(content={"error": "Python code is required when method is 'python'"}, status_code=400)
 
         if "python" in config and config["python"]:
             if not python_enabled:

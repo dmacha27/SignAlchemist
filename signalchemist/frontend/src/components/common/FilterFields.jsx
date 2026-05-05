@@ -73,9 +73,8 @@ const InfoModal = ({ opened, close }) => {
             code, an error message will be displayed.
           </li>
           <li>
-            <strong>Empty Field:</strong> If the field is left blank, the filter
-            will be executed with the other parameters from the form (this field
-            will be ignored).
+            <strong>Required for Python filter:</strong> If this field is left
+            blank, the custom Python filter cannot be executed.
           </li>
           <li>
             <strong>What packages can I use? (more to come):</strong>

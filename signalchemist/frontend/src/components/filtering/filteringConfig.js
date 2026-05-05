@@ -2,7 +2,7 @@ const PYTHON_FIELD = {
   label: "Python code",
   type: "textarea",
   defaultValue: "",
-  tooltip: "Optional custom Python function. If you use this field, it overrides the built-in filter settings.",
+  tooltip: "Custom Python function named filter_signal(signal) used as the filtering method.",
 };
 
 export const filterDefinitions = {
@@ -32,7 +32,6 @@ export const filterDefinitions = {
         optional: true,
         tooltip: "Upper cutoff frequency in Hz. Frequencies above this value are attenuated.",
       },
-      python: PYTHON_FIELD,
     },
   },
   bessel: {
@@ -54,7 +53,6 @@ export const filterDefinitions = {
         optional: true,
         tooltip: "Upper cutoff frequency in Hz. Frequencies above this value are attenuated.",
       },
-      python: PYTHON_FIELD,
     },
   },
   fir: {
@@ -76,7 +74,6 @@ export const filterDefinitions = {
         optional: true,
         tooltip: "Upper cutoff frequency in Hz. Frequencies above this value are attenuated.",
       },
-      python: PYTHON_FIELD,
     },
   },
   savgol: {
@@ -112,7 +109,6 @@ export const filterDefinitions = {
         min: 3,
         tooltip: "Number of samples used in each smoothing window. Larger windows produce stronger smoothing.",
       },
-      python: PYTHON_FIELD,
     },
   },
   gaussian: {
@@ -125,6 +121,11 @@ export const filterDefinitions = {
         min: 0.01,
         tooltip: "Controls how wide the Gaussian smoothing kernel is. Larger values smooth more aggressively.",
       },
+    },
+  },
+  python: {
+    label: "Python code",
+    fields: {
       python: PYTHON_FIELD,
     },
   },
