@@ -1,7 +1,7 @@
 import {
   createFormData,
   postFormData,
-} from "../../lib/apiClient";
+} from "@/lib/apiClient";
 
 export function getDefaultHeartRateMethod() {
   return "emotibit";
