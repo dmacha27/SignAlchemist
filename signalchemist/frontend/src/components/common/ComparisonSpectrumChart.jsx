@@ -6,7 +6,11 @@ import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { average, diff } from "../utils/dataUtils";
-import { exportToPNG, handleResetStyle, handleResetZoom } from "../utils/chartUtils";
+import {
+  exportSingleChartWithTitlePNG,
+  handleResetStyle,
+  handleResetZoom,
+} from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
 import { resetEchartsZoom, toRgba } from "./echartsBridge";
 import {
@@ -157,10 +161,19 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
 
   bridgeRef.current = {
     __kind: "echarts",
-    toBase64Image: () =>
+    exportMeta: {
+      badge: "Spectrum Compare",
+      title: `${name1} / ${name2}`,
+    },
+    toBase64Image: (exportOptions = {}) =>
       chartComponentRef.current
         ?.getEchartsInstance()
-        ?.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: isDark ? "#020617" : "#ffffff" }),
+        ?.getDataURL({
+          type: "png",
+          pixelRatio: exportOptions.pixelRatio ?? 4,
+          backgroundColor:
+            exportOptions.backgroundColor ?? (isDark ? "#020617" : "#ffffff"),
+        }),
     resetZoom: () => {
       resetEchartsZoom(chartComponentRef.current?.getEchartsInstance?.());
       setXWindow(null);
@@ -228,7 +241,13 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
             items={[{
               label: "PNG",
               icon: <FaImage size={12} />,
-              onClick: () => exportToPNG(bridgeRef.current),
+              onClick: () => exportSingleChartWithTitlePNG({
+                chart: bridgeRef.current,
+                title: `${name1} / ${name2}`,
+                filename: "comparison-spectrum-overlay.png",
+                backgroundColor: isDark ? "#020617" : "#ffffff",
+                foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
+              }),
             }]}
           />
         </div>

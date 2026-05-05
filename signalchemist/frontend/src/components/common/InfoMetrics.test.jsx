@@ -2,13 +2,13 @@ import { render, screen } from "../../test-utils";
 import InfoMetrics from "./InfoMetrics";
 
 const mockMetricsOriginal = {
-  metricA: { value: 0.967534, description: "Gadea et al." },
-  metricB: { value: 0.655444, description: "Gadea et al." },
+  metricA: { value: 0.967534, description: "EDA quality score. Higher is better." },
+  metricB: { value: 0.655444, description: "Pulse variability score. Lower is better." },
 };
 
 const mockMetricsProcessed = {
-  metricA: { value: 1.0, description: "Gadea et al." },
-  metricB: { value: 0.93, description: "Gadea et al." },
+  metricA: { value: 1.0, description: "EDA quality score. Higher is better." },
+  metricB: { value: 0.93, description: "Pulse variability score. Lower is better." },
 };
 
 describe("InfoMetrics", () => {
@@ -92,6 +92,21 @@ describe("InfoMetrics", () => {
     );
     expect(screen.getAllByText("metricA")).toHaveLength(2);
     expect(screen.getAllByText("metricB")).toHaveLength(2);
+  });
+
+  test("shows metric preference and trend indicators for processed metrics", () => {
+    render(
+      <InfoMetrics
+        metricsOriginal={mockMetricsOriginal}
+        metricsProcessed={mockMetricsProcessed}
+        isRequesting={false}
+      />
+    );
+
+    expect(screen.getAllByText("Higher is better")).toHaveLength(2);
+    expect(screen.getAllByText("Lower is better")).toHaveLength(2);
+    expect(screen.getByText("Improved")).toBeInTheDocument();
+    expect(screen.getByText("Worse")).toBeInTheDocument();
   });
 
   test("MetricsOriginal: YES, MetricsProcessed: YES, isRequesting: YES — shows original metrics and loader", () => {

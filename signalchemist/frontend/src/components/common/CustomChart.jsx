@@ -4,7 +4,12 @@ import ReactECharts from "echarts-for-react";
 import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
-import { exportToPNG, handleResetStyle, handleResetZoom, processChartHighlight } from "../utils/chartUtils";
+import {
+  exportSingleChartWithTitlePNG,
+  handleResetStyle,
+  handleResetZoom,
+  processChartHighlight,
+} from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
 import { getCharts, registerChart, resetEchartsZoom, toRgba, unregisterChart } from "./echartsBridge";
 import { SimpleMenu } from "./ui";
@@ -54,6 +59,7 @@ const CustomChart = memo(({
   defaultColor = "#2196f3",
   annotationPoints = [],
   annotationColor = "#f97316",
+  onBridgeReady = null,
 }) => {
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
@@ -265,12 +271,20 @@ const CustomChart = memo(({
     const bridge = {
       __kind: "echarts",
       group: "signal",
+      exportMeta: {
+        badge: "Signal",
+        title: headers[1],
+      },
       dataLength: points.length,
       xValues: points.map(([x]) => x),
-      toBase64Image: () =>
+      toBase64Image: (exportOptions = {}) =>
         chartComponentRef.current
           ?.getEchartsInstance()
-          ?.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: isDark ? "#020617" : "#ffffff" }),
+          ?.getDataURL({
+            type: "png",
+            pixelRatio: exportOptions.pixelRatio ?? 4,
+            backgroundColor: exportOptions.backgroundColor ?? (isDark ? "#020617" : "#ffffff"),
+          }),
       resetZoom: () => {
         resetEchartsZoom(chartComponentRef.current?.getEchartsInstance?.());
         setZoomWindow(null);
@@ -320,10 +334,14 @@ const CustomChart = memo(({
     };
 
     bridgeRef.current = bridge;
+    onBridgeReady?.(bridge);
     registerChart("signal", bridge);
 
-    return () => unregisterChart("signal", bridge);
-  }, [isDark, points]);
+    return () => {
+      onBridgeReady?.(null);
+      unregisterChart("signal", bridge);
+    };
+  }, [headers, isDark, onBridgeReady, points]);
 
   const handleMouseMove = (params) => {
     const xValue =
@@ -398,7 +416,13 @@ const CustomChart = memo(({
             items={[{
               label: "PNG",
               icon: <FaImage size={12} />,
-              onClick: () => exportToPNG(bridgeRef.current),
+              onClick: () => exportSingleChartWithTitlePNG({
+                chart: bridgeRef.current,
+                title: headers[1],
+                filename: `${headers[1] || "signal"}-chart.png`,
+                backgroundColor: isDark ? "#020617" : "#ffffff",
+                foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
+              }),
             }]}
           />
         </div>
@@ -446,12 +470,14 @@ CustomChart.propTypes = {
     PropTypes.arrayOf(PropTypes.number)
   ),
   annotationColor: PropTypes.string,
+  onBridgeReady: PropTypes.func,
 };
 
 CustomChart.defaultProps = {
   defaultColor: "#2196f3",
   annotationPoints: [],
   annotationColor: "#f97316",
+  onBridgeReady: null,
 };
 
 export default CustomChart;

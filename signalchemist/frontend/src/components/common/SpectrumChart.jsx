@@ -6,7 +6,11 @@ import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { average, diff } from "../utils/dataUtils";
-import { exportToPNG, handleResetStyle, handleResetZoom } from "../utils/chartUtils";
+import {
+  exportSingleChartWithTitlePNG,
+  handleResetStyle,
+  handleResetZoom,
+} from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
 import { getCharts, registerChart, resetEchartsZoom, toRgba, unregisterChart } from "./echartsBridge";
 import {
@@ -29,7 +33,7 @@ function padToPowerOfTwo(signal) {
   return signal.concat(Array(desiredLength - signal.length).fill(0));
 }
 
-const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
+const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = null }) => {
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
   const chartComponentRef = useRef(null);
@@ -151,10 +155,18 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
   useEffect(() => {
     const bridge = {
       __kind: "echarts",
-      toBase64Image: () =>
+      exportMeta: {
+        badge: "Spectrum",
+        title: "FFT",
+      },
+      toBase64Image: (exportOptions = {}) =>
         chartComponentRef.current
           ?.getEchartsInstance()
-          ?.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: isDark ? "#020617" : "#ffffff" }),
+          ?.getDataURL({
+            type: "png",
+            pixelRatio: exportOptions.pixelRatio ?? 4,
+            backgroundColor: exportOptions.backgroundColor ?? (isDark ? "#020617" : "#ffffff"),
+          }),
       resetZoom: () => {
         resetEchartsZoom(chartComponentRef.current?.getEchartsInstance?.());
         setXWindow(null);
@@ -192,6 +204,7 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
       },
     };
     bridgeRef.current = bridge;
+    onBridgeReady?.(bridge);
     registerChart("spectrum", bridge);
 
     const instance = chartComponentRef.current?.getEchartsInstance();
@@ -222,11 +235,12 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
     zr?.on?.("globalout", handleHoverOut);
 
     return () => {
+      onBridgeReady?.(null);
       zr?.off?.("mousemove", handleHoverMove);
       zr?.off?.("globalout", handleHoverOut);
       unregisterChart("spectrum", bridge);
     };
-  }, [isDark, points, zoomRangeX]);
+  }, [isDark, onBridgeReady, points, zoomRangeX]);
 
   const handleGoToX = (both = false) => {
     if (goToX === null || goToX < minXValue || goToX > maxXValue) return;
@@ -288,7 +302,13 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3" }) => {
             items={[{
               label: "PNG",
               icon: <FaImage size={12} />,
-              onClick: () => exportToPNG(bridgeRef.current),
+              onClick: () => exportSingleChartWithTitlePNG({
+                chart: bridgeRef.current,
+                title: "FFT",
+                filename: "spectrum-chart.png",
+                backgroundColor: isDark ? "#020617" : "#ffffff",
+                foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
+              }),
             }]}
           />
         </div>
@@ -378,6 +398,7 @@ SpectrumChart.propTypes = {
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number]))
   ).isRequired,
   defaultColor: PropTypes.string,
+  onBridgeReady: PropTypes.func,
 };
 
 export default SpectrumChart;
