@@ -171,7 +171,7 @@ export const HomeHero = ({ isDark }) => (
                     4
                   </span>
                   <p className="leading-5">
-                    Continue with `Processing`, `Batch` or a focused utility.
+                    Continue with `Processing`, `Batch` or a single utility.
                   </p>
                 </div>
               </div>

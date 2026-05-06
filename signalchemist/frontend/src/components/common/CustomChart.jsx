@@ -8,51 +8,14 @@ import {
   exportSingleChartWithTitlePNG,
   handleResetStyle,
   handleResetZoom,
-  processChartHighlight,
 } from "../utils/chartUtils";
 import { ChartFrame } from "./chartShell";
-import { getCharts, registerChart, resetEchartsZoom, toRgba, unregisterChart } from "./echartsBridge";
+import { resetEchartsZoom, toRgba } from "./echartsBridge";
 import { SimpleMenu } from "./ui";
 
 const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
   "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
-
-function findClosestPointIndex(points, xValue) {
-  if (!points.length || typeof xValue !== "number" || Number.isNaN(xValue)) {
-    return -1;
-  }
-
-  let low = 0;
-  let high = points.length - 1;
-
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    const currentX = points[mid][0];
-
-    if (currentX === xValue) {
-      return mid;
-    }
-
-    if (currentX < xValue) {
-      low = mid + 1;
-    } else {
-      high = mid - 1;
-    }
-  }
-
-  if (low >= points.length) {
-    return points.length - 1;
-  }
-
-  if (high < 0) {
-    return 0;
-  }
-
-  return Math.abs(points[low][0] - xValue) < Math.abs(points[high][0] - xValue)
-    ? low
-    : high;
-}
 
 const CustomChart = memo(({
   table,
@@ -67,7 +30,6 @@ const CustomChart = memo(({
   const bridgeRef = useRef(null);
   const [focusedIndex, setFocusedIndex] = useState(null);
   const [zoomWindow, setZoomWindow] = useState(null);
-  const [hoverIndex, setHoverIndex] = useState(null);
 
   const [headers = ["time", "value"], ...rows] = table ?? [["time", "value"]];
   const points = useMemo(
@@ -239,20 +201,6 @@ const CustomChart = memo(({
         },
         {
           type: "scatter",
-          data:
-            hoverIndex !== null && points[hoverIndex]
-              ? [points[hoverIndex]]
-              : [],
-          symbolSize: 8,
-          itemStyle: {
-            color: isDark ? "#f8fafc" : "#ffffff",
-            borderColor: defaultColor,
-            borderWidth: 2,
-          },
-          silent: true,
-        },
-        {
-          type: "scatter",
           data: annotations,
           symbol: "diamond",
           symbolSize: 10,
@@ -265,7 +213,7 @@ const CustomChart = memo(({
         },
       ],
     };
-  }, [annotationColor, annotations, defaultColor, focusedIndex, hasRows, headers, hoverIndex, isDark, isLargeDataset, maxX, minX, points, xAxisType, zoomWindow]);
+  }, [annotationColor, annotations, defaultColor, focusedIndex, hasRows, headers, isDark, isLargeDataset, maxX, minX, points, xAxisType, zoomWindow]);
 
   useEffect(() => {
     const bridge = {
@@ -291,92 +239,30 @@ const CustomChart = memo(({
       },
       resetStyle: () => {
         setFocusedIndex(null);
-        setHoverIndex(null);
       },
-      showTooltip: (index) => {
-        if (index < 0 || index >= points.length) return;
-        setHoverIndex(index);
-        const instance = chartComponentRef.current?.getEchartsInstance();
-        instance?.dispatchAction({
-          type: "showTip",
-          seriesIndex: 0,
-          dataIndex: index,
-        });
-      },
-      showTooltipAtX: (xValue) => {
-        const closestIndex = findClosestPointIndex(points, xValue);
-        if (closestIndex < 0) return;
-
-        setHoverIndex(closestIndex);
-        chartComponentRef.current?.getEchartsInstance()?.dispatchAction({
-          type: "showTip",
-          seriesIndex: 0,
-          dataIndex: closestIndex,
-        });
-      },
-      hideTooltip: () => {
-        setHoverIndex(null);
-        chartComponentRef.current?.getEchartsInstance()?.dispatchAction({
-          type: "hideTip",
-        });
-      },
-      highlightPoint: (pointIndex, xvalue, _highlightColor, zoomRange, chartRef) => {
+      highlightPoint: (pointIndex, xvalue, _highlightColor, zoomRange) => {
         if (points.length > MAX_DATA_LENGTH) return;
-        const resolvedIndex =
-          chartRef.current?.dataLength === points.length
-            ? pointIndex
-            : findClosestPointIndex(points, xvalue);
-        if (resolvedIndex < 0 || resolvedIndex >= points.length) return;
-
-        setFocusedIndex(resolvedIndex);
+        if (pointIndex < 0 || pointIndex >= points.length) return;
+        setFocusedIndex(pointIndex);
         setZoomWindow([xvalue - zoomRange, xvalue + zoomRange]);
       },
     };
 
     bridgeRef.current = bridge;
     onBridgeReady?.(bridge);
-    registerChart("signal", bridge);
 
     return () => {
       onBridgeReady?.(null);
-      unregisterChart("signal", bridge);
     };
   }, [headers, isDark, onBridgeReady, points]);
-
-  const handleMouseMove = (params) => {
-    const xValue =
-      Array.isArray(params.value) && typeof params.value[0] === "number"
-        ? params.value[0]
-        : points[params.dataIndex]?.[0];
-    if (typeof xValue !== "number" || Number.isNaN(xValue)) return;
-
-    getCharts("signal").forEach((chart) => {
-      if (chart !== bridgeRef.current) {
-        chart.showTooltipAtX?.(xValue);
-      }
-    });
-  };
-
-  const handleMouseLeave = () => {
-    getCharts("signal").forEach((chart) => {
-      chart.hideTooltip?.();
-    });
-  };
 
   const handlePointClick = (params) => {
     if (typeof params.dataIndex !== "number") return;
     const xValue = points[params.dataIndex]?.[0];
-    const charts = getCharts("signal");
-    charts.forEach((chart) => {
-      processChartHighlight(
-        chart,
-        params.dataIndex,
-        xValue,
-        "#f97316",
-        zoomRangeX,
-        { current: bridgeRef.current }
-      );
-    });
+    if (typeof xValue !== "number" || Number.isNaN(xValue)) return;
+
+    setFocusedIndex(params.dataIndex);
+    setZoomWindow([xValue - zoomRangeX, xValue + zoomRangeX]);
   };
 
   return (
@@ -428,20 +314,14 @@ const CustomChart = memo(({
         </div>
       }
       canvas={
-        <div
-          className="relative min-h-[360px] overflow-hidden rounded-[0.7rem] border border-slate-200 bg-white p-1 dark:border-gray-800 dark:bg-slate-950"
-          onMouseLeave={handleMouseLeave}
-        >
+        <div className="relative min-h-[360px] overflow-hidden rounded-[0.7rem] border border-slate-200 bg-white p-1 dark:border-gray-800 dark:bg-slate-950">
           <ReactECharts
             ref={chartComponentRef}
             option={option}
             notMerge
             lazyUpdate
             style={{ height: 360, width: "100%" }}
-            onEvents={{
-              click: handlePointClick,
-              mousemove: handleMouseMove,
-            }}
+            onEvents={{ click: handlePointClick }}
           />
         </div>
       }

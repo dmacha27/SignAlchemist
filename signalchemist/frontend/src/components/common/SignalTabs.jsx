@@ -201,14 +201,14 @@ const SignalTabs = ({
             {comparisonView === "split" && chartDataOriginal && chartDataProcessed ? (
               <SimpleMenu
                 widthClass="w-60"
-                label="Export selection"
+                label="Export"
                 trigger={(
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300 dark:hover:bg-gray-800"
                   >
                     <FaDownload size={12} />
-                    Export Selection
+                    Export
                   </button>
                 )}
                 items={[

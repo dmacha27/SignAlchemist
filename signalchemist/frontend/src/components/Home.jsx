@@ -62,10 +62,6 @@ const Home = () => {
   const [previewCropValues, setPreviewCropValues] = useState(null);
 
   useEffect(() => {
-    window.history.replaceState({}, "");
-  }, []);
-
-  useEffect(() => {
     const preview = buildChartPreview({
       fileRows,
       headers,

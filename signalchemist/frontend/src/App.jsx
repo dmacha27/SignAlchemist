@@ -1,9 +1,11 @@
 import {
-  Routes,
   Route,
   useLocation,
   Navigate,
   useNavigate,
+  Outlet,
+  createBrowserRouter,
+  createRoutesFromElements,
 } from "react-router-dom";
 import {
   lazy,
@@ -31,17 +33,29 @@ import { Toaster, toast } from "react-hot-toast";
 
 import {
   FaBook,
+  FaRegCommentDots,
   FaMoon,
   FaSun,
 } from "react-icons/fa";
 
-const About = lazy(() => import("./components/About"));
-const Processing = lazy(() => import("./components/Processing"));
-const Batch = lazy(() => import("./components/Batch"));
-const Resampling = lazy(() => import("./components/Resampling"));
-const Filtering = lazy(() => import("./components/Filtering"));
-const Hr = lazy(() => import("./components/Hr"));
-const Peaks = lazy(() => import("./components/Peaks"));
+const UEQ_FEEDBACK_URL =
+  "https://forms.cloud.microsoft/pages/responsepage.aspx?id=tbCjKoKnOE-omOSDsg6NYZrg_8ALi8hAsrlK1XJTvk1UMzhNS1Y1Q0JHSFo3N0NPRUZSVzJFQllOTy4u&route=shorturl";
+
+const loadAbout = () => import("./components/About");
+const loadProcessing = () => import("./components/Processing");
+const loadBatch = () => import("./components/Batch");
+const loadResampling = () => import("./components/Resampling");
+const loadFiltering = () => import("./components/Filtering");
+const loadHr = () => import("./components/Hr");
+const loadPeaks = () => import("./components/Peaks");
+
+const About = lazy(loadAbout);
+const Processing = lazy(loadProcessing);
+const Batch = lazy(loadBatch);
+const Resampling = lazy(loadResampling);
+const Filtering = lazy(loadFiltering);
+const Hr = lazy(loadHr);
+const Peaks = lazy(loadPeaks);
 
 // Get default system or prefered theme
 const getInitialTheme = () => {
@@ -88,7 +102,7 @@ const RouteLoader = () => (
   </div>
 );
 
-const App = () => {
+const AppLayout = () => {
   // Dark Theme toogle
   const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
   useEffect(() => {
@@ -114,13 +128,18 @@ const App = () => {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
 
   const handleNavigate = (path) => {
-    setIsNavMenuOpen(false);
-
     if (canOpenWorkspacePath(path, location.state)) {
-      navigate(path, { state: location.state });
+      setIsNavMenuOpen(false);
+      navigate(path, { state: location.state, flushSync: true });
     } else {
+      setIsNavMenuOpen(false);
       toast.error("Load a CSV first to open this utility");
     }
+  };
+
+  const handleNavigateHome = () => {
+    setIsNavMenuOpen(false);
+    navigate("/", { flushSync: true });
   };
 
   const isHome = location.pathname === "/" || location.pathname === "/about";
@@ -154,61 +173,25 @@ const App = () => {
 
           {/* Navigation */}
           <Suspense fallback={<RouteLoader />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-
-              <Route
-                path="/processing"
-                element={
-                  <ProtectedRoute>
-                    <Processing />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route path="/batch" element={<Batch />} />
-
-              <Route
-                path="/resampling"
-                element={
-                  <ProtectedRoute>
-                    <Resampling />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/filtering"
-                element={
-                  <ProtectedRoute>
-                    <Filtering />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/peaks"
-                element={
-                  <ProtectedRoute>
-                    <Peaks />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/hr"
-                element={
-                  <ProtectedRoute>
-                    <Hr />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route path="/docs" element={<DocsRedirect />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Outlet />
           </Suspense>
+
+          <a
+            href={UEQ_FEEDBACK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Help us by filling in the UEQ questionnaire"
+            className="fixed bottom-5 left-5 z-[1080] group"
+          >
+            <div className="flex items-center gap-2 rounded-full border border-cyan-200/70 bg-cyan-50/80 px-3 py-2 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.12)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-50 dark:border-cyan-400/20 dark:bg-cyan-500/10 dark:text-slate-200 dark:hover:bg-cyan-500/12">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/16 text-cyan-700 dark:bg-cyan-400/14 dark:text-cyan-300">
+                <FaRegCommentDots size={14} />
+              </span>
+              <span className="text-[12px] font-medium leading-none text-cyan-900 dark:text-cyan-100">
+                Help us: Fill in our UEQ survey
+              </span>
+            </div>
+          </a>
 
           <footer className="pb-6 pt-10">
             <div className="mx-auto w-full max-w-screen-xl px-5 py-3">
@@ -256,7 +239,7 @@ const App = () => {
               isOpen={isNavMenuOpen}
               onToggle={() => setIsNavMenuOpen((prev) => !prev)}
               onNavigate={handleNavigate}
-              onNavigateHome={() => navigate("/")}
+              onNavigateHome={handleNavigateHome}
             />
           )}
       </div>
@@ -264,4 +247,56 @@ const App = () => {
   );
 };
 
-export default App;
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<AppLayout />}>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route
+        path="/processing"
+        element={
+          <ProtectedRoute>
+            <Processing />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/batch" element={<Batch />} />
+      <Route
+        path="/resampling"
+        element={
+          <ProtectedRoute>
+            <Resampling />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/filtering"
+        element={
+          <ProtectedRoute>
+            <Filtering />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/peaks"
+        element={
+          <ProtectedRoute>
+            <Peaks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hr"
+        element={
+          <ProtectedRoute>
+            <Hr />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/docs" element={<DocsRedirect />} />
+      <Route path="*" element={<NotFound />} />
+    </Route>
+  )
+);
+
+export default router;
