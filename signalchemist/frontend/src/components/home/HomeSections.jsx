@@ -548,7 +548,7 @@ export const PreviewWorkspaceCard = ({ children }) => {
   const { t } = useTranslation();
 
   return (
-    <div className={OUTER_CARD_CLASS}>
+    <div className={OUTER_CARD_CLASS + " xl:sticky xl:top-4 xl:self-start"} >
       <SectionHeader
         step={3}
         title={t("home.preview.title")}
