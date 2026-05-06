@@ -156,9 +156,34 @@ export function createFilterDefaults(samplingRate = 1) {
   );
 }
 
-export function getFilterOptions() {
+export function getFilterOptions(t = null) {
   return Object.entries(filterDefinitions).map(([value, definition]) => ({
     value,
-    label: definition.label,
+    label: t ? t(`filtering.options.${value}`, { defaultValue: definition.label }) : definition.label,
   }));
+}
+
+export function getTranslatedFieldDefinitions(filter, t = null) {
+  const filterDefinition = filterDefinitions[filter];
+  if (!filterDefinition || !t) {
+    return filterDefinition?.fields ?? {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(filterDefinition.fields).map(([fieldName, fieldDefinition]) => {
+      const tooltipKey =
+        filter === "savgol" && fieldName === "order"
+          ? "savgolOrder"
+          : fieldName;
+
+      return [
+        fieldName,
+        {
+          ...fieldDefinition,
+          label: t(`filtering.fields.${fieldName}`, { defaultValue: fieldDefinition.label }),
+          tooltip: t(`filtering.tooltips.${tooltipKey}`, { defaultValue: fieldDefinition.tooltip }),
+        },
+      ];
+    })
+  );
 }

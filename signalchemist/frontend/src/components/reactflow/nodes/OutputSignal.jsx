@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { Position, useNodeConnections, useNodesData } from "@xyflow/react";
 import { FaArrowCircleDown } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import DownloadSignal from "../../common/DownloadSignal";
 import HandleLimit from "../edges/HandleLimit";
@@ -24,6 +25,7 @@ import { buildPeakMarkers } from "../../peaks/peaksShared";
  * @returns {JSX.Element} Visual representation of the processed signal
  */
 function OutputSignal({ id, data }) {
+  const { t } = useTranslation();
   const incomingConnections = useNodeConnections({ type: "target" });
 
   // Find the source node ID from connections
@@ -60,16 +62,16 @@ function OutputSignal({ id, data }) {
   return (
     <NodeShell
       icon={<FaArrowCircleDown />}
-      title="Processed Signal"
-      eyebrow="Output"
+      title={t("nodes.processedSignal")}
+      eyebrow={t("nodes.output")}
       accent="emerald"
       footer={table ? <DownloadSignal table={table} name="processed" /> : null}
     >
-      <NodeSection label="Signal preview">
+      <NodeSection label={t("nodes.signalPreview")}>
         <NodeDataTable
           headers={table ? [table[0][0], table[0][1]] : ["Time", "Value"]}
           rows={table ? table.slice(1, 10) : []}
-          emptyMessage="Waiting for processed signal..."
+          emptyMessage={t("nodes.waitingProcessed")}
         />
       </NodeSection>
 

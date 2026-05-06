@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import {
   FaFilter,
   FaProjectDiagram,
@@ -37,12 +38,15 @@ import {
 const NODE_CATEGORY_ORDER = ["Preprocessing", "Analysis"];
 
 const NodePaletteButton = ({ nodeType, definition, addNode, onNodeDragStart }) => {
+  const { t } = useTranslation();
   const Icon = definition?.icon;
+  const label = t(`pipeline.nodes.${nodeType}.label`, { defaultValue: definition.label });
+  const buttonTitle = t(`pipeline.nodes.${nodeType}.buttonTitle`, { defaultValue: definition.buttonTitle });
 
   return (
     <button
       type="button"
-      title={definition.buttonTitle}
+      title={buttonTitle}
       draggable
       onDragStart={(event) => onNodeDragStart(event, nodeType)}
       onClick={() => addNode(nodeType)}
@@ -54,7 +58,7 @@ const NodePaletteButton = ({ nodeType, definition, addNode, onNodeDragStart }) =
 
       <div className="min-w-0 flex-1">
         <div className="truncate text-[12px] font-semibold text-slate-800 dark:text-slate-100">
-          {definition.label}
+          {label}
         </div>
       </div>
 
@@ -83,39 +87,80 @@ export const ProcessingFlowSection = ({
   importPipeline,
   applyRecommendedPipeline,
 }) => (
+  <ProcessingFlowSectionInner
+    chartDataOriginal={chartDataOriginal}
+    nodes={nodes}
+    edges={edges}
+    edgeTypes={edgeTypes}
+    onNodesChange={onNodesChange}
+    onEdgesChange={onEdgesChange}
+    nodeTypes={nodeTypes}
+    onConnect={onConnect}
+    isDark={isDark}
+    isCanvasDragOver={isCanvasDragOver}
+    onCanvasDragOver={onCanvasDragOver}
+    onCanvasDragLeave={onCanvasDragLeave}
+    onCanvasDrop={onCanvasDrop}
+    exportPipeline={exportPipeline}
+    importPipeline={importPipeline}
+    applyRecommendedPipeline={applyRecommendedPipeline}
+  />
+);
+
+const ProcessingFlowSectionInner = ({
+  chartDataOriginal,
+  nodes,
+  edges,
+  edgeTypes,
+  onNodesChange,
+  onEdgesChange,
+  nodeTypes,
+  onConnect,
+  isDark,
+  isCanvasDragOver,
+  onCanvasDragOver,
+  onCanvasDragLeave,
+  onCanvasDrop,
+  exportPipeline,
+  importPipeline,
+  applyRecommendedPipeline,
+}) => {
+  const { t } = useTranslation();
+
+  return (
   <WorkspaceCard
-    title="Pipeline Flow"
-    description="Pipeline graph."
+    title={t("pages.processing.flowTitle")}
+    description={t("pages.processing.flowDescription")}
     icon={<FaProjectDiagram />}
     actions={(
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
         <WorkspaceSecondaryButton
-          title="Export pipeline"
+          title={t("common.export")}
           onClick={exportPipeline}
           className="px-3 py-2 text-xs"
         >
           <FaFileExport />
-          Export
+          {t("common.export")}
         </WorkspaceSecondaryButton>
         <WorkspaceSecondaryButton
-          title="Import pipeline"
+          title={t("common.import")}
           onClick={importPipeline}
           className="px-3 py-2 text-xs"
         >
           <FaFileImport />
-          Import
+          {t("common.import")}
         </WorkspaceSecondaryButton>
         <SimpleMenu
-          label="Recommended pipelines"
+          label={t("common.menu.recommendedPipelines")}
           widthClass="w-56"
           trigger={(
             <button
               type="button"
-              title="Recommended pipelines"
+              title={t("common.menu.recommendedPipelines")}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
             >
               <FaMagic />
-              Presets
+              {t("common.presets")}
             </button>
           )}
           items={[
@@ -182,7 +227,7 @@ export const ProcessingFlowSection = ({
             />
             <Panel position="top-right">
               <div className="rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-slate-950/95 dark:text-slate-300">
-                Add and connect nodes here.
+                {t("pages.processing.addAndConnect")}
               </div>
             </Panel>
             <MiniMap
@@ -206,17 +251,18 @@ export const ProcessingFlowSection = ({
           {isCanvasDragOver ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-cyan-500/8">
               <div className="rounded-full border border-cyan-300 bg-white/95 px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm dark:border-cyan-700 dark:bg-slate-950/95 dark:text-cyan-300">
-                Drop node
+                {t("pages.processing.dropNode")}
               </div>
             </div>
           ) : null}
         </div>
       ) : (
-        <LoaderMessage message="Loading flow..." />
+        <LoaderMessage message={t("app.loadingWorkspace")} />
       )}
     </WorkspaceInnerCard>
   </WorkspaceCard>
-);
+  );
+};
 
 export const ProcessingSidebar = ({
   addNode,
@@ -227,9 +273,32 @@ export const ProcessingSidebar = ({
   cleanFlow,
   scrollToCharts,
 }) => (
+  <ProcessingSidebarInner
+    addNode={addNode}
+    onNodeDragStart={onNodeDragStart}
+    deleteSourceTablesAndExecute={deleteSourceTablesAndExecute}
+    confirmationOpened={confirmationOpened}
+    setConfirmationOpened={setConfirmationOpened}
+    cleanFlow={cleanFlow}
+    scrollToCharts={scrollToCharts}
+  />
+);
+
+const ProcessingSidebarInner = ({
+  addNode,
+  onNodeDragStart,
+  deleteSourceTablesAndExecute,
+  confirmationOpened,
+  setConfirmationOpened,
+  cleanFlow,
+  scrollToCharts,
+}) => {
+  const { t } = useTranslation();
+
+  return (
   <WorkspaceCard
-    title="Nodes"
-    description="Click to add or drag into the flow."
+    title={t("pages.processing.nodesTitle")}
+    description={t("pages.processing.nodesDescription")}
     icon={<FaSquare />}
     className="xl:sticky xl:top-4 xl:self-start xl:max-w-[232px]"
   >
@@ -248,7 +317,7 @@ export const ProcessingSidebar = ({
             <div key={category}>
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  {category}
+                  {t(`pages.processing.categories.${category}`, { defaultValue: category })}
                 </h3>
                 <div className="h-px flex-1 bg-slate-200 dark:bg-gray-700" />
               </div>
@@ -274,36 +343,35 @@ export const ProcessingSidebar = ({
 
         <button
           type="button"
-          title="Start-end execution"
+          title={t("pages.processing.run")}
           onClick={deleteSourceTablesAndExecute}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700"
         >
           <FaRocket />
-          Run
+          {t("pages.processing.run")}
         </button>
 
         <div className="space-y-2">
           <button
             type="button"
             onClick={() => setConfirmationOpened(true)}
-            title="Restart flow"
+            title={t("pages.processing.clean")}
             className="w-full rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700"
           >
             <span className="inline-flex items-center gap-2">
               <FaTrash />
-              Clean
+              {t("pages.processing.clean")}
             </span>
           </button>
 
           <SimpleDialog
             open={confirmationOpened}
-            title="Clean pipeline"
+            title={t("pages.processing.cleanTitle")}
             onClose={() => setConfirmationOpened(false)}
           >
             <div className="space-y-4">
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                This will remove every processing node and connection, keeping
-                only the input and output nodes.
+                {t("pages.processing.cleanDescription")}
               </p>
               <div className="flex justify-end gap-2">
                 <button
@@ -311,7 +379,7 @@ export const ProcessingSidebar = ({
                   onClick={() => setConfirmationOpened(false)}
                   className="btn min-h-0 h-auto rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-none hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="button"
@@ -321,7 +389,7 @@ export const ProcessingSidebar = ({
                   }}
                   className="btn min-h-0 h-auto rounded-xl border-0 bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-none hover:bg-red-700"
                 >
-                  Yes, clean
+                  {t("pages.processing.cleanConfirm")}
                 </button>
               </div>
             </div>
@@ -329,17 +397,18 @@ export const ProcessingSidebar = ({
         </div>
 
         <button
-          title="Go to charts"
+          title={t("pages.processing.charts")}
           onClick={scrollToCharts}
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
         >
           <FaEye />
-          Charts
+          {t("pages.processing.charts")}
         </button>
       </div>
     </WorkspaceInnerCard>
   </WorkspaceCard>
-);
+  );
+};
 
 ProcessingFlowSection.propTypes = {
   chartDataOriginal: PropTypes.array,

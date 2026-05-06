@@ -1,14 +1,16 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import { average, diff } from "../utils/dataUtils";
 
-function formatDuration(seconds) {
+function formatDuration(seconds, t) {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins} min ${secs} s`;
+  return t("table.minutesSeconds", { minutes: mins, seconds: secs });
 }
 
 const SignalSummary = ({ table }) => {
+  const { t } = useTranslation();
   if (!table || table.length < 2) {
     return null;
   }
@@ -23,13 +25,13 @@ const SignalSummary = ({ table }) => {
       <div className="grid gap-2 sm:grid-cols-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-            Duration
+            {t("table.duration")}
           </p>
-          <p className="mt-1 font-semibold">{formatDuration(duration)}</p>
+          <p className="mt-1 font-semibold">{formatDuration(duration, t)}</p>
         </div>
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-            Sampling Rate
+            {t("table.samplingRate")}
           </p>
           <p className="mt-1 font-semibold" title={`${samplingRateCalculated} Hz`}>
             {samplingRateCalculated.toFixed(2)} Hz
@@ -37,7 +39,7 @@ const SignalSummary = ({ table }) => {
         </div>
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-            Samples
+            {t("table.samples")}
           </p>
           <p className="mt-1 font-semibold">{signalLength}</p>
         </div>

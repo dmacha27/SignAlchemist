@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
+import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
   FaChartLine,
@@ -28,6 +29,7 @@ import { requestResampling } from "../processing/processingRequests";
 
 const ResamplingPage = () => {
   const location = useLocation();
+  const { t } = useTranslation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
   const { readString } = usePapaParse();
@@ -80,7 +82,7 @@ const ResamplingPage = () => {
       ]);
     } catch (error) {
       console.error("Error performing resampling:", error);
-      toast.error(error.message || "Error performing resampling.");
+      toast.error(error.message || t("pages.resampling.error", { defaultValue: "Error performing resampling." }));
     } finally {
       setIsRequesting(false);
     }
@@ -90,27 +92,27 @@ const ResamplingPage = () => {
     <WorkspacePage>
       <WorkspaceHero
         icon={<FaChartLine />}
-        title="Resampling"
-        description="Change the sampling rate of the signal."
-        badge={`Signal type: ${signalType}`}
+        title={t("pages.resampling.title")}
+        description={t("pages.resampling.description")}
+        badge={t("common.signalTypeBadge", { signalType })}
       />
 
       <WorkspaceSection className="grid items-start gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.7fr)_minmax(0,0.95fr)]">
         <WorkspaceCard
-          title="Original Signal"
-          description="Input signal."
+          title={t("pages.resampling.originalTitle")}
+          description={t("pages.resampling.inputDescription")}
           icon={<FaSignal />}
         >
           {chartDataOriginal ? (
             <InfoTable table={chartDataOriginal} onlyTable={false} />
           ) : (
-            <WorkspaceEmptyState message="No data available" />
+            <WorkspaceEmptyState message={t("common.noData")} />
           )}
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Settings"
-          description="Interpolation method and target sampling rate."
+          title={t("pages.resampling.settingsTitle")}
+          description={t("pages.resampling.settingsDescription")}
           icon={<FaTools />}
           className="xl:sticky xl:top-4 xl:self-start"
         >
@@ -119,8 +121,8 @@ const ResamplingPage = () => {
               <div>
                 <FormFieldLabel
                   htmlFor="interpTechnique"
-                  label="Interpolation technique"
-                  tooltip="How new in-between samples are estimated when changing the sampling rate."
+                  label={t("pages.resampling.interpolationTechnique")}
+                  tooltip={t("pages.resampling.interpolationTooltip")}
                 />
                 <select
                   id="interpTechnique"
@@ -136,8 +138,8 @@ const ResamplingPage = () => {
               <div>
                 <FormFieldLabel
                   htmlFor="samplingRate"
-                  label="New sampling Rate (Hz)"
-                  tooltip="Target number of samples per second after resampling."
+                  label={t("pages.resampling.newSamplingRate")}
+                  tooltip={t("pages.resampling.newSamplingRateTooltip")}
                 />
                 <input
                   type="number"
@@ -156,7 +158,7 @@ const ResamplingPage = () => {
                       setNewSamplingRate(1);
                     }
                   }}
-                  placeholder="Enter Hz"
+                  placeholder={t("pages.resampling.enterHz")}
                   className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
                 />
               </div>
@@ -166,33 +168,33 @@ const ResamplingPage = () => {
                 onClick={requestResample}
               >
                 <FaExpandAlt />
-                Apply resampling
+                {t("pages.resampling.apply")}
               </WorkspacePrimaryButton>
             </div>
           </WorkspaceInnerCard>
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Resampled Signal"
-          description="Output signal."
+          title={t("pages.resampling.resultTitle")}
+          description={t("pages.resampling.outputDescription")}
           icon={<FaChartLine />}
         >
           {isRequesting ? (
-            <LoaderMessage message="Processing request..." />
+            <LoaderMessage message={t("common.processingRequest")} />
           ) : chartDataResampled ? (
             <>
               <InfoTable table={chartDataResampled} onlyTable={false} />
               <DownloadSignal table={chartDataResampled} name="resampled" />
             </>
           ) : (
-            <WorkspaceEmptyState message="Run resampling to see the result." />
+            <WorkspaceEmptyState message={t("pages.resampling.resultEmpty")} />
           )}
         </WorkspaceCard>
       </WorkspaceSection>
 
       <WorkspaceSection>
         <SignalTabs
-          rightTitle="Resampled"
+          rightTitle={t("pages.resampling.rightTitle")}
           rightIcon={<FaExpandAlt className="my-auto text-emerald-500" />}
           chartDataOriginal={chartDataOriginal}
           chartDataProcessed={chartDataResampled}

@@ -14,6 +14,7 @@ import {
   useState,
 } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import "./App.css";
 import "primereact/resources/primereact.min.css";
@@ -95,14 +96,23 @@ const DocsRedirect = () => {
 };
 
 const RouteLoader = () => (
-  <div className="mx-auto flex min-h-[52vh] w-full max-w-7xl items-center justify-center px-4 py-10">
-    <div className="rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 text-sm font-medium text-slate-600 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
-      Loading workspace...
-    </div>
-  </div>
+  <RouteLoaderInner />
 );
 
+const RouteLoaderInner = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="mx-auto flex min-h-[52vh] w-full max-w-7xl items-center justify-center px-4 py-10">
+      <div className="rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 text-sm font-medium text-slate-600 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
+        {t("app.loadingWorkspace")}
+      </div>
+    </div>
+  );
+};
+
 const AppLayout = () => {
+  const { t, i18n } = useTranslation();
   // Dark Theme toogle
   const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
   useEffect(() => {
@@ -133,7 +143,7 @@ const AppLayout = () => {
       navigate(path, { state: location.state, flushSync: true });
     } else {
       setIsNavMenuOpen(false);
-      toast.error("Load a CSV first to open this utility");
+      toast.error(t("app.toasts.loadCsvFirst"));
     }
   };
 
@@ -146,6 +156,8 @@ const AppLayout = () => {
   useEffect(() => {
     setIsNavMenuOpen(false);
   }, [location.pathname]);
+
+  const currentLanguage = i18n.resolvedLanguage?.startsWith("es") ? "es" : "en";
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
       <div
@@ -165,11 +177,37 @@ const AppLayout = () => {
           {/* Dark mode button */}
           <button
             onClick={toggleDarkMode}
-            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={isDarkMode ? t("app.theme.switchToLight") : t("app.theme.switchToDark")}
             className="fixed right-4 top-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white/90 text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.15)] backdrop-blur transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900/90 dark:text-white dark:hover:bg-gray-800"
           >
             {isDarkMode ? <FaSun /> : <FaMoon />}
           </button>
+
+          <div className="fixed right-[3.9rem] top-4 z-50">
+            <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/92 px-1 py-1 text-slate-900 shadow-[0_14px_32px_rgba(15,23,42,0.12)] backdrop-blur dark:border-gray-700 dark:bg-gray-900/92 dark:text-white">
+              <span className="px-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                {t("app.language.label")}
+              </span>
+              {["en", "es"].map((lng) => {
+                const isActive = currentLanguage === lng;
+                return (
+                  <button
+                    key={lng}
+                    type="button"
+                    onClick={() => i18n.changeLanguage(lng)}
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold transition ${
+                      isActive
+                        ? "bg-cyan-500 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-800"
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    {t(`app.language.${lng}`)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Navigation */}
           <Suspense fallback={<RouteLoader />}>
@@ -180,7 +218,7 @@ const AppLayout = () => {
             href={UEQ_FEEDBACK_URL}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Help us by filling in the UEQ questionnaire"
+            aria-label={t("app.feedback.aria")}
             className="fixed bottom-5 left-5 z-[1080] group"
           >
             <div className="flex items-center gap-2 rounded-full border border-cyan-200/70 bg-cyan-50/80 px-3 py-2 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.12)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-50 dark:border-cyan-400/20 dark:bg-cyan-500/10 dark:text-slate-200 dark:hover:bg-cyan-500/12">
@@ -188,7 +226,7 @@ const AppLayout = () => {
                 <FaRegCommentDots size={14} />
               </span>
               <span className="text-[12px] font-medium leading-none text-cyan-900 dark:text-cyan-100">
-                Help us: Fill in our UEQ survey
+                {t("app.feedback.cta")}
               </span>
             </div>
           </a>
@@ -225,9 +263,9 @@ const AppLayout = () => {
                 <a
                   href="/docs/"
                   className="flex items-center gap-1 hover:underline"
-                  aria-label="Read the documentation"
+                  aria-label={t("app.footer.docsAria")}
                 >
-                  <FaBook /> Read the Docs
+                  <FaBook /> {t("app.footer.docs")}
                 </a>
               </span>
             </div>

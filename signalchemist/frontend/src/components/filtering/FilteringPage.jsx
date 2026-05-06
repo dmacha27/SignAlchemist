@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
+import { useTranslation } from "react-i18next";
 import { FaFilter, FaSignal, FaTools } from "react-icons/fa";
 import toast from "react-hot-toast";
 
@@ -27,13 +28,14 @@ import {
 import { requestFiltering } from "../processing/processingRequests";
 import {
   createFilterDefaults,
-  filterDefinitions,
+  getTranslatedFieldDefinitions,
   getFilterOptions,
 } from "./filteringConfig";
 import { FormFieldLabel, uiSelectClass } from "../common/ui";
 
 const FilteringPage = () => {
   const location = useLocation();
+  const { t } = useTranslation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
   const { readString } = usePapaParse();
@@ -96,7 +98,7 @@ const FilteringPage = () => {
     }
 
     if (filter === "python" && !fields.python?.trim()) {
-      toast.error("Python code is required for the Python filter");
+      toast.error(t("pages.filtering.pythonRequired"));
       return;
     }
 
@@ -129,7 +131,7 @@ const FilteringPage = () => {
       setChartDataFiltered(null);
       setMetricsFiltered(null);
       console.error("Error performing filtering:", error);
-      toast.error(error.message || "Error performing filtering.");
+      toast.error(error.message || t("pages.filtering.error"));
     } finally {
       setIsRequesting(false);
     }
@@ -146,28 +148,28 @@ const FilteringPage = () => {
     <WorkspacePage>
       <WorkspaceHero
         icon={<FaFilter />}
-        title="Filtering"
-        description="Apply a filter to the signal."
-        badge={`Signal type: ${signalType}`}
+        title={t("pages.filtering.title")}
+        description={t("pages.filtering.description")}
+        badge={t("common.signalTypeBadge", { signalType })}
         action={<SignalSummary table={chartDataOriginal} />}
       />
 
       <WorkspaceSection className="grid items-start gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.7fr)_minmax(0,0.95fr)]">
         <WorkspaceCard
-          title="Original Signal"
-          description="Input signal."
+          title={t("pages.filtering.originalTitle")}
+          description={t("pages.filtering.inputDescription")}
           icon={<FaSignal />}
         >
           {chartDataOriginal ? (
             <InfoTable table={chartDataOriginal} onlyTable={true} />
           ) : (
-            <WorkspaceEmptyState message="No data available" />
+            <WorkspaceEmptyState message={t("common.noData")} />
           )}
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Settings"
-          description="Filter type and parameters."
+          title={t("pages.filtering.settingsTitle")}
+          description={t("pages.filtering.settingsDescription")}
           icon={<FaTools />}
           className="xl:sticky xl:top-4 xl:self-start"
         >
@@ -175,8 +177,8 @@ const FilteringPage = () => {
             <div className="space-y-4">
               <FormFieldLabel
                 htmlFor="filterTechnique"
-                label="Filtering technique"
-                tooltip="Select the family of filter you want to apply to the signal."
+                label={t("pages.filtering.technique")}
+                tooltip={t("pages.filtering.techniqueTooltip")}
               />
               <select
                 id="filterTechnique"
@@ -191,7 +193,7 @@ const FilteringPage = () => {
                 }}
                 className={uiSelectClass}
               >
-                {getFilterOptions().map((option) => (
+                {getFilterOptions(t).map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -201,7 +203,7 @@ const FilteringPage = () => {
               <FilterFields
                 filter={filter}
                 fields={fields}
-                fieldDefinitions={filterDefinitions[filter].fields}
+                fieldDefinitions={getTranslatedFieldDefinitions(filter, t)}
                 onFieldChange={handleFieldChange}
               />
 
@@ -210,33 +212,33 @@ const FilteringPage = () => {
                 onClick={requestFilter}
               >
                 <FaFilter />
-                Apply filter
+                {t("pages.filtering.apply")}
               </WorkspacePrimaryButton>
             </div>
           </WorkspaceInnerCard>
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Filtered Signal"
-          description="Output signal."
+          title={t("pages.filtering.resultTitle")}
+          description={t("pages.filtering.outputDescription")}
           icon={<FaFilter />}
         >
           {isRequesting ? (
-            <LoaderMessage message="Processing request..." />
+            <LoaderMessage message={t("common.processingRequest")} />
           ) : chartDataFiltered ? (
             <>
               <InfoTable table={chartDataFiltered} onlyTable={true} />
               <DownloadSignal table={chartDataFiltered} name="filtered" />
             </>
           ) : (
-            <WorkspaceEmptyState message="Run filtering to see the result." />
+            <WorkspaceEmptyState message={t("pages.filtering.resultEmpty")} />
           )}
         </WorkspaceCard>
       </WorkspaceSection>
 
       <WorkspaceSection>
         <SignalTabs
-          rightTitle="Filtered"
+          rightTitle={t("pages.filtering.rightTitle")}
           rightIcon={<FaFilter className="my-auto text-emerald-500" />}
           chartDataOriginal={chartDataOriginal}
           chartDataProcessed={chartDataFiltered}

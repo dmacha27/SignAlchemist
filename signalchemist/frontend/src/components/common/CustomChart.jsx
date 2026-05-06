@@ -2,6 +2,7 @@ import { memo, useContext, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import ReactECharts from "echarts-for-react";
 import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import {
@@ -24,6 +25,7 @@ const CustomChart = memo(({
   annotationColor = "#f97316",
   onBridgeReady = null,
 }) => {
+  const { t } = useTranslation();
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
   const chartComponentRef = useRef(null);
@@ -113,7 +115,9 @@ const CustomChart = memo(({
             color: splitLineColor,
           },
         },
-        name: xAxisType === "value" ? `${headers[0]} (ms)` : `${headers[0]} (date)`,
+        name: xAxisType === "value"
+          ? t("charts.millisecondsAxis", { name: headers[0] })
+          : t("charts.dateAxis", { name: headers[0] }),
         nameLocation: "middle",
         nameGap: 34,
         nameTextStyle: {
@@ -213,14 +217,14 @@ const CustomChart = memo(({
         },
       ],
     };
-  }, [annotationColor, annotations, defaultColor, focusedIndex, hasRows, headers, isDark, isLargeDataset, maxX, minX, points, xAxisType, zoomWindow]);
+  }, [annotationColor, annotations, defaultColor, focusedIndex, hasRows, headers, isDark, isLargeDataset, maxX, minX, points, t, xAxisType, zoomWindow]);
 
   useEffect(() => {
     const bridge = {
-      __kind: "echarts",
+        __kind: "echarts",
       group: "signal",
       exportMeta: {
-        badge: "Signal",
+        badge: t("charts.signalBadge"),
         title: headers[1],
       },
       dataLength: points.length,
@@ -254,7 +258,7 @@ const CustomChart = memo(({
     return () => {
       onBridgeReady?.(null);
     };
-  }, [headers, isDark, onBridgeReady, points]);
+  }, [headers, isDark, onBridgeReady, points, t]);
 
   const handlePointClick = (params) => {
     if (typeof params.dataIndex !== "number") return;
@@ -267,7 +271,7 @@ const CustomChart = memo(({
 
   return (
     <ChartFrame
-      badge="Signal"
+      badge={t("charts.signalBadge")}
       title={headers[1]}
       toolbar={
         <div className="flex items-center gap-2">
@@ -277,19 +281,19 @@ const CustomChart = memo(({
                 onClick={() => handleResetZoom(bridgeRef.current)}
                 className={chartActionButtonClass}
               >
-                <FaSearch /> Reset Zoom
+                <FaSearch /> {t("common.resetZoom")}
               </button>
               <button
                 onClick={() => handleResetStyle(bridgeRef.current, defaultColor)}
                 className={chartActionButtonClass}
               >
-                <FaCrosshairs /> Reset Style
+                <FaCrosshairs /> {t("common.resetStyle")}
               </button>
             </>
           ) : null}
           <SimpleMenu
             widthClass="w-28"
-            label="Export as"
+            label={t("common.exportAs")}
             trigger={(
               <button
                 type="button"
@@ -300,7 +304,7 @@ const CustomChart = memo(({
               </button>
             )}
             items={[{
-              label: "PNG",
+              label: t("common.png"),
               icon: <FaImage size={12} />,
               onClick: () => exportSingleChartWithTitlePNG({
                 chart: bridgeRef.current,
@@ -328,13 +332,13 @@ const CustomChart = memo(({
       notice={
         isLargeDataset ? (
           <>
-            Large dataset. Interaction off.
+            {t("charts.largeDatasetNotice")}
           </>
         ) : null
       }
       controls={
         isLargeDataset ? (
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Export is still available.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("charts.exportStillAvailable")}</p>
         ) : null
       }
     />

@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import { diff, average } from "../utils/dataUtils.js";
 import { SimplePagination } from "./ui";
 
@@ -11,6 +12,7 @@ import { SimplePagination } from "./ui";
  * @param {boolean} props.onlyTable - A flag indicating whether to display only the table without additional info.
  */
 const InfoTable = memo(({ table, onlyTable }) => {
+  const { t } = useTranslation();
   const headers = table[0];
   const data = table.slice(1);
 
@@ -21,7 +23,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
   const seconds_to_minutes = (s) => {
     const mins = Math.floor(s / 60);
     const secs = Math.floor(s % 60);
-    return `${mins} min ${secs} s`;
+    return t("table.minutesSeconds", { minutes: mins, seconds: secs });
   };
 
   const [page, setPage] = useState(1);
@@ -59,10 +61,10 @@ const InfoTable = memo(({ table, onlyTable }) => {
       {!onlyTable && (
         <div className="shadow-sm rounded-xl border border-gray-200 dark:border dark:border-gray-600 p-2 mb-2 bg-white dark:bg-gray-900">
           <p>
-            <strong>Duration:</strong> {seconds_to_minutes(duration)}
+            <strong>{t("table.duration")}:</strong> {seconds_to_minutes(duration)}
           </p>
           <p>
-            <strong>Sampling rate: </strong>
+            <strong>{t("table.samplingRate")}: </strong>
             <span
               title={`${samplingRateCalculated} Hz`}
               className="cursor-help"
@@ -71,7 +73,7 @@ const InfoTable = memo(({ table, onlyTable }) => {
             </span>
           </p>
           <p>
-            <strong>Signal length:</strong> {signalLength} samples
+            <strong>{t("table.signalLength")}:</strong> {signalLength} {t("table.samples")}
           </p>
         </div>
       )}

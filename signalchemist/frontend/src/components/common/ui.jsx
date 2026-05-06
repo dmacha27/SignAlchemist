@@ -1,6 +1,7 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { FaQuestionCircle } from "react-icons/fa";
 
 export const uiInputClass =
@@ -164,6 +165,7 @@ SimpleMenu.defaultProps = {
 };
 
 export const SimpleDialog = ({ open, title, onClose, children }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!open) {
       return undefined;
@@ -195,7 +197,7 @@ export const SimpleDialog = ({ open, title, onClose, children }) => {
         type="button"
         className="absolute inset-0 bg-slate-950/55 backdrop-blur-[1px]"
         onClick={onClose}
-        aria-label="Close modal"
+        aria-label={t("common.close")}
       />
 
       <div
@@ -212,7 +214,7 @@ export const SimpleDialog = ({ open, title, onClose, children }) => {
             type="button"
             onClick={onClose}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ✕
           </button>
@@ -239,6 +241,7 @@ SimpleDialog.propTypes = {
 };
 
 export const SimplePagination = ({ page, totalPages, onChange }) => {
+  const { t } = useTranslation();
   if (totalPages <= 1) {
     return null;
   }
@@ -275,7 +278,7 @@ export const SimplePagination = ({ page, totalPages, onChange }) => {
         disabled={page === 1}
         onClick={() => onChange(page - 1)}
       >
-        Prev
+        {t("common.prev")}
       </button>
       <div className="flex items-center gap-1">
         {items.map((item, index) => (
@@ -308,7 +311,7 @@ export const SimplePagination = ({ page, totalPages, onChange }) => {
         disabled={page === totalPages}
         onClick={() => onChange(page + 1)}
       >
-        Next
+        {t("common.next")}
       </button>
     </div>
   );
@@ -339,6 +342,7 @@ export const SimpleConfirm = ({
   onConfirm,
   confirmLabel = "Confirm",
 }) => {
+  const { t } = useTranslation();
   if (!open) {
     return null;
   }
@@ -351,14 +355,14 @@ export const SimpleConfirm = ({
       </p>
       <div className="mt-3 flex justify-end gap-2">
         <button type="button" onClick={onCancel} className={uiButtonClass}>
-          Cancel
+          {t("common.cancel")}
         </button>
         <button
           type="button"
           onClick={onConfirm}
           className="btn min-h-0 h-auto rounded-xl border-0 bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-none hover:bg-red-700"
         >
-          {confirmLabel}
+          {confirmLabel || t("common.confirm")}
         </button>
       </div>
     </div>

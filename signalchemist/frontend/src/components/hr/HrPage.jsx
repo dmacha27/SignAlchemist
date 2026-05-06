@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
+import { useTranslation } from "react-i18next";
 import {
   FaHeartbeat,
   FaSignal,
@@ -34,6 +35,7 @@ const fieldClass =
   "mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500";
 
 const HeartRateTable = ({ rows }) => {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
   const totalPages = Math.ceil(rows.length / rowsPerPage);
@@ -53,10 +55,10 @@ const HeartRateTable = ({ rows }) => {
                 #
               </th>
               <th className="border border-gray-200 px-3 py-2 text-left text-black dark:border-gray-600 dark:text-white">
-                Time
+                {t("pages.hr.table.time")}
               </th>
               <th className="border border-gray-200 px-3 py-2 text-left text-black dark:border-gray-600 dark:text-white">
-                HR
+                {t("pages.hr.table.hr")}
               </th>
             </tr>
           </thead>
@@ -92,6 +94,7 @@ const HeartRateTable = ({ rows }) => {
 
 const HrPage = () => {
   const location = useLocation();
+  const { t } = useTranslation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
   const { readString } = usePapaParse();
@@ -150,7 +153,7 @@ const HrPage = () => {
       setHeartRateTable(null);
       setBeatCount(0);
       console.error(error.message);
-      toast.error(error.message || "Error computing heart rate.");
+      toast.error(error.message || t("pages.hr.error"));
     } finally {
       setIsRequesting(false);
     }
@@ -165,28 +168,28 @@ const HrPage = () => {
     <WorkspacePage>
       <WorkspaceHero
         icon={<FaHeartbeat />}
-        title="Heart Rate"
-        description="Estimate heart rate from a PPG signal."
-        badge={`Signal type: ${signalType}`}
+        title={t("pages.hr.title")}
+        description={t("pages.hr.description")}
+        badge={t("common.signalTypeBadge", { signalType })}
         action={<SignalSummary table={chartDataOriginal} />}
       />
 
       <WorkspaceSection className="grid items-start gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.72fr)_minmax(0,0.95fr)]">
         <WorkspaceCard
-          title="Original Signal"
-          description="Input signal."
+          title={t("common.originalSignal")}
+          description={t("pages.hr.inputDescription")}
           icon={<FaSignal />}
         >
           {chartDataOriginal ? (
             <InfoTable table={chartDataOriginal} onlyTable={true} />
           ) : (
-            <WorkspaceEmptyState message="No data available" />
+            <WorkspaceEmptyState message={t("common.noData")} />
           )}
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Settings"
-          description="Select the heart rate algorithm."
+          title={t("pages.hr.settingsTitle")}
+          description={t("pages.hr.settingsDescription")}
           icon={<FaTools />}
           className="xl:sticky xl:top-4 xl:self-start"
         >
@@ -194,15 +197,15 @@ const HrPage = () => {
             <div className="space-y-4">
               {!isPpg ? (
                 <div className="rounded-[1rem] border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-                  Heart rate analysis is only available for PPG signals.
+                  {t("pages.hr.onlyPpg")}
                 </div>
               ) : null}
 
               <div>
                 <FormFieldLabel
                   htmlFor="heartRateMethod"
-                  label="Method"
-                  tooltip="Choose between the EmotiBit-style beat-to-beat estimate and NeuroKit's PPG rate pipeline."
+                  label={t("pages.hr.method")}
+                  tooltip={t("pages.hr.methodTooltip")}
                 />
                 <select
                   id="heartRateMethod"
@@ -221,45 +224,45 @@ const HrPage = () => {
                 disabled={!isPpg || !chartDataOriginal}
               >
                 <FaHeartbeat />
-                Compute heart rate
+                {t("pages.hr.compute")}
               </WorkspacePrimaryButton>
             </div>
           </WorkspaceInnerCard>
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Heart Rate Series"
-          description="Computed heart rate values."
+          title={t("pages.hr.outputTitle")}
+          description={t("pages.hr.outputDescription")}
           icon={<FaTable />}
         >
           {isRequesting ? (
-            <LoaderMessage message="Processing request..." />
+            <LoaderMessage message={t("common.processingRequest")} />
           ) : heartRateRows.length ? (
             <div className="space-y-4">
               <div className="rounded-[1rem] bg-slate-50/80 p-4 text-sm text-slate-700 dark:bg-gray-950/60 dark:text-slate-200">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-                  Beats used
+                  {t("pages.hr.beatsUsed")}
                 </p>
                 <p className="mt-1 text-2xl font-semibold">{beatCount}</p>
               </div>
               <HeartRateTable rows={heartRateRows} />
             </div>
           ) : (
-            <WorkspaceEmptyState message="Run heart rate analysis to see the result." />
+            <WorkspaceEmptyState message={t("pages.hr.empty")} />
           )}
         </WorkspaceCard>
       </WorkspaceSection>
 
       <WorkspaceSection>
         <WorkspaceCard
-          title="Heart Rate Chart"
-          description="Computed heart rate over time."
+          title={t("pages.hr.chartTitle")}
+          description={t("pages.hr.chartDescription")}
           icon={<FaHeartbeat />}
         >
           {heartRateTable ? (
             <CustomChart table={heartRateTable} defaultColor="#ef4444" />
           ) : (
-            <WorkspaceEmptyState message="No chart available" />
+            <WorkspaceEmptyState message={t("common.noChart")} />
           )}
         </WorkspaceCard>
       </WorkspaceSection>

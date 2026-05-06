@@ -2,6 +2,7 @@ import { memo, useContext, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import ReactECharts from "echarts-for-react";
 import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import {
@@ -18,6 +19,7 @@ const chartActionButtonClass =
   "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
 
 const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => {
+  const { t } = useTranslation();
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
   const chartComponentRef = useRef(null);
@@ -76,7 +78,9 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
         axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
         axisLabel: { color: axisColor, margin: 12 },
         splitLine: { show: true, lineStyle: { color: splitLineColor } },
-        name: xAxisType === "value" ? `${headers1[0]} (ms)` : `${headers1[0]} (date)`,
+        name: xAxisType === "value"
+          ? t("charts.millisecondsAxis", { name: headers1[0] })
+          : t("charts.dateAxis", { name: headers1[0] }),
         nameLocation: "middle",
         nameGap: 34,
         nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
@@ -129,12 +133,12 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
         },
       ],
     };
-  }, [focusedIndex, headers1, isDark, isLargeDataset, name1, name2, points1, points2, xAxisType, zoomWindow]);
+  }, [focusedIndex, headers1, isDark, isLargeDataset, name1, name2, points1, points2, t, xAxisType, zoomWindow]);
 
   bridgeRef.current = {
     __kind: "echarts",
     exportMeta: {
-      badge: "Compare",
+      badge: t("charts.compareBadge"),
       title: `${name1} / ${name2}`,
     },
     toBase64Image: (exportOptions = {}) =>
@@ -162,23 +166,23 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
 
   return (
     <ChartFrame
-      badge="Compare"
+      badge={t("charts.compareBadge")}
       title={`${name1} / ${name2}`}
       toolbar={
         <div className="flex items-center gap-2">
           {!isLargeDataset ? (
             <>
               <button onClick={() => handleResetZoom(bridgeRef.current)} className={chartActionButtonClass}>
-                <FaSearch /> Reset Zoom
+                <FaSearch /> {t("common.resetZoom")}
               </button>
               <button onClick={() => handleResetStyle(bridgeRef.current, "#38bdf8")} className={chartActionButtonClass}>
-                <FaCrosshairs /> Reset Style
+                <FaCrosshairs /> {t("common.resetStyle")}
               </button>
             </>
           ) : null}
           <SimpleMenu
             widthClass="w-28"
-            label="Export as"
+            label={t("common.exportAs")}
             trigger={(
               <button
                 type="button"
@@ -189,7 +193,7 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
               </button>
             )}
             items={[{
-              label: "PNG",
+              label: t("common.png"),
               icon: <FaImage size={12} />,
               onClick: () => exportSingleChartWithTitlePNG({
                 chart: bridgeRef.current,
@@ -217,13 +221,13 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
       notice={
         isLargeDataset ? (
           <>
-            Large dataset. Interaction off.
+            {t("charts.largeDatasetNotice")}
           </>
         ) : null
       }
       controls={
         isLargeDataset ? (
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Export is still available.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("charts.exportStillAvailable")}</p>
         ) : null
       }
     />

@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "react-range-slider-input/dist/style.css";
 import {
   Chart as ChartJS,
@@ -46,6 +47,7 @@ ChartJS.register(
 );
 
 const Home = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { readString } = usePapaParse();
   const { isDarkMode: isDark } = useContext(ThemeContext);
@@ -127,7 +129,10 @@ const Home = () => {
     samplingRate,
   };
   const canLaunchUtility = hasPreparedDataset(currentDatasetState);
-  const nextStepChecks = buildDatasetPreparationChecks(currentDatasetState);
+  const nextStepChecks = buildDatasetPreparationChecks({
+    ...currentDatasetState,
+    t,
+  });
 
   const launchUtility = async (path) => {
     if (path === "/batch") {

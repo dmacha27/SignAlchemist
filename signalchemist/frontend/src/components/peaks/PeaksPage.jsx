@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
+import { useTranslation } from "react-i18next";
 import { FaChartLine, FaSignal, FaTools } from "react-icons/fa";
 import { FaMountainSun } from "react-icons/fa6";
 import toast from "react-hot-toast";
@@ -32,6 +33,7 @@ const fieldClass =
   "mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500";
 
 const DownloadPeakIndices = ({ peaks }) => {
+  const { t } = useTranslation();
   const handleDownload = () => {
     const content = peaks.map((peak) => peak.index + 1).join("\n");
     const blob = new Blob([content], { type: "text/plain" });
@@ -47,7 +49,7 @@ const DownloadPeakIndices = ({ peaks }) => {
   return (
     <div className="rounded-[1rem] bg-slate-50/80 p-4 text-slate-900 dark:bg-gray-950/60 dark:text-white">
       <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
-        Download the row indices from the original CSV where peaks were detected.
+        {t("pages.peaks.downloadDescription")}
       </p>
 
       <div className="flex justify-end">
@@ -56,7 +58,7 @@ const DownloadPeakIndices = ({ peaks }) => {
           onClick={handleDownload}
           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
         >
-          Download indices
+          {t("pages.peaks.downloadIndices")}
         </button>
       </div>
     </div>
@@ -64,6 +66,7 @@ const DownloadPeakIndices = ({ peaks }) => {
 };
 
 const PeaksTable = ({ peaks }) => {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
   const totalPages = Math.ceil(peaks.length / rowsPerPage);
@@ -86,10 +89,10 @@ const PeaksTable = ({ peaks }) => {
                 #
               </th>
               <th className="border border-gray-200 px-3 py-2 text-left text-black dark:border-gray-600 dark:text-white">
-                Time
+                {t("pages.peaks.table.time")}
               </th>
               <th className="border border-gray-200 px-3 py-2 text-left text-black dark:border-gray-600 dark:text-white">
-                Value
+                {t("pages.peaks.table.value")}
               </th>
             </tr>
           </thead>
@@ -125,6 +128,7 @@ const PeaksTable = ({ peaks }) => {
 
 const PeaksPage = () => {
   const location = useLocation();
+  const { t } = useTranslation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
   const { readString } = usePapaParse();
@@ -197,7 +201,7 @@ const PeaksPage = () => {
     } catch (error) {
       setPeaks([]);
       console.error("Error detecting peaks:", error);
-      toast.error(error.message || "Error detecting peaks.");
+      toast.error(error.message || t("pages.peaks.error"));
     } finally {
       setIsRequesting(false);
     }
@@ -207,28 +211,28 @@ const PeaksPage = () => {
     <WorkspacePage>
       <WorkspaceHero
         icon={<FaMountainSun />}
-        title="Peak Detection"
-        description="Detect peaks in the signal."
-        badge={`Signal type: ${signalType}`}
+        title={t("pages.peaks.title")}
+        description={t("pages.peaks.description")}
+        badge={t("common.signalTypeBadge", { signalType })}
         action={<SignalSummary table={chartDataOriginal} />}
       />
 
       <WorkspaceSection className="grid items-start gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.72fr)_minmax(0,0.95fr)]">
         <WorkspaceCard
-          title="Original Signal"
-          description="Input signal."
+          title={t("common.originalSignal")}
+          description={t("pages.peaks.inputDescription")}
           icon={<FaSignal />}
         >
           {chartDataOriginal ? (
             <InfoTable table={chartDataOriginal} onlyTable={true} />
           ) : (
-            <WorkspaceEmptyState message="No data available" />
+            <WorkspaceEmptyState message={t("common.noData")} />
           )}
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Settings"
-          description="Detector and detection parameters."
+          title={t("pages.peaks.settingsTitle")}
+          description={t("pages.peaks.settingsDescription")}
           icon={<FaTools />}
           className="xl:sticky xl:top-4 xl:self-start"
         >
@@ -237,8 +241,8 @@ const PeaksPage = () => {
               <div>
                 <FormFieldLabel
                   htmlFor="peakDetector"
-                  label="Detector"
-                  tooltip="Choose between a more automatic NeuroKit detector or a more manual SciPy detector."
+                  label={t("pages.peaks.detector")}
+                  tooltip={t("pages.peaks.detectorTooltip")}
                 />
                 <select
                   id="peakDetector"
@@ -253,7 +257,7 @@ const PeaksPage = () => {
 
               {detector === "neurokit" ? (
                 <div className="rounded-[1rem] border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-600 dark:border-gray-700 dark:bg-gray-950/60 dark:text-slate-300">
-                  NeuroKit uses presets adapted to the selected signal type.
+                  {t("pages.peaks.neurokitHint")}
                 </div>
               ) : null}
 
@@ -262,8 +266,8 @@ const PeaksPage = () => {
               <div>
                 <FormFieldLabel
                   htmlFor="minDistanceSeconds"
-                  label="Min distance (s)"
-                  tooltip="Minimum time allowed between two detected peaks. Increase it to avoid detecting peaks that are too close together."
+                  label={t("pages.peaks.minDistance")}
+                  tooltip={t("pages.peaks.minDistanceTooltip")}
                 />
                 <input
                   id="minDistanceSeconds"
@@ -279,14 +283,14 @@ const PeaksPage = () => {
               <div>
                 <FormFieldLabel
                   htmlFor="height"
-                  label="Min height"
-                  tooltip="Minimum signal value required for a point to count as a peak."
+                  label={t("pages.peaks.minHeight")}
+                  tooltip={t("pages.peaks.minHeightTooltip")}
                 />
                 <input
                   id="height"
                   type="number"
                   step="0.01"
-                  placeholder="Optional"
+                  placeholder={t("pages.peaks.optional")}
                   value={height}
                   onChange={(event) => setHeight(event.target.value)}
                   className={fieldClass}
@@ -300,24 +304,24 @@ const PeaksPage = () => {
                 onClick={requestPeaks}
               >
                 <FaMountainSun />
-                Detect peaks
+                {t("pages.peaks.detect")}
               </WorkspacePrimaryButton>
             </div>
           </WorkspaceInnerCard>
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Detected Peaks"
-          description="Detected peaks."
+          title={t("pages.peaks.detectedTitle")}
+          description={t("pages.peaks.detectedDescription")}
           icon={<FaMountainSun />}
         >
           {isRequesting ? (
-            <LoaderMessage message="Processing request..." />
+            <LoaderMessage message={t("common.processingRequest")} />
           ) : peaks.length ? (
             <div className="space-y-4">
               <div className="rounded-[1rem] bg-slate-50/80 p-4 text-sm text-slate-700 dark:bg-gray-950/60 dark:text-slate-200">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-                  Peak Count
+                  {t("pages.peaks.peakCount")}
                 </p>
                 <p className="mt-1 text-2xl font-semibold">{peaks.length}</p>
               </div>
@@ -325,15 +329,15 @@ const PeaksPage = () => {
               <DownloadPeakIndices peaks={peaks} />
             </div>
           ) : (
-            <WorkspaceEmptyState message="Run detection to see the result." />
+            <WorkspaceEmptyState message={t("pages.peaks.empty")} />
           )}
         </WorkspaceCard>
       </WorkspaceSection>
 
       <WorkspaceSection>
         <WorkspaceCard
-          title="Annotated Signal"
-          description="Signal with detected peaks."
+          title={t("pages.peaks.annotatedTitle")}
+          description={t("pages.peaks.annotatedDescription")}
           icon={<FaChartLine />}
         >
           {chartDataOriginal ? (
@@ -343,7 +347,7 @@ const PeaksPage = () => {
               annotationColor="#f97316"
             />
           ) : (
-            <WorkspaceEmptyState message="No chart available" />
+            <WorkspaceEmptyState message={t("common.noChart")} />
           )}
         </WorkspaceCard>
       </WorkspaceSection>

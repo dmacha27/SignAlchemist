@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import {
   FaChartBar,
   FaChartLine,
@@ -13,59 +14,25 @@ import {
   FaMountainSun,
 } from "react-icons/fa6";
 
-const actions = [
-  {
-    key: "resampling",
-    label: "Resampling",
-    description: "Open resampling tools",
-    icon: FaChartLine,
-    path: "/resampling",
-  },
-  {
-    key: "filtering",
-    label: "Filtering",
-    description: "Open filters",
-    icon: FaFilter,
-    path: "/filtering",
-  },
-  {
-    key: "peaks",
-    label: "Peaks",
-    description: "Open peak detection",
-    icon: FaMountainSun,
-    path: "/peaks",
-  },
-  {
-    key: "hr",
-    label: "Heart Rate",
-    description: "Open heart rate analysis",
-    icon: FaHeartbeat,
-    path: "/hr",
-  },
-  {
-    key: "processing",
-    label: "Processing",
-    description: "Open processing",
-    icon: FaProjectDiagram,
-    path: "/processing",
-    featured: true,
-  },
-  {
-    key: "batch",
-    label: "Batch",
-    description: "Open batch processing",
-    icon: FaChartBar,
-    path: "/batch",
-  },
-];
+const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate, onNavigateHome }) => {
+  const { t } = useTranslation();
+  const actions = [
+    { key: "resampling", icon: FaChartLine, path: "/resampling" },
+    { key: "filtering", icon: FaFilter, path: "/filtering" },
+    { key: "peaks", icon: FaMountainSun, path: "/peaks" },
+    { key: "hr", icon: FaHeartbeat, path: "/hr" },
+    { key: "processing", icon: FaProjectDiagram, path: "/processing", featured: true },
+    { key: "batch", icon: FaChartBar, path: "/batch" },
+  ];
 
-const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate, onNavigateHome }) => (
-  <div className="fixed bottom-5 right-5 z-[1081]">
+  return <div className="fixed bottom-5 right-5 z-[1081]">
     <div className="relative flex w-44 flex-col items-end gap-2">
       {isOpen ? (
         <div className="flex flex-col items-end gap-2">
           {actions.map((action) => {
             const Icon = action.icon;
+            const label = t(`nav.actions.${action.key}.label`);
+            const description = t(`nav.actions.${action.key}.description`);
             const buttonClass = action.featured
               ? "group flex items-center gap-2 rounded-xl border border-amber-300/80 bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100 px-3 py-2 text-amber-900 shadow-[0_16px_28px_rgba(180,130,25,0.22)] transition hover:-translate-y-0.5 hover:from-amber-100 hover:via-yellow-100 hover:to-amber-200 dark:border-amber-500/40 dark:bg-gradient-to-r dark:from-amber-500/15 dark:via-yellow-500/10 dark:to-amber-400/20 dark:text-amber-100 dark:hover:from-amber-500/20 dark:hover:via-yellow-500/16 dark:hover:to-amber-400/26"
               : "group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-[0_14px_24px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-100 dark:hover:bg-gray-800";
@@ -81,8 +48,8 @@ const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate, onNavigateHome 
                 <button
                   type="button"
                   data-testid={action.testId}
-                  aria-label={action.label}
-                  title={action.description}
+                  aria-label={label}
+                  title={description}
                   onClick={() => onNavigate(action.path)}
                   className={buttonClass}
                 >
@@ -90,7 +57,7 @@ const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate, onNavigateHome 
                     <Icon />
                   </span>
                   <span className={labelClass}>
-                    {action.label}
+                    {label}
                   </span>
                 </button>
               </div>
@@ -103,8 +70,8 @@ const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate, onNavigateHome 
         {onNavigateHome && (
           <button
             type="button"
-            aria-label="Go to Home"
-            title="Reset and upload again"
+            aria-label={t("nav.home")}
+            title={t("nav.homeTitle")}
             onClick={onNavigateHome}
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
           >
@@ -113,7 +80,7 @@ const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate, onNavigateHome 
         )}
         <button
           type="button"
-          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-label={isOpen ? t("nav.close") : t("nav.open")}
           onClick={onToggle}
           className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white transition-transform dark:bg-white dark:text-slate-900"
           style={{
@@ -127,8 +94,8 @@ const FloatingNavMenu = ({ isDark, isOpen, onToggle, onNavigate, onNavigateHome 
         </button>
       </div>
     </div>
-  </div>
-);
+  </div>;
+};
 
 FloatingNavMenu.propTypes = {
   isDark: PropTypes.bool.isRequired,

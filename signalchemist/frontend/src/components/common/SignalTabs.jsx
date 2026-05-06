@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import {
   FaBalanceScale,
   FaChartLine,
@@ -35,34 +36,6 @@ const selectedModeButtonClass =
 const idleModeButtonClass =
   "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300 dark:hover:bg-gray-800";
 
-const topViews = [
-  {
-    key: "signal",
-    title: "Signal",
-    description: "Raw and processed waveform",
-    icon: <FaChartLine />,
-  },
-  {
-    key: "spectrum",
-    title: "Spectrum",
-    description: "FFT and frequency comparison",
-    icon: <FaWaveSquare />,
-  },
-];
-
-const comparisonViews = [
-  {
-    key: "split",
-    title: "Side by side",
-    icon: <FaColumns size={13} />,
-  },
-  {
-    key: "overlay",
-    title: "Compare",
-    icon: <FaBalanceScale size={13} />,
-  },
-];
-
 const ViewFrame = ({ title, icon, children }) => (
   <section>
     <div className="mb-3 flex items-center justify-center gap-2 text-center">
@@ -81,27 +54,6 @@ const EmptyState = ({ message }) => (
   </div>
 );
 
-const ProcessedContent = ({
-  isRequesting,
-  chartDataProcessed,
-  rightTitle,
-  children,
-}) => {
-  if (isRequesting) {
-    return <LoaderMessage message="Processing request..." />;
-  }
-
-  if (chartDataProcessed) {
-    return children;
-  }
-
-  return (
-    <EmptyState
-      message={`Please run processing to see ${rightTitle.toLowerCase()} results.`}
-    />
-  );
-};
-
 const SignalTabs = ({
   rightTitle,
   rightIcon,
@@ -110,12 +62,39 @@ const SignalTabs = ({
   processedAnnotationPoints = [],
   isRequesting = false,
 }) => {
+  const { t } = useTranslation();
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
   const [analysisView, setAnalysisView] = useState("signal");
   const [comparisonView, setComparisonView] = useState("split");
   const [originalBridge, setOriginalBridge] = useState(null);
   const [processedBridge, setProcessedBridge] = useState(null);
+  const topViews = [
+    {
+      key: "signal",
+      title: t("signalTabs.topViews.signal.title"),
+      description: t("signalTabs.topViews.signal.description"),
+      icon: <FaChartLine />,
+    },
+    {
+      key: "spectrum",
+      title: t("signalTabs.topViews.spectrum.title"),
+      description: t("signalTabs.topViews.spectrum.description"),
+      icon: <FaWaveSquare />,
+    },
+  ];
+  const comparisonViews = [
+    {
+      key: "split",
+      title: t("signalTabs.comparisonViews.split"),
+      icon: <FaColumns size={13} />,
+    },
+    {
+      key: "overlay",
+      title: t("signalTabs.comparisonViews.overlay"),
+      icon: <FaBalanceScale size={13} />,
+    },
+  ];
 
   const isSpectrum = analysisView === "spectrum";
   const renderOriginal = (data) =>
@@ -153,6 +132,24 @@ const SignalTabs = ({
         name2={rightTitle}
       />
     );
+
+  const processedContent = (() => {
+    if (isRequesting) {
+      return <LoaderMessage message={t("common.processingRequest")} />;
+    }
+
+    if (chartDataProcessed) {
+      return null;
+    }
+
+    return (
+      <EmptyState
+        message={t("signalTabs.waitingProcessed", {
+          target: rightTitle.toLowerCase(),
+        })}
+      />
+    );
+  })();
 
   return (
     <div className="space-y-5">
@@ -201,24 +198,28 @@ const SignalTabs = ({
             {comparisonView === "split" && chartDataOriginal && chartDataProcessed ? (
               <SimpleMenu
                 widthClass="w-60"
-                label="Export"
+                label={t("common.menu.exportLabel")}
                 trigger={(
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300 dark:hover:bg-gray-800"
                   >
                     <FaDownload size={12} />
-                    Export
+                    {t("common.export")}
                   </button>
                 )}
                 items={[
                   {
-                    label: isSpectrum ? "Original spectrum" : "Original signal",
+                    label: isSpectrum
+                      ? t("signalTabs.exportMenu.originalSpectrum")
+                      : t("signalTabs.exportMenu.originalSignal"),
                     icon: <FaImage size={12} />,
                     onClick: async () => {
                       await exportSingleChartWithTitlePNG({
                         chart: originalBridge,
-                        title: isSpectrum ? "Original Spectrum" : "Original Signal",
+                        title: isSpectrum
+                          ? t("signalTabs.exportMenu.originalSpectrum")
+                          : t("signalTabs.exportMenu.originalSignal"),
                         filename: isSpectrum ? "original-spectrum.png" : "original-signal.png",
                         backgroundColor: isDark ? "#020617" : "#ffffff",
                         foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
@@ -226,12 +227,16 @@ const SignalTabs = ({
                     },
                   },
                   {
-                    label: isSpectrum ? `${rightTitle} spectrum` : `${rightTitle} signal`,
+                    label: isSpectrum
+                      ? t("signalTabs.exportMenu.processedSpectrum", { target: rightTitle })
+                      : t("signalTabs.exportMenu.processedSignal", { target: rightTitle }),
                     icon: <FaImage size={12} />,
                     onClick: async () => {
                       await exportSingleChartWithTitlePNG({
                         chart: processedBridge,
-                        title: isSpectrum ? `${rightTitle} Spectrum` : `${rightTitle} Signal`,
+                        title: isSpectrum
+                          ? t("signalTabs.exportMenu.processedSpectrum", { target: rightTitle })
+                          : t("signalTabs.exportMenu.processedSignal", { target: rightTitle }),
                         filename: isSpectrum ? "processed-spectrum.png" : "processed-signal.png",
                         backgroundColor: isDark ? "#020617" : "#ffffff",
                         foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
@@ -239,14 +244,18 @@ const SignalTabs = ({
                     },
                   },
                   {
-                    label: "Side by side",
+                    label: t("signalTabs.exportMenu.sideBySide"),
                     icon: <FaColumns size={12} />,
                     onClick: async () => {
                       await exportChartsSideBySidePNG({
                         leftChart: originalBridge,
                         rightChart: processedBridge,
-                        leftTitle: isSpectrum ? "Original Spectrum" : "Original Signal",
-                        rightTitle: isSpectrum ? `${rightTitle} Spectrum` : `${rightTitle} Signal`,
+                        leftTitle: isSpectrum
+                          ? t("signalTabs.exportMenu.originalSpectrum")
+                          : t("signalTabs.exportMenu.originalSignal"),
+                        rightTitle: isSpectrum
+                          ? t("signalTabs.exportMenu.processedSpectrum", { target: rightTitle })
+                          : t("signalTabs.exportMenu.processedSignal", { target: rightTitle }),
                         filename: isSpectrum
                           ? "comparison-spectrum-side-by-side.png"
                           : "comparison-signal-side-by-side.png",
@@ -264,35 +273,25 @@ const SignalTabs = ({
 
       {comparisonView === "split" ? (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <ViewFrame title="Original Signal" icon={<FaSignal />}>
+          <ViewFrame title={t("common.originalSignal")} icon={<FaSignal />}>
             {chartDataOriginal ? (
               renderOriginal(chartDataOriginal)
             ) : (
-              <LoaderMessage message="Waiting for request..." />
+              <LoaderMessage message={t("common.waitingForRequest")} />
             )}
           </ViewFrame>
 
-          <ViewFrame title={`${rightTitle} Signal`} icon={rightIcon}>
-            <ProcessedContent
-              isRequesting={isRequesting}
-              chartDataProcessed={chartDataProcessed}
-              rightTitle={rightTitle}
-            >
-              {renderProcessed(chartDataProcessed)}
-            </ProcessedContent>
+          <ViewFrame title={`${rightTitle} ${t("common.signal")}`} icon={rightIcon}>
+            {processedContent ?? renderProcessed(chartDataProcessed)}
           </ViewFrame>
         </div>
       ) : (
-        <ViewFrame title="Comparison View" icon={<FaBalanceScale />}>
-          <ProcessedContent
-            isRequesting={isRequesting}
-            chartDataProcessed={chartDataProcessed}
-            rightTitle={rightTitle}
-          >
-            {chartDataOriginal && chartDataProcessed
+        <ViewFrame title={t("common.comparisonView")} icon={<FaBalanceScale />}>
+          {processedContent ?? (
+            chartDataOriginal && chartDataProcessed
               ? renderComparison(chartDataOriginal, chartDataProcessed)
-              : null}
-          </ProcessedContent>
+              : null
+          )}
         </ViewFrame>
       )}
     </div>
@@ -307,17 +306,6 @@ ViewFrame.propTypes = {
 
 EmptyState.propTypes = {
   message: PropTypes.string.isRequired,
-};
-
-ProcessedContent.propTypes = {
-  isRequesting: PropTypes.bool.isRequired,
-  chartDataProcessed: PropTypes.array,
-  rightTitle: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-};
-
-ProcessedContent.defaultProps = {
-  chartDataProcessed: null,
 };
 
 SignalTabs.propTypes = {

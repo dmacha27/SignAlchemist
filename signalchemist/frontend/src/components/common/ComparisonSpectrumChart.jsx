@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { fft, util as fftUtil } from "fft-js";
 import ReactECharts from "echarts-for-react";
 import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { average, diff } from "../utils/dataUtils";
@@ -45,6 +46,7 @@ function processFFT(table) {
 }
 
 const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original" }) => {
+  const { t } = useTranslation();
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
   const chartComponentRef = useRef(null);
@@ -102,7 +104,7 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
         axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
         axisLabel: { color: axisColor, margin: 12 },
         splitLine: { show: true, lineStyle: { color: splitLineColor } },
-        name: "Frequency (Hz)",
+        name: t("charts.frequencyHz"),
         nameLocation: "middle",
         nameGap: 34,
         nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
@@ -116,7 +118,7 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
         axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
         axisLabel: { color: axisColor, margin: 10 },
         splitLine: { show: true, lineStyle: { color: splitLineColor } },
-        name: "Amplitude",
+        name: t("charts.amplitude"),
         nameLocation: "middle",
         nameGap: 46,
         nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
@@ -157,12 +159,12 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
         },
       ],
     };
-  }, [dataset1, dataset2, isDark, isLargeDataset, name1, name2, selectedA, selectedB, xWindow, yWindow]);
+  }, [dataset1, dataset2, isDark, isLargeDataset, name1, name2, selectedA, selectedB, t, xWindow, yWindow]);
 
   bridgeRef.current = {
     __kind: "echarts",
     exportMeta: {
-      badge: "Spectrum Compare",
+      badge: t("charts.spectrumCompareBadge"),
       title: `${name1} / ${name2}`,
     },
     toBase64Image: (exportOptions = {}) =>
@@ -212,23 +214,23 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
 
   return (
     <ChartFrame
-      badge="Spectrum Compare"
+      badge={t("charts.spectrumCompareBadge")}
       title={`${name1} / ${name2}`}
       toolbar={
         <div className="flex items-center gap-2">
           {!isLargeDataset ? (
             <>
               <button onClick={() => handleResetZoom(bridgeRef.current)} className={chartActionButtonClass}>
-                <FaSearch /> Reset Zoom
+                <FaSearch /> {t("common.resetZoom")}
               </button>
               <button onClick={() => handleResetStyle(bridgeRef.current, "#38bdf8")} className={chartActionButtonClass}>
-                <FaCrosshairs /> Reset Style
+                <FaCrosshairs /> {t("common.resetStyle")}
               </button>
             </>
           ) : null}
           <SimpleMenu
             widthClass="w-28"
-            label="Export as"
+            label={t("common.exportAs")}
             trigger={(
               <button
                 type="button"
@@ -239,7 +241,7 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
               </button>
             )}
             items={[{
-              label: "PNG",
+              label: t("common.png"),
               icon: <FaImage size={12} />,
               onClick: () => exportSingleChartWithTitlePNG({
                 chart: bridgeRef.current,
@@ -260,25 +262,25 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
       notice={
         isLargeDataset ? (
           <>
-            Large dataset. Interaction off.
+            {t("charts.largeDatasetNotice")}
           </>
         ) : null
       }
       controls={
         isLargeDataset ? (
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Export is still available.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("charts.exportStillAvailable")}</p>
         ) : (
           <div className="overflow-x-auto">
             <div className="flex min-w-max flex-nowrap items-center justify-end gap-2">
-              <SimpleTooltip label="Focus the comparison around one frequency value.">
+              <SimpleTooltip label={t("charts.comparisonXFocusTooltip")}>
                 <div className="flex flex-nowrap items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
                   <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                    X Focus
+                    {t("charts.xFocus")}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="number"
-                      placeholder="Go to X"
+                      placeholder={t("charts.goToX")}
                       className={uiCompactInputClass}
                       style={{ width: 82 }}
                       step="0.001"
@@ -286,19 +288,19 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
                       max={maxXValue}
                       onChange={(event) => setGoToX(event.target.value === "" ? null : Number(event.target.value))}
                     />
-                    <button type="button" className={uiGhostButtonClass} onClick={handleGoToX} aria-label="go-x">Go</button>
+                    <button type="button" className={uiGhostButtonClass} onClick={handleGoToX} aria-label="go-x">{t("common.go")}</button>
                   </div>
                 </div>
               </SimpleTooltip>
-              <SimpleTooltip label="Highlight and zoom the comparison around an amplitude band.">
+              <SimpleTooltip label={t("charts.comparisonYBandTooltip")}>
                 <div className="flex flex-nowrap items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
                   <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                    Y Band
+                    {t("charts.yBand")}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="number"
-                      placeholder="Y min"
+                      placeholder={t("charts.yMin")}
                       className={uiCompactInputClass}
                       style={{ width: 70 }}
                       step="0.001"
@@ -306,13 +308,13 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
                     />
                     <input
                       type="number"
-                      placeholder="Y max"
+                      placeholder={t("charts.yMax")}
                       className={uiCompactInputClass}
                       style={{ width: 70 }}
                       step="0.001"
                       onChange={(event) => setYMax(event.target.value === "" ? null : Number(event.target.value))}
                     />
-                    <button type="button" className={uiGhostButtonClass} onClick={handleYMinMax} aria-label="go-y">Go</button>
+                    <button type="button" className={uiGhostButtonClass} onClick={handleYMinMax} aria-label="go-y">{t("common.go")}</button>
                   </div>
                 </div>
               </SimpleTooltip>

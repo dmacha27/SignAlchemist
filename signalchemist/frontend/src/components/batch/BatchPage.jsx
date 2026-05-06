@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import {
   FaChartBar,
   FaCheckCircle,
@@ -79,6 +80,7 @@ const PROGRESS_LIST_HEIGHT_CLASS = "max-h-[248px]";
 
 const BatchPage = () => {
   const location = useLocation();
+  const { t } = useTranslation();
   const { readString } = usePapaParse();
   const pipelineInputRef = useRef(null);
 
@@ -223,10 +225,10 @@ const BatchPage = () => {
 
       setPipelineDefinition(parsed);
       setPipelineFilename(selectedFile.name);
-      toast.success("Pipeline imported");
+      toast.success(t("pages.batch.toasts.imported"));
     } catch (error) {
       console.error(error);
-      toast.error(error.message || "Invalid pipeline file");
+      toast.error(error.message || t("pages.batch.toasts.invalidPipeline"));
     }
   };
 
@@ -238,7 +240,7 @@ const BatchPage = () => {
 
     setPipelineDefinition(preset);
     setPipelineFilename(`${presetKey.toLowerCase()}-preset.json`);
-    toast.success(`${presetKey} pipeline loaded`);
+    toast.success(t("pages.batch.toasts.presetLoaded", { preset: presetKey }));
   };
 
   const handleDatasetSelection = async (event) => {
@@ -269,10 +271,10 @@ const BatchPage = () => {
       setDatasets(parsedDatasets);
       setResults([]);
       setSelectedDatasetId(parsedDatasets[0]?.id ?? null);
-      toast.success(`${parsedDatasets.length} CSV files loaded`);
+      toast.success(t("pages.batch.toasts.loadedFiles", { count: parsedDatasets.length }));
     } catch (error) {
       console.error(error);
-      toast.error(error.message || "Could not load the selected CSV files");
+      toast.error(error.message || t("pages.batch.toasts.loadFilesError"));
     }
   };
 
@@ -285,7 +287,7 @@ const BatchPage = () => {
       id: dataset.id,
       name: dataset.name,
       status: "queued",
-      message: "Waiting to run",
+      message: t("pages.batch.statuses.waiting"),
       outputTable: null,
       outputRows: 0,
       peakCount: null,
@@ -299,7 +301,7 @@ const BatchPage = () => {
       for (const dataset of datasets) {
         setResults((current) => current.map((result) => (
           result.id === dataset.id
-            ? { ...result, status: "running", message: "Executing pipeline..." }
+            ? { ...result, status: "running", message: t("pages.batch.statuses.executing") }
             : result
         )));
 
@@ -324,7 +326,7 @@ const BatchPage = () => {
               ? {
                   ...result,
                   status: "success",
-                  message: `${output.stepCount} steps completed`,
+                  message: t("pages.batch.statuses.completedSteps", { count: output.stepCount }),
                   outputTable: output.table,
                   outputRows: output.outputRows,
                   peakCount: output.peakCount,
@@ -338,7 +340,7 @@ const BatchPage = () => {
               ? {
                   ...result,
                   status: "error",
-                  message: error.message || "Execution failed",
+                  message: error.message || t("pages.batch.statuses.executionFailed"),
                 }
               : result
           )));
@@ -352,10 +354,10 @@ const BatchPage = () => {
   const handleDownloadAll = async () => {
     try {
       await downloadBatchResultsAsZip(results);
-      toast.success("Batch zip downloaded");
+      toast.success(t("pages.batch.toasts.zipDownloaded"));
     } catch (error) {
       console.error(error);
-      toast.error(error.message || "Could not build the batch zip");
+      toast.error(error.message || t("pages.batch.toasts.zipError"));
     }
   };
 
@@ -363,33 +365,35 @@ const BatchPage = () => {
     <WorkspacePage>
       <WorkspaceHero
         icon={<FaLayerGroup />}
-        title="Batch Processing"
-        description="Import a validated pipeline, queue multiple CSV files and run them sequentially."
-        badge={pipelineFilename ? `Pipeline: ${pipelineFilename}` : "Pipeline: not loaded"}
+        title={t("pages.batch.title")}
+        description={t("pages.batch.description")}
+        badge={pipelineFilename
+          ? t("common.pipelineBadgeLoaded", { filename: pipelineFilename })
+          : t("common.pipelineBadgeEmpty")}
       />
 
       <WorkspaceSection className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.75fr)]">
         <WorkspaceCard
-          title="Pipeline"
-          description="Import the JSON exported from Processing."
+          title={t("pages.batch.pipelineTitle")}
+          description={t("pages.batch.pipelineDescription")}
           icon={<FaFileImport />}
           actions={(
             <div className="flex gap-2">
               <WorkspaceSecondaryButton onClick={() => pipelineInputRef.current?.click()}>
                 <FaFileImport />
-                Import pipeline
+                {t("common.import")}
               </WorkspaceSecondaryButton>
               <SimpleMenu
-                label="Recommended pipelines"
+                label={t("common.menu.recommendedPipelines")}
                 widthClass="w-56"
                 trigger={(
                   <button
                     type="button"
-                    title="Recommended pipelines"
+                    title={t("common.menu.recommendedPipelines")}
                     className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
                   >
                     <FaMagic />
-                    Presets
+                    {t("common.presets")}
                   </button>
                 )}
                 items={[
@@ -428,13 +432,13 @@ const BatchPage = () => {
               />
             </WorkspaceInnerCard>
           ) : (
-            <WorkspaceEmptyState message="Import a pipeline JSON exported from Processing." />
+            <WorkspaceEmptyState message={t("pages.batch.pipelineEmpty")} />
           )}
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Batch Setup"
-          description="Choose the shared dataset configuration for all files."
+          title={t("pages.batch.setupTitle")}
+          description={t("pages.batch.setupDescription")}
           icon={<FaUpload />}
           className="xl:sticky xl:top-4 xl:self-start"
         >
@@ -445,7 +449,7 @@ const BatchPage = () => {
                   htmlFor="batchFiles"
                   className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
                 >
-                  CSV files
+                  {t("pages.batch.csvFiles")}
                 </label>
                 <input
                   id="batchFiles"
@@ -474,14 +478,14 @@ const BatchPage = () => {
 
               {hasHeaderMismatch ? (
                 <div className="rounded-[1rem] border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-                  The selected CSV files do not all share the same headers. Batch execution assumes a common structure.
+                  {t("pages.batch.mismatch")}
                 </div>
               ) : null}
 
               <div className="grid gap-2 sm:grid-cols-2">
                 <WorkspacePrimaryButton onClick={handleRunBatch} disabled={!canRun || isRunning}>
                   <FaPlay />
-                  {isRunning ? "Running..." : "Run batch"}
+                  {isRunning ? t("pages.batch.running") : t("pages.batch.runBatch")}
                 </WorkspacePrimaryButton>
                 <WorkspaceSecondaryButton
                   onClick={() => {
@@ -491,7 +495,7 @@ const BatchPage = () => {
                   }}
                 >
                   <FaTrash />
-                  Clear files
+                  {t("pages.batch.clearFiles")}
                 </WorkspaceSecondaryButton>
               </div>
             </div>
@@ -501,8 +505,8 @@ const BatchPage = () => {
 
       <WorkspaceSection className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
         <WorkspaceCard
-          title="Execution"
-          description="Review the queue and the processing progress in one place."
+          title={t("pages.batch.executionTitle")}
+          description={t("pages.batch.executionDescription")}
           icon={<FaChartBar />}
           className="flex h-full min-h-0 flex-col overflow-hidden"
           actions={(
@@ -511,7 +515,7 @@ const BatchPage = () => {
               disabled={!hasDownloadableBatchResults}
             >
               <FaDownload />
-              Download all
+              {t("pages.batch.downloadAll")}
             </WorkspaceSecondaryButton>
           )}
         >
@@ -519,10 +523,10 @@ const BatchPage = () => {
             <div className="rounded-[1rem] border border-slate-200 bg-slate-50/80 p-3 dark:border-gray-700 dark:bg-gray-950/50">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Queue
+                    {t("pages.batch.queue")}
                 </p>
                 <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
-                  {datasets.length} files
+                  {t("pages.batch.filesCount", { count: datasets.length })}
                 </span>
               </div>
               {datasets.length ? (
@@ -543,18 +547,18 @@ const BatchPage = () => {
                           {dataset.name}
                         </p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          File {index + 1}
+                          {t("pages.batch.fileNumber", { index: index + 1 })}
                         </p>
                       </div>
                       <span className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                        {dataset.fileRows.length - 1} rows
+                        {t("common.rowCount", { count: dataset.fileRows.length - 1 })}
                       </span>
                     </button>
                   ))}
                 </div>
               ) : (
                 <div className={QUEUE_LIST_HEIGHT_CLASS}>
-                  <WorkspaceEmptyState message="Load CSV files to build the batch queue." />
+                  <WorkspaceEmptyState message={t("pages.batch.queueEmpty")} />
                 </div>
               )}
             </div>
@@ -563,11 +567,11 @@ const BatchPage = () => {
               <div className="mb-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                    Progress
+                    {t("pages.batch.progress")}
                   </p>
                   <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
-                    <span>{completedRuns} completed</span>
-                    <span>{failedRuns} failed</span>
+                    <span>{t("pages.batch.completed", { count: completedRuns })}</span>
+                    <span>{t("pages.batch.failed", { count: failedRuns })}</span>
                   </div>
                 </div>
                 <ProgressBar value={progressValue} />
@@ -603,7 +607,7 @@ const BatchPage = () => {
                             </div>
                             <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusTone[result.status]}`}>
                               <StatusIcon size={12} />
-                              {result.status}
+                              {t(`pages.batch.statuses.${result.status}`)}
                             </span>
                           </div>
                         </button>
@@ -612,17 +616,17 @@ const BatchPage = () => {
                           <div className="mt-3 flex flex-wrap gap-2">
                             {result.outputRows ? (
                               <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-slate-950 dark:text-slate-300">
-                                {result.outputRows} output rows
+                                {t("pages.batch.outputRows", { count: result.outputRows })}
                               </span>
                             ) : null}
                             {result.peakCount !== null ? (
                               <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-slate-950 dark:text-slate-300">
-                                {result.peakCount} peaks
+                                {t("pages.batch.peaks", { count: result.peakCount })}
                               </span>
                             ) : null}
                             {result.beatCount !== null ? (
                               <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-slate-950 dark:text-slate-300">
-                                {result.beatCount} beats
+                                {t("pages.batch.beats", { count: result.beatCount })}
                               </span>
                             ) : null}
                           </div>
@@ -637,7 +641,7 @@ const BatchPage = () => {
                               )}
                             >
                               <FaDownload />
-                              Download
+                              {t("pages.batch.download")}
                             </WorkspaceSecondaryButton>
                           </div>
                         ) : null}
@@ -647,7 +651,7 @@ const BatchPage = () => {
                 </div>
               ) : (
                 <div className={PROGRESS_LIST_HEIGHT_CLASS}>
-                  <WorkspaceEmptyState message="Run the batch to see progress and download each result." />
+                  <WorkspaceEmptyState message={t("pages.batch.progressEmpty")} />
                 </div>
               )}
             </div>
@@ -655,8 +659,8 @@ const BatchPage = () => {
         </WorkspaceCard>
 
         <WorkspaceCard
-          title="Inspect"
-          description="Compare the selected file before and after processing."
+          title={t("pages.batch.inspectTitle")}
+          description={t("pages.batch.inspectDescription")}
           icon={<FaChartBar />}
           className="flex h-full min-h-0 flex-col overflow-hidden"
         >
@@ -668,11 +672,13 @@ const BatchPage = () => {
                     {selectedDataset.name}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Click a file in the queue or progress list to inspect it.
+                    {t("pages.batch.inspectHint")}
                   </p>
                 </div>
                 <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
-                  {selectedResult?.status ?? "queued"}
+                  {selectedResult
+                    ? t(`pages.batch.statuses.${selectedResult.status}`)
+                    : t("pages.batch.statuses.queued")}
                 </span>
               </div>
             ) : null}
@@ -682,13 +688,13 @@ const BatchPage = () => {
                 <ComparisonChart
                   table1={selectedSourceTable}
                   table2={selectedResult.outputTable}
-                  name1="Original"
-                  name2="Processed"
+                  name1={t("common.originalSignal")}
+                  name2={t("common.processedSignal")}
                 />
               ) : selectedDataset ? (
-                <WorkspaceEmptyState message="Run the selected file successfully to enable the comparison chart." />
+                <WorkspaceEmptyState message={t("pages.batch.inspectPending")} />
               ) : (
-                <WorkspaceEmptyState message="Load CSV files and select one to inspect it here." />
+                <WorkspaceEmptyState message={t("pages.batch.inspectEmpty")} />
               )}
             </div>
           </WorkspaceInnerCard>

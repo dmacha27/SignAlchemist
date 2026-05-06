@@ -1,6 +1,7 @@
 import { memo } from "react";
 import PropTypes from "prop-types";
 import { FaArrowDown, FaArrowRight, FaArrowUp } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import LoaderMessage from "./LoaderMessage";
 import { SimpleTooltip } from "./ui";
@@ -16,17 +17,23 @@ const getMetricPreference = (description = "") => {
   return "neutral";
 };
 
-const getMetricPreferenceLabel = (preference) => {
+const stripMetricPreferenceText = (description = "") =>
+  description
+    .replace(/\s*Higher is better\.?/i, "")
+    .replace(/\s*Lower is better\.?/i, "")
+    .trim();
+
+const getMetricPreferenceLabel = (preference, t) => {
   if (preference === "higher") {
-    return "Higher is better";
+    return t("common.higherIsBetter");
   }
   if (preference === "lower") {
-    return "Lower is better";
+    return t("common.lowerIsBetter");
   }
-  return "No preference";
+  return t("metrics.noPreference");
 };
 
-const getMetricTrend = (preference, currentValue, originalValue) => {
+const getMetricTrend = (preference, currentValue, originalValue, t) => {
   if (
     preference === "neutral" ||
     typeof originalValue !== "number" ||
@@ -38,7 +45,7 @@ const getMetricTrend = (preference, currentValue, originalValue) => {
   if (currentValue === originalValue) {
     return {
       icon: FaArrowRight,
-      label: "No change",
+      label: t("metrics.noChange"),
       className:
         "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-gray-800",
     };
@@ -52,26 +59,32 @@ const getMetricTrend = (preference, currentValue, originalValue) => {
   return improved
     ? {
         icon: preference === "higher" ? FaArrowUp : FaArrowDown,
-        label: "Improved",
+        label: t("metrics.improved"),
         className:
           "text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10",
       }
     : {
         icon: preference === "higher" ? FaArrowDown : FaArrowUp,
-        label: "Worse",
+        label: t("metrics.worse"),
         className:
           "text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10",
       };
 };
 
-const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => (
+const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => {
+  const { t } = useTranslation();
+
+  return (
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
     {Object.entries(metrics).map(([name, { value, description }], index) => (
       <SimpleTooltip
         key={name}
-        label={`${description} ${getMetricPreferenceLabel(
-          getMetricPreference(description)
-        )}.`.trim()}
+        label={[
+          stripMetricPreferenceText(description),
+          getMetricPreferenceLabel(getMetricPreference(description), t),
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       >
           <button
             type="button"
@@ -84,10 +97,7 @@ const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => 
                   {name}
                 </h3>
                 <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Metric {index + 1}
-                </p>
-                <p className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  {getMetricPreferenceLabel(getMetricPreference(description))}
+                  {t("metrics.metricNumber", { index: index + 1 })}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -98,7 +108,8 @@ const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => 
                   const trend = getMetricTrend(
                     getMetricPreference(description),
                     value,
-                    baselineMetrics?.[name]?.value
+                    baselineMetrics?.[name]?.value,
+                    t
                   );
 
                   if (!trend) {
@@ -121,7 +132,8 @@ const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => 
       </SimpleTooltip>
     ))}
   </div>
-);
+  );
+};
 
 const MetricsPanel = ({ title, content }) => (
   <div>
@@ -135,23 +147,26 @@ const MetricsPanel = ({ title, content }) => (
 );
 
 const InfoMetrics = memo(
-  ({ metricsOriginal, metricsProcessed, isRequesting = false }) => (
+  ({ metricsOriginal, metricsProcessed, isRequesting = false }) => {
+    const { t } = useTranslation();
+
+    return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <MetricsPanel
-        title="Original Metrics"
+        title={t("metrics.originalTitle")}
         content={
           metricsOriginal ? (
             <MetricCards metrics={metricsOriginal} />
           ) : (
-            <LoaderMessage message="Calculating..." />
+            <LoaderMessage message={t("metrics.calculating")} />
           )
         }
       />
       <MetricsPanel
-        title="Processed Metrics"
+        title={t("metrics.processedTitle")}
         content={
           isRequesting ? (
-            <LoaderMessage message="Processing request..." />
+            <LoaderMessage message={t("common.processingRequest")} />
           ) : metricsProcessed ? (
             <MetricCards
               metrics={metricsProcessed}
@@ -160,13 +175,14 @@ const InfoMetrics = memo(
             />
           ) : (
             <div className="rounded-[1rem] bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500 dark:bg-gray-800/70 dark:text-slate-400">
-              Please run processing to see results.
+              {t("metrics.empty")}
             </div>
           )
         }
       />
     </div>
-  )
+    );
+  }
 );
 
 MetricCards.propTypes = {

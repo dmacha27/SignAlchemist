@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Handle,
   Position,
@@ -27,6 +28,7 @@ import {
  * @returns {JSX.Element} The visual representation of the signal table
  */
 function InputSignal({ id, data }) {
+  const { t } = useTranslation();
   const headers = data.table[0];
   const table = data.table;
   const { updateNodeData } = useReactFlow();
@@ -79,11 +81,11 @@ function InputSignal({ id, data }) {
   return (
     <NodeShell
       icon={<FaWaveSquare />}
-      title="Original Signal"
-      eyebrow="Source"
+      title={t("nodes.originalSignal")}
+      eyebrow={t("nodes.source")}
       accent="cyan"
     >
-      <NodeSection label="Signal preview">
+      <NodeSection label={t("nodes.signalPreview")}>
         <NodeDataTable headers={headers} rows={table.slice(1, 10)} />
       </NodeSection>
 

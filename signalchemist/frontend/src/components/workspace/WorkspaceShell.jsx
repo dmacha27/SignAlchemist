@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
@@ -18,16 +19,19 @@ export const WorkspaceHero = ({
   badge,
   backTo = "/",
   action = null,
-}) => (
+}) => {
+  const { t } = useTranslation();
+
+  return (
   <header className="rounded-[1.75rem] border border-slate-200/90 bg-white px-5 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] dark:border-gray-700 dark:bg-gray-950 md:px-6">
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start">
-      <div>
+    <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
+      <div className="flex flex-col items-start">
         <Link
           to={backTo}
           className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
         >
           <FaArrowLeft size={11} />
-          Home
+          {t("workspace.backHome")}
         </Link>
         <div className="mt-4 flex items-center gap-3">
           <div className="text-[1.8rem] text-cyan-600 dark:text-cyan-400">
@@ -44,9 +48,9 @@ export const WorkspaceHero = ({
         </div>
       </div>
 
-      <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3.5 dark:border-gray-700 dark:bg-gray-900">
+      <div className="h-full rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3.5 dark:border-gray-700 dark:bg-gray-900">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-          Context
+          {t("common.context")}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white dark:bg-white dark:text-slate-900">
@@ -57,13 +61,14 @@ export const WorkspaceHero = ({
           <div className="mt-4">{action}</div>
         ) : (
           <p className="mt-4 text-sm leading-5 text-slate-600 dark:text-slate-300">
-            Configure the operation and review the result.
+            {t("common.configureAndReview")}
           </p>
         )}
       </div>
     </div>
   </header>
-);
+  );
+};
 
 export const WorkspaceSection = ({ children, className = "" }) => (
   <section className="mt-6">

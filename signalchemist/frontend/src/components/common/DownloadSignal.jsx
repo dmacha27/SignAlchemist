@@ -1,7 +1,9 @@
 import { memo, useState } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 const DownloadSignal = memo(({ table, name }) => {
+  const { t } = useTranslation();
   const [onlySignal, setOnlySignal] = useState(false);
   const [withHeader, setWithHeader] = useState(true);
   const [separator, setSeparator] = useState(",");
@@ -31,11 +33,11 @@ const DownloadSignal = memo(({ table, name }) => {
     setSeparator(nextSeparator);
 
     if (nextSeparator.length !== 1) {
-      setError("The separator must be a single character");
+      setError(t("download.separatorSingleChar"));
     } else if (nextSeparator === ".") {
-      setError('The separator cannot be a dot (".")');
+      setError(t("download.separatorNoDot"));
     } else if (!isNaN(nextSeparator)) {
-      setError("The separator cannot be a number");
+      setError(t("download.separatorNoNumber"));
     } else {
       setError("");
     }
@@ -51,7 +53,7 @@ const DownloadSignal = memo(({ table, name }) => {
             onChange={(event) => setOnlySignal(event.target.checked)}
             className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-900"
           />
-          Only signal
+          {t("download.onlySignal")}
         </label>
         <label className="inline-flex min-w-0 items-center gap-2 text-sm">
           <input
@@ -60,10 +62,10 @@ const DownloadSignal = memo(({ table, name }) => {
             onChange={(event) => setWithHeader(event.target.checked)}
             className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-900"
           />
-          Include header
+          {t("download.includeHeader")}
         </label>
         <div className="flex min-w-0 items-center gap-2">
-          <span className="text-sm font-medium">Sep</span>
+          <span className="text-sm font-medium">{t("download.separator")}</span>
           <input
             type="text"
             value={separator}
@@ -86,7 +88,7 @@ const DownloadSignal = memo(({ table, name }) => {
           disabled={!!error}
           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
         >
-          Download
+          {t("download.button")}
         </button>
       </div>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

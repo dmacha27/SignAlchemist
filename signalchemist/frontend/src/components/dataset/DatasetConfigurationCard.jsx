@@ -1,6 +1,8 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import {
+  NO_TIMESTAMPS_LABEL,
   SIGNAL_TYPE_OPTIONS,
   normalizeSamplingRateOnBlur,
 } from "../home/homeUtils";
@@ -64,13 +66,14 @@ export const DatasetConfigurationCard = ({
   onTimestampChange,
   onSignalValuesChange,
   onSamplingRateChange,
-  title = "Configure dataset",
-  description = "These values drive the preview and are passed to the selected utility exactly as before.",
-  step = 2,
+  title,
+  description,
+  step,
   variant = "card",
 }) => {
+  const { t } = useTranslation();
   const timestampOptions = headers.map((header, index) => ({
-    label: header,
+    label: header === NO_TIMESTAMPS_LABEL ? t("home.configure.noTimestamps") : header,
     value: index,
   }));
   const signalValueOptions = headers
@@ -85,7 +88,7 @@ export const DatasetConfigurationCard = ({
         <div className="grid gap-3 sm:grid-cols-2">
           <FieldCard
             className="tuto-signalType"
-            label="Signal Type"
+            label={t("home.configure.signalType")}
             inputId="signalType"
           >
             <select
@@ -96,7 +99,7 @@ export const DatasetConfigurationCard = ({
             >
               {SIGNAL_TYPE_OPTIONS.map((option) => (
                 <option key={option || "empty"} value={option}>
-                  {option}
+                  {t(`home.configure.signalTypes.${option || "empty"}`)}
                 </option>
               ))}
             </select>
@@ -104,7 +107,7 @@ export const DatasetConfigurationCard = ({
 
           <FieldCard
             className="tuto-timestampColumn"
-            label="Timestamp Column"
+            label={t("home.configure.timestampColumn")}
             inputId="timestampColumn"
           >
             <select
@@ -127,16 +130,16 @@ export const DatasetConfigurationCard = ({
         <div className="grid gap-3 sm:grid-cols-2">
           <FieldCard
             className="tuto-samplingRate"
-            label="Sampling Rate (Hz)"
+            label={t("home.configure.samplingRate")}
             inputId="samplingRate"
-            footer="Enabled when the file does not contain timestamps."
+            footer={t("home.configure.samplingRateFooter")}
             footerClassName="mt-1 text-[10px] leading-4 text-slate-500 dark:text-slate-400"
           >
             <input
               type="number"
               step={1}
               min={1}
-              placeholder="Enter Hz"
+              placeholder={t("home.configure.enterHz")}
               id="samplingRate"
               value={samplingRate || ""}
               onChange={(event) => onSamplingRateChange(event.target.value)}
@@ -154,7 +157,7 @@ export const DatasetConfigurationCard = ({
 
           <FieldCard
             className="tuto-signalValues"
-            label="Signal Values"
+            label={t("home.configure.signalValues")}
             inputId="signalValues"
           >
             <select
@@ -180,7 +183,7 @@ export const DatasetConfigurationCard = ({
             id="samplingRateBadge"
             className="inline-flex w-fit items-center rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-lg"
           >
-            Detected sampling rate of {samplingRate} Hz
+            {t("home.configure.detectedSamplingRate", { value: samplingRate })}
           </div>
         </div>
       ) : null}
@@ -194,9 +197,9 @@ export const DatasetConfigurationCard = ({
   return (
     <div className={`config-fields ${CARD_CLASS}`}>
       <SectionHeader
-        step={step}
-        title={title}
-        description={description}
+        step={step ?? 2}
+        title={title ?? t("home.configure.title")}
+        description={description ?? t("home.configure.description")}
       />
       {content}
     </div>
@@ -252,10 +255,9 @@ DatasetConfigurationCard.propTypes = {
 
 DatasetConfigurationCard.defaultProps = {
   samplingRate: null,
-  title: "Configure dataset",
-  description:
-    "These values drive the preview and are passed to the selected utility exactly as before.",
-  step: 2,
+  title: undefined,
+  description: undefined,
+  step: undefined,
   variant: "card",
 };
 

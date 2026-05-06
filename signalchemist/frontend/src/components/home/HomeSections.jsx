@@ -1,5 +1,6 @@
 import { memo, useRef } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { PrimeReactProvider } from "primereact/api";
 import { FileUpload } from "primereact/fileupload";
@@ -33,43 +34,37 @@ const QUICK_STEP_CARD_CLASS =
 
 const utilityItems = [
   {
-    label: "Processing",
+    key: "processing",
     icon: FaProjectDiagram,
     path: "/processing",
     featured: true,
-    helper: "Build and validate a custom pipeline.",
   },
   {
-    label: "Batch",
+    key: "batch",
     icon: FaChartBar,
     path: "/batch",
     featured: true,
     alwaysEnabled: true,
-    helper: "Run an exported pipeline on multiple CSV files.",
   },
   {
-    label: "Resampling",
+    key: "resampling",
     icon: FaChartLine,
     path: "/resampling",
-    helper: "Adjust the sampling rate of one signal.",
   },
   {
-    label: "Filtering",
+    key: "filtering",
     icon: FaFilter,
     path: "/filtering",
-    helper: "Apply a filter directly to the dataset.",
   },
   {
-    label: "Peaks",
+    key: "peaks",
     icon: FaMountainSun,
     path: "/peaks",
-    helper: "Detect relevant signal peaks.",
   },
   {
-    label: "HR",
+    key: "hr",
     icon: FaHeartbeat,
     path: "/hr",
-    helper: "Estimate heart rate from PPG.",
   },
 ];
 
@@ -89,28 +84,33 @@ const SectionHeader = ({
   const HeadingTag = titleTag;
 
   return (
-    <div className="mb-3 flex items-start justify-between gap-3">
-      <div className="min-w-0 text-left">
-        <div className="flex items-center gap-2.5">
-          {step ? <StepBadge step={step} /> : null}
-          <HeadingTag className="text-base font-semibold text-slate-900 dark:text-white">
-            {title}
-          </HeadingTag>
+    <div className="mb-3 text-left">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5">
+            {step ? <StepBadge step={step} /> : null}
+            <HeadingTag className="text-base font-semibold text-slate-900 dark:text-white">
+              {title}
+            </HeadingTag>
+          </div>
         </div>
-        {description ? (
-          <p className="mt-1 text-[11px] leading-4 text-slate-600 dark:text-slate-300">
-            {description}
-          </p>
-        ) : null}
+        {aside ? <div className="shrink-0">{aside}</div> : null}
       </div>
-      {aside}
+      {description ? (
+        <p className="mt-1 text-[11px] leading-4 text-slate-600 dark:text-slate-300">
+          {description}
+        </p>
+      ) : null}
     </div>
   );
 };
 
-export const HomeHero = ({ isDark }) => (
+export const HomeHero = ({ isDark }) => {
+  const { t } = useTranslation();
+
+  return (
   <header className="rounded-[1.75rem] border border-white/70 bg-white/80 px-5 py-4 shadow-[0_20px_55px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700 dark:bg-gray-950/75 md:px-6">
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start">
+    <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
       <div>
         <img
           src={isDark ? "/logo_dark.png" : "/logo.png"}
@@ -118,18 +118,17 @@ export const HomeHero = ({ isDark }) => (
           alt="SignAlchemist Logo"
         />
         <h1 className="mt-2 text-[1.2rem] font-semibold text-slate-900 dark:text-white md:text-[1.45rem]">
-          Load and prepare your dataset before processing
+          {t("home.hero.title")}
         </h1>
         <p className="mt-1.5 max-w-3xl text-sm leading-5 text-slate-600 dark:text-slate-300">
-          Upload a CSV, define timestamps and values, crop the visible range and
-          preview the result before moving into the tools.
+          {t("home.hero.description")}
         </p>
         <div className="mt-3">
           <Link
             to="/about"
             className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
           >
-            About this project
+            {t("home.hero.aboutProject")}
             <FaArrowRight size={12} />
           </Link>
         </div>
@@ -140,18 +139,18 @@ export const HomeHero = ({ isDark }) => (
           <div>
             <div className="flex items-center gap-3">
               <span className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white dark:bg-white dark:text-slate-900">
-                Quick Start
+                {t("home.hero.quickStart")}
               </span>
             </div>
           </div>
 
           <div>
-            <div className="grid gap-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            <div className="grid gap-2 lg:grid-cols-2">
               <div className="grid gap-2">
                 <div className="grid gap-2 sm:grid-cols-2">
                   {[
-                    "Load a sample or upload your own CSV.",
-                    "Configure signal type, columns and sampling rate.",
+                    t("home.hero.steps.one"),
+                    t("home.hero.steps.two"),
                   ].map((item, index) => (
                     <div
                       key={item}
@@ -171,7 +170,7 @@ export const HomeHero = ({ isDark }) => (
                     4
                   </span>
                   <p className="leading-5">
-                    Continue with `Processing`, `Batch` or a single utility.
+                    {t("home.hero.steps.four")}
                   </p>
                 </div>
               </div>
@@ -184,11 +183,10 @@ export const HomeHero = ({ isDark }) => (
                 </span>
                 <div className="min-w-0">
                   <p className="font-semibold text-slate-800 dark:text-slate-100">
-                    Inspect and crop
+                    {t("home.hero.steps.threeTitle")}
                   </p>
                   <p className="mt-1 leading-5">
-                    Use the preview to validate the selected columns and trim
-                    the working range before you continue.
+                    {t("home.hero.steps.threeDescription")}
                   </p>
                 </div>
               </div>
@@ -198,9 +196,11 @@ export const HomeHero = ({ isDark }) => (
       </div>
     </div>
   </header>
-);
+  );
+};
 
 export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
+  const { t } = useTranslation();
   const fileUploader = useRef(null);
   const { readString } = usePapaParse();
 
@@ -242,12 +242,12 @@ export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
     <div className={`upload-card ${OUTER_CARD_CLASS}`}>
       <SectionHeader
         step={1}
-        title="Upload signal"
-        description="Load a CSV manually or use a bundled sample."
+        title={t("home.upload.title")}
+        description={t("home.upload.description")}
         aside={
           <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600 dark:bg-gray-800 dark:text-slate-200">
             <FaUpload className="text-cyan-500" />
-            CSV up to 50 MB
+            {t("home.upload.csvLimit")}
           </div>
         }
       />
@@ -256,7 +256,7 @@ export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
         <div className={INNER_CARD_CLASS}>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-              Sample Data
+              {t("home.upload.sampleData")}
             </p>
             <div className="flex flex-wrap gap-1.5">
               <button
@@ -270,13 +270,13 @@ export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
 
               <SimpleMenu
                 widthClass="w-56"
-                label="Sample files"
+                label={t("common.menu.sampleFiles")}
                 trigger={
                   <button
                     type="button"
                     className="sample-list h-7 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-700 shadow-none transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
                   >
-                    More samples
+                    {t("home.upload.moreSamples")}
                   </button>
                 }
                 items={[
@@ -309,18 +309,17 @@ export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
             maxFileSize={52428868}
             className="home-fileupload"
             headerTemplate={renderUploadHeader}
-            chooseLabel="Choose CSV"
+            chooseLabel={t("home.upload.chooseCsv")}
             emptyTemplate={
               <div className="flex min-h-[84px] flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-300 bg-slate-50/70 px-2 py-2 text-center transition dark:border-gray-700 dark:bg-gray-950/70">
                 <div className="mb-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900">
                   <FaUpload size={13} />
                 </div>
                 <p className="m-0 text-xs font-semibold text-slate-900 dark:text-white">
-                  Drag and drop your CSV here
+                  {t("home.upload.dragTitle")}
                 </p>
                 <p className="mt-0.5 max-w-[220px] text-[10px] leading-4 text-slate-600 dark:text-slate-300">
-                  Upload your signal CSV file by dragging it here or selecting
-                  it manually.
+                  {t("home.upload.dragDescription")}
                 </p>
               </div>
             }
@@ -341,6 +340,7 @@ export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
 });
 
 export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
+  const { t } = useTranslation();
   const pendingChecks = checks.filter((check) => !check.complete);
   const featuredUtilities = utilityItems.filter((item) => item.featured);
   const secondaryUtilities = utilityItems.filter((item) => !item.featured);
@@ -349,19 +349,19 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
     <div className={`tuto-next-step ${OUTER_CARD_CLASS}`}>
       <SectionHeader
         step={4}
-        title="Next step"
+        title={t("home.nextStep.title")}
         titleTag="h3"
-        description="Choose the utility once the dataset is ready."
+        description={t("home.nextStep.description")}
       />
 
       <div className="mt-3 flex flex-col gap-2.5">
         <div className="rounded-xl bg-slate-50 px-3 py-2 text-[13px] text-slate-600 dark:bg-gray-800 dark:text-slate-300">
           {canLaunchUtility ? (
-            "Everything is ready. Choose where you want to continue."
+            t("home.nextStep.ready")
           ) : (
             <div className="flex flex-wrap items-center gap-2 text-[12px]">
               <span className="font-medium text-slate-500 dark:text-slate-400">
-                Missing:
+                {t("home.nextStep.missing")}
               </span>
               {pendingChecks.map((check) => (
                 <span
@@ -379,13 +379,15 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
             {featuredUtilities.map((item) => {
               const Icon = item.icon;
               const isDisabled = item.alwaysEnabled ? false : !canLaunchUtility;
-              const featuredClass = item.label === "Batch"
+              const label = item.key === "hr" ? "HR" : t(`nav.actions.${item.key}.label`);
+              const helper = t(`home.nextStep.utilities.${item.key}`);
+              const featuredClass = item.key === "batch"
                 ? "border-cyan-200 bg-cyan-50/90 text-cyan-900 hover:bg-cyan-100 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-100 dark:hover:bg-cyan-500/20"
                 : "border-amber-200 bg-amber-50/90 text-amber-900 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100 dark:hover:bg-amber-500/20";
 
               return (
                 <button
-                  key={item.label}
+                  key={item.key}
                   type="button"
                   onClick={() => onLaunchUtility(item.path)}
                   disabled={isDisabled}
@@ -396,10 +398,10 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
                   </span>
                   <span className="min-w-0">
                     <span className="block text-[13px] font-semibold leading-4">
-                      {item.label}
+                      {label}
                     </span>
                     <span className="mt-0.5 block text-[11px] leading-4 opacity-80">
-                      {item.helper}
+                      {helper}
                     </span>
                   </span>
                 </button>
@@ -409,16 +411,17 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
 
           <div>
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Single Utilities
+              {t("home.nextStep.singleUtilities")}
             </p>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
               {secondaryUtilities.map((item) => {
                 const Icon = item.icon;
                 const isDisabled = item.alwaysEnabled ? false : !canLaunchUtility;
+                const label = item.key === "hr" ? "HR" : t(`nav.actions.${item.key}.label`);
 
                 return (
                   <button
-                    key={item.label}
+                    key={item.key}
                     type="button"
                     onClick={() => onLaunchUtility(item.path)}
                     disabled={isDisabled}
@@ -429,7 +432,7 @@ export const NextStepCard = ({ canLaunchUtility, checks, onLaunchUtility }) => {
                         <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
                       </span>
                     ) : null}
-                    <span>{item.label}</span>
+                    <span>{label}</span>
                   </button>
                 );
               })}
@@ -452,6 +455,7 @@ export const SignalPreviewCard = ({
   onApplyCrop,
   hasAppliedCrop,
 }) => {
+  const { t } = useTranslation();
   const parsedSignalIndex =
     signalValues === "" ? -1 : parseInt(signalValues, 10);
   const hasSelectedTimestamp =
@@ -465,15 +469,15 @@ export const SignalPreviewCard = ({
   const previewHeaders = [
     hasSelectedTimestamp
       ? headers[timestampColumn] === NO_TIMESTAMPS_LABEL
-        ? "Time"
+        ? t("home.preview.time")
         : headers[timestampColumn]
-      : "Time",
-    hasSelectedSignal ? headers[parsedSignalIndex] : "Value",
+      : t("home.preview.time"),
+    hasSelectedSignal ? headers[parsedSignalIndex] : t("home.preview.value"),
   ];
   const previewMessage = !fileRows
-    ? "Waiting for file..."
+    ? t("home.preview.waitingFile")
     : !chartDataOriginal
-      ? "Waiting for parameters..."
+      ? t("home.preview.waitingParameters")
       : null;
   const previewTable = chartDataOriginal ?? [previewHeaders];
 
@@ -498,8 +502,8 @@ export const SignalPreviewCard = ({
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
                 {cropValues
-                  ? `Rows ${cropValues[0] + 1} - ${cropValues[1]}`
-                  : "Rows"}
+                  ? t("home.preview.rows", { start: cropValues[0] + 1, end: cropValues[1] })
+                  : t("home.preview.rowsFallback")}
               </div>
               <div className="flex gap-2">
                 <button
@@ -510,7 +514,7 @@ export const SignalPreviewCard = ({
                   }}
                   className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
                 >
-                  Reset
+                  {t("home.preview.reset")}
                 </button>
                 <button
                   type="button"
@@ -518,7 +522,7 @@ export const SignalPreviewCard = ({
                   disabled={!cropValues || hasAppliedCrop}
                   className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
                 >
-                  Crop
+                  {t("home.preview.crop")}
                 </button>
               </div>
             </div>
@@ -540,16 +544,20 @@ export const SignalPreviewCard = ({
   );
 };
 
-export const PreviewWorkspaceCard = ({ children }) => (
-  <div className={OUTER_CARD_CLASS}>
-    <SectionHeader
-      step={3}
-      title="Preview"
-      description="Visualize and crop your signal data before proceeding."
-    />
-    <div className="space-y-5">{children}</div>
-  </div>
-);
+export const PreviewWorkspaceCard = ({ children }) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className={OUTER_CARD_CLASS}>
+      <SectionHeader
+        step={3}
+        title={t("home.preview.title")}
+        description={t("home.preview.description")}
+      />
+      <div className="space-y-5">{children}</div>
+    </div>
+  );
+};
 
 HomeHero.propTypes = {
   isDark: PropTypes.bool.isRequired,

@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { fft, util as fftUtil } from "fft-js";
 import ReactECharts from "echarts-for-react";
 import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { average, diff } from "../utils/dataUtils";
@@ -34,6 +35,7 @@ function padToPowerOfTwo(signal) {
 }
 
 const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = null }) => {
+  const { t } = useTranslation();
   const theme = useContext(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
   const chartComponentRef = useRef(null);
@@ -98,7 +100,7 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
         axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
         axisLabel: { color: axisColor, margin: 12 },
         splitLine: { show: true, lineStyle: { color: splitLineColor } },
-        name: "Frequency (Hz)",
+        name: t("charts.frequencyHz"),
         nameLocation: "middle",
         nameGap: 34,
         nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
@@ -112,7 +114,7 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
         axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
         axisLabel: { color: axisColor, margin: 10 },
         splitLine: { show: true, lineStyle: { color: splitLineColor } },
-        name: "Amplitude",
+        name: t("charts.amplitude"),
         nameLocation: "middle",
         nameGap: 46,
         nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
@@ -150,14 +152,14 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
         },
       ],
     };
-  }, [defaultColor, hoverIndex, isDark, isLargeDataset, points, selectedPoints, xWindow, yWindow]);
+  }, [defaultColor, hoverIndex, isDark, isLargeDataset, points, selectedPoints, t, xWindow, yWindow]);
 
   useEffect(() => {
     const bridge = {
-      __kind: "echarts",
+        __kind: "echarts",
       exportMeta: {
-        badge: "Spectrum",
-        title: "FFT",
+        badge: t("charts.spectrumBadge"),
+        title: t("charts.fftTitle"),
       },
       toBase64Image: (exportOptions = {}) =>
         chartComponentRef.current
@@ -240,7 +242,7 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
       zr?.off?.("globalout", handleHoverOut);
       unregisterChart("spectrum", bridge);
     };
-  }, [isDark, onBridgeReady, points, zoomRangeX]);
+  }, [isDark, onBridgeReady, points, t, zoomRangeX]);
 
   const handleGoToX = (both = false) => {
     if (goToX === null || goToX < minXValue || goToX > maxXValue) return;
@@ -273,23 +275,23 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
 
   return (
     <ChartFrame
-      badge="Spectrum"
-      title="FFT"
+      badge={t("charts.spectrumBadge")}
+      title={t("charts.fftTitle")}
       toolbar={
         <div className="flex items-center gap-2">
           {!isLargeDataset ? (
             <>
               <button onClick={() => handleResetZoom(bridgeRef.current)} className={chartActionButtonClass}>
-                <FaSearch /> Reset Zoom
+                <FaSearch /> {t("common.resetZoom")}
               </button>
               <button onClick={() => handleResetStyle(bridgeRef.current, defaultColor)} className={chartActionButtonClass}>
-                <FaCrosshairs /> Reset Style
+                <FaCrosshairs /> {t("common.resetStyle")}
               </button>
             </>
           ) : null}
           <SimpleMenu
             widthClass="w-28"
-            label="Export as"
+            label={t("common.exportAs")}
             trigger={(
               <button
                 type="button"
@@ -300,11 +302,11 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
               </button>
             )}
             items={[{
-              label: "PNG",
+              label: t("common.png"),
               icon: <FaImage size={12} />,
               onClick: () => exportSingleChartWithTitlePNG({
                 chart: bridgeRef.current,
-                title: "FFT",
+                title: t("charts.fftTitle"),
                 filename: "spectrum-chart.png",
                 backgroundColor: isDark ? "#020617" : "#ffffff",
                 foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
@@ -327,25 +329,25 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
       notice={
         isLargeDataset ? (
           <>
-            Large dataset. Interaction off.
+            {t("charts.largeDatasetNotice")}
           </>
         ) : null
       }
       controls={
         isLargeDataset ? (
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Export is still available.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("charts.exportStillAvailable")}</p>
         ) : (
           <div className="overflow-x-auto">
             <div className="flex min-w-max flex-nowrap items-center justify-end gap-2">
-              <SimpleTooltip label="Focus the chart around one frequency value. 'Both' applies it to all spectrum views.">
+              <SimpleTooltip label={t("charts.xFocusTooltip")}>
                 <div className="flex flex-nowrap items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
                   <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                    X Focus
+                    {t("charts.xFocus")}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="number"
-                      placeholder="Go to X"
+                      placeholder={t("charts.goToX")}
                       className={uiCompactInputClass}
                       style={{ width: 82 }}
                       step="0.001"
@@ -353,20 +355,20 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
                       max={maxXValue}
                       onChange={(event) => setGoToX(event.target.value === "" ? null : Number(event.target.value))}
                     />
-                    <button type="button" className={uiGhostButtonClass} onClick={() => handleGoToX()} aria-label="go-x">Go</button>
-                    <button type="button" className={uiGhostButtonClass} onClick={() => handleGoToX(true)} aria-label="both-x">Both</button>
+                    <button type="button" className={uiGhostButtonClass} onClick={() => handleGoToX()} aria-label="go-x">{t("common.go")}</button>
+                    <button type="button" className={uiGhostButtonClass} onClick={() => handleGoToX(true)} aria-label="both-x">{t("common.both")}</button>
                   </div>
                 </div>
               </SimpleTooltip>
-              <SimpleTooltip label="Highlight a Y range and zoom around that amplitude band. 'Both' applies it to all spectrum views.">
+              <SimpleTooltip label={t("charts.yBandTooltip")}>
                 <div className="flex flex-nowrap items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
                   <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                    Y Band
+                    {t("charts.yBand")}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="number"
-                      placeholder="Y min"
+                      placeholder={t("charts.yMin")}
                       className={uiCompactInputClass}
                       style={{ width: 70 }}
                       step="0.001"
@@ -374,14 +376,14 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
                     />
                     <input
                       type="number"
-                      placeholder="Y max"
+                      placeholder={t("charts.yMax")}
                       className={uiCompactInputClass}
                       style={{ width: 70 }}
                       step="0.001"
                       onChange={(event) => setYMax(event.target.value === "" ? null : Number(event.target.value))}
                     />
-                    <button type="button" className={uiGhostButtonClass} onClick={() => handleYMinMax()} aria-label="go-y">Go</button>
-                    <button type="button" className={uiGhostButtonClass} onClick={() => handleYMinMax(true)} aria-label="both-y">Both</button>
+                    <button type="button" className={uiGhostButtonClass} onClick={() => handleYMinMax()} aria-label="go-y">{t("common.go")}</button>
+                    <button type="button" className={uiGhostButtonClass} onClick={() => handleYMinMax(true)} aria-label="both-y">{t("common.both")}</button>
                   </div>
                 </div>
               </SimpleTooltip>

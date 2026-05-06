@@ -61,25 +61,36 @@ export const buildDatasetPreparationChecks = ({
   timestampColumn,
   signalValues,
   samplingRate,
+  t,
 }) => [
   {
-    label: "Upload a CSV or load a sample",
+    label: t
+      ? t("home.nextStep.checks.file")
+      : "Upload a CSV or load a sample",
     complete: Boolean(file),
   },
   {
-    label: "Choose a signal type",
+    label: t
+      ? t("home.nextStep.checks.signalType")
+      : "Choose a signal type",
     complete: Boolean(signalType),
   },
   {
-    label: "Select the timestamp column",
+    label: t
+      ? t("home.nextStep.checks.timestamp")
+      : "Select the timestamp column",
     complete: timestampColumn >= 0,
   },
   {
-    label: "Select the signal values column",
+    label: t
+      ? t("home.nextStep.checks.signalValues")
+      : "Select the signal values column",
     complete: hasSelectedSignalColumn(signalValues),
   },
   {
-    label: "Set or detect the sampling rate",
+    label: t
+      ? t("home.nextStep.checks.samplingRate")
+      : "Set or detect the sampling rate",
     complete: Boolean(normalizeSamplingRate(samplingRate)),
   },
 ];

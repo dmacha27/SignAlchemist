@@ -1,6 +1,7 @@
 import { useState, memo, useContext, useEffect } from "react";
 import PropTypes from "prop-types";
 import { FaInfo, FaCheck, FaRegCopy } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
 import {
@@ -19,6 +20,7 @@ import {
  * @param {function} props.close - Function to close the modal.
  */
 const InfoModal = ({ opened, close }) => {
+  const { t } = useTranslation();
   const content =
     "def filter_signal(signal): \n\tnew_values = scipy.ndimage.gaussian_filter1d(signal, sigma=30) \n\treturn new_values";
   const packageList =
@@ -39,62 +41,51 @@ const InfoModal = ({ opened, close }) => {
     : "mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-950 px-4 py-3 text-sm text-slate-100";
 
   return (
-    <SimpleDialog open={opened} onClose={close} title="Python Info">
+    <SimpleDialog open={opened} onClose={close} title={t("filtering.modal.title")}>
       <div className="overflow-x-hidden text-gray-800 dark:text-white">
-        <h3 className="text-xl font-semibold mb-4">filter_signal function</h3>
+        <h3 className="mb-4 text-xl font-semibold">{t("filtering.modal.functionTitle")}</h3>
 
         <ol className="list-decimal list-inside space-y-3 text-sm">
           <li>
-            <strong>Code:</strong> The Python code must be well written, with
-            correct tabulations and blank spaces.
+            {t("filtering.modal.rules.code")}
           </li>
           <li>
-            <strong>Function name:</strong> The code must contain the definition
-            of a function named{" "}
-            <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">
-              filter_signal
-            </code>{" "}
-            that performs the filtering of the signal.
+            {t("filtering.modal.rules.functionName")}
           </li>
           <li>
-            <strong>Parameters:</strong> The function must have a single
-            parameter that represents the signal values.
+            {t("filtering.modal.rules.parameters")}
           </li>
           <li>
-            <strong>Output:</strong> The function's output will be the processed
-            (filtered) signal values (must have the same length as the input).
+            {t("filtering.modal.rules.output")}
           </li>
           <li>
-            <strong>No additional parameters:</strong> The function should not
-            accept any additional parameters.
+            {t("filtering.modal.rules.noAdditional")}
           </li>
           <li>
-            <strong>Syntax Error:</strong> If there is a syntax error in the
-            code, an error message will be displayed.
+            {t("filtering.modal.rules.syntax")}
           </li>
           <li>
-            <strong>Required for Python filter:</strong> If this field is left
-            blank, the custom Python filter cannot be executed.
+            {t("filtering.modal.rules.required")}
           </li>
           <li>
-            <strong>What packages can I use? (more to come):</strong>
+            <strong>{t("filtering.modal.rules.packages")}</strong>
             <pre className={codeBlockClassName}>
               <code>{packageList}</code>
             </pre>
           </li>
           <li>
-            <strong>Example (copy and paste to try!):</strong>
+            <strong>{t("filtering.modal.rules.example")}</strong>
             <div className="relative">
               <pre className={codeBlockClassName}>
                 <code>{content}</code>
               </pre>
 
-              <SimpleTooltip label={copied ? "Copied!" : "Copy"}>
+              <SimpleTooltip label={copied ? t("common.copied") : t("common.copy")}>
                 <button
                   type="button"
                   className="absolute top-2 right-2 cursor-pointer text-gray-500 dark:text-gray-100"
                   onClick={handleCopy}
-                  title="Copy"
+                  title={t("common.copy")}
                 >
                   {copied ? (
                     <FaCheck className="text-green-500" />
@@ -113,7 +104,7 @@ const InfoModal = ({ opened, close }) => {
             className="btn min-h-0 h-auto rounded-xl border-0 bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-none hover:bg-red-700"
             onClick={close}
           >
-            Close
+            {t("common.close")}
           </button>
         </div>
       </div>
@@ -129,6 +120,7 @@ const InfoModal = ({ opened, close }) => {
  * @param {function} props.onFieldChange - A callback function to handle field value changes.
  */
 const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) => {
+  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [enabledFields, setEnabledFields] = useState({});
 
@@ -181,7 +173,7 @@ const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) 
                   key={`${filter}_${field}`}
                   id={field}
                   type="number"
-                  placeholder={`Enter ${field}`}
+                  placeholder={fieldDefinition.label}
                   value={fieldValue ?? ""}
                   min={fieldDefinition.min ?? 0}
                   onBlur={(event) => {
@@ -225,9 +217,9 @@ const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) 
                   type="button"
                   className={`${uiButtonClass} px-2 py-1 text-xs`}
                   onClick={() => setOpened(true)}
-                  title="Info"
+                  title={t("common.info")}
                 >
-                  <FaInfo /> Info
+                  <FaInfo /> {t("common.info")}
                 </button>
               </div>
               <textarea

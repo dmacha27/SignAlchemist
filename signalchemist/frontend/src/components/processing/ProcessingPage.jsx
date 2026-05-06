@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useContext, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useNodesState,
   useEdgesState,
@@ -69,6 +70,7 @@ const EDGE_TYPES = {
 
 const ProcessingPage = () => {
   const location = useLocation();
+  const { t } = useTranslation();
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
   const { readString } = usePapaParse();
@@ -336,9 +338,9 @@ const ProcessingPage = () => {
     <WorkspacePage>
       <WorkspaceHero
         icon={<FaWaveSquare />}
-        title="Signal Processing"
-        description="Build and run a processing pipeline."
-        badge={`Signal type: ${signalType}`}
+        title={t("pages.processing.title")}
+        description={t("pages.processing.description")}
+        badge={t("common.signalTypeBadge", { signalType })}
         action={<SignalSummary table={chartDataOriginal} />}
       />
 
