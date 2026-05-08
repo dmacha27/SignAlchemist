@@ -181,7 +181,7 @@ const AppLayout = () => {
             {isDarkMode ? <FaSun /> : <FaMoon />}
           </button>
 
-          <div className="fixed right-[3.9rem] top-4 z-50">
+          <div className="fixed right-[4.1rem] top-4 z-50 flex h-11 items-center">
             <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/92 px-1 py-1 text-slate-900 shadow-[0_14px_32px_rgba(15,23,42,0.12)] backdrop-blur dark:border-gray-700 dark:bg-gray-900/92 dark:text-white">
               <span className="px-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                 {t("app.language.label")}
