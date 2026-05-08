@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Handle,
   Position,
@@ -31,6 +32,7 @@ import {
  * @returns {JSX.Element} Visual representation of the resampling node with UI for setting parameters and executing the resampling operation
  */
 function ResamplingNode({ id, data }) {
+  const { t } = useTranslation();
   const tableRef = useRef(null);
   const samplingRateRef = useRef(data.samplingRate);
   const initialConfig = parseTechniqueConfig(data.technique, {
@@ -191,8 +193,8 @@ function ResamplingNode({ id, data }) {
   return (
     <NodeShell
       icon={<FaChartLine />}
-      title="Resampling"
-      eyebrow="Node"
+      title={t("pipeline.nodes.ResamplingNode.label", { defaultValue: "Resampling" })}
+      eyebrow={t("pipeline.eyebrow.node", { defaultValue: "Node" })}
       accent="cyan"
       executionState={executionState}
       onStatusClick={() => {
@@ -213,7 +215,7 @@ function ResamplingNode({ id, data }) {
           onClick={requestResample}
           accent="cyan"
         >
-          Resample
+          {t("pages.resampling.apply")}
         </NodeRunButton>
       }
     >
@@ -225,8 +227,8 @@ function ResamplingNode({ id, data }) {
       />
 
       <NodeSection
-        label="Interpolation technique"
-        tooltip="How new in-between samples are estimated when changing the sampling rate."
+        label={t("pages.resampling.interpolationTechnique")}
+        tooltip={t("pages.resampling.interpolationTooltip")}
         fieldId="resampling-interpolation-technique"
       >
           <select
@@ -247,8 +249,8 @@ function ResamplingNode({ id, data }) {
       </NodeSection>
 
       <NodeSection
-        label="Target sampling rate"
-        tooltip="Target number of samples per second after resampling."
+        label={t("pages.resampling.newSamplingRate")}
+        tooltip={t("pages.resampling.newSamplingRateTooltip")}
         fieldId="resampling-target-sampling-rate"
       >
           <input
@@ -256,7 +258,7 @@ function ResamplingNode({ id, data }) {
             type="number"
             step={1}
             min={1}
-            placeholder="Enter Hz"
+            placeholder={t("pages.resampling.enterHz")}
             value={targetSamplingRate}
             onChange={(event) =>
               setTargetSamplingRate(parseInt(event.target.value))

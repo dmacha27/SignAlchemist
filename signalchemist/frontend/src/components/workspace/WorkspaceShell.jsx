@@ -5,6 +5,8 @@ import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 const PAGE_CARD_CLASS =
   "rounded-[1.6rem] border border-slate-200/90 bg-white p-4 shadow-[0_18px_44px_rgba(15,23,42,0.07)] dark:border-gray-700 dark:bg-gray-900";
+const GLASS_BUTTON_CLASS =
+  "border border-slate-200/75 bg-white/70 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.10)] backdrop-blur-md transition-colors hover:bg-white/86 dark:border-gray-700/75 dark:bg-gray-900/70 dark:text-slate-200 dark:hover:bg-gray-900/86";
 
 export const WorkspacePage = ({ children }) => (
   <div className="container mx-auto px-4 py-4">
@@ -16,7 +18,7 @@ export const WorkspaceHero = ({
   icon,
   title,
   description,
-  badge,
+  badge = null,
   backTo = "/",
   action = null,
 }) => {
@@ -28,7 +30,7 @@ export const WorkspaceHero = ({
       <div className="flex flex-col items-start">
         <Link
           to={backTo}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
+          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${GLASS_BUTTON_CLASS}`}
         >
           <FaArrowLeft size={11} />
           {t("workspace.backHome")}
@@ -52,15 +54,17 @@ export const WorkspaceHero = ({
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
           {t("common.context")}
         </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white dark:bg-white dark:text-slate-900">
-            {badge}
-          </span>
-        </div>
+        {badge ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white dark:bg-white dark:text-slate-900">
+              {badge}
+            </span>
+          </div>
+        ) : null}
         {action ? (
-          <div className="mt-4">{action}</div>
+          <div className={badge ? "mt-4" : "mt-3"}>{action}</div>
         ) : (
-          <p className="mt-4 text-sm leading-5 text-slate-600 dark:text-slate-300">
+          <p className={badge ? "mt-4 text-sm leading-5 text-slate-600 dark:text-slate-300" : "mt-3 text-sm leading-5 text-slate-600 dark:text-slate-300"}>
             {t("common.configureAndReview")}
           </p>
         )}
@@ -157,7 +161,7 @@ export const WorkspaceSecondaryButton = ({
     type="button"
     title={title}
     onClick={onClick}
-    className={`inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800 ${className}`.trim()}
+    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${GLASS_BUTTON_CLASS} ${className}`.trim()}
   >
     {children}
   </button>
@@ -181,12 +185,13 @@ WorkspaceHero.propTypes = {
   icon: PropTypes.node.isRequired,
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
-  badge: PropTypes.string.isRequired,
+  badge: PropTypes.string,
   backTo: PropTypes.string,
   action: PropTypes.node,
 };
 
 WorkspaceHero.defaultProps = {
+  badge: null,
   backTo: "/",
   action: null,
 };

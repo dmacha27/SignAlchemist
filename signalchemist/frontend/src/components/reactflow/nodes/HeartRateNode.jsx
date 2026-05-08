@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Handle,
   Position,
@@ -30,6 +31,7 @@ import {
 } from "../../hr/hrShared";
 
 function HeartRateNode({ id, data }) {
+  const { t } = useTranslation();
   const tableRef = useRef(null);
   const initialConfig = parseTechniqueConfig(data.technique, {
     method: data.method,
@@ -163,8 +165,8 @@ function HeartRateNode({ id, data }) {
   return (
     <NodeShell
       icon={<FaHeartbeat />}
-      title="Heart Rate"
-      eyebrow="Analysis"
+      title={t("pages.hr.title")}
+      eyebrow={t("pipeline.eyebrow.analysis", { defaultValue: "Analysis" })}
       accent="rose"
       executionState={executionState}
       onStatusClick={() => {
@@ -185,7 +187,7 @@ function HeartRateNode({ id, data }) {
           onClick={requestHeartRate}
           accent="rose"
         >
-          Compute HR
+          {t("pages.hr.compute")}
         </NodeRunButton>
       )}
     >
@@ -199,14 +201,14 @@ function HeartRateNode({ id, data }) {
       {!isPpg ? (
         <NodeSection compact>
           <p className="text-sm text-amber-700 dark:text-amber-200">
-            Heart rate analysis is only available for PPG signals.
+            {t("pages.hr.onlyPpg")}
           </p>
         </NodeSection>
       ) : null}
 
       <NodeSection
-        label="Method"
-        tooltip="Choose between the EmotiBit-style beat-to-beat estimate and NeuroKit's PPG rate pipeline."
+        label={t("pages.hr.method")}
+        tooltip={t("pages.hr.methodTooltip")}
         fieldId="heart-rate-method"
       >
         <select
@@ -223,7 +225,7 @@ function HeartRateNode({ id, data }) {
       <NodeSection compact>
         <div className="flex items-center justify-between gap-3 text-sm">
           <span className="font-semibold text-slate-700 dark:text-slate-200">
-            Beats used
+            {t("pages.hr.beatsUsed")}
           </span>
           <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
             {beatCount}

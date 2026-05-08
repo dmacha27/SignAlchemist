@@ -87,15 +87,6 @@ html.dark body {
   font-size: 10px !important;
 }
 
-/* Dark mode over PrimeReact */
-.dark .p-fileupload-content,
-.dark .p-fileupload-buttonbar,
-.dark .p-fileupload-empty {
-  background-color: #1f2937 !important; /* Tailwind bg-gray-800 */
-  color: #f3f4f6 !important; /* Tailwind text-gray-100 */
-  border-color: #4b5563 !important; /* dark:border-gray-600 */
-}
-
 /* Loader author: https://github.com/Afif13/*/
 .loader {
   display: inline-grid;

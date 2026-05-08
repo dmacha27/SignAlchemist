@@ -17,6 +17,25 @@ const getMetricPreference = (description = "") => {
   return "neutral";
 };
 
+const getResolvedMetricPreference = (metric) => {
+  if (metric?.preference === "higher" || metric?.preference === "lower") {
+    return metric.preference;
+  }
+
+  return getMetricPreference(metric?.description ?? "");
+};
+
+const getMetricDescription = (metric, t) => {
+  const metricId = metric?.metric_id;
+  if (!metricId) {
+    return stripMetricPreferenceText(metric?.description ?? "");
+  }
+
+  return t(`metrics.items.${metricId}.description`, {
+    defaultValue: stripMetricPreferenceText(metric?.description ?? ""),
+  });
+};
+
 const stripMetricPreferenceText = (description = "") =>
   description
     .replace(/\s*Higher is better\.?/i, "")
@@ -76,12 +95,12 @@ const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => 
 
   return (
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-    {Object.entries(metrics).map(([name, { value, description }], index) => (
+    {Object.entries(metrics).map(([name, metric], index) => (
       <SimpleTooltip
         key={name}
         label={[
-          stripMetricPreferenceText(description),
-          getMetricPreferenceLabel(getMetricPreference(description), t),
+          getMetricDescription(metric, t),
+          getMetricPreferenceLabel(getResolvedMetricPreference(metric), t),
         ]
           .filter(Boolean)
           .join(" · ")}
@@ -89,7 +108,7 @@ const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => 
           <button
             type="button"
             className="rounded-[1rem] bg-slate-50/70 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-800/70"
-            title={description}
+            title={metric.description}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -102,12 +121,12 @@ const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => 
               </div>
               <div className="flex flex-col items-end gap-2">
                 <span className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">
-                  {value.toFixed(4)}
+                  {metric.value.toFixed(4)}
                 </span>
                 {showTrend ? (() => {
                   const trend = getMetricTrend(
-                    getMetricPreference(description),
-                    value,
+                    getResolvedMetricPreference(metric),
+                    metric.value,
                     baselineMetrics?.[name]?.value,
                     t
                   );
@@ -190,12 +209,16 @@ MetricCards.propTypes = {
     PropTypes.shape({
       value: PropTypes.number.isRequired,
       description: PropTypes.string.isRequired,
+      metric_id: PropTypes.string,
+      preference: PropTypes.oneOf(["higher", "lower", "neutral"]),
     })
   ).isRequired,
   baselineMetrics: PropTypes.objectOf(
     PropTypes.shape({
       value: PropTypes.number.isRequired,
       description: PropTypes.string.isRequired,
+      metric_id: PropTypes.string,
+      preference: PropTypes.oneOf(["higher", "lower", "neutral"]),
     })
   ),
   showTrend: PropTypes.bool,
@@ -216,12 +239,16 @@ InfoMetrics.propTypes = {
     PropTypes.shape({
       value: PropTypes.number.isRequired,
       description: PropTypes.string.isRequired,
+      metric_id: PropTypes.string,
+      preference: PropTypes.oneOf(["higher", "lower", "neutral"]),
     })
   ),
   metricsProcessed: PropTypes.objectOf(
     PropTypes.shape({
       value: PropTypes.number.isRequired,
       description: PropTypes.string.isRequired,
+      metric_id: PropTypes.string,
+      preference: PropTypes.oneOf(["higher", "lower", "neutral"]),
     })
   ),
   isRequesting: PropTypes.bool,

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Handle,
   Position,
@@ -37,6 +38,7 @@ import { requestFiltering } from "../../processing/processingRequests";
  * @returns {JSX.Element} Visual representation of the filtering node with UI for selecting a filter, configuring parameters, and executing the filtering operation
  */
 function FilteringNode({ id, data }) {
+  const { t } = useTranslation();
   const tableRef = useRef(null);
   const samplingRateRef = useRef(data.samplingRate);
   const initialConfig = parseTechniqueConfig(data.technique, {
@@ -233,8 +235,8 @@ function FilteringNode({ id, data }) {
   return (
     <NodeShell
       icon={<FaFilter />}
-      title="Filtering"
-      eyebrow="Node"
+      title={t("pipeline.nodes.FilteringNode.label", { defaultValue: "Filtering" })}
+      eyebrow={t("pipeline.eyebrow.node", { defaultValue: "Node" })}
       accent="emerald"
       executionState={executionState}
       onStatusClick={() => {
@@ -255,7 +257,7 @@ function FilteringNode({ id, data }) {
           onClick={requestFilter}
           accent="emerald"
         >
-          Filter
+          {t("pages.filtering.apply")}
         </NodeRunButton>
       }
     >
@@ -267,8 +269,8 @@ function FilteringNode({ id, data }) {
       />
 
       <NodeSection
-        label="Filtering technique"
-        tooltip="Select the family of filter you want to apply to the signal."
+        label={t("pages.filtering.technique")}
+        tooltip={t("pages.filtering.techniqueTooltip")}
         fieldId="filtering-technique"
       >
         <select

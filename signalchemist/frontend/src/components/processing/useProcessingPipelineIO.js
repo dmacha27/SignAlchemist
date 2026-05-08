@@ -105,10 +105,16 @@ export function useProcessingPipelineIO({
       return Number.isNaN(numericId) ? highest : Math.max(highest, numericId);
     }, 2);
 
-    setNodes(nextNodes);
-    setEdges(importedEdges);
     resetProcessedPreview();
-    setLastId(maxId);
+    setEdges([]);
+    setNodes(buildBaseNodes());
+    setLastId(2);
+
+    window.requestAnimationFrame(() => {
+      setNodes(nextNodes);
+      setEdges(importedEdges);
+      setLastId(maxId);
+    });
 
     if (successMessage) {
       toast.success(successMessage);

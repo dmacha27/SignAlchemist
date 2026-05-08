@@ -18,6 +18,33 @@ const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
   "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
 
+function formatAxisValue(value) {
+  return typeof value === "number" ? value.toFixed(3) : value;
+}
+
+function buildAxisBounds(axisData) {
+  const min = axisData?.min;
+  const max = axisData?.max;
+
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return { min, max };
+  }
+
+  if (min === max) {
+    const padding = Math.abs(min || 1) * 0.05 || 0.001;
+    return {
+      min: min - padding,
+      max: max + padding,
+    };
+  }
+
+  const padding = (max - min) * 0.02;
+  return {
+    min: min - padding,
+    max: max + padding,
+  };
+}
+
 const CustomChart = memo(({
   table,
   defaultColor = "#2196f3",
@@ -122,14 +149,14 @@ const CustomChart = memo(({
         nameGap: 34,
         nameTextStyle: {
           color: axisColor,
-          fontSize: 12,
-          fontWeight: 500,
+          fontSize: 14,
+          fontWeight: 600,
         },
       },
       yAxis: {
         type: "value",
-        min: hasRows ? undefined : 0,
-        max: hasRows ? undefined : 1,
+        min: hasRows ? (axisData) => buildAxisBounds(axisData).min : 0,
+        max: hasRows ? (axisData) => buildAxisBounds(axisData).max : 1,
         splitNumber: 6,
         axisLine: {
           lineStyle: { color: axisLineColor, width: 1 },
@@ -142,6 +169,7 @@ const CustomChart = memo(({
         axisLabel: {
           color: axisColor,
           margin: 10,
+          formatter: (value) => formatAxisValue(value),
         },
         splitLine: {
           show: true,
@@ -154,8 +182,8 @@ const CustomChart = memo(({
         nameGap: 46,
         nameTextStyle: {
           color: axisColor,
-          fontSize: 12,
-          fontWeight: 500,
+          fontSize: 14,
+          fontWeight: 600,
         },
       },
       dataZoom: isLargeDataset

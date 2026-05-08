@@ -25,6 +25,33 @@ const MAX_DATA_LENGTH = 5000;
 const chartActionButtonClass =
   "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
 
+function formatAxisValue(value) {
+  return typeof value === "number" ? value.toFixed(3) : value;
+}
+
+function buildAxisBounds(axisData) {
+  const min = axisData?.min;
+  const max = axisData?.max;
+
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return { min, max };
+  }
+
+  if (min === max) {
+    const padding = Math.abs(min || 1) * 0.05 || 0.001;
+    return {
+      min: min - padding,
+      max: max + padding,
+    };
+  }
+
+  const padding = (max - min) * 0.02;
+  return {
+    min: min - padding,
+    max: max + padding,
+  };
+}
+
 function nextPowerOfTwo(n) {
   return Math.pow(2, Math.ceil(Math.log2(n)));
 }
@@ -98,26 +125,34 @@ const SpectrumChart = memo(({ table, defaultColor = "#2196f3", onBridgeReady = n
         splitNumber: 6,
         axisLine: { lineStyle: { color: axisLineColor, width: 1 } },
         axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
-        axisLabel: { color: axisColor, margin: 12 },
+        axisLabel: {
+          color: axisColor,
+          margin: 12,
+          formatter: (value) => formatAxisValue(value),
+        },
         splitLine: { show: true, lineStyle: { color: splitLineColor } },
         name: t("charts.frequencyHz"),
         nameLocation: "middle",
         nameGap: 34,
-        nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
+        nameTextStyle: { color: axisColor, fontSize: 14, fontWeight: 600 },
       },
       yAxis: {
         type: "value",
-        min: yWindow?.[0],
-        max: yWindow?.[1],
+        min: yWindow?.[0] ?? ((axisData) => buildAxisBounds(axisData).min),
+        max: yWindow?.[1] ?? ((axisData) => buildAxisBounds(axisData).max),
         splitNumber: 6,
         axisLine: { lineStyle: { color: axisLineColor, width: 1 } },
         axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
-        axisLabel: { color: axisColor, margin: 10 },
+        axisLabel: {
+          color: axisColor,
+          margin: 10,
+          formatter: (value) => formatAxisValue(value),
+        },
         splitLine: { show: true, lineStyle: { color: splitLineColor } },
         name: t("charts.amplitude"),
         nameLocation: "middle",
         nameGap: 46,
-        nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
+        nameTextStyle: { color: axisColor, fontSize: 14, fontWeight: 600 },
       },
       dataZoom: isLargeDataset ? [] : [{ type: "inside", xAxisIndex: 0, filterMode: "none" }],
       series: [

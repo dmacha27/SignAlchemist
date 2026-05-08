@@ -167,12 +167,12 @@ const Home = () => {
 
         <section
           id="workspace"
-          className="mt-6"
+          className="mt-3"
         >
-          <div className="mx-auto mb-6 h-px w-16 rounded-full bg-cyan-300/90 dark:bg-cyan-700/80" />
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]">
-            <div className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
+          <div className="mx-auto mb-4 h-px w-16 rounded-full bg-cyan-300/90 dark:bg-cyan-700/80" />
+          <div className="grid gap-4 xl:grid-cols-2">
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <CSVUploader
                   onDatasetLoaded={handleDatasetLoaded}
                   onDatasetCleared={resetDataset}
@@ -200,7 +200,7 @@ const Home = () => {
               />
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               <PreviewWorkspaceCard>
                 <SignalPreviewCard
                   chartDataOriginal={chartDataOriginal}

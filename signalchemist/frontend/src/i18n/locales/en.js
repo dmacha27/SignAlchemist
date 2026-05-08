@@ -114,7 +114,7 @@ const en = {
         threeTitle: "Inspect and crop",
         threeDescription:
           "Use the preview to validate the selected columns and trim the working range before you continue.",
-        four: "Continue with Processing, Batch or a single utility.",
+        four: "Select a tool.",
       },
     },
     upload: {
@@ -131,7 +131,7 @@ const en = {
     configure: {
       title: "Configure dataset",
       description:
-        "These values drive the preview and are passed to the selected utility.",
+        "Set the values used by the preview and tools.",
       signalType: "Signal Type",
       timestampColumn: "Timestamp Column",
       samplingRate: "Sampling Rate (Hz)",
@@ -139,6 +139,8 @@ const en = {
       enterHz: "Enter Hz",
       samplingRateFooter: "Enabled when the file does not contain timestamps.",
       detectedSamplingRate: "Detected sampling rate of {{value}} Hz",
+      samplingRateDetectedFooter:
+        "Detected automatically from the selected timestamp column.",
       signalTypes: {
         empty: "",
         EDA: "EDA",
@@ -246,6 +248,24 @@ const en = {
     noChange: "No change",
     improved: "Improved",
     worse: "Worse",
+    items: {
+      bottcher_2022: {
+        description:
+          "EDA quality score based on amplitude plausibility and RAC stability.",
+      },
+      kleckner_2017_raw: {
+        description:
+          "Automated EDA quality score using range, slope and artifact spreading rules on the raw signal.",
+      },
+      kleckner_2017_filter_2s: {
+        description:
+          "Automated EDA quality score using the same range, slope and artifact spreading rules after a 2-second pre-filter.",
+      },
+      maki_2020: {
+        description:
+          "Q_PHV pulse-height variability metric based on beat-to-beat pulse height variation.",
+      },
+    },
   },
   table: {
     duration: "Duration",
@@ -334,14 +354,41 @@ const en = {
     view: "View",
     entryPoint: "Entry point of the pipeline.",
     finalOutput: "Final output of the pipeline.",
+    eyebrow: {
+      node: "Node",
+      analysis: "Analysis",
+    },
+    actions: {
+      applyOutliers: "Apply Outliers",
+      normalize: "Normalize",
+    },
+    nodes: {
+      ResamplingNode: {
+        label: "Resampling",
+      },
+      OutliersNode: {
+        label: "Outliers",
+        techniqueLabel: "Detection technique",
+        techniqueTooltip:
+          "Choose how anomalous samples are identified before they are corrected or removed.",
+      },
+      FilteringNode: {
+        label: "Filtering",
+      },
+      NormalizationNode: {
+        label: "Normalization",
+        methodLabel: "Normalization method",
+        methodTooltip:
+          "Choose how the signal values are rescaled before the next processing step.",
+      },
+    },
   },
   about: {
     title: "About this Project",
     description:
       "SignAlchemist is a visual toolkit for exploring, transforming, and validating physiological signals without losing sight of the raw data.",
-    badge: "Project overview",
     intro:
-      "Explore the workflow, jump back into the Home workspace, or head straight into the docs.",
+      "Workflow summary, access to the main workspace, and project documentation.",
     tryNow: "Try it now",
     readDocs: "Read the docs",
     toolkitTitle: "Signal Processing Toolkit",
@@ -362,6 +409,24 @@ const en = {
     fundingDescription:
       "Research projects supporting the development of SignAlchemist.",
     workflowImageAlt: "Signal Processing",
+    cards: {
+      processingTitle: "Modular processing",
+      processingText:
+        "The visual flow makes it possible to chain resampling, filtering, outlier handling, and other reusable operations.",
+      metricsTitle: "Quality assessment",
+      metricsText:
+        "Metrics help compare raw and transformed signals while preserving the context of the workflow.",
+    },
+    fundingBody: {
+      beforeFirst: "This work is part of project ",
+      afterFirst:
+        ", funded by MCIN/AEI/10.13039/501100011033 and the European Union ",
+      betweenProjects:
+        "/PRTR, and project ",
+      afterSecond:
+        ", funded by MICIU/AEI/10.13039/501100011033 and by ",
+      end: ".",
+    },
   },
   notFound: {
     title: "404 - Page not found",
@@ -373,7 +438,7 @@ const en = {
       title: "Signal Processing",
       description: "Build and run a processing pipeline.",
       flowTitle: "Pipeline Flow",
-      flowDescription: "Pipeline graph.",
+      flowDescription: "",
       nodesTitle: "Nodes",
       nodesDescription: "Click to add or drag into the flow.",
       addAndConnect: "Add and connect nodes here.",

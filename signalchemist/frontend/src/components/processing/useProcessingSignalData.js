@@ -8,7 +8,7 @@ import {
 
 export const DEFAULT_PREVIEW_META = Object.freeze({
   annotationPoints: [],
-  title: "Processed",
+  title: null,
   iconKey: "signal",
   computeMetrics: true,
 });

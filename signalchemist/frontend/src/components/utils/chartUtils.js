@@ -115,8 +115,8 @@ async function exportChartCollectionPNG({
   const images = await Promise.all(imageUrls.map((imageUrl) => loadImage(imageUrl)));
   const padding = 48;
   const gutter = charts.length > 1 ? 28 : 0;
-  const titleHeight = 40;
-  const titleGap = 14;
+  const titleHeight = 52;
+  const titleGap = 16;
   const contentWidth = Math.max(...images.map((image) => image.width));
   const contentHeight = Math.max(...images.map((image) => image.height));
   const panelWidth = contentWidth;
@@ -143,7 +143,7 @@ async function exportChartCollectionPNG({
     const y = padding;
 
     context.fillStyle = foregroundColor;
-    context.font = "600 28px Inter, system-ui, sans-serif";
+    context.font = "700 36px Inter, system-ui, sans-serif";
     context.textBaseline = "top";
     context.textAlign = "center";
     context.fillText(title, x + panelWidth / 2, y);

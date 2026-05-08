@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Handle,
   Position,
@@ -26,6 +27,7 @@ import {
 import { requestNormalization as requestNormalizationData } from "../../processing/processingRequests";
 
 function NormalizationNode({ id, data }) {
+  const { t } = useTranslation();
   const tableRef = useRef(null);
   const initialConfig = parseTechniqueConfig(data.technique, {
     name: data.normalizationMethod,
@@ -151,8 +153,8 @@ function NormalizationNode({ id, data }) {
   return (
     <NodeShell
       icon={<FaBalanceScale />}
-      title="Normalization"
-      eyebrow="Node"
+      title={t("pipeline.nodes.NormalizationNode.label", { defaultValue: "Normalization" })}
+      eyebrow={t("pipeline.eyebrow.node", { defaultValue: "Node" })}
       accent="violet"
       executionState={executionState}
       onStatusClick={() => {
@@ -173,7 +175,7 @@ function NormalizationNode({ id, data }) {
           onClick={requestNormalization}
           accent="violet"
         >
-          Normalize
+          {t("pipeline.actions.normalize", { defaultValue: "Normalize" })}
         </NodeRunButton>
       )}
     >
@@ -185,8 +187,8 @@ function NormalizationNode({ id, data }) {
       />
 
       <NodeSection
-        label="Normalization method"
-        tooltip="Choose how the signal values are rescaled before the next processing step."
+        label={t("pipeline.nodes.NormalizationNode.methodLabel", { defaultValue: "Normalization method" })}
+        tooltip={t("pipeline.nodes.NormalizationNode.methodTooltip", { defaultValue: "Choose how the signal values are rescaled before the next processing step." })}
         fieldId="normalization-method"
       >
         <select

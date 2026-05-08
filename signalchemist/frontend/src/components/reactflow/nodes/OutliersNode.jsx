@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Handle,
   Position,
@@ -31,6 +32,7 @@ import { requestOutliers as requestOutliersData } from "../../processing/process
  * @returns {JSX.Element} Visual and functional representation of the outlier detection node
  */
 function OutliersNode({ id, data }) {
+  const { t } = useTranslation();
   const tableRef = useRef(null);
   const initialConfig = parseTechniqueConfig(data.technique, {
     name: data.outlierTechnique,
@@ -169,8 +171,8 @@ function OutliersNode({ id, data }) {
   return (
     <NodeShell
       icon={<FaBullseye />}
-      title="Outlier Detection"
-      eyebrow="Node"
+      title={t("pipeline.nodes.OutliersNode.label", { defaultValue: "Outliers" })}
+      eyebrow={t("pipeline.eyebrow.node", { defaultValue: "Node" })}
       accent="amber"
       executionState={executionState}
       onStatusClick={() => {
@@ -191,7 +193,7 @@ function OutliersNode({ id, data }) {
           onClick={requestOutliers}
           accent="amber"
         >
-          Apply Outliers
+          {t("pipeline.actions.applyOutliers", { defaultValue: "Apply Outliers" })}
         </NodeRunButton>
       }
     >
@@ -203,8 +205,8 @@ function OutliersNode({ id, data }) {
       />
 
       <NodeSection
-        label="Detection technique"
-        tooltip="Choose how anomalous samples are identified before they are corrected or removed."
+        label={t("pipeline.nodes.OutliersNode.techniqueLabel", { defaultValue: "Detection technique" })}
+        tooltip={t("pipeline.nodes.OutliersNode.techniqueTooltip", { defaultValue: "Choose how anomalous samples are identified before they are corrected or removed." })}
         fieldId="outliers-detection-technique"
       >
           <select

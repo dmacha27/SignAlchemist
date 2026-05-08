@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Handle,
   Position,
@@ -36,6 +37,7 @@ import {
 } from "../../processing/processingEvents";
 
 function PeaksNode({ id, data }) {
+  const { t } = useTranslation();
   const tableRef = useRef(null);
   const initialConfig = parseTechniqueConfig(data.technique, {
     detector: data.detector,
@@ -198,8 +200,8 @@ function PeaksNode({ id, data }) {
   return (
     <NodeShell
       icon={<FaMountainSun />}
-      title="Peak Detection"
-      eyebrow="Analysis"
+      title={t("pages.peaks.title")}
+      eyebrow={t("pipeline.eyebrow.analysis", { defaultValue: "Analysis" })}
       accent="rose"
       executionState={executionState}
       onStatusClick={() => {
@@ -220,7 +222,7 @@ function PeaksNode({ id, data }) {
           onClick={requestPeaks}
           accent="rose"
         >
-          Detect peaks
+          {t("pages.peaks.detect")}
         </NodeRunButton>
       )}
     >
@@ -232,8 +234,8 @@ function PeaksNode({ id, data }) {
       />
 
       <NodeSection
-        label="Detector"
-        tooltip="Choose between NeuroKit presets and manual SciPy peak detection."
+        label={t("pages.peaks.detector")}
+        tooltip={t("pages.peaks.detectorTooltip")}
         fieldId="peaks-detector"
       >
         <select
@@ -250,7 +252,7 @@ function PeaksNode({ id, data }) {
       {detector === "neurokit" ? (
         <NodeSection compact>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            NeuroKit uses presets adapted to the selected signal type.
+            {t("pages.peaks.neurokitHint")}
           </p>
         </NodeSection>
       ) : (
@@ -259,8 +261,8 @@ function PeaksNode({ id, data }) {
             <div>
               <FormFieldLabel
                 htmlFor="peaks-min-distance"
-                label="Min distance (s)"
-                tooltip="Minimum time allowed between two detected peaks."
+                label={t("pages.peaks.minDistance")}
+                tooltip={t("pages.peaks.minDistanceTooltip")}
                 className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
               />
               <input
@@ -277,15 +279,15 @@ function PeaksNode({ id, data }) {
             <div>
               <FormFieldLabel
                 htmlFor="peaks-min-height"
-                label="Min height"
-                tooltip="Minimum signal value required for a point to count as a peak."
+                label={t("pages.peaks.minHeight")}
+                tooltip={t("pages.peaks.minHeightTooltip")}
                 className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
               />
               <input
                 id="peaks-min-height"
                 type="number"
                 step="0.01"
-                placeholder="Optional"
+                placeholder={t("pages.peaks.optional")}
                 value={height}
                 onChange={(event) => setHeight(event.target.value)}
                 className={`mt-1 ${uiInputClass}`}
@@ -298,7 +300,7 @@ function PeaksNode({ id, data }) {
       <NodeSection compact>
         <div className="flex items-center justify-between gap-3 text-sm">
           <span className="font-semibold text-slate-700 dark:text-slate-200">
-            Peaks
+            {t("pages.peaks.peakCount")}
           </span>
           <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
             {peaks.length}

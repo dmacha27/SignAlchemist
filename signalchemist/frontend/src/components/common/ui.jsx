@@ -21,6 +21,8 @@ export const uiPrimaryButtonClass =
 
 export const uiGhostButtonClass =
   "btn btn-ghost min-h-0 h-auto rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-none hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-gray-800";
+export const uiGlassButtonClass =
+  "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200/75 bg-white/70 px-3 py-2 text-sm font-semibold text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.10)] backdrop-blur-md transition-colors hover:bg-white/86 dark:border-gray-700/75 dark:bg-gray-900/70 dark:text-slate-200 dark:hover:bg-gray-900/86";
 
 export const SimpleTooltip = ({ label, children }) => (
   <div className="tooltip" data-tip={label}>
@@ -72,6 +74,35 @@ FormFieldLabel.defaultProps = {
 export const SimpleMenu = ({ trigger, label, items, widthClass = "w-44" }) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
+  const menuRef = useRef(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (!open || !containerRef.current) {
+      return undefined;
+    }
+
+    const updatePosition = () => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return;
+      }
+
+      setMenuPosition({
+        top: rect.bottom + 8,
+        left: rect.right,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -79,7 +110,10 @@ export const SimpleMenu = ({ trigger, label, items, widthClass = "w-44" }) => {
     }
 
     const handlePointerDown = (event) => {
-      if (!containerRef.current?.contains(event.target)) {
+      const clickedTrigger = containerRef.current?.contains(event.target);
+      const clickedMenu = menuRef.current?.contains(event.target);
+
+      if (!clickedTrigger && !clickedMenu) {
         setOpen(false);
       }
     };
@@ -113,35 +147,43 @@ export const SimpleMenu = ({ trigger, label, items, widthClass = "w-44" }) => {
       </button>
     );
 
+  const menu = open ? (
+    <ul
+      ref={menuRef}
+      className={`menu fixed z-[1200] rounded-xl border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 ${widthClass}`.trim()}
+      style={{
+        top: `${menuPosition.top}px`,
+        left: `${menuPosition.left}px`,
+        transform: "translateX(-100%)",
+      }}
+    >
+      {label ? (
+        <li className="pointer-events-none px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+          {label}
+        </li>
+      ) : null}
+      {items.map((item) => (
+        <li key={item.label}>
+          <button
+            type="button"
+            onClick={() => {
+              item.onClick();
+              setOpen(false);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800"
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  ) : null;
+
   return (
     <div ref={containerRef} className="relative shrink-0">
       {triggerNode}
-      {open ? (
-        <ul
-          className={`menu absolute right-0 top-full z-[60] mt-2 rounded-xl border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-lg dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 ${widthClass}`.trim()}
-        >
-          {label ? (
-            <li className="pointer-events-none px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-              {label}
-            </li>
-          ) : null}
-          {items.map((item) => (
-            <li key={item.label}>
-              <button
-                type="button"
-                onClick={() => {
-                  item.onClick();
-                  setOpen(false);
-                }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800"
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      {open && typeof document !== "undefined" ? createPortal(menu, document.body) : menu}
     </div>
   );
 };
@@ -348,12 +390,12 @@ export const SimpleConfirm = ({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 text-slate-800 shadow-md dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+    <div className="w-[20rem] max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-4 text-slate-800 shadow-md dark:border-gray-700 dark:bg-gray-900 dark:text-white">
       <p className="font-semibold">{title}</p>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
         {description}
       </p>
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-3 flex flex-wrap justify-end gap-2">
         <button type="button" onClick={onCancel} className={uiButtonClass}>
           {t("common.cancel")}
         </button>

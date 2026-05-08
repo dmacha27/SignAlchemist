@@ -114,7 +114,7 @@ const es = {
         threeTitle: "Inspecciona y recorta",
         threeDescription:
           "Usa la previsualización para validar las columnas seleccionadas y recortar el rango de trabajo antes de continuar.",
-        four: "Continúa con Processing, Batch o una utilidad individual.",
+        four: "Seleccionar herramienta.",
       },
     },
     upload: {
@@ -131,7 +131,7 @@ const es = {
     configure: {
       title: "Configurar dataset",
       description:
-        "Estos valores alimentan la previsualización y se pasan a la utilidad seleccionada.",
+        "Define los valores usados por la previsualización y las herramientas.",
       signalType: "Tipo de señal",
       timestampColumn: "Columna de timestamp",
       samplingRate: "Frecuencia de muestreo (Hz)",
@@ -140,6 +140,8 @@ const es = {
       samplingRateFooter:
         "Se habilita cuando el archivo no contiene timestamps.",
       detectedSamplingRate: "Frecuencia de muestreo detectada: {{value}} Hz",
+      samplingRateDetectedFooter:
+        "Detectada automáticamente a partir de la columna de timestamp seleccionada.",
       signalTypes: {
         empty: "",
         EDA: "EDA",
@@ -248,6 +250,24 @@ const es = {
     noChange: "Sin cambios",
     improved: "Mejorada",
     worse: "Peor",
+    items: {
+      bottcher_2022: {
+        description:
+          "Puntuación de calidad EDA basada en la plausibilidad de la amplitud y la estabilidad RAC.",
+      },
+      kleckner_2017_raw: {
+        description:
+          "Puntuación automática de calidad EDA usando reglas de rango, pendiente y propagación de artefactos sobre la señal original.",
+      },
+      kleckner_2017_filter_2s: {
+        description:
+          "Puntuación automática de calidad EDA usando las mismas reglas de rango, pendiente y propagación de artefactos tras un prefiltrado de 2 segundos.",
+      },
+      maki_2020: {
+        description:
+          "Métrica Q_PHV de variabilidad de altura de pulso basada en la variación latido a latido.",
+      },
+    },
   },
   table: {
     duration: "Duración",
@@ -336,14 +356,41 @@ const es = {
     view: "Ver",
     entryPoint: "Punto de entrada del pipeline.",
     finalOutput: "Salida final del pipeline.",
+    eyebrow: {
+      node: "Nodo",
+      analysis: "Análisis",
+    },
+    actions: {
+      applyOutliers: "Aplicar outliers",
+      normalize: "Normalizar",
+    },
+    nodes: {
+      ResamplingNode: {
+        label: "Remuestreo",
+      },
+      OutliersNode: {
+        label: "Outliers",
+        techniqueLabel: "Técnica de detección",
+        techniqueTooltip:
+          "Elige cómo se identifican las muestras anómalas antes de corregirlas o eliminarlas.",
+      },
+      FilteringNode: {
+        label: "Filtrado",
+      },
+      NormalizationNode: {
+        label: "Normalización",
+        methodLabel: "Método de normalización",
+        methodTooltip:
+          "Elige cómo se reescalan los valores de la señal antes del siguiente paso de procesamiento.",
+      },
+    },
   },
   about: {
     title: "Sobre este proyecto",
     description:
       "SignAlchemist es un toolkit visual para explorar, transformar y validar señales fisiológicas sin perder de vista los datos originales.",
-    badge: "Resumen del proyecto",
     intro:
-      "Explora el flujo de trabajo, vuelve al workspace principal o entra directamente en la documentación.",
+      "Resumen del flujo de trabajo, acceso al workspace principal y documentación del proyecto.",
     tryNow: "Probar ahora",
     readDocs: "Leer la documentación",
     toolkitTitle: "Toolkit de procesamiento de señales",
@@ -364,6 +411,24 @@ const es = {
     fundingDescription:
       "Proyectos de investigación que apoyan el desarrollo de SignAlchemist.",
     workflowImageAlt: "Procesamiento de señales",
+    cards: {
+      processingTitle: "Procesamiento modular",
+      processingText:
+        "El flujo visual permite encadenar remuestreo, filtrado, outliers y más operaciones reutilizables.",
+      metricsTitle: "Evaluación de calidad",
+      metricsText:
+        "Las métricas ayudan a comparar la señal original y la transformada sin perder el contexto del proceso.",
+    },
+    fundingBody: {
+      beforeFirst: "Este trabajo forma parte del proyecto ",
+      afterFirst:
+        ", financiado por MCIN/AEI/10.13039/501100011033 y la Unión Europea ",
+      betweenProjects:
+        "/PRTR, y del proyecto ",
+      afterSecond:
+        ", financiado por MICIU/AEI/10.13039/501100011033 y por ",
+      end: ".",
+    },
   },
   notFound: {
     title: "404 - Página no encontrada",
@@ -375,7 +440,7 @@ const es = {
       title: "Procesamiento de señal",
       description: "Construye y ejecuta un pipeline de procesamiento.",
       flowTitle: "Flujo del pipeline",
-      flowDescription: "Grafo del pipeline.",
+      flowDescription: "",
       nodesTitle: "Nodos",
       nodesDescription: "Haz clic para añadir o arrastra al flujo.",
       addAndConnect: "Añade y conecta nodos aquí.",

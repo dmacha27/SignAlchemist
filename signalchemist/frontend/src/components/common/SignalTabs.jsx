@@ -69,6 +69,16 @@ const SignalTabs = ({
   const [comparisonView, setComparisonView] = useState("split");
   const [originalBridge, setOriginalBridge] = useState(null);
   const [processedBridge, setProcessedBridge] = useState(null);
+  const normalizedRightTitle = rightTitle ?? t("common.processedSignal");
+  const processedSignalTitle = rightTitle
+    ? `${rightTitle} ${t("common.signal")}`
+    : t("common.processedSignal");
+  const processedExportSignalTitle = rightTitle
+    ? t("signalTabs.exportMenu.processedSignal", { target: rightTitle })
+    : t("common.processedSignal");
+  const processedExportSpectrumTitle = rightTitle
+    ? t("signalTabs.exportMenu.processedSpectrum", { target: rightTitle })
+    : t("common.spectrum");
   const topViews = [
     {
       key: "signal",
@@ -145,7 +155,7 @@ const SignalTabs = ({
     return (
       <EmptyState
         message={t("signalTabs.waitingProcessed", {
-          target: rightTitle.toLowerCase(),
+          target: normalizedRightTitle.toLowerCase(),
         })}
       />
     );
@@ -228,15 +238,15 @@ const SignalTabs = ({
                   },
                   {
                     label: isSpectrum
-                      ? t("signalTabs.exportMenu.processedSpectrum", { target: rightTitle })
-                      : t("signalTabs.exportMenu.processedSignal", { target: rightTitle }),
+                      ? processedExportSpectrumTitle
+                      : processedExportSignalTitle,
                     icon: <FaImage size={12} />,
                     onClick: async () => {
                       await exportSingleChartWithTitlePNG({
                         chart: processedBridge,
                         title: isSpectrum
-                          ? t("signalTabs.exportMenu.processedSpectrum", { target: rightTitle })
-                          : t("signalTabs.exportMenu.processedSignal", { target: rightTitle }),
+                          ? processedExportSpectrumTitle
+                          : processedExportSignalTitle,
                         filename: isSpectrum ? "processed-spectrum.png" : "processed-signal.png",
                         backgroundColor: isDark ? "#020617" : "#ffffff",
                         foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
@@ -254,8 +264,8 @@ const SignalTabs = ({
                           ? t("signalTabs.exportMenu.originalSpectrum")
                           : t("signalTabs.exportMenu.originalSignal"),
                         rightTitle: isSpectrum
-                          ? t("signalTabs.exportMenu.processedSpectrum", { target: rightTitle })
-                          : t("signalTabs.exportMenu.processedSignal", { target: rightTitle }),
+                          ? processedExportSpectrumTitle
+                          : processedExportSignalTitle,
                         filename: isSpectrum
                           ? "comparison-spectrum-side-by-side.png"
                           : "comparison-signal-side-by-side.png",
@@ -281,7 +291,7 @@ const SignalTabs = ({
             )}
           </ViewFrame>
 
-          <ViewFrame title={`${rightTitle} ${t("common.signal")}`} icon={rightIcon}>
+          <ViewFrame title={processedSignalTitle} icon={rightIcon}>
             {processedContent ?? renderProcessed(chartDataProcessed)}
           </ViewFrame>
         </div>

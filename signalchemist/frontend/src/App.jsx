@@ -17,8 +17,6 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
 import "./App.css";
-import "primereact/resources/primereact.min.css";
-import "primereact/resources/themes/lara-light-indigo/theme.css";
 
 import Home from "./components/Home";
 import FloatingNavMenu from "./components/common/FloatingNavMenu";

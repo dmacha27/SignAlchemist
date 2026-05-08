@@ -462,22 +462,30 @@ def get_metrics(
     if signal_type == "EDA":
         return {
             "Böttcher et al. (2022)": {
+                "metric_id": "bottcher_2022",
                 "value": bottcher_quality(values, fs=sampling_rate),
+                "preference": "higher",
                 "description": "EDA quality score based on amplitude plausibility and RAC stability. Higher is better.",
             },
             "Kleckner et al. (2017) Raw": {
+                "metric_id": "kleckner_2017_raw",
                 "value": kleckner_quality(values, fs=sampling_rate),
+                "preference": "higher",
                 "description": "Automated EDA quality score using range, slope and artifact spreading rules on the raw signal. Higher is better.",
             },
             "Kleckner et al. (2017) 2s Filter": {
+                "metric_id": "kleckner_2017_filter_2s",
                 "value": kleckner_quality_filter(values, fs=sampling_rate),
+                "preference": "higher",
                 "description": "Automated EDA quality score using the same range, slope and artifact spreading rules after a 2-second pre-filter. Higher is better.",
             },
         }
     elif signal_type == "PPG":
         return {
             "Maki et al. (2020)": {
+                "metric_id": "maki_2020",
                 "value": maki_quality(values, fs=sampling_rate),
+                "preference": "lower",
                 "description": "Q_PHV pulse-height variability metric based on beat-to-beat pulse height variation. Lower is better.",
             }
         }

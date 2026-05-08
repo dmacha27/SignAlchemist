@@ -107,7 +107,7 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
         name: t("charts.frequencyHz"),
         nameLocation: "middle",
         nameGap: 34,
-        nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
+        nameTextStyle: { color: axisColor, fontSize: 14, fontWeight: 600 },
       },
       yAxis: {
         type: "value",
@@ -121,7 +121,7 @@ const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original
         name: t("charts.amplitude"),
         nameLocation: "middle",
         nameGap: 46,
-        nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
+        nameTextStyle: { color: axisColor, fontSize: 14, fontWeight: 600 },
       },
       dataZoom: isLargeDataset ? [] : [{ type: "inside", xAxisIndex: 0, filterMode: "none" }],
       series: [

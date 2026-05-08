@@ -83,7 +83,7 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
           : t("charts.dateAxis", { name: headers1[0] }),
         nameLocation: "middle",
         nameGap: 34,
-        nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
+        nameTextStyle: { color: axisColor, fontSize: 14, fontWeight: 600 },
       },
       yAxis: {
         type: "value",
@@ -95,7 +95,7 @@ const ComparisonChart = memo(({ table1, table2, name2, name1 = "Original" }) => 
         name: headers1[1],
         nameLocation: "middle",
         nameGap: 46,
-        nameTextStyle: { color: axisColor, fontSize: 12, fontWeight: 500 },
+        nameTextStyle: { color: axisColor, fontSize: 14, fontWeight: 600 },
       },
       dataZoom: isLargeDataset ? [] : [{ type: "inside", xAxisIndex: 0, filterMode: "none" }],
       series: [

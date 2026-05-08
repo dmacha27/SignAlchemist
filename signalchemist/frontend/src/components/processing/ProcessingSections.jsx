@@ -22,7 +22,7 @@ import {
 
 import LoaderMessage from "../common/LoaderMessage";
 import {
-  SimpleDialog,
+  SimpleConfirm,
   SimpleMenu,
 } from "../common/ui";
 import {
@@ -201,8 +201,9 @@ const ProcessingFlowSectionInner = ({
             edges={edges}
             edgeTypes={edgeTypes}
             connectionLineStyle={{
-              stroke: isDark ? "#67e8f9" : "#0f172a",
-              strokeWidth: 2,
+              stroke: isDark ? "#a5f3fc" : "#0f172a",
+              strokeWidth: 4.6,
+              strokeOpacity: 1,
             }}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -351,10 +352,10 @@ const ProcessingSidebarInner = ({
           {t("pages.processing.run")}
         </button>
 
-        <div className="space-y-2">
+        <div className="relative">
           <button
             type="button"
-            onClick={() => setConfirmationOpened(true)}
+            onClick={() => setConfirmationOpened((current) => !current)}
             title={t("pages.processing.clean")}
             className="w-full rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700"
           >
@@ -364,36 +365,19 @@ const ProcessingSidebarInner = ({
             </span>
           </button>
 
-          <SimpleDialog
-            open={confirmationOpened}
-            title={t("pages.processing.cleanTitle")}
-            onClose={() => setConfirmationOpened(false)}
-          >
-            <div className="space-y-4">
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                {t("pages.processing.cleanDescription")}
-              </p>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmationOpened(false)}
-                  className="btn min-h-0 h-auto rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-none hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
-                >
-                  {t("common.cancel")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    cleanFlow();
-                    setConfirmationOpened(false);
-                  }}
-                  className="btn min-h-0 h-auto rounded-xl border-0 bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-none hover:bg-red-700"
-                >
-                  {t("pages.processing.cleanConfirm")}
-                </button>
-              </div>
-            </div>
-          </SimpleDialog>
+          <div className="absolute right-[calc(100%+0.5rem)] top-1/2 z-20 -translate-y-1/2">
+            <SimpleConfirm
+              open={confirmationOpened}
+              title={t("pages.processing.cleanTitle")}
+              description={t("pages.processing.cleanDescription")}
+              onCancel={() => setConfirmationOpened(false)}
+              onConfirm={() => {
+                cleanFlow();
+                setConfirmationOpened(false);
+              }}
+              confirmLabel={t("pages.processing.cleanConfirm")}
+            />
+          </div>
         </div>
 
         <button

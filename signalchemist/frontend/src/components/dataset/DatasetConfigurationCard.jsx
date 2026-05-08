@@ -6,6 +6,7 @@ import {
   SIGNAL_TYPE_OPTIONS,
   normalizeSamplingRateOnBlur,
 } from "../home/homeUtils";
+import { SimpleTooltip } from "../common/ui";
 
 const CARD_CLASS =
   "rounded-[1.6rem] border border-slate-200/80 bg-white/85 p-3.5 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700 dark:bg-gray-900/85";
@@ -56,6 +57,29 @@ const FieldCard = ({
   </div>
 );
 
+const HighlightFieldCard = ({ label, value, footer, tooltip }) => (
+  <div className="tuto-samplingRate flex min-h-[96px] flex-col justify-between rounded-[1.15rem] border border-cyan-200 bg-cyan-50/80 p-2.5 shadow-sm dark:border-cyan-500/30 dark:bg-cyan-500/10">
+    <div className="block min-h-[32px] text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-200">
+      {label}
+    </div>
+    <SimpleTooltip label={tooltip}>
+      <div
+        id="samplingRateBadge"
+        className="mt-1 flex min-h-[42px] items-center rounded-xl bg-white px-3 py-2.5 text-sm font-semibold leading-5 text-cyan-700 shadow-sm dark:bg-gray-900 dark:text-cyan-200"
+      >
+        <span className="block w-full overflow-hidden text-balance break-words">
+          {value}
+        </span>
+      </div>
+    </SimpleTooltip>
+    {footer ? (
+      <p className="mt-1 text-[10px] leading-4 text-cyan-700/80 dark:text-cyan-200/80">
+        {footer}
+      </p>
+    ) : null}
+  </div>
+);
+
 export const DatasetConfigurationCard = ({
   signalType,
   timestampColumn,
@@ -81,6 +105,14 @@ export const DatasetConfigurationCard = ({
     .map((header, index) => ({ label: header, value: index }));
   const samplingRateDisabled =
     !headers.length || timestampColumn !== headers.length - 1;
+  const hasDetectedSamplingRate =
+    Boolean(samplingRate) && headers.length > 0 && timestampColumn !== headers.length - 1;
+  const formattedSamplingRate = Number.isFinite(Number(samplingRate))
+    ? Number(Number(samplingRate).toFixed(3)).toString()
+    : String(samplingRate ?? "");
+  const fullSamplingRate = Number.isFinite(Number(samplingRate))
+    ? `${String(samplingRate)} Hz`
+    : String(samplingRate ?? "");
 
   const content = (
     <>
@@ -128,32 +160,43 @@ export const DatasetConfigurationCard = ({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <FieldCard
-            className="tuto-samplingRate"
-            label={t("home.configure.samplingRate")}
-            inputId="samplingRate"
-            footer={t("home.configure.samplingRateFooter")}
-            footerClassName="mt-1 text-[10px] leading-4 text-slate-500 dark:text-slate-400"
-          >
-            <input
-              type="number"
-              step={1}
-              min={1}
-              placeholder={t("home.configure.enterHz")}
-              id="samplingRate"
-              value={samplingRate || ""}
-              onChange={(event) => onSamplingRateChange(event.target.value)}
-              onBlur={(event) => {
-                const normalizedValue = normalizeSamplingRateOnBlur(
-                  event.target.value,
-                );
-                event.target.value = normalizedValue;
-                onSamplingRateChange(normalizedValue);
-              }}
-              disabled={samplingRateDisabled}
-              className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
+          {hasDetectedSamplingRate ? (
+            <HighlightFieldCard
+              label={t("home.configure.samplingRate")}
+              value={`${formattedSamplingRate} Hz`}
+              tooltip={fullSamplingRate}
+              footer={t("home.configure.samplingRateDetectedFooter", {
+                defaultValue: "Detected automatically from the selected timestamp column.",
+              })}
             />
-          </FieldCard>
+          ) : (
+            <FieldCard
+              className="tuto-samplingRate"
+              label={t("home.configure.samplingRate")}
+              inputId="samplingRate"
+              footer={samplingRateDisabled ? null : t("home.configure.samplingRateFooter")}
+              footerClassName="mt-1 text-[10px] leading-4 text-slate-500 dark:text-slate-400"
+            >
+              <input
+                type="number"
+                step={1}
+                min={1}
+                placeholder={t("home.configure.enterHz")}
+                id="samplingRate"
+                value={samplingRate || ""}
+                onChange={(event) => onSamplingRateChange(event.target.value)}
+                onBlur={(event) => {
+                  const normalizedValue = normalizeSamplingRateOnBlur(
+                    event.target.value,
+                  );
+                  event.target.value = normalizedValue;
+                  onSamplingRateChange(normalizedValue);
+                }}
+                disabled={samplingRateDisabled}
+                className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
+              />
+            </FieldCard>
+          )}
 
           <FieldCard
             className="tuto-signalValues"
@@ -177,16 +220,6 @@ export const DatasetConfigurationCard = ({
         </div>
       </form>
 
-      {samplingRate && timestampColumn !== headers.length - 1 ? (
-        <div className="my-2 flex justify-center">
-          <div
-            id="samplingRateBadge"
-            className="inline-flex w-fit items-center rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-lg"
-          >
-            {t("home.configure.detectedSamplingRate", { value: samplingRate })}
-          </div>
-        </div>
-      ) : null}
     </>
   );
 
@@ -234,6 +267,18 @@ FieldCard.defaultProps = {
   className: "",
   footer: null,
   footerClassName: "",
+};
+
+HighlightFieldCard.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  footer: PropTypes.string,
+  tooltip: PropTypes.string,
+};
+
+HighlightFieldCard.defaultProps = {
+  footer: null,
+  tooltip: "",
 };
 
 DatasetConfigurationCard.propTypes = {

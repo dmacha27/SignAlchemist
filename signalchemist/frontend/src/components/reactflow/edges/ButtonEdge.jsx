@@ -61,7 +61,7 @@ function ButtonEdge({
         ? "#10b981"
         : executionState === "error"
           ? "#ef4444"
-          : "#0f172a";
+          : "#475569";
 
   const handleInsert = (nodeType) => {
     if (!isInsertableNodeType(nodeType)) {
@@ -88,9 +88,10 @@ function ButtonEdge({
         path={edgePath}
         markerEnd={markerEnd}
         style={{
-          strokeWidth: executionState === "running" ? 2.8 : 2.2,
+          strokeWidth: executionState === "running" ? 4.8 : 4.2,
           stroke: edgeTone,
           strokeDasharray: executionState === "running" ? "7 5" : undefined,
+          strokeOpacity: 1,
           ...style,
         }}
         data-testid="BaseEdge"

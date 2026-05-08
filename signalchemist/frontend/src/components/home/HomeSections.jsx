@@ -1,9 +1,7 @@
-import { memo, useRef } from "react";
+import { memo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { PrimeReactProvider } from "primereact/api";
-import { FileUpload } from "primereact/fileupload";
 import { usePapaParse } from "react-papaparse";
 import RangeSlider from "react-range-slider-input";
 import { FaArrowRight, FaCogs, FaFlask, FaUpload } from "react-icons/fa";
@@ -31,6 +29,21 @@ const INNER_CARD_CLASS =
   "rounded-[1.15rem] border border-slate-200 bg-white p-2.5 dark:border-gray-700 dark:bg-gray-900";
 const QUICK_STEP_CARD_CLASS =
   "rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-600 dark:border-gray-700 dark:bg-gray-950 dark:text-slate-300";
+
+const QuickStepItem = ({ step, children, title = null }) => (
+  <div className={QUICK_STEP_CARD_CLASS}>
+    <div className="min-w-0 text-sm leading-5 text-slate-600 dark:text-slate-300">
+      <span className="float-left mr-3 mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
+        {step}
+      </span>
+      {title ? (
+        <p className="pt-0.5 font-semibold text-slate-800 dark:text-slate-100">{title}</p>
+      ) : null}
+      <p className={title ? "mt-1" : "pt-0.5"}>{children}</p>
+      <div className="clear-both" />
+    </div>
+  </div>
+);
 
 const utilityItems = [
   {
@@ -110,7 +123,7 @@ export const HomeHero = ({ isDark }) => {
 
   return (
   <header className="rounded-[1.75rem] border border-white/70 bg-white/80 px-5 py-4 shadow-[0_20px_55px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700 dark:bg-gray-950/75 md:px-6">
-    <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:items-start">
       <div>
         <img
           src={isDark ? "/logo_dark.png" : "/logo.png"}
@@ -145,50 +158,23 @@ export const HomeHero = ({ isDark }) => {
           </div>
 
           <div>
-            <div className="grid gap-2 lg:grid-cols-2">
-              <div className="grid gap-2">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {[
-                    t("home.hero.steps.one"),
-                    t("home.hero.steps.two"),
-                  ].map((item, index) => (
-                    <div
-                      key={item}
-                      className={`${QUICK_STEP_CARD_CLASS} flex items-start gap-3`}
-                    >
-                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
-                        {index + 1}
-                      </span>
-                      <p className="leading-5">{item}</p>
-                    </div>
-                  ))}
-                </div>
-                <div
-                  className={`${QUICK_STEP_CARD_CLASS} flex items-start gap-3`}
-                >
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
-                    4
-                  </span>
-                  <p className="leading-5">
-                    {t("home.hero.steps.four")}
-                  </p>
-                </div>
+            <div className="grid gap-2 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-2">
+                {[t("home.hero.steps.one"), t("home.hero.steps.two")].map((item, index) => (
+                  <QuickStepItem key={item} step={index + 1}>
+                    {item}
+                  </QuickStepItem>
+                ))}
               </div>
 
-              <div
-                className={`${QUICK_STEP_CARD_CLASS} flex h-full items-start gap-3`}
-              >
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
-                  3
-                </span>
-                <div className="min-w-0">
-                  <p className="font-semibold text-slate-800 dark:text-slate-100">
-                    {t("home.hero.steps.threeTitle")}
-                  </p>
-                  <p className="mt-1 leading-5">
-                    {t("home.hero.steps.threeDescription")}
-                  </p>
-                </div>
+              <div className="lg:row-span-2">
+                <QuickStepItem step={3} title={t("home.hero.steps.threeTitle")}>
+                  {t("home.hero.steps.threeDescription")}
+                </QuickStepItem>
+              </div>
+
+              <div className="lg:col-start-1">
+                <QuickStepItem step={4}>{t("home.hero.steps.four")}</QuickStepItem>
               </div>
             </div>
           </div>
@@ -199,24 +185,53 @@ export const HomeHero = ({ isDark }) => {
   );
 };
 
+QuickStepItem.propTypes = {
+  step: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  children: PropTypes.node.isRequired,
+  title: PropTypes.string,
+};
+
+QuickStepItem.defaultProps = {
+  title: null,
+};
+
 export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
   const { t } = useTranslation();
-  const fileUploader = useRef(null);
+  const fileInputRef = useRef(null);
   const { readString } = usePapaParse();
+  const [selectedFilename, setSelectedFilename] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const fileSelected = async (event) => {
-    const selectedFile = event.files?.[0];
+  const handleSelectedFile = async (selectedFile) => {
     if (!selectedFile) {
       return;
     }
 
-    const dataset = await parseCsvFile(selectedFile, readString);
-    if (dataset) {
-      onDatasetLoaded(dataset);
+    try {
+      const dataset = await parseCsvFile(selectedFile, readString);
+      if (dataset) {
+        setErrorMessage("");
+        setSelectedFilename(selectedFile.name);
+        onDatasetLoaded(dataset);
+        return;
+      }
+      setErrorMessage(t("home.upload.invalidCsv", { defaultValue: "No se pudo cargar el CSV." }));
+    } catch {
+      setErrorMessage(t("home.upload.invalidCsv", { defaultValue: "No se pudo cargar el CSV." }));
     }
   };
 
+  const fileSelected = async (event) => {
+    const selectedFile = event.target.files?.[0];
+    await handleSelectedFile(selectedFile);
+  };
+
   const fileRemoved = () => {
+    setSelectedFilename("");
+    setErrorMessage("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     onDatasetCleared();
   };
 
@@ -226,115 +241,138 @@ export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
     const sampleFile = new File([data], filename, { type: "text/csv" });
     const dataset = await parseCsvFile(sampleFile, readString);
     if (dataset) {
+      setSelectedFilename(filename);
       onDatasetLoaded(autoConfigureDataset(dataset, filename));
     }
-    fileUploader.current?.setFiles([sampleFile]);
   };
 
-  const renderUploadHeader = (options) => (
-    <div className="mb-1 flex items-center justify-center gap-1.5">
-      {options.chooseButton}
-      {options.cancelButton}
-    </div>
-  );
-
   return (
-    <div className={`upload-card ${OUTER_CARD_CLASS}`}>
+    <div className={`upload-card ${OUTER_CARD_CLASS} flex h-full flex-col`}>
       <SectionHeader
         step={1}
         title={t("home.upload.title")}
         description={t("home.upload.description")}
         aside={
-          <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600 dark:bg-gray-800 dark:text-slate-200">
+          <div className="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium text-slate-600 dark:bg-gray-800 dark:text-slate-200">
             <FaUpload className="text-cyan-500" />
             {t("home.upload.csvLimit")}
           </div>
         }
       />
 
-      <PrimeReactProvider>
-        <div className={INNER_CARD_CLASS}>
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-              {t("home.upload.sampleData")}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                className="sample-eda inline-flex h-7 items-center gap-1.5 rounded-md bg-slate-900 px-2 text-[10px] font-semibold text-white shadow-none dark:bg-white dark:text-slate-900"
-                onClick={() => loadSampleFile("EDA.csv")}
-              >
-                <FaFlask size={12} />
-                EDA.csv
-              </button>
-
-              <SimpleMenu
-                widthClass="w-56"
-                label={t("common.menu.sampleFiles")}
-                trigger={
-                  <button
-                    type="button"
-                    className="sample-list h-7 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-700 shadow-none transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
-                  >
-                    {t("home.upload.moreSamples")}
-                  </button>
-                }
-                items={[
-                  {
-                    label: "EDA.csv",
-                    onClick: () => loadSampleFile("EDA.csv"),
-                  },
-                  {
-                    label: "PPG.csv",
-                    onClick: () => loadSampleFile("PPG.csv"),
-                  },
-                ]}
-              />
-            </div>
-          </div>
-
-          <div className="mb-2 border-t border-slate-200 dark:border-gray-700" />
-
-          <p
-            id="error-message"
-            className="mb-1 min-h-4 text-[11px] font-medium text-red-500"
-          ></p>
-          <FileUpload
-            data-testid="csv-file-dropzone"
-            ref={fileUploader}
-            onSelect={fileSelected}
-            onClear={fileRemoved}
-            onRemove={fileRemoved}
-            accept=".csv"
-            maxFileSize={52428868}
-            className="home-fileupload"
-            headerTemplate={renderUploadHeader}
-            chooseLabel={t("home.upload.chooseCsv")}
-            emptyTemplate={
-              <div className="flex min-h-[84px] flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-300 bg-slate-50/70 px-2 py-2 text-center transition dark:border-gray-700 dark:bg-gray-950/70">
-                <div className="mb-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                  <FaUpload size={13} />
-                </div>
-                <p className="m-0 text-xs font-semibold text-slate-900 dark:text-white">
-                  {t("home.upload.dragTitle")}
-                </p>
-                <p className="mt-0.5 max-w-[220px] text-[10px] leading-4 text-slate-600 dark:text-slate-300">
-                  {t("home.upload.dragDescription")}
-                </p>
-              </div>
-            }
-            chooseOptions={{
-              className:
-                "rounded-md bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white shadow-none transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200",
-            }}
-            uploadOptions={{ className: "hidden p-fileupload-utility" }}
-            cancelOptions={{
-              className:
-                "rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 shadow-none transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800",
-            }}
-          />
+      <div className="flex flex-1 items-center justify-center">
+      <div className={`${INNER_CARD_CLASS} w-full max-w-[26rem]`}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          className="hidden"
+          onChange={fileSelected}
+        />
+        <div className="mb-1 flex items-center justify-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded-md bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white shadow-none transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+          >
+            {t("home.upload.chooseCsv")}
+          </button>
+          <button
+            type="button"
+            onClick={fileRemoved}
+            className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 shadow-none transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+          >
+            {t("common.clean")}
+          </button>
         </div>
-      </PrimeReactProvider>
+
+        <div
+          data-testid="csv-file-dropzone"
+          role="button"
+          tabIndex={0}
+          onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          onDragOver={(event) => {
+            event.preventDefault();
+          }}
+          onDrop={(event) => {
+            event.preventDefault();
+            void handleSelectedFile(event.dataTransfer?.files?.[0]);
+          }}
+          className="flex min-h-[72px] cursor-pointer flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-300 bg-slate-50/70 px-2 py-1.5 text-center transition hover:border-slate-400 hover:bg-slate-100/80 dark:border-gray-700 dark:bg-gray-950/70 dark:hover:border-gray-600 dark:hover:bg-gray-950"
+        >
+          <div className="mb-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900">
+            <FaUpload size={13} />
+          </div>
+          <p className="m-0 text-xs font-semibold text-slate-900 dark:text-white">
+            {t("home.upload.dragTitle")}
+          </p>
+          {errorMessage ? (
+            <p
+              id="error-message"
+              className="mt-0.5 max-w-[220px] text-[10px] font-medium leading-4 text-red-500"
+            >
+              {errorMessage}
+            </p>
+          ) : (
+            <p className="mt-0.5 max-w-[220px] text-[10px] leading-4 text-slate-600 dark:text-slate-300">
+              {t("home.upload.dragDescription")}
+            </p>
+          )}
+          {selectedFilename ? (
+            <p className="mt-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+              {selectedFilename}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="my-2 border-t border-slate-200/80 dark:border-gray-700" />
+
+        <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50/80 p-2.5 dark:border-gray-700 dark:bg-gray-950/70">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+            {t("home.upload.sampleData")}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              className="sample-eda inline-flex h-7 items-center gap-1.5 rounded-md bg-slate-900 px-2 text-[10px] font-semibold text-white shadow-none dark:bg-white dark:text-slate-900"
+              onClick={() => loadSampleFile("EDA.csv")}
+            >
+              <FaFlask size={12} />
+              EDA.csv
+            </button>
+
+            <SimpleMenu
+              widthClass="w-56"
+              label={t("common.menu.sampleFiles")}
+              trigger={(
+                <button
+                  type="button"
+                  className="sample-list h-7 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-700 shadow-none transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                >
+                  {t("home.upload.moreSamples")}
+                </button>
+              )}
+              items={[
+                {
+                  label: "EDA.csv",
+                  onClick: () => loadSampleFile("EDA.csv"),
+                },
+                {
+                  label: "PPG.csv",
+                  onClick: () => loadSampleFile("PPG.csv"),
+                },
+              ]}
+            />
+          </div>
+        </div>
+      </div>
+      </div>
     </div>
   );
 });
@@ -484,7 +522,7 @@ export const SignalPreviewCard = ({
   return (
     <div className="tuto-chart">
       <div>
-        <div className="px-3 pb-3 pt-2">
+        <div className="px-3 pb-2 pt-1.5">
           <div className="relative">
             <CustomChart table={previewTable} />
             {previewMessage ? (
@@ -498,8 +536,8 @@ export const SignalPreviewCard = ({
         </div>
 
         {fileRows ? (
-          <div className="tuto-range-slider px-4 py-3">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="tuto-range-slider px-4 py-2">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
                 {cropValues
                   ? t("home.preview.rows", { start: cropValues[0] + 1, end: cropValues[1] })
@@ -554,7 +592,7 @@ export const PreviewWorkspaceCard = ({ children }) => {
         title={t("home.preview.title")}
         description={t("home.preview.description")}
       />
-      <div className="space-y-5">{children}</div>
+      <div className="space-y">{children}</div>
     </div>
   );
 };
