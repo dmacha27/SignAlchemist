@@ -167,15 +167,26 @@ export const WorkspaceSecondaryButton = ({
   </button>
 );
 
-export const WorkspaceActionLink = ({ to, children }) => (
-  <Link
-    to={to}
-    className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
-  >
-    {children}
-    <FaArrowRight size={12} />
-  </Link>
-);
+export const WorkspaceActionLink = ({ to = null, href = null, children }) => {
+  const className =
+    "inline-flex items-center gap-2 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200";
+
+  if (href) {
+    return (
+      <a href={href} className={className}>
+        {children}
+        <FaArrowRight size={12} />
+      </a>
+    );
+  }
+
+  return (
+    <Link to={to} className={className}>
+      {children}
+      <FaArrowRight size={12} />
+    </Link>
+  );
+};
 
 WorkspacePage.propTypes = {
   children: PropTypes.node.isRequired,
@@ -266,6 +277,12 @@ WorkspaceSecondaryButton.defaultProps = {
 };
 
 WorkspaceActionLink.propTypes = {
-  to: PropTypes.string.isRequired,
+  to: PropTypes.string,
+  href: PropTypes.string,
   children: PropTypes.node.isRequired,
+};
+
+WorkspaceActionLink.defaultProps = {
+  to: null,
+  href: null,
 };

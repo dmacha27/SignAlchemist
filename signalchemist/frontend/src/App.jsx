@@ -85,17 +85,17 @@ ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-const DocsRedirect = () => {
-  useEffect(() => {
-    window.location.href = "/docs/index.html";
-  }, []);
-
-  return null;
-};
-
 const RouteLoader = () => (
   <RouteLoaderInner />
 );
+
+const DocsRedirect = () => {
+  useEffect(() => {
+    window.location.replace("/docs/index.html");
+  }, []);
+
+  return <RouteLoader />;
+};
 
 const RouteLoaderInner = () => {
   const { t } = useTranslation();
@@ -259,7 +259,7 @@ const AppLayout = () => {
               <hr className="my-3 border-slate-200/70 sm:mx-auto dark:border-gray-700/70" />
               <span className="flex items-center justify-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                 <a
-                  href="/docs/"
+                  href="/docs/index.html"
                   className="flex items-center gap-1 hover:underline"
                   aria-label={t("app.footer.docsAria")}
                 >
@@ -288,6 +288,7 @@ const router = createBrowserRouter(
     <Route element={<AppLayout />}>
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
+      <Route path="/docs" element={<DocsRedirect />} />
       <Route
         path="/processing"
         element={
@@ -329,7 +330,6 @@ const router = createBrowserRouter(
           </ProtectedRoute>
         }
       />
-      <Route path="/docs" element={<DocsRedirect />} />
       <Route path="*" element={<NotFound />} />
     </Route>
   )

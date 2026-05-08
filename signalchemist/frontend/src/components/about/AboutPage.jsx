@@ -35,7 +35,7 @@ const AboutPage = () => {
                 {t("about.tryNow")}
                 <FaArrowRight size={12} />
               </button>
-              <WorkspaceActionLink to="/docs">{t("about.readDocs")}</WorkspaceActionLink>
+              <WorkspaceActionLink href="/docs/index.html">{t("about.readDocs")}</WorkspaceActionLink>
             </div>
           </div>
         }
