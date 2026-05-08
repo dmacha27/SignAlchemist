@@ -30,8 +30,8 @@ const INNER_CARD_CLASS =
 const QUICK_STEP_CARD_CLASS =
   "rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-600 dark:border-gray-700 dark:bg-gray-950 dark:text-slate-300";
 
-const QuickStepItem = ({ step, children, title = null }) => (
-  <div className={QUICK_STEP_CARD_CLASS}>
+const QuickStepItem = ({ step, children, title = null, className = "" }) => (
+  <div className={`${QUICK_STEP_CARD_CLASS} ${className}`.trim()}>
     <div className="min-w-0 text-sm leading-5 text-slate-600 dark:text-slate-300">
       <span className="float-left mr-3 mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900">
         {step}
@@ -168,7 +168,11 @@ export const HomeHero = ({ isDark }) => {
               </div>
 
               <div className="lg:row-span-2">
-                <QuickStepItem step={3} title={t("home.hero.steps.threeTitle")}>
+                <QuickStepItem
+                  step={3}
+                  title={t("home.hero.steps.threeTitle")}
+                  className="h-full"
+                >
                   {t("home.hero.steps.threeDescription")}
                 </QuickStepItem>
               </div>
@@ -189,10 +193,12 @@ QuickStepItem.propTypes = {
   step: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   children: PropTypes.node.isRequired,
   title: PropTypes.string,
+  className: PropTypes.string,
 };
 
 QuickStepItem.defaultProps = {
   title: null,
+  className: "",
 };
 
 export const CSVUploader = memo(({ onDatasetLoaded, onDatasetCleared }) => {
