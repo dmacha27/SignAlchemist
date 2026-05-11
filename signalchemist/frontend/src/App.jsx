@@ -1,43 +1,61 @@
 import {
-  Routes,
   Route,
   useLocation,
   Navigate,
   useNavigate,
+  Outlet,
+  createBrowserRouter,
+  createRoutesFromElements,
 } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { MantineProvider } from "@mantine/core";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  useMemo,
+} from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import "./App.css";
-import "primereact/resources/primereact.min.css";
-import "primereact/resources/themes/lara-light-indigo/theme.css";
 
 import Home from "./components/Home";
-import About from "./components/About";
-import Processing from "./components/Processing";
-import Resampling from "./components/Resampling";
-import Filtering from "./components/Filtering";
+import FloatingNavMenu from "./components/common/FloatingNavMenu";
 import NotFound from "./components/common/NotFound";
+import {
+  canOpenWorkspacePath,
+  hasPreparedDataset,
+} from "./components/workspace/workspaceState";
 
 import { ThemeContext } from "./contexts/ThemeContext";
 
 import { Toaster, toast } from "react-hot-toast";
 
 import {
-  CircleMenu,
-  CircleMenuItem,
-  TooltipPlacement,
-} from "react-circular-menu";
-
-import {
-  FaFilter,
-  FaChartLine,
-  FaProjectDiagram,
-  FaHome,
-  FaGithub,
   FaBook,
+  FaRegCommentDots,
+  FaMoon,
+  FaSun,
 } from "react-icons/fa";
+
+const UEQ_FEEDBACK_URL =
+  "https://forms.cloud.microsoft/pages/responsepage.aspx?id=tbCjKoKnOE-omOSDsg6NYZrg_8ALi8hAsrlK1XJTvk1UMzhNS1Y1Q0JHSFo3N0NPRUZSVzJFQllOTy4u&route=shorturl";
+
+const loadAbout = () => import("./components/About");
+const loadProcessing = () => import("./components/Processing");
+const loadBatch = () => import("./components/Batch");
+const loadResampling = () => import("./components/Resampling");
+const loadFiltering = () => import("./components/Filtering");
+const loadHr = () => import("./components/Hr");
+const loadPeaks = () => import("./components/Peaks");
+
+const About = lazy(loadAbout);
+const Processing = lazy(loadProcessing);
+const Batch = lazy(loadBatch);
+const Resampling = lazy(loadResampling);
+const Filtering = lazy(loadFiltering);
+const Hr = lazy(loadHr);
+const Peaks = lazy(loadPeaks);
 
 // Get default system or prefered theme
 const getInitialTheme = () => {
@@ -52,13 +70,19 @@ const getInitialTheme = () => {
   return false;
 };
 
+const getInitialReducedMotion = () =>
+  typeof window !== "undefined"
+  && typeof window.matchMedia === "function"
+  && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 // Redirect invalid routes to /home if no data is loaded
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
-  // Check if there is data loaded
-  if (!location.state) {
+
+  if (!hasPreparedDataset(location.state)) {
     return <Navigate to="/" replace />;
   }
+
   return children;
 };
 
@@ -67,9 +91,51 @@ ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-const App = () => {
+const RouteLoader = () => (
+  <RouteLoaderInner />
+);
+
+const DocsRedirect = () => {
+  useEffect(() => {
+    window.location.replace("/docs/index.html");
+  }, []);
+
+  return <RouteLoader />;
+};
+
+const RouteLoaderInner = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="mx-auto flex min-h-[52vh] w-full max-w-7xl items-center justify-center px-4 py-10">
+      <div className="rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 text-sm font-medium text-slate-600 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300">
+        {t("app.loadingWorkspace")}
+      </div>
+    </div>
+  );
+};
+
+const AppLayout = () => {
+  const { t, i18n } = useTranslation();
   // Dark Theme toogle
   const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    getInitialReducedMotion
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncReducedMotion = (event) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    mediaQuery.addEventListener("change", syncReducedMotion);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncReducedMotion);
+    };
+  }, []);
+
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
@@ -85,93 +151,118 @@ const App = () => {
       localStorage.setItem("theme", "light");
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle(
+      "reduced-motion",
+      prefersReducedMotion
+    );
+  }, [prefersReducedMotion]);
   const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
   // Navigation
   const location = useLocation();
   const navigate = useNavigate();
+  const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
 
   const handleNavigate = (path) => {
-    if (location.state) {
-      navigate(path, { state: location.state });
+    if (canOpenWorkspacePath(path, location.state)) {
+      setIsNavMenuOpen(false);
+      navigate(path, { state: location.state, flushSync: true });
     } else {
-      toast.error("No data detected");
+      setIsNavMenuOpen(false);
+      toast.error(t("app.toasts.loadCsvFirst"));
     }
   };
 
-  const isHome = location.pathname === "/" || location.pathname === "/about";
-  const DocsRedirect = () => {
-    useEffect(() => {
-      window.location.href = "/docs/index.html";
-    }, []);
-    return null;
+  const handleNavigateHome = () => {
+    setIsNavMenuOpen(false);
+    navigate("/", { flushSync: true });
   };
+
+  const isHome = location.pathname === "/" || location.pathname === "/about";
+
+  const toastStyle = useMemo(
+    () => ({
+      background: isDarkMode ? "#1f2937" : "#f3f4f6",
+      color: isDarkMode ? "#ffffff" : "#000000",
+    }),
+    [isDarkMode]
+  );
+
+  const currentLanguage = i18n.resolvedLanguage?.startsWith("es") ? "es" : "en";
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
-      <MantineProvider
-        withGlobalStyles
-        withNormalizeCSS
-        theme={{ colorScheme: isDarkMode ? "dark" : "light" }}
+      <div
+        data-theme={isDarkMode ? "dark" : "light"}
+        className="App user-select-none bg-white text-black dark:bg-gray-900 dark:text-white"
+        style={{ position: "relative", minHeight: "100vh" }}
       >
-        <div
-          className="App user-select-none bg-white text-black dark:bg-gray-900 dark:text-white"
-          style={{ position: "relative", minHeight: "100vh" }}
-        >
           <Toaster
             toastOptions={{
-              style: {
-                background: isDarkMode ? "#1f2937" : "#f3f4f6", // bg-gray-800 / bg-gray-100
-                color: isDarkMode ? "#ffffff" : "#000000",
-              },
+              style: toastStyle,
             }}
           />
 
           {/* Dark mode button */}
           <button
             onClick={toggleDarkMode}
-            className="fixed top-4 right-4 p-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded shadow z-50"
+            aria-label={isDarkMode ? t("app.theme.switchToLight") : t("app.theme.switchToDark")}
+            className="fixed right-4 top-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white/90 text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.15)] backdrop-blur transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900/90 dark:text-white dark:hover:bg-gray-800"
           >
-            {isDarkMode ? "☀️" : "🌙"}
+            {isDarkMode ? <FaSun /> : <FaMoon />}
           </button>
 
+          <div className="fixed right-[4.1rem] top-4 z-50 flex h-11 items-center">
+            <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/92 px-1 py-1 text-slate-900 shadow-[0_14px_32px_rgba(15,23,42,0.12)] backdrop-blur dark:border-gray-700 dark:bg-gray-900/92 dark:text-white">
+              <span className="px-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                {t("app.language.label")}
+              </span>
+              {["en", "es"].map((lng) => {
+                const isActive = currentLanguage === lng;
+                return (
+                  <button
+                    key={lng}
+                    type="button"
+                    onClick={() => i18n.changeLanguage(lng)}
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold transition ${
+                      isActive
+                        ? "bg-cyan-500 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-800"
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    {t(`app.language.${lng}`)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Navigation */}
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
+          <Suspense fallback={<RouteLoader />}>
+            <Outlet />
+          </Suspense>
 
-            <Route
-              path="/processing"
-              element={
-                <ProtectedRoute>
-                  <Processing />
-                </ProtectedRoute>
-              }
-            />
+          <a
+            href={UEQ_FEEDBACK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t("app.feedback.aria")}
+            className="fixed bottom-5 left-5 z-[1080] group"
+          >
+            <div className="flex items-center gap-2 rounded-full border border-cyan-200/70 bg-cyan-50/80 px-3 py-2 text-cyan-950 shadow-[0_12px_28px_rgba(15,23,42,0.12)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-50 dark:border-cyan-400/20 dark:bg-cyan-500/10 dark:text-cyan-100 dark:hover:bg-cyan-500/12">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/16 text-cyan-700 dark:bg-cyan-400/14 dark:text-cyan-300">
+                <FaRegCommentDots size={14} />
+              </span>
+              <span className="text-[12px] font-medium leading-none text-cyan-900 dark:text-cyan-100">
+                {t("app.feedback.cta")}
+              </span>
+            </div>
+          </a>
 
-            <Route
-              path="/resampling"
-              element={
-                <ProtectedRoute>
-                  <Resampling />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/filtering"
-              element={
-                <ProtectedRoute>
-                  <Filtering />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route path="/docs" element={<DocsRedirect />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-
-          <footer>
-            <div className="w-full max-w-screen-xl mx-auto mt-10">
+          <footer className="pb-6 pt-10">
+            <div className="mx-auto w-full max-w-screen-xl px-5 py-3">
               <div className="sm:flex sm:items-center sm:justify-between">
                 <a href="/">
                   <img
@@ -197,80 +288,83 @@ const App = () => {
                   </li>
                 </ul>
               </div>
-              <hr className="my-3 border-gray-200 sm:mx-auto dark:border-gray-700" />
-              <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-4">
-                {/*
+              <hr className="my-3 border-slate-200/70 sm:mx-auto dark:border-gray-700/70" />
+              <span className="flex items-center justify-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                 <a
-                  href="https://github.com/dmacha27/SignAlchemist"
+                  href="/docs/index.html"
                   className="flex items-center gap-1 hover:underline"
-                  aria-label="Source code on GitHub"
+                  aria-label={t("app.footer.docsAria")}
                 >
-                  <FaGithub /> Source code
-                </a>
-
-                <span className="text-gray-400">•</span>
-                */}
-                <a
-                  href="/docs/"
-                  className="flex items-center gap-1 hover:underline"
-                  aria-label="Read the documentation"
-                >
-                  <FaBook /> Read the Docs
+                  <FaBook /> {t("app.footer.docs")}
                 </a>
               </span>
             </div>
           </footer>
 
           {!isHome && (
-            <div
-              style={{
-                position: "fixed",
-                bottom: "20px",
-                right: "20px",
-                zIndex: 1081,
-              }}
-            >
-              <CircleMenu
-                startAngle={-190}
-                rotationAngle={100}
-                itemSize={1.25}
-                radius={4}
-              >
-                <CircleMenuItem
-                  tooltip="Home (data will be deleted)"
-                  tooltipPlacement={TooltipPlacement.Left}
-                  onClick={() => handleNavigate("/")}
-                >
-                  <FaHome data-testid="home" />
-                </CircleMenuItem>
-                <CircleMenuItem
-                  tooltip="Resampling"
-                  tooltipPlacement={TooltipPlacement.Left}
-                  onClick={() => handleNavigate("/resampling")}
-                >
-                  <FaChartLine />
-                </CircleMenuItem>
-                <CircleMenuItem
-                  tooltip="Filtering"
-                  tooltipPlacement={TooltipPlacement.Left}
-                  onClick={() => handleNavigate("/filtering")}
-                >
-                  <FaFilter />
-                </CircleMenuItem>
-                <CircleMenuItem
-                  tooltip="Processing"
-                  tooltipPlacement={TooltipPlacement.Top}
-                  onClick={() => handleNavigate("/processing")}
-                >
-                  <FaProjectDiagram />
-                </CircleMenuItem>
-              </CircleMenu>
-            </div>
+            <FloatingNavMenu
+              isDark={isDarkMode}
+              isOpen={isNavMenuOpen}
+              onToggle={() => setIsNavMenuOpen((prev) => !prev)}
+              onNavigate={handleNavigate}
+              onNavigateHome={handleNavigateHome}
+            />
           )}
-        </div>
-      </MantineProvider>
+      </div>
     </ThemeContext.Provider>
   );
 };
 
-export default App;
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<AppLayout />}>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/docs" element={<DocsRedirect />} />
+      <Route
+        path="/processing"
+        element={
+          <ProtectedRoute>
+            <Processing />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/batch" element={<Batch />} />
+      <Route
+        path="/resampling"
+        element={
+          <ProtectedRoute>
+            <Resampling />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/filtering"
+        element={
+          <ProtectedRoute>
+            <Filtering />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/peaks"
+        element={
+          <ProtectedRoute>
+            <Peaks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hr"
+        element={
+          <ProtectedRoute>
+            <Hr />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<NotFound />} />
+    </Route>
+  )
+);
+
+export default router;

@@ -48,6 +48,10 @@ import { ThemeContext } from "../../../contexts/ThemeContext";
 
 const mockSetChartDataProcessed = jest.fn();
 const mockDeleteNode = jest.fn();
+const applyUpdateMocks = (prev) =>
+  mockUpdateNodeData.mock.calls
+    .filter(([nodeId]) => nodeId === "2")
+    .map(([, updater]) => updater(prev));
 
 describe("OutliersNode", () => {
   beforeAll(() => {
@@ -96,7 +100,7 @@ describe("OutliersNode", () => {
       </ThemeContext.Provider>
     );
 
-    expect(screen.getByText(/Outlier technique/i)).toBeInTheDocument();
+    expect(screen.getByText(/Detection technique/i)).toBeInTheDocument();
   });
 
   it("deletes node", async () => {
@@ -121,7 +125,7 @@ describe("OutliersNode", () => {
     expect(mockDeleteNode).toHaveBeenCalled();
   });
 
-  it("handles see output", async () => {
+  it("handles preview", async () => {
     mockUseNodeConnections.mockReturnValue([]);
     mockUseNodesData.mockReturnValue({ data: { table: mockEDA } });
 
@@ -138,16 +142,15 @@ describe("OutliersNode", () => {
       </ThemeContext.Provider>
     );
 
-    const outputButton = screen.getByTestId("output2");
-    fireEvent.click(outputButton);
+    const previewButton = screen.getByRole("button", { name: /preview/i });
+    fireEvent.click(previewButton);
 
     expect(mockSetChartDataProcessed).toHaveBeenCalled();
   });
 
-  it("handles see output error", async () => {
+  it("hides preview when no output is available", async () => {
     mockUseNodeConnections.mockReturnValue([]);
     mockUseNodesData.mockReturnValue({});
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
     render(
       <ThemeContext.Provider value={mockTheme}>
@@ -162,10 +165,7 @@ describe("OutliersNode", () => {
       </ThemeContext.Provider>
     );
 
-    const outputButton = screen.getByTestId("output2");
-    fireEvent.click(outputButton);
-
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /preview/i })).not.toBeInTheDocument();
   });
 
   it("handles delete table", async () => {
@@ -197,10 +197,9 @@ describe("OutliersNode", () => {
 
     expect(mockUpdateNodeData).toHaveBeenCalledWith("2", expect.any(Function));
 
-    const prevFn = mockUpdateNodeData.mock.calls[0][1];
     const prev = { table: mockEDA };
-    const result = prevFn(prev);
-    expect(result).toEqual({
+    const results = applyUpdateMocks(prev);
+    expect(results).toContainEqual({
       ...prev,
       table: null,
     });
@@ -239,12 +238,11 @@ describe("OutliersNode", () => {
 
     expect(mockUpdateNodeData).toHaveBeenCalledWith("2", expect.any(Function));
 
-    const prevFn = mockUpdateNodeData.mock.calls[1][1];
     const prev = { table: mockEDA };
-    const result = prevFn(prev);
-    expect(result).toEqual({
+    const results = applyUpdateMocks(prev);
+    expect(results).toContainEqual({
       ...prev,
-      table: mockEdaOutliers, // Outliers result
+      table: mockEdaOutliers,
     });
   });
 

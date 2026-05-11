@@ -1,101 +1,205 @@
 import { memo } from "react";
 import PropTypes from "prop-types";
-import { Popover, Text } from "@mantine/core";
-import LoaderMessage from "./LoaderMessage";
+import { FaArrowDown, FaArrowRight, FaArrowUp } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
-/**
- * MetricCards Component
- *
- * Renders a responsive grid of metric cards, each displaying a metric name and its formatted value.
- * On hover or click, a tooltip (Popover) is shown with additional details.
- *
- * @component
- * @param {Object} props
- * @param {Object.<string, { value: number, description: string }>} props.metrics
- */
-const MetricCards = ({ metrics }) => {
+import LoaderMessage from "./LoaderMessage";
+import { SimpleTooltip } from "./ui";
+
+const getMetricPreference = (description = "") => {
+  const normalizedDescription = description.toLowerCase();
+  if (normalizedDescription.includes("higher is better")) {
+    return "higher";
+  }
+  if (normalizedDescription.includes("lower is better")) {
+    return "lower";
+  }
+  return "neutral";
+};
+
+const getResolvedMetricPreference = (metric) => {
+  if (metric?.preference === "higher" || metric?.preference === "lower") {
+    return metric.preference;
+  }
+
+  return getMetricPreference(metric?.description ?? "");
+};
+
+const getMetricDescription = (metric, t) => {
+  const metricId = metric?.metric_id;
+  if (!metricId) {
+    return stripMetricPreferenceText(metric?.description ?? "");
+  }
+
+  return t(`metrics.items.${metricId}.description`, {
+    defaultValue: stripMetricPreferenceText(metric?.description ?? ""),
+  });
+};
+
+const stripMetricPreferenceText = (description = "") =>
+  description
+    .replace(/\s*Higher is better\.?/i, "")
+    .replace(/\s*Lower is better\.?/i, "")
+    .trim();
+
+const getMetricPreferenceLabel = (preference, t) => {
+  if (preference === "higher") {
+    return t("common.higherIsBetter");
+  }
+  if (preference === "lower") {
+    return t("common.lowerIsBetter");
+  }
+  return t("metrics.noPreference");
+};
+
+const getMetricTrend = (preference, currentValue, originalValue, t) => {
+  if (
+    preference === "neutral" ||
+    typeof originalValue !== "number" ||
+    Number.isNaN(originalValue)
+  ) {
+    return null;
+  }
+
+  if (currentValue === originalValue) {
+    return {
+      icon: FaArrowRight,
+      label: t("metrics.noChange"),
+      className:
+        "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-gray-800",
+    };
+  }
+
+  const improved =
+    preference === "higher"
+      ? currentValue > originalValue
+      : currentValue < originalValue;
+
+  return improved
+    ? {
+        icon: preference === "higher" ? FaArrowUp : FaArrowDown,
+        label: t("metrics.improved"),
+        className:
+          "text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10",
+      }
+    : {
+        icon: preference === "higher" ? FaArrowDown : FaArrowUp,
+        label: t("metrics.worse"),
+        className:
+          "text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10",
+      };
+};
+
+const MetricCards = ({ metrics, baselineMetrics = null, showTrend = false }) => {
+  const { t } = useTranslation();
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
-      {Object.entries(metrics).map(([name, { value, description }], index) => {
-        const metricValue = value.toFixed(4);
-        return (
-          <div key={name} className="flex justify-center items-center">
-            <Popover
-              position="top"
-              withArrow
-              shadow="md"
-              width={220}
-              arrowSize={12}
-              arrowRadius={3}
-            >
-              <Popover.Target>
-                <div className="bg-white dark:bg-gray-900 shadow-xl rounded-lg p-6 cursor-pointer hover:scale-105 transform transition-all ease-in-out border-0 dark:border dark:border-gray-600">
-                  <div className="flex flex-col items-center text-center">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                      {name}
-                    </h3>
-                    <div className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
-                      <span className="text-teal-500">{metricValue}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Metric {index + 1}
-                    </p>
-                  </div>
-                </div>
-              </Popover.Target>
-              <Popover.Dropdown className="bg-blue-50 dark:bg-[#1e3a8a] text-blue-600 dark:text-white rounded-lg shadow-lg text-sm p-4 border-0">
-                <Text size="sm" className="font-bold text-lg dark:text-white">
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    {Object.entries(metrics).map(([name, metric], index) => (
+      <SimpleTooltip
+        key={name}
+        label={[
+          getMetricDescription(metric, t),
+          getMetricPreferenceLabel(getResolvedMetricPreference(metric), t),
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+      >
+          <button
+            type="button"
+            className="rounded-[1rem] bg-slate-50/70 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-800/70"
+            title={metric.description}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                   {name}
-                </Text>
-                <Text
-                  size="xs"
-                  className="text-gray-500 dark:text-gray-400 mb-2"
-                >
-                  {description}
-                </Text>
-              </Popover.Dropdown>
-            </Popover>
-          </div>
-        );
-      })}
-    </div>
+                </h3>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  {t("metrics.metricNumber", { index: index + 1 })}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <span className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">
+                  {metric.value.toFixed(4)}
+                </span>
+                {showTrend ? (() => {
+                  const trend = getMetricTrend(
+                    getResolvedMetricPreference(metric),
+                    metric.value,
+                    baselineMetrics?.[name]?.value,
+                    t
+                  );
+
+                  if (!trend) {
+                    return null;
+                  }
+
+                  const TrendIcon = trend.icon;
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold ${trend.className}`}
+                    >
+                      <TrendIcon size={10} />
+                      {trend.label}
+                    </span>
+                  );
+                })() : null}
+              </div>
+            </div>
+          </button>
+      </SimpleTooltip>
+    ))}
+  </div>
   );
 };
 
-/**
- * InfoMetrics Component
- *
- * Displays two metric panels side-by-side: one for original metrics and one for processed metrics.
- *
- * @component
- * @param {Object} props - Component props.
- * @param {Object.<string, { value: number, description: string }>} [props.metricsOriginal] - Metrics of the original signal.
- * @param {Object.<string, { value: number, description: string }>} [props.metricsProcessed] - Metrics of the processed signal.
- * @param {boolean} [props.isRequesting=false] - Whether the processed metrics are being requested or calculated.
- */
+const MetricsPanel = ({ title, content }) => (
+  <div>
+    <div className="mb-4">
+      <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+        {title}
+      </h2>
+    </div>
+    {content}
+  </div>
+);
+
 const InfoMetrics = memo(
   ({ metricsOriginal, metricsProcessed, isRequesting = false }) => {
+    const { t } = useTranslation();
+
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 mt-6">
-        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-          {metricsOriginal ? (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <MetricsPanel
+        title={t("metrics.originalTitle")}
+        content={
+          metricsOriginal ? (
             <MetricCards metrics={metricsOriginal} />
           ) : (
-            <LoaderMessage message="Calculating..." />
-          )}
-        </div>
-        <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-          {isRequesting ? (
-            <LoaderMessage message="Processing request..." />
+            <LoaderMessage message={t("metrics.calculating")} />
+          )
+        }
+      />
+      <MetricsPanel
+        title={t("metrics.processedTitle")}
+        content={
+          isRequesting ? (
+            <LoaderMessage message={t("common.processingRequest")} />
           ) : metricsProcessed ? (
-            <MetricCards metrics={metricsProcessed} />
+            <MetricCards
+              metrics={metricsProcessed}
+              baselineMetrics={metricsOriginal}
+              showTrend
+            />
           ) : (
-            <div className="p-5 text-center text-gray-500 dark:text-gray-400">
-              Please run processing to see results.
+            <div className="rounded-[1rem] bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500 dark:bg-gray-800/70 dark:text-slate-400">
+              {t("metrics.empty")}
             </div>
-          )}
-        </div>
-      </div>
+          )
+        }
+      />
+    </div>
     );
   }
 );
@@ -105,8 +209,29 @@ MetricCards.propTypes = {
     PropTypes.shape({
       value: PropTypes.number.isRequired,
       description: PropTypes.string.isRequired,
+      metric_id: PropTypes.string,
+      preference: PropTypes.oneOf(["higher", "lower", "neutral"]),
     })
   ).isRequired,
+  baselineMetrics: PropTypes.objectOf(
+    PropTypes.shape({
+      value: PropTypes.number.isRequired,
+      description: PropTypes.string.isRequired,
+      metric_id: PropTypes.string,
+      preference: PropTypes.oneOf(["higher", "lower", "neutral"]),
+    })
+  ),
+  showTrend: PropTypes.bool,
+};
+
+MetricCards.defaultProps = {
+  baselineMetrics: null,
+  showTrend: false,
+};
+
+MetricsPanel.propTypes = {
+  title: PropTypes.string.isRequired,
+  content: PropTypes.node.isRequired,
 };
 
 InfoMetrics.propTypes = {
@@ -114,15 +239,25 @@ InfoMetrics.propTypes = {
     PropTypes.shape({
       value: PropTypes.number.isRequired,
       description: PropTypes.string.isRequired,
+      metric_id: PropTypes.string,
+      preference: PropTypes.oneOf(["higher", "lower", "neutral"]),
     })
   ),
   metricsProcessed: PropTypes.objectOf(
     PropTypes.shape({
       value: PropTypes.number.isRequired,
       description: PropTypes.string.isRequired,
+      metric_id: PropTypes.string,
+      preference: PropTypes.oneOf(["higher", "lower", "neutral"]),
     })
   ),
-  isRequesting: PropTypes.bool.isRequired,
+  isRequesting: PropTypes.bool,
+};
+
+InfoMetrics.defaultProps = {
+  metricsOriginal: null,
+  metricsProcessed: null,
+  isRequesting: false,
 };
 
 export default InfoMetrics;

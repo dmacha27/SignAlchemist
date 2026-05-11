@@ -1,83 +1,29 @@
-import { useMemo, memo, useRef, useEffect, useState, useContext } from "react";
+import { memo, useContext, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { fft, util as fftUtil } from "fft-js";
-import { Line } from "react-chartjs-2";
-import "chartjs-adapter-date-fns";
-
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale,
-} from "chart.js";
-import zoomPlugin from "chartjs-plugin-zoom";
-import { Button, Menu, NumberInput, Group } from "@mantine/core";
-import { FaDownload, FaImage, FaSearch, FaHandPaper } from "react-icons/fa";
-import Draggable from "react-draggable";
-
-import { diff, average } from "../utils/dataUtils.js";
-import { exportToPNG, handleResetZoom } from "../utils/chartUtils";
-
-ChartJS.register(
-  zoomPlugin,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale
-);
-
-const MAX_DATA_LENGTH = 5000;
+import ReactECharts from "echarts-for-react";
+import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
-import ErrorBoundary from "./ErrorBoundary";
+import { average, diff } from "../utils/dataUtils";
+import {
+  exportSingleChartWithTitlePNG,
+  handleResetStyle,
+  handleResetZoom,
+} from "../utils/chartUtils";
+import { ChartFrame } from "./chartShell";
+import { resetEchartsZoom, toRgba } from "./echartsBridge";
+import {
+  SimpleMenu,
+  SimpleTooltip,
+  uiCompactInputClass,
+  uiGhostButtonClass,
+} from "./ui";
 
-const baseChartOptions = {
-  label: "comparison-spectrum",
-  responsive: true,
-  plugins: {
-    legend: {
-      display: true,
-      position: "top",
-    },
-    tooltip: {
-      mode: "nearest",
-      intersect: true,
-      backgroundColor: "#fff",
-      titleColor: "#222",
-      bodyColor: "#333",
-      borderColor: "#ccc",
-      borderWidth: 1,
-    },
-  },
-  scales: {
-    x: {
-      type: "linear",
-      title: {
-        display: true,
-        text: "Frequency (Hz)",
-        color: "#111",
-        font: { size: 14, weight: "bold" },
-      },
-    },
-    y: {
-      title: {
-        display: true,
-        text: "Amplitude",
-        color: "#111",
-        font: { size: 14, weight: "bold" },
-      },
-    },
-  },
-};
+const MAX_DATA_LENGTH = 5000;
+const chartActionButtonClass =
+  "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
 
 function nextPowerOfTwo(n) {
   return Math.pow(2, Math.ceil(Math.log2(n)));
@@ -88,292 +34,297 @@ function padToPowerOfTwo(signal) {
   return signal.concat(Array(desiredLength - signal.length).fill(0));
 }
 
-function processFFT(table, samplingRate) {
+function processFFT(table) {
   const signal = table.slice(1).map((row) => row[1]);
+  const timestamps = table.slice(1).map((row) => row[0]);
+  const samplingRate = 1 / average(diff(timestamps));
   const padded = padToPowerOfTwo(signal);
   const phasors = fft(padded);
   const frequencies = fftUtil.fftFreq(phasors, samplingRate);
   const magnitudes = fftUtil.fftMag(phasors);
-  return frequencies.map((f, i) => ({ x: f, y: magnitudes[i] }));
+  return frequencies.map((x, index) => [x, magnitudes[index]]);
 }
 
-/**
- * ComparisonSpectrumChart component renders a line chart that compares two spectrograms.
- *
- * @param {Object} props - The props for the component.
- * @param {Array} props.table1 - The first dataset, a 2D array where each sub-array represents a pair of x and y values.
- * @param {Array} props.table2 - The second dataset, a 2D array where each sub-array represents a pair of x and y values.
- * @param {string} [props.name1="Original"] - The label for the first dataset.
- * @param {string} props.name2 - The label for the second dataset.
- *
- */
-const ComparisonSpectrumChart = memo(
-  ({ table1, table2, name2, name1 = "Original" }) => {
-    const chartRef = useRef(null);
-    const draggableRef = useRef(null);
+const ComparisonSpectrumChart = memo(({ table1, table2, name2, name1 = "Original" }) => {
+  const { t } = useTranslation();
+  const theme = useContext(ThemeContext);
+  const isDark = theme?.isDarkMode ?? false;
+  const chartComponentRef = useRef(null);
+  const bridgeRef = useRef(null);
+  const [goToX, setGoToX] = useState(null);
+  const [yMin, setYMin] = useState(null);
+  const [yMax, setYMax] = useState(null);
+  const [xWindow, setXWindow] = useState(null);
+  const [yWindow, setYWindow] = useState(null);
+  const [selectedA, setSelectedA] = useState([]);
+  const [selectedB, setSelectedB] = useState([]);
 
-    const samplingRate1 =
-      1 / average(diff(table1.slice(1).map((row) => row[0])));
-    const dataset1 = useMemo(() => processFFT(table1, samplingRate1), [table1]);
+  const dataset1 = useMemo(() => processFFT(table1), [table1]);
+  const dataset2 = useMemo(() => processFFT(table2), [table2]);
+  const isLargeDataset = dataset1.length > MAX_DATA_LENGTH || dataset2.length > MAX_DATA_LENGTH;
+  const allX = [...dataset1, ...dataset2].map(([x]) => x);
+  const allY = [...dataset1, ...dataset2].map(([, y]) => y);
+  const minXValue = Math.min(...allX);
+  const maxXValue = Math.max(...allX);
+  const minYValue = Math.min(...allY);
+  const maxYValue = Math.max(...allY);
+  const zoomRangeX = (maxXValue - minXValue) * 0.02;
+  const option = useMemo(() => {
+    const axisColor = isDark ? "#94a3b8" : "#475569";
+    const axisLineColor = isDark ? "#475569" : "#94a3b8";
+    const splitLineColor = isDark ? "rgba(148,163,184,0.14)" : "rgba(148,163,184,0.28)";
+    const tooltipBackground = isDark ? "#020617" : "#ffffff";
+    const tooltipBorder = isDark ? "#334155" : "#cbd5e1";
+    const tooltipText = isDark ? "#e2e8f0" : "#0f172a";
 
-    const samplingRate2 =
-      1 / average(diff(table2.slice(1).map((row) => row[0])));
-    const dataset2 = useMemo(() => processFFT(table2, samplingRate2), [table2]);
-
-    const isLargeDataset =
-      dataset1.length > MAX_DATA_LENGTH || dataset2.length > MAX_DATA_LENGTH;
-
-    const allX = [...dataset1, ...dataset2].map((d) => d.x);
-    const allY = [...dataset1, ...dataset2].map((d) => d.y);
-
-    const minXValue = useMemo(() => {
-      return allX.reduce((min, val) => Math.min(min, val), Infinity);
-    }, [dataset1, dataset2]);
-
-    const maxXValue = useMemo(() => {
-      return allX.reduce((max, val) => Math.max(max, val), -Infinity);
-    }, [dataset1, dataset2]);
-
-    const minYValue = useMemo(() => {
-      return allY.reduce((min, val) => Math.min(min, val), Infinity);
-    }, [dataset1, dataset2]);
-
-    const maxYValue = useMemo(() => {
-      return allY.reduce((max, val) => Math.max(max, val), -Infinity);
-    }, [dataset1, dataset2]);
-
-    const zoomRangeX = (maxXValue - minXValue) * 0.02;
-
-    const [goToX, setGoToX] = useState(null);
-    const [yMin, setYMin] = useState(null);
-    const [yMax, setYMax] = useState(null);
-
-    const { isDarkMode: isDark } = useContext(ThemeContext);
-
-    const chartOptions = useMemo(
-      () => ({
-        ...baseChartOptions,
-        plugins: {
-          ...baseChartOptions.plugins,
-          legend: {
-            display: true,
-            labels: {
-              color: isDark ? "#ffffff" : "#000000",
-            },
-          },
-          tooltip: {
-            ...baseChartOptions.plugins.tooltip,
-            backgroundColor: isDark ? "#333" : "#fff",
-            titleColor: isDark ? "#fff" : "#222",
-            bodyColor: isDark ? "#ddd" : "#333",
-            borderColor: isDark ? "#555" : "#ccc",
-          },
-          zoom: {
-            pan: {
-              enabled: !isLargeDataset,
-              mode: "x",
-            },
-            zoom: {
-              wheel: { enabled: !isLargeDataset },
-              pinch: { enabled: !isLargeDataset },
-              mode: "x",
-              onZoomComplete: ({ chart }) => {
-                chart.config.options.scales.y.min = undefined;
-                chart.config.options.scales.y.max = undefined;
-                chart.update();
-              },
-            },
-          },
-        },
-        scales: {
-          ...baseChartOptions.scales,
-          x: {
-            ...baseChartOptions.scales.x,
-            ticks: { color: isDark ? "#ffffff" : "#000000" },
-            grid: { color: isDark ? "#444444" : "#e5e5e5" },
-            title: {
-              ...baseChartOptions.scales.x.title,
-              color: isDark ? "#ffffff" : "#000000",
-            },
-          },
-          y: {
-            ...baseChartOptions.scales.y,
-            ticks: { color: isDark ? "#ffffff" : "#444444" },
-            grid: { color: isDark ? "#444444" : "#e5e5e5" },
-            title: {
-              ...baseChartOptions.scales.y.title,
-              color: isDark ? "#ffffff" : "#000000",
-            },
-          },
-        },
-      }),
-      [isDark, isLargeDataset]
-    );
-
-    useEffect(() => {
-      if (!chartRef.current) return;
-      chartRef.current.update();
-    }, [isDark]);
-
-    const chartData = {
-      datasets: [
+    return {
+      animation: false,
+      backgroundColor: "transparent",
+      grid: { left: 64, right: 24, top: 32, bottom: 56 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "line", lineStyle: { color: "#f97316", width: 1 } },
+        backgroundColor: tooltipBackground,
+        borderColor: tooltipBorder,
+        borderWidth: 1,
+        textStyle: { color: tooltipText },
+      },
+      legend: {
+        show: true,
+        top: 0,
+        right: 8,
+        textStyle: { color: axisColor, fontSize: 11 },
+      },
+      xAxis: {
+        type: "value",
+        min: xWindow?.[0],
+        max: xWindow?.[1],
+        splitNumber: 6,
+        axisLine: { lineStyle: { color: axisLineColor, width: 1 } },
+        axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
+        axisLabel: { color: axisColor, margin: 12 },
+        splitLine: { show: true, lineStyle: { color: splitLineColor } },
+        name: t("charts.frequencyHz"),
+        nameLocation: "middle",
+        nameGap: 34,
+        nameTextStyle: { color: axisColor, fontSize: 14, fontWeight: 600 },
+      },
+      yAxis: {
+        type: "value",
+        min: yWindow?.[0],
+        max: yWindow?.[1],
+        splitNumber: 6,
+        axisLine: { lineStyle: { color: axisLineColor, width: 1 } },
+        axisTick: { show: true, length: 6, lineStyle: { color: axisLineColor } },
+        axisLabel: { color: axisColor, margin: 10 },
+        splitLine: { show: true, lineStyle: { color: splitLineColor } },
+        name: t("charts.amplitude"),
+        nameLocation: "middle",
+        nameGap: 46,
+        nameTextStyle: { color: axisColor, fontSize: 14, fontWeight: 600 },
+      },
+      dataZoom: isLargeDataset ? [] : [{ type: "inside", xAxisIndex: 0, filterMode: "none" }],
+      series: [
         {
-          label: name1,
+          name: name1,
+          type: "line",
           data: dataset1,
-          borderColor: "#2196f3",
-          pointBackgroundColor: "#2196f3",
-          pointRadius: 2,
-          fill: false,
+          showSymbol: false,
+          smooth: 0.05,
+          lineStyle: { color: "#38bdf8", width: 2.2 },
+          areaStyle: { color: toRgba("#38bdf8", isDark ? 0.03 : 0.07) },
         },
         {
-          label: name2,
+          name: name2,
+          type: "line",
           data: dataset2,
-          borderColor: "#50C878",
-          pointBackgroundColor: "#50C878",
-          pointRadius: 2,
-          fill: false,
+          showSymbol: false,
+          smooth: 0.05,
+          lineStyle: { color: "#34d399", width: 2.2 },
+          areaStyle: { color: toRgba("#34d399", isDark ? 0.02 : 0.06) },
+        },
+        {
+          type: "scatter",
+          data: selectedA,
+          symbolSize: 7,
+          itemStyle: { color: "#f97316" },
+          silent: true,
+        },
+        {
+          type: "scatter",
+          data: selectedB,
+          symbolSize: 7,
+          itemStyle: { color: "#f97316" },
+          silent: true,
         },
       ],
     };
+  }, [dataset1, dataset2, isDark, isLargeDataset, name1, name2, selectedA, selectedB, t, xWindow, yWindow]);
 
-    const handleGoToX = () => {
-      if (
-        chartRef.current &&
-        goToX !== null &&
-        minXValue <= goToX &&
-        goToX <= maxXValue
-      ) {
-        handleResetZoom(chartRef.current);
-        chartRef.current.config.options.scales.x.min = goToX - zoomRangeX;
-        chartRef.current.config.options.scales.x.max = goToX + zoomRangeX;
-        chartRef.current.update();
-      }
-    };
+  bridgeRef.current = {
+    __kind: "echarts",
+    exportMeta: {
+      badge: t("charts.spectrumCompareBadge"),
+      title: `${name1} / ${name2}`,
+    },
+    toBase64Image: (exportOptions = {}) =>
+      chartComponentRef.current
+        ?.getEchartsInstance()
+        ?.getDataURL({
+          type: "png",
+          pixelRatio: exportOptions.pixelRatio ?? 4,
+          backgroundColor:
+            exportOptions.backgroundColor ?? (isDark ? "#020617" : "#ffffff"),
+        }),
+    resetZoom: () => {
+      resetEchartsZoom(chartComponentRef.current?.getEchartsInstance?.());
+      setXWindow(null);
+      setYWindow(null);
+    },
+    resetStyle: () => {
+      setSelectedA([]);
+      setSelectedB([]);
+    },
+  };
 
-    const handleYMinMax = () => {
-      if (
-        chartRef.current &&
-        yMin !== null &&
-        yMax !== null &&
-        yMin <= yMax &&
-        minYValue <= yMin &&
-        yMax <= maxYValue
-      ) {
-        handleResetZoom(chartRef.current);
+  const handleGoToX = () => {
+    if (goToX === null || goToX < minXValue || goToX > maxXValue) return;
+    handleResetZoom(bridgeRef.current);
+    setXWindow([goToX - zoomRangeX, goToX + zoomRangeX]);
+    setSelectedA(dataset1.filter(([x]) => Math.abs(x - goToX) <= zoomRangeX));
+    setSelectedB(dataset2.filter(([x]) => Math.abs(x - goToX) <= zoomRangeX));
+  };
 
-        const zoomRangeY = (yMax - yMin) * 0.02;
-        chartRef.current.config.options.scales.y.min = yMin - zoomRangeY;
-        chartRef.current.config.options.scales.y.max = yMax + zoomRangeY;
-        chartRef.current.update();
-      }
-    };
+  const handleYMinMax = () => {
+    if (
+      yMin === null ||
+      yMax === null ||
+      yMin > yMax ||
+      yMin < minYValue ||
+      yMax > maxYValue
+    ) {
+      return;
+    }
+    handleResetZoom(bridgeRef.current);
+    const zoomRangeY = (yMax - yMin) * 0.02;
+    setYWindow([yMin - zoomRangeY, yMax + zoomRangeY]);
+    setSelectedA(dataset1.filter(([, y]) => y >= yMin && y <= yMax));
+    setSelectedB(dataset2.filter(([, y]) => y >= yMin && y <= yMax));
+  };
 
-    return (
-      <div className="text-center py-4">
-        <div className="relative">
-          <ErrorBoundary>
-            <Line ref={chartRef} data={chartData} options={chartOptions} />
-          </ErrorBoundary>
-          <Draggable
-            bounds="parent"
-            nodeRef={draggableRef}
-            handle=".drag-handle"
-          >
-            <div ref={draggableRef} className="absolute top-0 right-0 z-10">
-              <div className="relative inline-block group">
-                <Menu shadow="md" width={100}>
-                  <Menu.Target>
-                    <Button size="xs" variant="light" aria-label="export">
-                      <FaDownload />
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown className="bg-white dark:bg-gray-900 dark:border-gray-600">
-                    <Menu.Label className="text-black dark:text-white">
-                      Export as
-                    </Menu.Label>
-                    <Menu.Item
-                      leftSection={<FaImage size={12} />}
-                      onClick={() => exportToPNG(chartRef.current)}
-                      className="text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      PNG
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-
-                <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full w-6 h-6 shadow-md border border-gray-300 dark:border-gray-600">
-                  <FaHandPaper size={12} />
-                </div>
-              </div>
-            </div>
-          </Draggable>
+  return (
+    <ChartFrame
+      badge={t("charts.spectrumCompareBadge")}
+      title={`${name1} / ${name2}`}
+      toolbar={
+        <div className="flex items-center gap-2">
+          {!isLargeDataset ? (
+            <>
+              <button onClick={() => handleResetZoom(bridgeRef.current)} className={chartActionButtonClass}>
+                <FaSearch /> {t("common.resetZoom")}
+              </button>
+              <button onClick={() => handleResetStyle(bridgeRef.current, "#38bdf8")} className={chartActionButtonClass}>
+                <FaCrosshairs /> {t("common.resetStyle")}
+              </button>
+            </>
+          ) : null}
+          <SimpleMenu
+            widthClass="w-28"
+            label={t("common.exportAs")}
+            trigger={(
+              <button
+                type="button"
+                aria-label="export"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                <FaDownload size={12} />
+              </button>
+            )}
+            items={[{
+              label: t("common.png"),
+              icon: <FaImage size={12} />,
+              onClick: () => exportSingleChartWithTitlePNG({
+                chart: bridgeRef.current,
+                title: `${name1} / ${name2}`,
+                filename: "comparison-spectrum-overlay.png",
+                backgroundColor: isDark ? "#020617" : "#ffffff",
+                foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
+              }),
+            }]}
+          />
         </div>
-
-        {isLargeDataset ? (
-          <div className="w-3/4 mx-auto mt-3 bg-yellow-100 text-yellow-800 p-4 rounded-md">
-            <strong>Too much data</strong> – interaction is disabled to improve
-            performance.
-          </div>
+      }
+      canvas={
+        <div className="relative min-h-[360px] overflow-hidden rounded-[0.7rem] border border-slate-200 bg-white p-1 dark:border-gray-800 dark:bg-slate-950">
+          <ReactECharts ref={chartComponentRef} option={option} notMerge lazyUpdate style={{ height: 360, width: "100%" }} />
+        </div>
+      }
+      notice={
+        isLargeDataset ? (
+          <>
+            {t("charts.largeDatasetNotice")}
+          </>
+        ) : null
+      }
+      controls={
+        isLargeDataset ? (
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("charts.exportStillAvailable")}</p>
         ) : (
-          <div className="flex justify-center items-center gap-4 mt-4">
-            <button
-              onClick={() => handleResetZoom(chartRef.current)}
-              className="flex items-center gap-2 px-4 py-1 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm"
-            >
-              <FaSearch /> Reset Zoom
-            </button>
-
-            <Group spacing="xs">
-              <NumberInput
-                placeholder="Go to X..."
-                size="xs"
-                style={{ width: 100 }}
-                hideControls
-                step={0.001}
-                precision={3}
-                min={minXValue}
-                max={maxXValue}
-                onChange={(value) => setGoToX(value)}
-              />
-              <Button size="xs" onClick={handleGoToX} aria-label="go-x">
-                Go
-              </Button>
-            </Group>
-
-            <Group spacing="xs">
-              <NumberInput
-                placeholder="Y min"
-                size="xs"
-                style={{ width: 80 }}
-                hideControls
-                precision={3}
-                step={0.001}
-                min={-Infinity}
-                max={Infinity}
-                onChange={(value) => setYMin(value)}
-              />
-
-              <NumberInput
-                placeholder="Y max"
-                size="xs"
-                style={{ width: 80 }}
-                hideControls
-                precision={3}
-                step={0.001}
-                min={-Infinity}
-                max={Infinity}
-                onChange={(value) => setYMax(value)}
-              />
-              <Button size="xs" onClick={handleYMinMax} aria-label="go-y">
-                Go
-              </Button>
-            </Group>
+          <div className="overflow-x-auto">
+            <div className="flex min-w-max flex-nowrap items-center justify-end gap-2">
+              <SimpleTooltip label={t("charts.comparisonXFocusTooltip")}>
+                <div className="flex flex-nowrap items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
+                  <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                    {t("charts.xFocus")}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      placeholder={t("charts.goToX")}
+                      className={uiCompactInputClass}
+                      style={{ width: 82 }}
+                      step="0.001"
+                      min={minXValue}
+                      max={maxXValue}
+                      onChange={(event) => setGoToX(event.target.value === "" ? null : Number(event.target.value))}
+                    />
+                    <button type="button" className={uiGhostButtonClass} onClick={handleGoToX} aria-label="go-x">{t("common.go")}</button>
+                  </div>
+                </div>
+              </SimpleTooltip>
+              <SimpleTooltip label={t("charts.comparisonYBandTooltip")}>
+                <div className="flex flex-nowrap items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
+                  <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                    {t("charts.yBand")}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      placeholder={t("charts.yMin")}
+                      className={uiCompactInputClass}
+                      style={{ width: 70 }}
+                      step="0.001"
+                      onChange={(event) => setYMin(event.target.value === "" ? null : Number(event.target.value))}
+                    />
+                    <input
+                      type="number"
+                      placeholder={t("charts.yMax")}
+                      className={uiCompactInputClass}
+                      style={{ width: 70 }}
+                      step="0.001"
+                      onChange={(event) => setYMax(event.target.value === "" ? null : Number(event.target.value))}
+                    />
+                    <button type="button" className={uiGhostButtonClass} onClick={handleYMinMax} aria-label="go-y">{t("common.go")}</button>
+                  </div>
+                </div>
+              </SimpleTooltip>
+            </div>
           </div>
-        )}
-      </div>
-    );
-  }
-);
+        )
+      }
+    />
+  );
+});
 
 ComparisonSpectrumChart.propTypes = {
   table1: PropTypes.arrayOf(

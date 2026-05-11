@@ -6,18 +6,20 @@ import {
 } from "../../test-utils";
 import FilterFields from "./FilterFields";
 import { ThemeContext } from "../../contexts/ThemeContext";
+import { filterDefinitions } from "../filtering/filteringConfig";
 
 const mockFields = {
   order: 2,
   lowcut: null,
   highcut: null,
-  python: { value: "" },
+  python: "",
 };
 
 const mockTheme = {
   isDarkMode: false,
   toggleDarkMode: jest.fn(),
 };
+const butterworthFieldDefinitions = filterDefinitions.butterworth.fields;
 
 describe("FilterFields", () => {
   let onFieldChange;
@@ -29,12 +31,17 @@ describe("FilterFields", () => {
   it("renders all fields and info button", () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <FilterFields fields={mockFields} onFieldChange={onFieldChange} />
+        <FilterFields
+          filter="butterworth"
+          fields={mockFields}
+          fieldDefinitions={butterworthFieldDefinitions}
+          onFieldChange={onFieldChange}
+        />
       </ThemeContext.Provider>
     );
 
     expect(screen.getByLabelText(/Order/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Order/i)).toHaveValue("2"); // Default value
+    expect(screen.getByLabelText(/Order/i)).toHaveValue(2);
 
     expect(screen.getByLabelText(/Lowcut/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Lowcut/i)).toBeDisabled();
@@ -48,7 +55,12 @@ describe("FilterFields", () => {
   it("calls onFieldChange on input changes", () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <FilterFields fields={mockFields} onFieldChange={onFieldChange} />
+        <FilterFields
+          filter="butterworth"
+          fields={mockFields}
+          fieldDefinitions={butterworthFieldDefinitions}
+          onFieldChange={onFieldChange}
+        />
       </ThemeContext.Provider>
     );
 
@@ -73,7 +85,12 @@ describe("FilterFields", () => {
   it("calls onFieldChange on empty number input", () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <FilterFields fields={mockFields} onFieldChange={onFieldChange} />
+        <FilterFields
+          filter="butterworth"
+          fields={mockFields}
+          fieldDefinitions={butterworthFieldDefinitions}
+          onFieldChange={onFieldChange}
+        />
       </ThemeContext.Provider>
     );
 
@@ -83,14 +100,19 @@ describe("FilterFields", () => {
 
     expect(onFieldChange).toHaveBeenCalledWith("order", ""); // First it tries to set wrong value
 
-    fireEvent.blur(orderInput); // User loses focus on the input
+    fireEvent.blur(orderInput, { target: { value: "" } });
     expect(onFieldChange).toHaveBeenCalledWith("order", 1); // Empty input is forbidden, then force value of 1
   });
 
   it("toggles checkbox and enables/disables input", () => {
     render(
       <ThemeContext.Provider value={mockTheme}>
-        <FilterFields fields={mockFields} onFieldChange={onFieldChange} />
+        <FilterFields
+          filter="butterworth"
+          fields={mockFields}
+          fieldDefinitions={butterworthFieldDefinitions}
+          onFieldChange={onFieldChange}
+        />
       </ThemeContext.Provider>
     );
 
@@ -126,7 +148,12 @@ describe("FilterFields", () => {
           toggleDarkMode: jest.fn(),
         }}
       >
-        <FilterFields fields={mockFields} onFieldChange={onFieldChange} />
+        <FilterFields
+          filter="butterworth"
+          fields={mockFields}
+          fieldDefinitions={butterworthFieldDefinitions}
+          onFieldChange={onFieldChange}
+        />
       </ThemeContext.Provider>
     );
 

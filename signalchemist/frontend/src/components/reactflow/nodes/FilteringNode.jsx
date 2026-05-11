@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useEffectEvent } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Handle,
   Position,
@@ -6,39 +7,25 @@ import {
   useNodesData,
   useReactFlow,
 } from "@xyflow/react";
-import { Card, Button, Select, Tooltip } from "@mantine/core";
 import FilterFields from "../../common/FilterFields";
-import { FaFilter, FaTrash, FaEye } from "react-icons/fa";
-import ExecutionIcon from "../../common/ExecutionIcon";
+import { FaFilter } from "react-icons/fa";
 import toast from "react-hot-toast";
 import HandleLimit from "../edges/HandleLimit";
-import { diff, average } from "../../utils/dataUtils";
-
-const filtersFields = {
-  butterworth: {
-    order: 2,
-    lowcut: null,
-    highcut: null,
-    python: "",
-  },
-  bessel: {
-    lowcut: null,
-    highcut: null,
-    python: "",
-  },
-  fir: {
-    lowcut: null,
-    highcut: null,
-    python: "",
-  },
-  savgol: {
-    order: 2,
-    lowcut: null,
-    highcut: null,
-    window_size: 999,
-    python: "",
-  },
-};
+import { inferSamplingRate } from "../../utils/dataUtils";
+import { NodeOutputPreview, NodeRunButton, NodeSection, NodeShell } from "./NodeShell";
+import { uiSelectClass } from "../../common/ui";
+import {
+  createFilterDefaults,
+  filterDefinitions,
+  getFilterOptions,
+} from "../../filtering/filteringConfig";
+import { parseTechniqueConfig } from "../../processing/processingNodeUtils";
+import {
+  dispatchWindowEvent,
+  getDeleteTablesEventName,
+  getExecuteEventName,
+} from "../../processing/processingEvents";
+import { requestFiltering } from "../../processing/processingRequests";
 
 /**
  * FilteringNode component
@@ -51,168 +38,105 @@ const filtersFields = {
  * @returns {JSX.Element} Visual representation of the filtering node with UI for selecting a filter, configuring parameters, and executing the filtering operation
  */
 function FilteringNode({ id, data }) {
+  const { t } = useTranslation();
   const tableRef = useRef(null);
   const samplingRateRef = useRef(data.samplingRate);
-  const windowSizeRef = useRef(
-    Math.round(data.samplingRate / 3) % 2 === 0
-      ? Math.round(data.samplingRate / 3) + 1
-      : Math.round(data.samplingRate / 3)
-  );
-
-  filtersFields.savgol.window_size = windowSizeRef.current;
+  const initialConfig = parseTechniqueConfig(data.technique, {
+    name: data.filter,
+    fields: data.fields,
+  });
+  const baseFilterDefaults = createFilterDefaults(data.samplingRate);
+  const filterDefaultsRef = useRef(createFilterDefaults(data.samplingRate));
 
   const { updateNodeData } = useReactFlow();
-  const [sourceNodeId, setSourceNodeId] = useState(null);
-  const [targetNodeId, setTargetNodeId] = useState(null);
-  const [filter, setFilter] = useState("butterworth");
-  const [fields, setFields] = useState(filtersFields[filter]);
+  const [filter, setFilter] = useState(initialConfig?.name ?? "butterworth");
+  const [fields, setFields] = useState(
+    initialConfig?.fields
+      ? {
+          ...baseFilterDefaults[initialConfig.name],
+          ...initialConfig.fields,
+        }
+      : baseFilterDefaults[initialConfig?.name ?? "butterworth"]
+  );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
-  const { python, ...rest } = fields;
-  data["technique"] = JSON.stringify({
-    name: filter,
-    fields: python == "" ? rest : { python: python },
-  });
-  data["target"] = targetNodeId;
-
-  // Set source and target node IDs based on the current connections
-  useEffect(() => {
-    const sourceId = connections?.find((conn) => conn.target === id)?.source;
-    const targetId = connections?.find((conn) => conn.source === id)?.target;
-    setSourceNodeId(sourceId);
-    setTargetNodeId(targetId);
-  }, [connections, id]);
+  const sourceNodeId = connections?.find((conn) => conn.target === id)?.source ?? null;
+  const targetNodeId = connections?.find((conn) => conn.source === id)?.target ?? null;
 
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
   const incomingTable = sourceNodeData?.data?.table;
+  const outputTable = currentNodeData?.data?.table;
 
-  if (incomingTable) {
-    tableRef.current = incomingTable;
-
-    samplingRateRef.current =
-      1 / average(diff(incomingTable.slice(1).map((x) => x[0])));
-
-    windowSizeRef.current = Math.round(samplingRateRef.current / 3);
-    if (windowSizeRef.current % 2 === 0) {
-      windowSizeRef.current += 1;
+  useEffect(() => {
+    if (incomingTable) {
+      tableRef.current = incomingTable;
+      samplingRateRef.current =
+        inferSamplingRate(incomingTable) ?? data.samplingRate;
+      filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
+      return;
     }
-  } else {
+
     tableRef.current = null;
     samplingRateRef.current = null;
-    windowSizeRef.current = null;
-  }
+    filterDefaultsRef.current = createFilterDefaults(data.samplingRate);
+  }, [data.samplingRate, incomingTable]);
 
   useEffect(() => {
-    /**
-     * Handler to delete the current node's table and propagate the event to the next node.
-     */
-    const handleDeleteTable = () => {
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: null,
-      }));
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      technique: JSON.stringify({
+        name: filter,
+        fields,
+      }),
+      target: targetNodeId,
+      filter,
+      fields,
+      samplingRate: data.samplingRate,
+      executionState,
+    }));
+  }, [
+    data.samplingRate,
+    executionState,
+    fields,
+    filter,
+    id,
+    targetNodeId,
+    updateNodeData,
+  ]);
 
-      setExecutionState("waiting");
-
-      const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-      window.dispatchEvent(event);
-    };
-
-    /**
-     * Handler to execute the filtering process when an event is triggered.
-     * @param {Event} e - The event containing the table data to be filtered.
-     */
-    const handleExecute = async (e) => {
-      const table_source = e.detail.table;
-
-      if (table_source) {
-        tableRef.current = table_source;
-
-        samplingRateRef.current =
-          1 / average(diff(table_source.slice(1).map((x) => x[0])));
-
-        windowSizeRef.current = Math.round(samplingRateRef.current / 3);
-        if (windowSizeRef.current % 2 === 0) {
-          windowSizeRef.current += 1;
-        }
-
-        const new_table = await requestFilter();
-
-        if (targetNodeId && new_table) {
-          const customEvent = new CustomEvent(`execute-node${targetNodeId}`, {
-            detail: { table: new_table },
-          });
-          window.dispatchEvent(customEvent);
-        }
-      }
-    };
-
-    window.addEventListener(`execute-node${id}`, handleExecute);
-    window.addEventListener(`delete-source-tables${id}`, handleDeleteTable);
-
-    return () => {
-      // Clean up events when dependencies change (avoid multiple listeners of the same type)
-      window.removeEventListener(`execute-node${id}`, handleExecute);
-      window.removeEventListener(
-        `delete-source-tables${id}`,
-        handleDeleteTable
-      );
-    };
-  }, [targetNodeId, filter, fields, id]);
-
-  /**
-   * Trigger a delete event when filter configuration changes.
-   */
-  useEffect(() => {
-    const event = new CustomEvent(`delete-source-tables${id}`);
-    window.dispatchEvent(event);
-  }, [filter, fields, id]);
-
-  /**
-   * Makes a request to the server to filter the table data.
-   * @returns {Array} The new filtered table.
-   */
-  const requestFilter = async () => {
+  const requestFilter = useCallback(async () => {
     const table = tableRef.current;
     const samplingRate = samplingRateRef.current;
 
     if (!table) return;
 
+    if (filter === "python" && !fields.python?.trim()) {
+      toast.error("Python code is required for the Python filter");
+      setExecutionState("error");
+      return null;
+    }
+
     setExecutionState("running");
 
-    const formData = new FormData();
-
     const signalOnly = table.slice(1); // Exclude headers
-
-    formData.append("signal", JSON.stringify(signalOnly));
-    formData.append("sampling_rate", Math.round(samplingRate));
 
     const filterConfig = {
       method: filter,
       ...fields,
     };
 
-    formData.append("filter_config", JSON.stringify(filterConfig));
-
-    const event = new CustomEvent(`delete-source-tables${targetNodeId}`);
-    window.dispatchEvent(event);
+    if (targetNodeId) {
+      dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+    }
 
     try {
-      const response = await fetch("/api/filtering", {
-        method: "POST",
-        body: formData,
+      const result = await requestFiltering({
+        signal: signalOnly,
+        samplingRate,
+        filterConfig,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(errorData.error);
-        toast.error(errorData.error);
-        throw new Error(errorData.error);
-      }
-
-      const result = await response.json();
 
       const new_table = [table[0]].concat(result.data); // Add headers back
 
@@ -224,13 +148,74 @@ function FilteringNode({ id, data }) {
       setExecutionState("executed");
       return new_table;
     } catch (error) {
-      console.error("Failed to apply filter:", error);
-      toast.error("Failed to apply filter");
+      const message = error.message || "Failed to apply filter";
+      console.error(message);
+      toast.error(message);
 
       setExecutionState("error");
       return null;
     }
-  };
+  }, [fields, filter, id, targetNodeId, updateNodeData]);
+
+  const handleDeleteTable = useEffectEvent(() => {
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      table: null,
+    }));
+
+    setExecutionState("waiting");
+
+    if (targetNodeId) {
+      dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+    }
+  });
+
+  const handleExecute = useEffectEvent(async (event) => {
+    const tableSource = event.detail.table;
+
+    if (!tableSource) {
+      return;
+    }
+
+    tableRef.current = tableSource;
+    samplingRateRef.current =
+      inferSamplingRate(tableSource) ?? data.samplingRate;
+    filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
+
+    const nextTable = await requestFilter();
+
+    if (targetNodeId && nextTable) {
+      dispatchWindowEvent(getExecuteEventName(targetNodeId), {
+        table: nextTable,
+      });
+    }
+  });
+
+  useEffect(() => {
+    const executeEventName = getExecuteEventName(id);
+    const deleteEventName = getDeleteTablesEventName(id);
+    const onExecute = (event) => {
+      void handleExecute(event);
+    };
+    const onDelete = () => {
+      handleDeleteTable();
+    };
+
+    window.addEventListener(executeEventName, onExecute);
+    window.addEventListener(deleteEventName, onDelete);
+
+    return () => {
+      window.removeEventListener(executeEventName, onExecute);
+      window.removeEventListener(deleteEventName, onDelete);
+    };
+  }, [id]);
+
+  /**
+   * Trigger a delete event when filter configuration changes.
+   */
+  useEffect(() => {
+    dispatchWindowEvent(getDeleteTablesEventName(id));
+  }, [filter, fields, id]);
 
   /**
    * Handle changes in the filter fields.
@@ -242,68 +227,34 @@ function FilteringNode({ id, data }) {
   };
 
   return (
-    <Card className="bg-white dark:bg-gray-900 shadow-lg dark:shadow-xl rounded-lg p-4 mt-2 relative overflow-visible border-0 dark:border dark:border-gray-700">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <FaFilter className="text-green-600" size={20} />
-          <span className="font-bold text-lg text-gray-800 dark:text-white">
-            Filtering
-          </span>
-
-          {/* Node execution state icon */}
-          <Tooltip label={executionState} withArrow position="bottom">
-            <div
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                toast.custom(
-                  <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
-                    <div>Status:</div>
-                    <div>
-                      <ExecutionIcon executionState={executionState} />
-                    </div>
-                    <div>{executionState}</div>
-                  </div>
-                );
-              }}
-            >
-              <ExecutionIcon executionState={executionState} />
-            </div>
-          </Tooltip>
-
-          {/* Button to see the node output */}
-          <Tooltip label="See output" withArrow position="bottom">
-            <div
-              data-testid={`output${id}`}
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                if (currentNodeData?.data?.table) {
-                  data.setChartDataProcessed(currentNodeData.data.table);
-                } else {
-                  console.error("Execute node first");
-                  toast.error("Execute node first");
-                }
-              }}
-            >
-              <FaEye className="text-black dark:text-white" />
-            </div>
-          </Tooltip>
-
-          {/* Button to delete the node */}
-          <Tooltip label="Delete node" withArrow position="bottom">
-            <div
-              data-testid={`delete${id}`}
-              className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm cursor-pointer"
-              onClick={() => {
-                data.deleteNode(id);
-              }}
-            >
-              <FaTrash className="text-red-500" />
-            </div>
-          </Tooltip>
-        </div>
-      </div>
-
+    <NodeShell
+      icon={<FaFilter />}
+      title={t("pipeline.nodes.FilteringNode.label", { defaultValue: "Filtering" })}
+      eyebrow={t("pipeline.eyebrow.node", { defaultValue: "Node" })}
+      accent="emerald"
+      executionState={executionState}
+      onStatusClick={() => {
+        toast.custom(
+          <div className="toast-status bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-black dark:text-white">
+            <div>Status:</div>
+            <div>{executionState}</div>
+          </div>
+        );
+      }}
+      onDeleteClick={() => {
+        data.deleteNode(id);
+      }}
+      deleteTestId={`delete${id}`}
+      footer={
+        <NodeRunButton
+          disabled={!incomingTable}
+          onClick={requestFilter}
+          accent="emerald"
+        >
+          {t("pages.filtering.apply")}
+        </NodeRunButton>
+      }
+    >
       <HandleLimit
         type="target"
         position={Position.Left}
@@ -311,62 +262,51 @@ function FilteringNode({ id, data }) {
         connectionCount={1}
       />
 
-      <div className="p-4 space-y-2">
-        <label
-          htmlFor="filterTechnique"
-          className="block font-medium text-black dark:text-white"
-        >
-          Filtering technique
-        </label>
-        <Select
-          size="sm"
+      <NodeSection
+        label={t("pages.filtering.technique")}
+        tooltip={t("pages.filtering.techniqueTooltip")}
+        fieldId="filtering-technique"
+      >
+        <select
+          id="filtering-technique"
           data-testid="Select filter"
           value={filter}
-          onChange={(value) => {
+          onChange={(event) => {
+            const value = event.target.value;
             if (value) {
               setFilter(value);
-              setFields(filtersFields[value]);
+              setFields(filterDefaultsRef.current[value]);
             }
           }}
-          data={Object.keys(filtersFields).map((key) => ({
-            value: key,
-            label: key.charAt(0).toUpperCase() + key.slice(1),
-          }))}
-          className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
-          classNames={{
-            input:
-              "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
-            dropdown:
-              "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
-            option: `
-                                      hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white
-                                      data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-600
-                                      data-[selected]:text-black dark:data-[selected]:text-white
-                                    `,
-          }}
-        />
+          className={uiSelectClass}
+        >
+          {getFilterOptions().map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </NodeSection>
 
+      <div>
         <FilterFields
           filter={filter}
           fields={fields}
+          fieldDefinitions={filterDefinitions[filter].fields}
           onFieldChange={handleFieldChange}
         />
       </div>
 
-      {/* Button */}
-      <div className="w-full">
-        <Button
-          variant="subtle"
-          size="sm"
-          disabled={!tableRef.current}
-          onClick={requestFilter}
-          className={`rounded-lg font-semibold w-full dark:bg-gray-800 dark:hover:bg-gray-700 ${
-            !tableRef.current ? "" : "dark:text-white"
-          }`}
-        >
-          Filter
-        </Button>
-      </div>
+      <NodeOutputPreview
+        ready={Boolean(outputTable)}
+        rows={outputTable ? outputTable.length - 1 : 0}
+        onClick={() => {
+          if (outputTable) {
+            data.showProcessedPreview(outputTable);
+          }
+        }}
+        accent="emerald"
+      />
 
       <Handle
         type="source"
@@ -374,7 +314,7 @@ function FilteringNode({ id, data }) {
         id="output"
         className="custom-handle"
       />
-    </Card>
+    </NodeShell>
   );
 }
 

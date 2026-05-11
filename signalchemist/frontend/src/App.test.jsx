@@ -1,3 +1,5 @@
+/* global jest, describe, beforeAll, it, expect */
+
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
@@ -39,7 +41,7 @@ describe("App", () => {
     expect(document.body).toHaveClass("bg-white");
     expect(document.body).not.toHaveClass("bg-gray-900");
 
-    const toggleBtn = screen.getByRole("button", { name: /🌙/ });
+    const toggleBtn = screen.getByRole("button", { name: /switch to dark mode/i });
     fireEvent.click(toggleBtn);
 
     await waitFor(() => expect(document.body).toHaveClass("bg-gray-900"));
@@ -71,13 +73,14 @@ describe("App", () => {
     expect(screen.getByText(/signal processing/i)).toBeInTheDocument();
   });
 
-  it("circularMenu error", async () => {
+  it("navigation menu error", async () => {
     render(
       <MemoryRouter initialEntries={["/try"]}>
         <App />
       </MemoryRouter>
     );
 
+    fireEvent.click(screen.getByLabelText(/open navigation menu/i));
     const button = screen.getByTestId("home");
     expect(button).toBeInTheDocument();
 
@@ -85,7 +88,7 @@ describe("App", () => {
     expect(toast.error).toHaveBeenCalledWith("No data detected");
   });
 
-  it("circularMenu redirects", async () => {
+  it("navigation menu redirects", async () => {
     render(
       <MemoryRouter
         initialEntries={[{ pathname: "/processing", state: { yes: "yes" } }]}
@@ -94,6 +97,7 @@ describe("App", () => {
       </MemoryRouter>
     );
 
+    fireEvent.click(screen.getByLabelText(/open navigation menu/i));
     const button = screen.getByTestId("home");
     expect(button).toBeInTheDocument();
     fireEvent.click(button);

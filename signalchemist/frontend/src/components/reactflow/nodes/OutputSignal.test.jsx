@@ -23,14 +23,18 @@ jest.mock("@xyflow/react", () => {
 });
 
 import { render, screen } from "../../../test-utils";
+import userEvent from "@testing-library/user-event";
 import OutputSignal from "./OutputSignal";
 
 const mockSetChartDataProcessed = jest.fn();
+const mockScrollToCharts = jest.fn();
 
 describe("OutputSignal", () => {
   beforeEach(() => {
     mockUseNodeConnections.mockReset();
     mockUseNodesData.mockReset();
+    mockSetChartDataProcessed.mockReset();
+    mockScrollToCharts.mockReset();
   });
   it("renders the headers and rows when source populated", async () => {
     mockUseNodeConnections.mockReturnValue([{ source: "0", target: "1" }]);
@@ -38,7 +42,10 @@ describe("OutputSignal", () => {
     render(
       <OutputSignal
         id="1"
-        data={{ setChartDataProcessed: mockSetChartDataProcessed }}
+        data={{
+          setChartDataProcessed: mockSetChartDataProcessed,
+          scrollToCharts: mockScrollToCharts,
+        }}
       />
     );
 
@@ -49,6 +56,7 @@ describe("OutputSignal", () => {
 
     expect(screen.getByText("0.0000")).toBeInTheDocument();
     expect(screen.getByText("1.1000")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /see/i })).toBeInTheDocument();
   });
 
   it("waits for table", async () => {
@@ -57,12 +65,35 @@ describe("OutputSignal", () => {
     render(
       <OutputSignal
         id="1"
-        data={{ setChartDataProcessed: mockSetChartDataProcessed }}
+        data={{
+          setChartDataProcessed: mockSetChartDataProcessed,
+          scrollToCharts: mockScrollToCharts,
+        }}
       />
     );
 
     expect(
       screen.getByText(/Waiting for processed signal/i)
     ).toBeInTheDocument();
+  });
+
+  it("scrolls to charts when clicking see", async () => {
+    const user = userEvent.setup();
+    mockUseNodeConnections.mockReturnValue([{ source: "0", target: "1" }]);
+    mockUseNodesData.mockReturnValue({ data: { table: mockEDA } });
+    render(
+      <OutputSignal
+        id="1"
+        data={{
+          setChartDataProcessed: mockSetChartDataProcessed,
+          scrollToCharts: mockScrollToCharts,
+        }}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /see/i }));
+
+    expect(mockScrollToCharts).toHaveBeenCalledTimes(1);
+    expect(mockSetChartDataProcessed).toHaveBeenCalledWith(mockEDA);
   });
 });

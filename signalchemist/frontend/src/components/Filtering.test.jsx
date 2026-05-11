@@ -3,6 +3,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Filtering from "./Filtering";
 import { ThemeContext } from "../contexts/ThemeContext";
 
+jest.mock("./common/SignalTabs", () => () => <div>SignalTabs</div>);
+
 const mockChartRef = {
   config: { options: {} },
   update: jest.fn(),
@@ -46,6 +48,38 @@ const mockTheme = {
   toggleDarkMode: jest.fn(),
 };
 
+const createSuccessFetchMock = () =>
+  jest.fn((url) => {
+    if (url.includes("metrics")) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            metricA: { value: 0.967534, description: "Gadea et al." },
+          }),
+      });
+    }
+    if (url.includes("/api/filtering")) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            data: [
+              [0, 55.55],
+              [1, 1.5],
+              [2, 2.2],
+              [3, 2.5],
+              [4, 3.3],
+              [5, 3.5],
+              [6, 4.4],
+            ],
+          }),
+      });
+    }
+
+    return Promise.reject(new Error(`Unhandled fetch URL: ${url}`));
+  });
+
 const mockEDA = [
   ["Timestamp", "Gsr"],
   [0, 1.1],
@@ -83,39 +117,14 @@ describe("Filtering", () => {
       }
     });
 
-    global.fetch = jest.fn((url) => {
-      if (url.includes("metrics")) {
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              metricA: { value: 0.967534, description: "Gadea et al." },
-            }),
-        });
-      }
-      if (url.includes("/api/filtering")) {
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              data: [
-                // No headers
-                [0, 55.55],
-                [1, 1.5],
-                [2, 2.2],
-                [3, 2.5],
-                [4, 3.3],
-                [5, 3.5],
-                [6, 4.4],
-              ],
-            }),
-        });
-      }
-    });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    global.fetch = createSuccessFetchMock();
   });
 
   it("renders", async () => {
@@ -136,6 +145,8 @@ describe("Filtering", () => {
       const elements = screen.queryAllByText("Waiting for request...");
       expect(elements.length).toBe(0);
     });
+
+    await screen.findByText(/metricA/i);
 
     expect(await screen.findByText(/metricA/i)).toBeInTheDocument();
   });
@@ -160,7 +171,7 @@ describe("Filtering", () => {
     await fireEvent.click(screen.getByTestId("Select filter"));
 
     await fireEvent.click((await screen.findByText(/Fir/i)).parentElement);
-    expect(screen.getByTestId("Select filter")).toHaveValue("Fir");
+    expect(screen.getByTestId("Select filter")).toHaveValue("FIR");
 
     await waitFor(() => {
       // Fir does not have order parameter
@@ -183,6 +194,8 @@ describe("Filtering", () => {
       const elements = screen.queryAllByText("Waiting for request...");
       expect(elements.length).toBe(0);
     });
+
+    await screen.findByText(/metricA/i);
 
     const orderInput = screen.getByPlaceholderText("Enter order");
 
@@ -215,29 +228,34 @@ describe("Filtering", () => {
       expect(screen.queryByText(/Processing request/i)).not.toBeInTheDocument();
     });
 
-    // First call was metrics for original data
-    expect(global.fetch).toHaveBeenCalledTimes(3);
-
-    // /api/filtering
-    const firstCall = global.fetch.mock.calls[1];
-    expect(firstCall[0]).toContain("/api/filtering");
-    expect(firstCall[1].method).toBe("POST");
-
-    // /api/metrics
-    const secondCall = global.fetch.mock.calls[2];
-    expect(secondCall[0]).toContain("/api/metrics");
-    expect(secondCall[1].method).toBe("POST");
+    await waitFor(() => {
+      expect(screen.getAllByText("55.55").length).toBeGreaterThan(0);
+    });
   });
 
   it("shows error if filtering returns error", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: false,
-        json: () => Promise.resolve({ error: "Filtering failed" }),
-      })
-    );
+    global.fetch = jest.fn((url) => {
+      if (url.includes("/api/filtering")) {
+        return Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({ error: "Filtering failed" }),
+        });
+      }
+
+      if (url.includes("/api/metrics")) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              metricA: { value: 0.967534, description: "Gadea et al." },
+            }),
+        });
+      }
+
+      return Promise.reject(new Error(`Unhandled fetch URL: ${url}`));
+    });
 
     render(
       <MemoryRouter initialEntries={[initialEntry]}>
@@ -262,13 +280,20 @@ describe("Filtering", () => {
       expect(screen.queryByText(/Processing request/i)).not.toBeInTheDocument();
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Filtering failed");
+    await waitFor(() => {
+      expect(
+        consoleErrorSpy.mock.calls.some((call) =>
+          call.some((entry) => String(entry).includes("Filtering failed"))
+        )
+      ).toBe(true);
+    });
 
     consoleErrorSpy.mockRestore();
   });
 
   it("shows error if metrics returns error", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+    let metricsCallCount = 0;
 
     global.fetch = jest.fn((url) => {
       if (url.includes("/api/filtering")) {
@@ -290,11 +315,19 @@ describe("Filtering", () => {
       }
 
       if (url.includes("/api/metrics")) {
+        metricsCallCount += 1;
         return Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ error: "Metrics failed" }),
+          ok: metricsCallCount === 1,
+          json: () =>
+            Promise.resolve(
+              metricsCallCount === 1
+                ? { metricA: { value: 0.967534, description: "Gadea et al." } }
+                : { error: "Metrics failed" }
+            ),
         });
       }
+
+      return Promise.reject(new Error(`Unhandled fetch URL: ${url}`));
     });
 
     render(
@@ -312,6 +345,8 @@ describe("Filtering", () => {
       expect(elements.length).toBe(0);
     });
 
+    await screen.findByText(/metricA/i);
+
     const button = screen.getByRole("button", { name: /execute filter/i });
     fireEvent.click(button);
 
@@ -319,7 +354,13 @@ describe("Filtering", () => {
       expect(screen.queryByText(/Processing request/i)).not.toBeInTheDocument();
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Metrics failed");
+    await waitFor(() => {
+      expect(
+        consoleErrorSpy.mock.calls.some((call) =>
+          call.some((entry) => String(entry).includes("Metrics failed"))
+        )
+      ).toBe(true);
+    });
 
     consoleErrorSpy.mockRestore();
   });

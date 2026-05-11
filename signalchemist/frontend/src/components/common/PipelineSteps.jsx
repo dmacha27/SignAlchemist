@@ -1,16 +1,126 @@
-import { Stepper, Popover, Text } from "@mantine/core";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
+import { FaArrowRight } from "react-icons/fa";
+import { getPipelineStepDefinition } from "./pipelineStepDefinitions";
 
-/**
- * Renders a step-by-step pipeline view.
- *
- * @param {Array} nodes - Array of node objects with id, type, and data.
- */
-const PipelineSteps = ({ nodes }) => {
-  if (!Array.isArray(nodes) || nodes.length === 0) {
-    return <Text>No steps to display.</Text>;
+const capitalize = (str) => {
+  if (typeof str !== "string" || str.length === 0) {
+    return "";
   }
 
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+const getTechniqueInfo = (node) => {
+  if (!node.data?.technique) {
+    const fieldsByType = {
+      ResamplingNode: {
+        name: node.data?.interpolationTechnique,
+        fields: {
+          targetSamplingRate: node.data?.targetSamplingRate,
+        },
+      },
+      OutliersNode: {
+        name: node.data?.outlierTechnique,
+        fields: {},
+      },
+      FilteringNode: {
+        name: node.data?.filter,
+        fields: node.data?.fields ?? {},
+      },
+      NormalizationNode: {
+        name: node.data?.normalizationMethod,
+        fields: {},
+      },
+      PeaksNode: {
+        name: node.data?.detector,
+        fields: {
+          minDistanceSeconds: node.data?.minDistanceSeconds,
+          height: node.data?.height,
+        },
+      },
+      HeartRateNode: {
+        name: node.data?.method,
+        fields: {},
+      },
+    };
+
+    const fallbackInfo = fieldsByType[node.type];
+    if (!fallbackInfo?.name) {
+      return null;
+    }
+
+    return {
+      name: fallbackInfo.name,
+      fields: Object.fromEntries(
+        Object.entries(fallbackInfo.fields).filter(([, value]) => (
+          value !== undefined && value !== null && value !== ""
+        ))
+      ),
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(node.data.technique);
+    const techniqueName = parsed.name ?? parsed.detector ?? parsed.method ?? null;
+    if (!techniqueName) {
+      return null;
+    }
+
+    const fields = parsed.fields ?? {};
+    if (parsed.detector) {
+      fields.detector = parsed.detector;
+    }
+    if (parsed.minDistanceSeconds !== undefined && parsed.minDistanceSeconds !== "") {
+      fields.minDistanceSeconds = parsed.minDistanceSeconds;
+    }
+    if (parsed.height !== undefined && parsed.height !== "") {
+      fields.height = parsed.height;
+    }
+    return {
+      name: techniqueName,
+      fields,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const TechniqueFields = ({ fields }) => {
+  const { t } = useTranslation();
+
+  return (
+  <div className="mt-2 flex flex-wrap gap-1.5">
+    {Object.entries(fields).map(([key, value]) => {
+      const valueStr = String(value);
+      const isLong = valueStr.length > 30;
+
+      return (
+        <div
+          key={key}
+          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-600 dark:border-gray-700 dark:bg-gray-950 dark:text-slate-300"
+        >
+          <span className="font-semibold">{capitalize(key)}:</span>
+          {isLong ? (
+            <details className="dropdown dropdown-end">
+              <summary className="cursor-pointer list-none text-xs font-medium">
+                {t("pipeline.view")}
+              </summary>
+              <div className="dropdown-content z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900">
+                <p className="break-words">{valueStr}</p>
+              </div>
+            </details>
+          ) : (
+            <span>{valueStr}</span>
+          )}
+        </div>
+      );
+    })}
+  </div>
+  );
+};
+
+const getConnectedNodes = (nodes, edges) => {
   const dictNodes = {};
   nodes.forEach((element) => {
     if (element?.id) {
@@ -18,94 +128,110 @@ const PipelineSteps = ({ nodes }) => {
     }
   });
 
-  const conectedNodes = [];
-  const visited = new Set();
-  let actualNode = "1";
-
-  while (actualNode && !visited.has(actualNode)) {
-    const current = dictNodes[actualNode];
-    if (!current) break;
-
-    conectedNodes.push(current);
-    visited.add(actualNode);
-    actualNode = current.data?.target;
+  const edgeMap = new Map();
+  if (Array.isArray(edges)) {
+    edges.forEach((edge) => {
+      if (edge?.source && edge?.target) {
+        edgeMap.set(String(edge.source), String(edge.target));
+      }
+    });
   }
 
-  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+  const connectedNodes = [];
+  const visited = new Set();
+  let currentNodeId = "1";
+
+  while (currentNodeId && !visited.has(currentNodeId)) {
+    const current = dictNodes[currentNodeId];
+    if (!current) {
+      break;
+    }
+
+    connectedNodes.push(current);
+    visited.add(currentNodeId);
+    currentNodeId = current.data?.target ?? edgeMap.get(currentNodeId);
+  }
+
+  return connectedNodes;
+};
+
+const PipelineSteps = ({ nodes, edges = null }) => {
+  const { t } = useTranslation();
+  if (!Array.isArray(nodes) || nodes.length === 0) {
+    return <p>{t("pipeline.noSteps", { defaultValue: "No steps to display." })}</p>;
+  }
+
+  const connectedNodes = getConnectedNodes(nodes, edges);
 
   return (
-    <Stepper iconSize={42}>
-      {conectedNodes.map((node) => {
-        if (!node.data.technique)
+    <div className="rounded-[1.35rem] bg-white p-4 dark:bg-gray-900">
+      <div className="flex flex-wrap items-stretch gap-3">
+        {connectedNodes.map((node, index) => {
+          const definition =
+            getPipelineStepDefinition(node.type) ?? getPipelineStepDefinition("OutputSignal");
+          const SummaryIcon = definition?.summaryIcon ?? definition?.icon;
+          const techniqueObj = getTechniqueInfo(node);
+
           return (
-            <Stepper.Step
-              key={node.id}
-              label={capitalize(node.type)}
-              description=""
-            />
-          );
-
-        const techniqueObj = JSON.parse(node.data.technique);
-
-        return (
-          <Stepper.Step
-            key={node.id}
-            label={capitalize(node.type)}
-            description={
-              node.type !== "InputSignal" &&
-              node.type !== "OutputSignal" && (
-                <div className="bg-white dark:bg-gray-900 border-0 dark:border dark:border-gray-600 shadow-md rounded-lg p-4">
-                  <div>
-                    <strong>Technique:</strong> {capitalize(techniqueObj.name)}
-                  </div>
-                  <div>
-                    <ul className="mt-2">
-                      {techniqueObj.fields &&
-                        Object.entries(techniqueObj.fields).map(
-                          ([key, value]) => {
-                            const capitalizedKey = capitalize(key);
-                            const valueStr = String(value);
-                            const isLong = valueStr.length > 30;
-
-                            return (
-                              <li key={key} className="mb-1">
-                                <strong>{capitalizedKey}: </strong>
-                                {isLong ? (
-                                  <Popover
-                                    width={300}
-                                    trapFocus
-                                    position="bottom"
-                                    withArrow
-                                    shadow="md"
-                                  >
-                                    <Popover.Target>
-                                      <Text title="Click to view full text">
-                                        Click
-                                      </Text>
-                                    </Popover.Target>
-                                    <Popover.Dropdown>
-                                      <Text size="sm" className="break-words">
-                                        {valueStr}
-                                      </Text>
-                                    </Popover.Dropdown>
-                                  </Popover>
-                                ) : (
-                                  <span>{valueStr}</span>
-                                )}
-                              </li>
-                            );
-                          }
-                        )}
-                    </ul>
+            <div key={node.id} className="flex items-center gap-3">
+              <article className="min-w-[220px] max-w-[280px] rounded-[1.15rem] bg-slate-50 p-3 dark:bg-slate-950">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-400">
+                      {t("pipeline.step", { defaultValue: "Step {{index}}", index: index + 1 })}
+                    </div>
+                    <div className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${definition?.summaryTone ?? ""}`}>
+                      {SummaryIcon ? <SummaryIcon size={13} /> : null}
+                      {t(`pipeline.summary.${node.type}`, {
+                        defaultValue: definition?.summaryLabel ?? node.type,
+                      })}
+                    </div>
                   </div>
                 </div>
-              )
-            }
-          />
-        );
-      })}
-    </Stepper>
+
+                {techniqueObj ? (
+                  <div className="mt-3">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                      {t("pipeline.technique", { defaultValue: "Technique" })}
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                      {capitalize(techniqueObj.name)}
+                    </div>
+                    {techniqueObj.fields ? (
+                      <TechniqueFields fields={techniqueObj.fields} />
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                    {node.type === "InputSignal"
+                      ? t("pipeline.entryPoint", { defaultValue: "Entry point of the pipeline." })
+                      : t("pipeline.finalOutput", { defaultValue: "Final output of the pipeline." })}
+                  </div>
+                )}
+              </article>
+
+              {index < connectedNodes.length - 1 ? (
+                <div className="hidden text-slate-300 dark:text-slate-600 md:block">
+                  <FaArrowRight size={16} />
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
+};
+
+TechniqueFields.propTypes = {
+  fields: PropTypes.objectOf(
+    PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+      PropTypes.bool,
+      PropTypes.oneOf([null]),
+    ])
+  ).isRequired,
 };
 
 PipelineSteps.propTypes = {
@@ -116,6 +242,16 @@ PipelineSteps.propTypes = {
       data: PropTypes.object,
     })
   ).isRequired,
+  edges: PropTypes.arrayOf(
+    PropTypes.shape({
+      source: PropTypes.string.isRequired,
+      target: PropTypes.string.isRequired,
+    })
+  ),
+};
+
+PipelineSteps.defaultProps = {
+  edges: null,
 };
 
 export default PipelineSteps;

@@ -3,6 +3,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Resampling from "./Resampling";
 import { ThemeContext } from "../contexts/ThemeContext";
 
+jest.mock("./common/SignalTabs", () => () => <div>SignalTabs</div>);
+
 const mockChartRef = {
   config: { options: {} },
   update: jest.fn(),
@@ -127,6 +129,8 @@ describe("Resampling", () => {
       const elements = screen.queryAllByText("Waiting for request...");
       expect(elements.length).toBe(0);
     });
+
+    await screen.findByText("1.1000");
   });
 
   it("handles wrong values in sampling rate input", async () => {
@@ -145,6 +149,8 @@ describe("Resampling", () => {
       const elements = screen.queryAllByText("Waiting for request...");
       expect(elements.length).toBe(0);
     });
+
+    await screen.findByText("1.1000");
 
     const samplingRateInput = screen.getByLabelText(
       /New sampling Rate \(Hz\)/i
@@ -186,7 +192,11 @@ describe("Resampling", () => {
       expect(screen.queryByText(/Processing request/i)).not.toBeInTheDocument();
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(1);
+    await screen.findByText("55.5500");
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
 
     const lastCall = global.fetch.mock.calls[0];
     const fetchOptions = lastCall[1];
@@ -222,6 +232,8 @@ describe("Resampling", () => {
       expect(elements.length).toBe(0);
     });
 
+    await screen.findByText("1.1000");
+
     const button = screen.getByRole("button", { name: /Resample/i });
     fireEvent.click(button);
 
@@ -229,7 +241,9 @@ describe("Resampling", () => {
       expect(screen.queryByText(/Processing request/i)).not.toBeInTheDocument();
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Filtering failed");
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Filtering failed");
+    });
 
     consoleErrorSpy.mockRestore();
   });

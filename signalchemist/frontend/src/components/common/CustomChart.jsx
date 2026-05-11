@@ -1,305 +1,375 @@
-import { memo, useRef, useEffect, useMemo, useContext } from "react";
+import { memo, useContext, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { Line } from "react-chartjs-2";
-import "chartjs-adapter-date-fns";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale,
-} from "chart.js";
-import zoomPlugin from "chartjs-plugin-zoom";
-import { FaSearch, FaDownload, FaImage, FaHandPaper } from "react-icons/fa";
-import { Menu, Button } from "@mantine/core";
-import Draggable from "react-draggable";
-
-ChartJS.register(
-  zoomPlugin,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale
-);
-
-import {
-  handleResetZoom,
-  handleResetStyle,
-  exportToPNG,
-  processChartHighlight,
-} from "../utils/chartUtils";
+import ReactECharts from "echarts-for-react";
+import { FaCrosshairs, FaDownload, FaImage, FaSearch } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
-import ErrorBoundary from "./ErrorBoundary";
+import {
+  exportSingleChartWithTitlePNG,
+  handleResetStyle,
+  handleResetZoom,
+} from "../utils/chartUtils";
+import { ChartFrame } from "./chartShell";
+import { resetEchartsZoom, toRgba } from "./echartsBridge";
+import { SimpleMenu } from "./ui";
 
 const MAX_DATA_LENGTH = 5000;
+const chartActionButtonClass =
+  "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800";
 
-const baseChartOptions = {
-  label: "signal",
-  responsive: true,
-  plugins: {
-    legend: {
-      display: false,
-    },
-    tooltip: {
-      mode: "index",
-      intersect: true,
-      backgroundColor: "#fff",
-      titleColor: "#222",
-      bodyColor: "#333",
-      borderColor: "#ccc",
-      borderWidth: 1,
-    },
-  },
-  scales: {
-    x: {
-      type: "time",
-      position: "bottom",
-      time: {
-        unit: "second",
-        tooltipFormat: "dd MMM yyyy HH:mm:ss",
-        displayFormats: {
-          minute: "HH:mm",
-          hour: "HH:mm",
-          day: "MMM d",
-        },
-      },
-      title: {
-        display: true,
-        text: "(ms)",
-        color: "#111",
-        font: { size: 14, weight: "bold" },
-      },
-    },
-    y: {
-      ticks: { color: "#444" },
-      title: {
-        display: true,
-        text: "Value",
-        color: "#111",
-        font: { size: 14, weight: "bold" },
-      },
-    },
-  },
-};
+function formatAxisValue(value) {
+  return typeof value === "number" ? value.toFixed(3) : value;
+}
 
-/**
- * CustomChart component renders a chart based on the given table data.
- *
- * @param {Object} props
- * @param {Array} props.table - A 2D array with headers in the first row and data points in subsequent rows.
- * @param {string} [props.defaultColor='#2196f3'] - The default color for the chart's line and points.
- */
-const CustomChart = memo(({ table, defaultColor = "#2196f3" }) => {
-  // Avoid re-render on parent render if table and setChartImage do not change.
-  // table: [[header, header], [x1, y1], [x2, y2], [x3, y3]]
+function buildAxisBounds(axisData) {
+  const min = axisData?.min;
+  const max = axisData?.max;
 
-  const chartRef = useRef(null);
-  const draggableRef = useRef(null);
-  const [headers, ...rows] = table;
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return { min, max };
+  }
 
-  const minValue = rows[0]; //seconds
-  const maxValue = rows[rows.length - 1];
-  const zoomRangeX = parseInt((maxValue * 1000 - minValue * 1000) * 0.02);
-  const isLargeDataset = rows.length > MAX_DATA_LENGTH;
+  if (min === max) {
+    const padding = Math.abs(min || 1) * 0.05 || 0.001;
+    return {
+      min: min - padding,
+      max: max + padding,
+    };
+  }
 
-  const { isDarkMode: isDark } = useContext(ThemeContext);
+  const padding = (max - min) * 0.02;
+  return {
+    min: min - padding,
+    max: max + padding,
+  };
+}
 
-  const chartOptions = useMemo(
-    () => ({
-      ...baseChartOptions,
-      actualColor: defaultColor,
-      onClick: function (evt) {
-        const elements = chartRef.current.getElementsAtEventForMode(
-          evt,
-          "nearest",
-          { intersect: true },
-          true
-        );
-        if (elements.length === 0) return;
+const CustomChart = memo(({
+  table,
+  defaultColor = "#2196f3",
+  annotationPoints = [],
+  annotationColor = "#f97316",
+  onBridgeReady = null,
+}) => {
+  const { t } = useTranslation();
+  const theme = useContext(ThemeContext);
+  const isDark = theme?.isDarkMode ?? false;
+  const chartComponentRef = useRef(null);
+  const bridgeRef = useRef(null);
+  const [focusedIndex, setFocusedIndex] = useState(null);
+  const [zoomWindow, setZoomWindow] = useState(null);
 
-        const pointIndex = elements[0].index;
-        const timestamp = chartRef.current.data.datasets[0].data[pointIndex].x;
-
-        const highlightColor = "#fa6400";
-        const charts = Object.values(ChartJS.instances).filter(
-          (chart) => chart?.config?.options?.label === "signal"
-        );
-        charts.forEach((chart) => {
-          processChartHighlight(
-            chart,
-            pointIndex,
-            timestamp,
-            highlightColor,
-            zoomRangeX,
-            chartRef
-          );
-        });
-      },
-      onHover: (event, chartElements) => {
-        if (chartElements.length === 0) return;
-
-        // This part was suggested by ChatGPT and checked in source code: https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.tooltip.js#L1106
-        const index = chartElements[0].index;
-        const charts = Object.values(ChartJS.instances).filter(
-          (chart) => chart?.config?.options?.label === "signal"
-        );
-
-        charts.forEach((chart) => {
-          if (chartRef.current !== chart) {
-            if (
-              chartRef.current.data.datasets[0].data.length !==
-              chart.data.datasets[0].data.length
-            )
-              return; // No point-to-point correspondence
-            chart.tooltip.setActiveElements([{ datasetIndex: 0, index }], {
-              x: event.native.x,
-              y: event.native.y,
-            });
-            chart.update();
-          }
-        });
-      },
-      plugins: {
-        ...baseChartOptions.plugins,
-        tooltip: {
-          ...baseChartOptions.plugins.tooltip,
-          backgroundColor: isDark ? "#333" : "#fff",
-          titleColor: isDark ? "#fff" : "#222",
-          bodyColor: isDark ? "#ddd" : "#333",
-          borderColor: isDark ? "#555" : "#ccc",
-        },
-        zoom: {
-          pan: {
-            enabled: !isLargeDataset,
-            mode: "x",
-          },
-          zoom: {
-            wheel: { enabled: !isLargeDataset },
-            pinch: { enabled: !isLargeDataset },
-            mode: "x",
-          },
-        },
-      },
-      scales: {
-        ...baseChartOptions.scales,
-        x: {
-          ...baseChartOptions.scales.x,
-          type: rows[0][0] == 0.0 ? "linear" : "time",
-          ticks: { color: isDark ? "#ffffff" : "#000000" },
-          grid: { color: isDark ? "#444444" : "#e5e5e5" },
-          title: {
-            ...baseChartOptions.scales.x.title,
-            text:
-              rows[0][0] == 0.0 ? `${headers[0]} (ms)` : `${headers[0]} (date)`,
-            color: isDark ? "#ffffff" : "#000000",
-          },
-
-          ...(rows[0][0] == 0.0
-            ? {}
-            : {
-                time: baseChartOptions.scales.x.time,
-              }),
-        },
-        y: {
-          ...baseChartOptions.scales.y,
-          ticks: { color: isDark ? "#ffffff" : "#444444" },
-          grid: { color: isDark ? "#444444" : "#e5e5e5" },
-          title: {
-            ...baseChartOptions.scales.y.title,
-            text: headers[1],
-            color: isDark ? "#ffffff" : "#000000",
-          },
-        },
-      },
-    }),
-    [isDark, headers, isLargeDataset, rows]
+  const [headers = ["time", "value"], ...rows] = table ?? [["time", "value"]];
+  const points = useMemo(
+    () => rows.map(([x, y]) => [x * 1000, y]),
+    [rows]
+  );
+  const annotations = useMemo(
+    () => annotationPoints.map(([x, y]) => [x * 1000, y]),
+    [annotationPoints]
   );
 
-  useEffect(() => {
-    if (!chartRef.current) return;
-    chartRef.current.update();
-  }, [isDark]);
+  const hasRows = rows.length > 0;
+  const xAxisType = hasRows && rows[0] && rows[0][0] === 0 ? "value" : "time";
+  const isLargeDataset = rows.length > MAX_DATA_LENGTH;
+  const minX = points[0]?.[0] ?? 0;
+  const maxX = points[points.length - 1]?.[0] ?? 6000;
+  const zoomRangeX = Math.max((maxX - minX) * 0.02, 1);
 
-  const chartData = {
-    datasets: [
-      {
-        data: rows.map(([x, y]) => ({ x: x * 1000, y })),
-        borderColor: defaultColor,
-        pointRadius: isLargeDataset ? 0 : 2,
-        pointBackgroundColor: defaultColor,
-        fill: false,
+  const option = useMemo(() => {
+    const highlightedPoint =
+      focusedIndex !== null && points[focusedIndex]
+        ? {
+            coord: points[focusedIndex],
+            value: points[focusedIndex][1],
+          }
+        : null;
+    const axisColor = isDark ? "#94a3b8" : "#475569";
+    const axisLineColor = isDark ? "#475569" : "#94a3b8";
+    const splitLineColor = isDark ? "rgba(148,163,184,0.14)" : "rgba(148,163,184,0.28)";
+    const tooltipBackground = isDark ? "#020617" : "#ffffff";
+    const tooltipBorder = isDark ? "#334155" : "#cbd5e1";
+    const tooltipText = isDark ? "#e2e8f0" : "#0f172a";
+
+    return {
+      animation: false,
+      backgroundColor: "transparent",
+      grid: {
+        left: 64,
+        right: 24,
+        top: 24,
+        bottom: 56,
       },
-    ],
+      tooltip: {
+        trigger: "axis",
+        axisPointer: {
+          type: "line",
+          snap: true,
+          lineStyle: {
+            color: "#f97316",
+            width: 1,
+          },
+        },
+        backgroundColor: tooltipBackground,
+        borderColor: tooltipBorder,
+        borderWidth: 1,
+        textStyle: {
+          color: tooltipText,
+        },
+      },
+      xAxis: {
+        type: xAxisType,
+        min: zoomWindow?.[0] ?? (hasRows ? undefined : minX),
+        max: zoomWindow?.[1] ?? (hasRows ? undefined : maxX),
+        splitNumber: 6,
+        axisLine: {
+          lineStyle: { color: axisLineColor, width: 1 },
+        },
+        axisTick: {
+          show: true,
+          length: 6,
+          lineStyle: { color: axisLineColor },
+        },
+        axisLabel: {
+          color: axisColor,
+          margin: 12,
+          hideOverlap: true,
+        },
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: splitLineColor,
+          },
+        },
+        name: xAxisType === "value"
+          ? t("charts.millisecondsAxis", { name: headers[0] })
+          : t("charts.dateAxis", { name: headers[0] }),
+        nameLocation: "middle",
+        nameGap: 34,
+        nameTextStyle: {
+          color: axisColor,
+          fontSize: 14,
+          fontWeight: 600,
+        },
+      },
+      yAxis: {
+        type: "value",
+        min: hasRows ? (axisData) => buildAxisBounds(axisData).min : 0,
+        max: hasRows ? (axisData) => buildAxisBounds(axisData).max : 1,
+        splitNumber: 6,
+        axisLine: {
+          lineStyle: { color: axisLineColor, width: 1 },
+        },
+        axisTick: {
+          show: true,
+          length: 6,
+          lineStyle: { color: axisLineColor },
+        },
+        axisLabel: {
+          color: axisColor,
+          margin: 10,
+          formatter: (value) => formatAxisValue(value),
+        },
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: splitLineColor,
+          },
+        },
+        name: headers[1],
+        nameLocation: "middle",
+        nameGap: 46,
+        nameTextStyle: {
+          color: axisColor,
+          fontSize: 14,
+          fontWeight: 600,
+        },
+      },
+      dataZoom: isLargeDataset
+        ? []
+        : [
+            {
+              type: "inside",
+              xAxisIndex: 0,
+              filterMode: "none",
+            },
+          ],
+      series: [
+        {
+          type: "line",
+          data: points,
+          showSymbol: false,
+          symbol: "circle",
+          silent: !hasRows,
+          lineStyle: {
+            color: defaultColor,
+            width: 2.3,
+            cap: "round",
+            join: "round",
+            opacity: hasRows ? 1 : 0,
+          },
+          emphasis: {
+            focus: "series",
+          },
+          areaStyle: {
+            color: toRgba(defaultColor, isDark ? 0.08 : 0.12),
+            opacity: hasRows ? 1 : 0,
+          },
+          smooth: 0.05,
+          markPoint: highlightedPoint
+            ? {
+                symbol: "circle",
+                symbolSize: 9,
+                label: { show: false },
+                itemStyle: {
+                  color: "#f97316",
+                  borderColor: "#fff",
+                  borderWidth: 1.5,
+                },
+                data: [highlightedPoint],
+              }
+            : undefined,
+        },
+        {
+          type: "scatter",
+          data: annotations,
+          symbol: "diamond",
+          symbolSize: 10,
+          itemStyle: {
+            color: annotationColor,
+            borderColor: isDark ? "#020617" : "#ffffff",
+            borderWidth: 1.5,
+          },
+          silent: true,
+        },
+      ],
+    };
+  }, [annotationColor, annotations, defaultColor, focusedIndex, hasRows, headers, isDark, isLargeDataset, maxX, minX, points, t, xAxisType, zoomWindow]);
+
+  useEffect(() => {
+    const bridge = {
+        __kind: "echarts",
+      group: "signal",
+      exportMeta: {
+        badge: t("charts.signalBadge"),
+        title: headers[1],
+      },
+      dataLength: points.length,
+      xValues: points.map(([x]) => x),
+      toBase64Image: (exportOptions = {}) =>
+        chartComponentRef.current
+          ?.getEchartsInstance()
+          ?.getDataURL({
+            type: "png",
+            pixelRatio: exportOptions.pixelRatio ?? 4,
+            backgroundColor: exportOptions.backgroundColor ?? (isDark ? "#020617" : "#ffffff"),
+          }),
+      resetZoom: () => {
+        resetEchartsZoom(chartComponentRef.current?.getEchartsInstance?.());
+        setZoomWindow(null);
+      },
+      resetStyle: () => {
+        setFocusedIndex(null);
+      },
+      highlightPoint: (pointIndex, xvalue, _highlightColor, zoomRange) => {
+        if (points.length > MAX_DATA_LENGTH) return;
+        if (pointIndex < 0 || pointIndex >= points.length) return;
+        setFocusedIndex(pointIndex);
+        setZoomWindow([xvalue - zoomRange, xvalue + zoomRange]);
+      },
+    };
+
+    bridgeRef.current = bridge;
+    onBridgeReady?.(bridge);
+
+    return () => {
+      onBridgeReady?.(null);
+    };
+  }, [headers, isDark, onBridgeReady, points, t]);
+
+  const handlePointClick = (params) => {
+    if (typeof params.dataIndex !== "number") return;
+    const xValue = points[params.dataIndex]?.[0];
+    if (typeof xValue !== "number" || Number.isNaN(xValue)) return;
+
+    setFocusedIndex(params.dataIndex);
+    setZoomWindow([xValue - zoomRangeX, xValue + zoomRangeX]);
   };
 
   return (
-    <div className="text-center py-4">
-      <div className="relative">
-        <ErrorBoundary>
-          <Line ref={chartRef} data={chartData} options={chartOptions} />
-        </ErrorBoundary>
-        <Draggable bounds="parent" nodeRef={draggableRef} handle=".drag-handle">
-          <div ref={draggableRef} className="absolute top-0 right-0 z-10">
-            <div className="relative inline-block group">
-              <Menu shadow="md" width={100}>
-                <Menu.Target>
-                  <Button size="xs" variant="light" aria-label="export">
-                    <FaDownload />
-                  </Button>
-                </Menu.Target>
-                <Menu.Dropdown className="bg-white dark:bg-gray-900 dark:border-gray-600">
-                  <Menu.Label className="text-black dark:text-white">
-                    Export as
-                  </Menu.Label>
-                  <Menu.Item
-                    leftSection={<FaImage size={12} />}
-                    onClick={() => exportToPNG(chartRef.current)}
-                    className="text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    PNG
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-
-              <div className="drag-handle absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:flex group-active:flex items-center justify-center cursor-move text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full w-6 h-6 shadow-md border border-gray-300 dark:border-gray-600">
-                <FaHandPaper size={12} />
-              </div>
-            </div>
-          </div>
-        </Draggable>
-      </div>
-
-      {isLargeDataset ? (
-        <div className="w-3/4 mx-auto mt-3 bg-yellow-100 text-yellow-800 p-4 rounded-md">
-          <strong>Too much data</strong> – interaction is disabled to improve
-          performance.
+    <ChartFrame
+      badge={t("charts.signalBadge")}
+      title={headers[1]}
+      toolbar={
+        <div className="flex items-center gap-2">
+          {!isLargeDataset ? (
+            <>
+              <button
+                onClick={() => handleResetZoom(bridgeRef.current)}
+                className={chartActionButtonClass}
+              >
+                <FaSearch /> {t("common.resetZoom")}
+              </button>
+              <button
+                onClick={() => handleResetStyle(bridgeRef.current, defaultColor)}
+                className={chartActionButtonClass}
+              >
+                <FaCrosshairs /> {t("common.resetStyle")}
+              </button>
+            </>
+          ) : null}
+          <SimpleMenu
+            widthClass="w-28"
+            label={t("common.exportAs")}
+            trigger={(
+              <button
+                type="button"
+                aria-label="export"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                <FaDownload size={12} />
+              </button>
+            )}
+            items={[{
+              label: t("common.png"),
+              icon: <FaImage size={12} />,
+              onClick: () => exportSingleChartWithTitlePNG({
+                chart: bridgeRef.current,
+                title: headers[1],
+                filename: `${headers[1] || "signal"}-chart.png`,
+                backgroundColor: isDark ? "#020617" : "#ffffff",
+                foregroundColor: isDark ? "#e2e8f0" : "#0f172a",
+              }),
+            }]}
+          />
         </div>
-      ) : (
-        <div className="flex justify-center gap-4 mt-3">
-          <button
-            onClick={() => handleResetZoom(chartRef.current)}
-            className="mt-3 flex items-center gap-2 mx-auto px-6 py-2 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium"
-          >
-            <FaSearch /> Reset Zoom
-          </button>
-          <button
-            onClick={() => handleResetStyle(chartRef.current, defaultColor)}
-            className="mt-3 flex items-center gap-2 mx-auto px-6 py-2 rounded-full border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-medium"
-          >
-            <FaSearch /> Reset Style
-          </button>
+      }
+      canvas={
+        <div className="relative min-h-[360px] overflow-hidden rounded-[0.7rem] border border-slate-200 bg-white p-1 dark:border-gray-800 dark:bg-slate-950">
+          <ReactECharts
+            ref={chartComponentRef}
+            option={option}
+            notMerge
+            lazyUpdate
+            style={{ height: 360, width: "100%" }}
+            onEvents={{ click: handlePointClick }}
+          />
         </div>
-      )}
-    </div>
+      }
+      notice={
+        isLargeDataset ? (
+          <>
+            {t("charts.largeDatasetNotice")}
+          </>
+        ) : null
+      }
+      controls={
+        isLargeDataset ? (
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("charts.exportStillAvailable")}</p>
+        ) : null
+      }
+    />
   );
 });
 
@@ -308,6 +378,18 @@ CustomChart.propTypes = {
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number]))
   ).isRequired,
   defaultColor: PropTypes.string,
+  annotationPoints: PropTypes.arrayOf(
+    PropTypes.arrayOf(PropTypes.number)
+  ),
+  annotationColor: PropTypes.string,
+  onBridgeReady: PropTypes.func,
+};
+
+CustomChart.defaultProps = {
+  defaultColor: "#2196f3",
+  annotationPoints: [],
+  annotationColor: "#f97316",
+  onBridgeReady: null,
 };
 
 export default CustomChart;

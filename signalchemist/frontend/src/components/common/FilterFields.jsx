@@ -1,25 +1,16 @@
 import { useState, memo, useContext, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter/dist/cjs/prism";
-import { materialDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { FaInfo, FaCheck, FaRegCopy } from "react-icons/fa";
-
-import {
-  Modal,
-  Button,
-  Group,
-  Tooltip,
-  Text,
-  NumberInput,
-  Checkbox,
-  Textarea,
-  Stack,
-  Box,
-  Code,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useTranslation } from "react-i18next";
 
 import { ThemeContext } from "../../contexts/ThemeContext";
+import {
+  SimpleDialog,
+  SimpleTooltip,
+  FormFieldLabel,
+  uiButtonClass,
+  uiCompactInputClass,
+} from "./ui";
 
 /**
  * InfoModal component displays a modal with Python function information and example code.
@@ -29,8 +20,11 @@ import { ThemeContext } from "../../contexts/ThemeContext";
  * @param {function} props.close - Function to close the modal.
  */
 const InfoModal = ({ opened, close }) => {
+  const { t } = useTranslation();
   const content =
     "def filter_signal(signal): \n\tnew_values = scipy.ndimage.gaussian_filter1d(signal, sigma=30) \n\treturn new_values";
+  const packageList =
+    "import numpy as np\nimport pandas as pd\nimport neurokit2\nimport scipy";
 
   const [copied, setCopied] = useState(false);
 
@@ -42,89 +36,56 @@ const InfoModal = ({ opened, close }) => {
 
   // Detect dark mode
   const { isDarkMode: isDark } = useContext(ThemeContext);
+  const codeBlockClassName = isDark
+    ? "mt-2 overflow-x-auto rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-sm text-gray-100"
+    : "mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-950 px-4 py-3 text-sm text-slate-100";
 
   return (
-    <Modal
-      opened={opened}
-      onClose={close}
-      title="Python Info"
-      size="lg"
-      centered
-      withCloseButton
-      classNames={{
-        header:
-          "bg-white dark:bg-gray-900 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700",
-        body: "bg-white dark:bg-gray-900 text-gray-800 dark:text-white",
-        title: "text-gray-800 dark:text-white",
-      }}
-    >
+    <SimpleDialog open={opened} onClose={close} title={t("filtering.modal.title")}>
       <div className="overflow-x-hidden text-gray-800 dark:text-white">
-        <h3 className="text-xl font-semibold mb-4">filter_signal function</h3>
+        <h3 className="mb-4 text-xl font-semibold">{t("filtering.modal.functionTitle")}</h3>
 
         <ol className="list-decimal list-inside space-y-3 text-sm">
           <li>
-            <strong>Code:</strong> The Python code must be well written, with
-            correct tabulations and blank spaces.
+            {t("filtering.modal.rules.code")}
           </li>
           <li>
-            <strong>Function name:</strong> The code must contain the definition
-            of a function named{" "}
-            <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">
-              filter_signal
-            </code>{" "}
-            that performs the filtering of the signal.
+            {t("filtering.modal.rules.functionName")}
           </li>
           <li>
-            <strong>Parameters:</strong> The function must have a single
-            parameter that represents the signal values.
+            {t("filtering.modal.rules.parameters")}
           </li>
           <li>
-            <strong>Output:</strong> The function's output will be the processed
-            (filtered) signal values (must have the same length as the input).
+            {t("filtering.modal.rules.output")}
           </li>
           <li>
-            <strong>No additional parameters:</strong> The function should not
-            accept any additional parameters.
+            {t("filtering.modal.rules.noAdditional")}
           </li>
           <li>
-            <strong>Syntax Error:</strong> If there is a syntax error in the
-            code, an error message will be displayed.
+            {t("filtering.modal.rules.syntax")}
           </li>
           <li>
-            <strong>Empty Field:</strong> If the field is left blank, the filter
-            will be executed with the other parameters from the form (this field
-            will be ignored).
+            {t("filtering.modal.rules.required")}
           </li>
           <li>
-            <strong>What packages can I use? (more to come):</strong>
-            <SyntaxHighlighter
-              language="python"
-              style={isDark ? materialDark : undefined}
-            >
-              {
-                "import numpy as np\nimport pandas as pd\nimport neurokit2\nimport scipy"
-              }
-            </SyntaxHighlighter>
+            <strong>{t("filtering.modal.rules.packages")}</strong>
+            <pre className={codeBlockClassName}>
+              <code>{packageList}</code>
+            </pre>
           </li>
           <li>
-            <strong>Example (copy and paste to try!):</strong>
+            <strong>{t("filtering.modal.rules.example")}</strong>
             <div className="relative">
-              <SyntaxHighlighter
-                language="python"
-                style={isDark ? materialDark : undefined}
-              >
-                {content}
-              </SyntaxHighlighter>
+              <pre className={codeBlockClassName}>
+                <code>{content}</code>
+              </pre>
 
-              <Tooltip
-                label={copied ? "Copied!" : "Copy"}
-                position="top-end"
-                withArrow
-              >
+              <SimpleTooltip label={copied ? t("common.copied") : t("common.copy")}>
                 <button
+                  type="button"
                   className="absolute top-2 right-2 cursor-pointer text-gray-500 dark:text-gray-100"
                   onClick={handleCopy}
-                  title="Copy"
+                  title={t("common.copy")}
                 >
                   {copied ? (
                     <FaCheck className="text-green-500" />
@@ -132,18 +93,22 @@ const InfoModal = ({ opened, close }) => {
                     <FaRegCopy className="text-gray-500" />
                   )}
                 </button>
-              </Tooltip>
+              </SimpleTooltip>
             </div>
           </li>
         </ol>
 
-        <Group justify="flex-end" className="mt-6">
-          <Button variant="light" color="red" onClick={close}>
-            Close
-          </Button>
-        </Group>
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            className="btn min-h-0 h-auto rounded-xl border-0 bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-none hover:bg-red-700"
+            onClick={close}
+          >
+            {t("common.close")}
+          </button>
+        </div>
       </div>
-    </Modal>
+    </SimpleDialog>
   );
 };
 
@@ -154,13 +119,20 @@ const InfoModal = ({ opened, close }) => {
  * @param {Object} props.fields - An object containing the filter fields and their configuration.
  * @param {function} props.onFieldChange - A callback function to handle field value changes.
  */
-const FilterFields = memo(({ filter, fields, onFieldChange }) => {
-  const [opened, { open, close }] = useDisclosure(false);
+const FilterFields = memo(({ filter, fields, fieldDefinitions, onFieldChange }) => {
+  const { t } = useTranslation();
+  const [opened, setOpened] = useState(false);
   const [enabledFields, setEnabledFields] = useState({});
 
   useEffect(() => {
-    setEnabledFields({});
-  }, [filter]);
+    const nextEnabledFields = Object.fromEntries(
+      Object.entries(fieldDefinitions)
+        .filter(([, definition]) => definition.optional)
+        .map(([fieldName]) => [fieldName, fields[fieldName] !== null])
+    );
+
+    setEnabledFields(nextEnabledFields);
+  }, [fieldDefinitions, fields, filter]);
 
   const onCheckboxChange = (field, checked) => {
     setEnabledFields((prev) => ({
@@ -177,76 +149,86 @@ const FilterFields = memo(({ filter, fields, onFieldChange }) => {
 
   return (
     <>
-      <InfoModal opened={opened} close={close} />
+      <InfoModal opened={opened} close={() => setOpened(false)} />
 
-      {Object.keys(fields).map((field) => {
-        const fieldConfig = fields[field];
+      {Object.entries(fieldDefinitions).map(([field, fieldDefinition]) => {
+        const fieldValue = fields[field];
 
-        if (field !== "python") {
+        if (fieldDefinition.type !== "textarea") {
           return (
-            <div key={field} className="mb-4">
-              <label
-                htmlFor={field}
-                className="block mb-1 font-medium text-black dark:text-white"
-              >
-                {field.charAt(0).toUpperCase() + field.slice(1)}
-              </label>
-              <Group align="center" spacing="sm">
-                <NumberInput
+            <div
+              key={field}
+              className="rounded-[1rem] border border-slate-200 bg-slate-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/70"
+            >
+              <div className="mb-2">
+                <FormFieldLabel
+                  htmlFor={field}
+                  label={fieldDefinition.label}
+                  tooltip={fieldDefinition.tooltip}
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <input
                   key={`${filter}_${field}`}
                   id={field}
-                  placeholder={`Enter ${field}`}
-                  value={fieldConfig}
-                  min={0.01}
+                  type="number"
+                  placeholder={fieldDefinition.label}
+                  value={fieldValue ?? ""}
+                  min={fieldDefinition.min ?? 0}
                   onBlur={(event) => {
-                    if (event.target.value === "") {
-                      onFieldChange(field, 1);
+                    if (event.target.value === "" || Number.isNaN(Number(event.target.value))) {
+                      onFieldChange(field, fieldDefinition.min ?? 1);
                     }
                   }}
-                  onChange={(value) => onFieldChange(field, value)}
-                  disabled={
-                    (field === "lowcut" || field === "highcut") &&
-                    !enabledFields[field]
-                  }
-                  style={{ flex: 1 }}
-                  className="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg shadow-sm text-black dark:text-white"
-                  classNames={{
-                    input:
-                      "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    onFieldChange(field, nextValue === "" ? "" : Number(nextValue));
                   }}
+                  disabled={fieldDefinition.optional && !enabledFields[field]}
+                  className={`flex-1 ${uiCompactInputClass}`}
                 />
 
-                {(field === "lowcut" || field === "highcut") && (
-                  <Checkbox
+                {fieldDefinition.optional && (
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-sm"
                     checked={!!enabledFields[field]}
                     onChange={(e) => onCheckboxChange(field, e.target.checked)}
-                    size="md"
                   />
                 )}
-              </Group>
+              </div>
             </div>
           );
         } else {
           return (
-            <div key={field}>
+            <div
+              key={field}
+              className="rounded-[1rem] border border-slate-200 bg-slate-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/70"
+            >
               <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-gray-700 dark:text-white">
-                  Python code
-                </span>
-                <Button variant="subtle" size="xs" onClick={open} title="Info">
-                  <FaInfo /> Info
-                </Button>
+                <FormFieldLabel
+                  htmlFor={field}
+                  label={fieldDefinition.label}
+                  tooltip={fieldDefinition.tooltip}
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
+                />
+                <button
+                  type="button"
+                  className={`${uiButtonClass} px-2 py-1 text-xs`}
+                  onClick={() => setOpened(true)}
+                  title={t("common.info")}
+                >
+                  <FaInfo /> {t("common.info")}
+                </button>
               </div>
-              <Textarea
+              <textarea
+                id={field}
                 key={`${filter}_${field}`}
-                value={fieldConfig.value}
+                value={fieldValue}
                 onChange={(e) => onFieldChange(field, e.target.value)}
-                minRows={3}
-                autosize
-                classNames={{
-                  input:
-                    "bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600",
-                }}
+                rows={4}
+                className="textarea textarea-bordered min-h-[110px] w-full rounded-xl border-slate-300 bg-white text-sm text-slate-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
               />
             </div>
           );
@@ -262,12 +244,9 @@ InfoModal.propTypes = {
 };
 
 FilterFields.propTypes = {
-  fields: PropTypes.objectOf(
-    PropTypes.shape({
-      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-        .isRequired,
-    })
-  ).isRequired,
+  filter: PropTypes.string.isRequired,
+  fields: PropTypes.object.isRequired,
+  fieldDefinitions: PropTypes.object.isRequired,
   onFieldChange: PropTypes.func.isRequired,
 };
 

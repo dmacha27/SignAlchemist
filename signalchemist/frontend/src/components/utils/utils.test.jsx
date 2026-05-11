@@ -6,6 +6,7 @@ import {
   updateDatasetStyles,
   processChartHighlight,
 } from "../utils/chartUtils";
+import { resetEchartsZoom } from "../common/echartsBridge";
 
 const mockEDA = [
   ["Timestamp", "Gsr"],
@@ -71,6 +72,17 @@ describe("chartUtils", () => {
 
     it("does nothing if chart is undefined", () => {
       expect(handleResetZoom(null)).toBeUndefined();
+    });
+
+    it("delegates to echarts bridge resetZoom", () => {
+      const mockChart = {
+        __kind: "echarts",
+        resetZoom: jest.fn(),
+      };
+
+      handleResetZoom(mockChart);
+
+      expect(mockChart.resetZoom).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -253,6 +265,22 @@ describe("chartUtils", () => {
       expect(mockChart.config.options.scales.x.min).toBe(-1); // 1 - 2 / xvalue - zoomRange
       expect(mockChart.config.options.scales.x.max).toBe(3); // 1 + 2
       expect(mockChart.update).toHaveBeenCalled();
+    });
+  });
+});
+
+describe("echartsBridge", () => {
+  it("resets echarts dataZoom to full range", () => {
+    const instance = {
+      dispatchAction: jest.fn(),
+    };
+
+    resetEchartsZoom(instance);
+
+    expect(instance.dispatchAction).toHaveBeenCalledWith({
+      type: "dataZoom",
+      start: 0,
+      end: 100,
     });
   });
 });

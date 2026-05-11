@@ -1,45 +1,24 @@
+/* global jest, describe, beforeAll, it, expect, global */
+
 import { render, screen, fireEvent, waitFor } from "../test-utils";
 import { BrowserRouter } from "react-router-dom";
 import Home from "./Home";
 import { ThemeContext } from "../contexts/ThemeContext";
 
-const mockChartRef = {
-  config: { options: {} },
-  update: jest.fn(),
-  data: {},
-};
+jest.mock("echarts-for-react", () => {
+  const React = jest.requireActual("react");
 
-jest.mock("react-chartjs-2", () => {
-  const Line = jest.fn(({ data, options, ref }) => {
-    mockChartRef.config.options = {
-      ...options,
-      label: "signal",
-    };
-    mockChartRef.data = data;
-    ref.current = mockChartRef;
+  return React.forwardRef((props, ref) => {
+    React.useImperativeHandle(ref, () => ({
+      getEchartsInstance: () => ({
+        getDataURL: jest.fn(() => "data:image/png;base64,mock"),
+        dispatchAction: jest.fn(),
+      }),
+    }));
 
-    return <div data-testid="mock-line-chart" />;
+    return <div data-testid="mock-echart" />;
   });
-
-  return { Line };
 });
-
-const mockInstances = { mockChart: mockChartRef };
-
-jest.mock("chart.js", () => {
-  return {
-    Chart: class {
-      static register = jest.fn();
-      static get instances() {
-        return mockInstances;
-      }
-    },
-  };
-});
-
-jest.mock("chartjs-plugin-zoom", () => ({}));
-jest.mock("chartjs-adapter-date-fns", () => {});
-jest.mock("react-draggable", () => ({ children }) => <div>{children}</div>);
 
 const mockTheme = {
   isDarkMode: false,
@@ -195,6 +174,12 @@ describe("Home", () => {
     expectedHeaders.forEach((header) => {
       expect(optionsText).toContain(header);
     });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Signal Type/i)).toHaveValue("EDA");
+      expect(screen.getByLabelText(/Timestamp Column/i)).toHaveValue("0");
+      expect(screen.getByLabelText(/Signal Values/i)).toHaveValue("1");
+    });
   });
 
   it("handles wrong values in sampling rate input", async () => {
@@ -242,7 +227,7 @@ describe("Home", () => {
     spyParseInt.mockRestore();
   });
 
-  it("shows error when opening utility modal without selecting all params", async () => {
+  it("autoconfigures sample data so next-step buttons become available", async () => {
     render(
       <BrowserRouter>
         <ThemeContext.Provider value={mockTheme}>
@@ -253,21 +238,21 @@ describe("Home", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /EDA.csv/i }));
     await waitFor(() => {
-      const timestampSelect = document.getElementById("timestampColumn");
-      if (!timestampSelect) throw new Error("Select not found");
-      if (timestampSelect.options.length === 0)
-        throw new Error("Options not loaded yet");
+      expect(screen.getByLabelText(/Signal Type/i)).toHaveValue("EDA");
+      expect(screen.getByLabelText(/Timestamp Column/i)).toHaveValue("0");
+      expect(screen.getByLabelText(/Signal Values/i)).toHaveValue("1");
     });
 
-    const uploadBtn = screen.getByText(/Select utility/i).parentElement;
-    fireEvent.click(uploadBtn);
-
-    expect(
-      await screen.findByText(/All fields must be selected/i)
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Resampling/i })
+      ).not.toBeDisabled();
+      expect(screen.getByRole("button", { name: /Filtering/i })).not.toBeDisabled();
+      expect(screen.getByRole("button", { name: /Processing/i })).not.toBeDisabled();
+    });
   });
 
-  it("shows utility modal and navigates to resampling", async () => {
+  it("navigates to resampling from next step when all params are ready", async () => {
     render(
       <BrowserRouter>
         <ThemeContext.Provider value={mockTheme}>
@@ -278,34 +263,20 @@ describe("Home", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /EDA.csv/i }));
     await waitFor(() => {
-      const timestampSelect = document.getElementById("timestampColumn");
-      if (!timestampSelect) throw new Error("Select not found");
-      if (timestampSelect.options.length === 0)
-        throw new Error("Options not loaded yet");
+      expect(screen.getByLabelText(/Signal Type/i)).toHaveValue("EDA");
+      expect(screen.getByLabelText(/Timestamp Column/i)).toHaveValue("0");
+      expect(screen.getByLabelText(/Signal Values/i)).toHaveValue("1");
     });
 
-    const timestampSelect = screen.getByLabelText(/Timestamp Column/i);
-    const signalValuesSelect = screen.getByLabelText(/Signal Values/i);
-    const signalType = screen.getByLabelText(/Signal Type/i);
-
-    fireEvent.change(timestampSelect, { target: { value: 0 } });
-    fireEvent.change(signalValuesSelect, { target: { value: 1 } });
-    fireEvent.change(signalType, { target: { value: "EDA" } });
-
-    const openModalButton = screen.getByText(/Select utility/i).parentElement;
+    const resamplingButton = screen.getByRole("button", {
+      name: /Resampling/i,
+    });
 
     await waitFor(() => {
-      expect(openModalButton).not.toBeDisabled();
+      expect(resamplingButton).not.toBeDisabled();
     });
 
-    fireEvent.click(openModalButton);
-
-    expect(
-      await screen.findByText(/Select SignAlchemist Utility/i)
-    ).toBeInTheDocument();
-
-    const goButton = screen.getAllByRole("button", { name: /Go/i })[0];
-    fireEvent.click(goButton);
+    fireEvent.click(resamplingButton);
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(

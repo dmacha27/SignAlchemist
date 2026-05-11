@@ -8,11 +8,13 @@ const mockUseReactFlow = jest.fn(() => ({
   setEdges: mockSetEdges,
 }));
 const mockUseNodeConnections = jest.fn(() => []);
+const mockUseNodesData = jest.fn(() => ({ data: { executionState: "idle" } }));
 
 jest.mock("@xyflow/react", () => ({
   ...jest.requireActual("@xyflow/react"),
   useReactFlow: () => mockUseReactFlow(),
   useNodeConnections: () => mockUseNodeConnections(),
+  useNodesData: (id) => mockUseNodesData(id),
   EdgeLabelRenderer: ({ children }) => <>{children}</>, // Forcing edge to appear as if two nodes were connected
 }));
 
@@ -22,6 +24,8 @@ describe("ButtonEdge", () => {
     mockUseReactFlow.mockImplementation(() => ({
       setEdges: mockSetEdges,
     }));
+    mockUseNodesData.mockReset();
+    mockUseNodesData.mockReturnValue({ data: { executionState: "idle" } });
   });
 
   it("renders the BaseEdge correctly", () => {
@@ -29,6 +33,8 @@ describe("ButtonEdge", () => {
       <ReactFlowProvider>
         <ButtonEdge
           id="e1-2"
+          source="1"
+          target="2"
           sourceX={0}
           sourceY={0}
           targetX={100}
@@ -40,6 +46,7 @@ describe("ButtonEdge", () => {
     );
     expect(screen.getByTestId("BaseEdge")).toBeInTheDocument();
     expect(screen.getByTestId("FaTrash")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /insert node/i })).toBeInTheDocument();
   });
 
   it("calls setEdges when clicking delete label", () => {
@@ -47,6 +54,8 @@ describe("ButtonEdge", () => {
       <ReactFlowProvider>
         <ButtonEdge
           id="e1-2"
+          source="1"
+          target="2"
           sourceX={0}
           sourceY={0}
           targetX={100}
@@ -72,6 +81,74 @@ describe("ButtonEdge", () => {
     const filtered = filter(initialEdges);
 
     expect(filtered).toEqual([{ id: "e3-4", label: "keep" }]);
+  });
+
+  it("dispatches insert event from edge menu", () => {
+    const listener = jest.fn();
+    window.addEventListener("insert-node-on-edge", listener);
+
+    render(
+      <ReactFlowProvider>
+        <ButtonEdge
+          id="e1-2"
+          source="1"
+          target="2"
+          sourceX={0}
+          sourceY={0}
+          targetX={100}
+          targetY={100}
+          sourcePosition="right"
+          targetPosition="left"
+        />
+      </ReactFlowProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /insert node/i }));
+    fireEvent.click(screen.getByRole("button", { name: /insert filtering node/i }));
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener.mock.calls[0][0].detail).toEqual({
+      edgeId: "e1-2",
+      sourceId: "1",
+      targetId: "2",
+      nodeType: "FilteringNode",
+    });
+
+    window.removeEventListener("insert-node-on-edge", listener);
+  });
+
+  it("dispatches insert event for peaks node", () => {
+    const listener = jest.fn();
+    window.addEventListener("insert-node-on-edge", listener);
+
+    render(
+      <ReactFlowProvider>
+        <ButtonEdge
+          id="e1-2"
+          source="1"
+          target="2"
+          sourceX={0}
+          sourceY={0}
+          targetX={100}
+          targetY={100}
+          sourcePosition="right"
+          targetPosition="left"
+        />
+      </ReactFlowProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /insert node/i }));
+    fireEvent.click(screen.getByRole("button", { name: /insert peaks node/i }));
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener.mock.calls[0][0].detail).toEqual({
+      edgeId: "e1-2",
+      sourceId: "1",
+      targetId: "2",
+      nodeType: "PeaksNode",
+    });
+
+    window.removeEventListener("insert-node-on-edge", listener);
   });
 });
 

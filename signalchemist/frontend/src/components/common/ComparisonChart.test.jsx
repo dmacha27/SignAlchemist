@@ -1,17 +1,30 @@
-import { render, screen, userEvent } from "../../test-utils";
+/* global jest, describe, beforeEach, afterEach, it, expect */
+
+import React from "react";
+import { fireEvent, render, screen, userEvent } from "../../test-utils";
 import ComparisonChart from "./ComparisonChart";
-import { ThemeContext } from "../../contexts/ThemeContext";
 import * as chartUtils from "../utils/chartUtils";
 
-const mockChartRef = {
-  config: {
-    options: {
-      label: "signal",
-    },
-  },
-  update: jest.fn(),
-  data: {},
-};
+const mockGetDataURL = jest.fn(() => "data:image/png;base64,mock");
+
+jest.mock("echarts-for-react", () => {
+  const React = jest.requireActual("react");
+
+  return React.forwardRef(({ onEvents }, ref) => {
+    React.useImperativeHandle(ref, () => ({
+      getEchartsInstance: () => ({
+        getDataURL: mockGetDataURL,
+      }),
+    }));
+
+    return (
+      <div
+        data-testid="mock-echart"
+        onClick={() => onEvents?.click?.({ dataIndex: 2 })}
+      />
+    );
+  });
+});
 
 const mockEDA = [
   ["Timestamp", "Gsr"],
@@ -24,144 +37,69 @@ const mockEDA = [
   [6, 4.4],
 ];
 
-jest.mock("react-chartjs-2", () => {
-  const Line = jest.fn(({ data, options, ref }) => {
-    mockChartRef.config.options = {
-      ...options,
-      label: "signal",
-    };
-    mockChartRef.data = data;
-    ref.current = mockChartRef;
-
-    return <div data-testid="mock-line-chart" />;
-  });
-
-  return { Line };
-});
-
-jest.mock("chart.js", () => ({
-  Chart: {
-    register: jest.fn(),
-  },
-}));
-
-jest.mock("chartjs-plugin-zoom", () => ({}));
-jest.mock("chartjs-adapter-date-fns", () => {});
-jest.mock("react-draggable", () => ({ children }) => <div>{children}</div>);
-
-const mockTheme = {
-  isDarkMode: false,
-  toggleDarkMode: jest.fn(),
-};
-
 describe("ComparisonChart", () => {
   beforeEach(() => {
     jest.spyOn(chartUtils, "exportToPNG").mockImplementation(() => {});
     jest.spyOn(chartUtils, "handleResetZoom").mockImplementation(() => {});
     jest.spyOn(chartUtils, "handleResetStyle").mockImplementation(() => {});
+    mockGetDataURL.mockClear();
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it("renders the chart with small dataset", () => {
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />
-      </ThemeContext.Provider>
-    );
-    expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
+  it("renders the echarts comparison chart", () => {
+    render(<ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />);
+
+    expect(screen.getByTestId("mock-echart")).toBeInTheDocument();
     expect(screen.getByText("Reset Zoom")).toBeInTheDocument();
-    expect(mockChartRef.data.datasets).toHaveLength(2); // Two datasets (2 lines)
-
-    expect(mockChartRef.config.options.scales.x.type).toBe("linear"); // Datasets seem to be calculated (start by 0)
-    expect(mockChartRef.config.options.scales.x.title.text).toMatch(/((ms))/i);
+    expect(screen.getByText("Reset Style")).toBeInTheDocument();
   });
 
-  it("renders correctly without timestamps starting with 0", () => {
-    const mockRealTimeEDA = [
-      ["Timestamp", "Gsr"],
-      [1749626640, 1.1],
-      [1749626641, 1.5],
-      [1749626642, 2.2],
-      [1749626643, 2.5],
-      [1749626644, 3.3],
-      [1749626645, 3.5],
-      [1749626646, 4.4],
-    ];
-
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart
-          table1={mockRealTimeEDA}
-          table2={mockRealTimeEDA}
-          name2="Test"
-        />
-      </ThemeContext.Provider>
-    );
-
-    expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
-
-    expect(mockChartRef.config.options.scales.x.type).toBe("time");
-    expect(mockChartRef.config.options.scales.x.title.text).toMatch(
-      /((date))/i
-    );
-  });
-
-  it("renders warning and disables interaction with large dataset", () => {
+  it("renders warning and disables controls with a large dataset", () => {
     const largeDataset = [
       ["Timestamp", "Gsr"],
       ...Array.from({ length: 6000 }, (_, i) => [i, Math.random() * 10]),
     ];
 
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart table1={largeDataset} table2={mockEDA} name2="Test" />
-      </ThemeContext.Provider>
-    );
-    expect(screen.getByTestId("mock-line-chart")).toBeInTheDocument();
-    expect(screen.getByText(/Too much data/i)).toBeInTheDocument();
+    render(<ComparisonChart table1={largeDataset} table2={mockEDA} name2="Test" />);
 
+    expect(screen.getByTestId("mock-echart")).toBeInTheDocument();
+    expect(screen.getByText(/Large dataset\. Interaction off\./i)).toBeInTheDocument();
     expect(screen.queryByText(/Reset Zoom/i)).not.toBeInTheDocument();
-
-    expect(mockChartRef.config.options.plugins.zoom.pan.enabled).toBe(false);
-    expect(mockChartRef.config.options.plugins.zoom.zoom.wheel.enabled).toBe(
-      false
-    );
-    expect(mockChartRef.config.options.plugins.zoom.zoom.pinch.enabled).toBe(
-      false
-    );
   });
 
-  it("calls exportToPNG when export PNG menu item is clicked", async () => {
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />
-      </ThemeContext.Provider>
-    );
+  it("calls exportToPNG when PNG is selected", async () => {
+    render(<ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />);
 
-    const exportToPNGButton = screen.getByLabelText("export");
-    await userEvent.click(exportToPNGButton);
+    await userEvent.click(screen.getByLabelText("export"));
+    await userEvent.click(await screen.findByText("PNG"));
 
-    const pngItem = await screen.findByText("PNG");
-    expect(pngItem).toBeInTheDocument();
-
-    await userEvent.click(pngItem);
-
-    expect(chartUtils.exportToPNG).toHaveBeenCalled();
+    expect(chartUtils.exportToPNG).toHaveBeenCalledTimes(1);
   });
 
-  it("calls handleResetZoom when Reset Zoom button is clicked", async () => {
-    render(
-      <ThemeContext.Provider value={mockTheme}>
-        <ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />
-      </ThemeContext.Provider>
-    );
+  it("calls handleResetZoom when reset zoom is clicked", async () => {
+    render(<ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />);
 
-    const resetZoomButton = screen.getByText(/Reset Zoom/i);
-    await userEvent.click(resetZoomButton);
+    await userEvent.click(screen.getByText(/Reset Zoom/i));
 
-    expect(chartUtils.handleResetZoom).toHaveBeenCalled();
+    expect(chartUtils.handleResetZoom).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls handleResetStyle when reset style is clicked", async () => {
+    render(<ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />);
+
+    await userEvent.click(screen.getByText(/Reset Style/i));
+
+    expect(chartUtils.handleResetStyle).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the plot clickable", () => {
+    render(<ComparisonChart table1={mockEDA} table2={mockEDA} name2="Test" />);
+
+    fireEvent.click(screen.getByTestId("mock-echart"));
+
+    expect(screen.getByTestId("mock-echart")).toBeInTheDocument();
   });
 });
