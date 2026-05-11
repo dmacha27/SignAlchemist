@@ -8,19 +8,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Resampling &mdash; SignAlchemist 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=8d563738"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Filtering" href="filtering.html" />
-    <link rel="prev" title="Home" href="home.html" /> 
+    <link rel="prev" title="Batch Processing" href="batch.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,10 +45,10 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="batch.html">Batch Processing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Resampling</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#interpolation-techniques">Interpolation techniques</a></li>
@@ -56,7 +57,11 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="peaks.html">Peak Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hr.html">Heart Rate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 </ul>
 
         </div>
@@ -85,53 +90,50 @@
              
   <section id="resampling">
 <h1>Resampling<a class="headerlink" href="#resampling" title="Link to this heading"></a></h1>
-<p>Resampling is often the first step in physiological signal preprocessing, especially when signals are acquired at inconsistent or low sampling rates. This is common with wearable devices, whose widespread use has led to signals being recorded at varying sampling rates and qualities. Resampling helps standardize these signals, enabling more reliable comparisons and calculations.</p>
+<p>Resampling is often one of the first preprocessing steps in physiological signal analysis, especially when recordings come from devices with different or unstable sampling rates.</p>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
-<p>The resampling module allows you to transform your raw signal to a new, consistent sampling rate using a variety of interpolation techniques.</p>
+<p>The Resampling page allows the user to transform a signal to a new and consistent sampling rate using interpolation techniques.</p>
 <p>This is useful to:</p>
 <ul class="simple">
-<li><p>Standardise input signals from different sources</p></li>
+<li><p>Standardise signals from different sources</p></li>
 <li><p>Improve time resolution</p></li>
-<li><p>Prepare data for machine learning or statistical analysis</p></li>
+<li><p>Prepare the data for later filtering or comparison</p></li>
 </ul>
 </section>
 <section id="interpolation-techniques">
 <h2>Interpolation techniques<a class="headerlink" href="#interpolation-techniques" title="Link to this heading"></a></h2>
-<p>Users can choose between different interpolation methods:</p>
+<p>The current page provides two interpolation methods:</p>
 <ul class="simple">
-<li><p><strong>Spline</strong>:
-smooth interpolation using B-spline curves. Good for physiological signals with smooth trends.</p></li>
-<li><p><strong>Interp1d</strong>:
-flexible 1D interpolation using SciPy.</p></li>
+<li><p><strong>Spline</strong></p></li>
+<li><p><strong>Interp1d</strong></p></li>
 </ul>
+<p>Both are configured from the same settings card.</p>
 </section>
 <section id="interface-controls">
 <h2>Interface controls<a class="headerlink" href="#interface-controls" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p><strong>Interpolation technique</strong>: select the desired method from the dropdown.</p></li>
-<li><p><strong>Parameters</strong>: the input field correspond to the new rate in Hz (specify the target sampling rate for the signal).</p></li>
-<li><p><strong>Execute resampling</strong>: applies the resampling technique and updates the results displayed in the interface.</p></li>
-<li><p><strong>Core widgets</strong>: the results are displayed using core widgets, more specifically, charts and spectrum widgets. For more details, refer to the
-<a class="reference internal" href="core_widgets.html"><span class="doc">Core Widgets</span></a>.</p></li>
+<li><p><strong>New sampling rate (Hz)</strong>: define the target rate.</p></li>
+<li><p><strong>Apply resampling</strong>: execute the transformation and update the result area.</p></li>
+<li><p><strong>Core widgets</strong>: the output is displayed using the shared charts and spectrum views described in <a class="reference internal" href="core_widgets.html"><span class="doc">Core Widgets</span></a>.</p></li>
 </ul>
-<a class="reference internal image-reference" href="_images/resampling_panel.png"><img alt="Resampling panel screenshot" class="align-center" src="_images/resampling_panel.png" style="width: 50%;" />
-</a>
-<p>Once configured, the interface:</p>
+<p>Once configured, the page:</p>
 <ul class="simple">
-<li><p>Shows execution status via icons</p></li>
-<li><p>Allows preview of the resampled signal</p></li>
-<li><p>Enables export of the processed data and visual charts</p></li>
+<li><p>Shows the execution status</p></li>
+<li><p>Allows visual inspection of the resampled signal</p></li>
+<li><p>Preserves the original signal for comparison</p></li>
+<li><p>Supports the usual export tools from the chart area</p></li>
 </ul>
-<a class="reference internal image-reference" href="_images/resampling_full_interface.png"><img alt="Filtering full interface." class="align-center" src="_images/resampling_full_interface.png" style="width: 70%;" />
+<a class="reference internal image-reference" href="_images/resampling-page-result.png"><img alt="Resampling page result" class="align-center" src="_images/resampling-page-result.png" style="width: 85%;" />
 </a>
 </section>
 <section id="applications-examples">
 <h2>Applications examples<a class="headerlink" href="#applications-examples" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>Upsampling an EDA signal from 4 Hz to 20 Hz to enable better filter application.</p></li>
-<li><p>Resampling a PPG signal recorded with variable sampling to 100 Hz for standard analysis.</p></li>
-<li><p>Harmonising input signals with different sampling frequencies before model training.</p></li>
+<li><p>Upsampling an EDA signal before filtering.</p></li>
+<li><p>Bringing recordings from different devices to the same frequency.</p></li>
+<li><p>Preparing a signal for a later processing step that assumes a stable rate.</p></li>
 </ul>
 </section>
 </section>
@@ -140,7 +142,7 @@ flexible 1D interpolation using SciPy.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="home.html" class="btn btn-neutral float-left" title="Home" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="batch.html" class="btn btn-neutral float-left" title="Batch Processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="filtering.html" class="btn btn-neutral float-right" title="Filtering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

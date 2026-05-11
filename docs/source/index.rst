@@ -7,30 +7,54 @@
 Welcome to SignAlchemist!
 =========================
 
-SignAlchemist is an open-source web application designed to make physiological signal processing easy; nonetheless, any other signal can be processed.
+SignAlchemist is an open-source web application for loading, inspecting, transforming, and validating physiological signals directly in the browser.
 
-Its main aim is to be accessible to practitioners and researchers everywhere, providing a simple graphical user interface based on nodes for novice users, and more complex functionality for people with Python programming knowledge.
+Its purpose is to make signal processing easier for both novice and advanced users. For simple workflows, the application provides direct utilities such as resampling, filtering, peak detection, and heart-rate estimation. For more advanced cases, it also includes a node-based processing workspace and batch execution tools.
 
-The application has been designed with up-to-date web-based frameworks that make it responsive and easy to use on any device.
+The application has been designed as a web-based interface, so it can be used from any modern browser without requiring a local Python workflow from the user.
 
-✨ Features (more to come!)
----------------------------
+Features
+--------
 
-- **Resampling**: changes the sampling rate of the signal by using several interpolation techniques such as spline or interp1d. This is useful when signals come from different sources or when they need to be normalized to a common frequency.
+- **Home page**: load a CSV file, define timestamps and signal values, preview the recording, and choose the next utility.
+- **Processing workspace**: create reusable preprocessing pipelines visually by connecting nodes.
+- **Batch execution**: run an exported pipeline over multiple files that share the same structure.
+- **Standalone tools**: use focused pages for resampling, filtering, peak detection, and heart-rate estimation.
+- **Shared visual widgets**: inspect raw and processed signals using charts, spectra, summaries, and comparison views.
 
-- **Filtering**: removes artefacts (e.g., noise, high-frequency...) using different filters including Butterworth, Bessel, FIR, and Savitzky-Golay. Parameters such as cutoff frequencies can be set based on user needs. Furthermore, users can create and customize their own filters using Python by following the instructions on the page.
+Contents
+--------
 
-- **Outlier detection**: identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the Hampel filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.
+The documentation is organised around the main parts of the application:
+
+- :doc:`installation` explains how to run the project and how the documentation is bundled into the frontend.
+- :doc:`usage` describes how to access the app and move around the main interface.
+- :doc:`home` covers dataset loading and initial validation.
+- :doc:`processing` and :doc:`batch` describe the reusable workflow features.
+- :doc:`resampling`, :doc:`filtering`, :doc:`peaks`, and :doc:`hr` describe the direct analysis utilities.
+- :doc:`core_widgets` summarises the shared visual components that appear across multiple pages.
+
+.. Screenshot: add an updated landing or home capture near the introduction if needed.
+   Suggested file: ``docs/source/_static/index-home-overview.png``.
+
+.. image:: _static/index-home-overview.png
+   :alt: Home page overview
+   :width: 85%
+   :align: center
 
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   installation
-   usage
-   core_widgets
+   about
    home
+   processing
+   batch
    resampling
    filtering
-   processing
+   peaks
+   hr
+   core_widgets
+   installation
+   usage

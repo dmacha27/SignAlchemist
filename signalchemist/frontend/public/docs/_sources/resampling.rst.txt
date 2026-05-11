@@ -1,60 +1,55 @@
 Resampling
 ==========
 
-Resampling is often the first step in physiological signal preprocessing, especially when signals are acquired at inconsistent or low sampling rates. This is common with wearable devices, whose widespread use has led to signals being recorded at varying sampling rates and qualities. Resampling helps standardize these signals, enabling more reliable comparisons and calculations.
+Resampling is often one of the first preprocessing steps in physiological signal analysis, especially when recordings come from devices with different or unstable sampling rates.
 
 Overview
 --------
 
-The resampling module allows you to transform your raw signal to a new, consistent sampling rate using a variety of interpolation techniques.
+The Resampling page allows the user to transform a signal to a new and consistent sampling rate using interpolation techniques.
 
 This is useful to:
 
-- Standardise input signals from different sources
+- Standardise signals from different sources
 - Improve time resolution
-- Prepare data for machine learning or statistical analysis
+- Prepare the data for later filtering or comparison
 
 Interpolation techniques
--------------------------
+------------------------
 
-Users can choose between different interpolation methods:
+The current page provides two interpolation methods:
 
-- **Spline**:  
-  smooth interpolation using B-spline curves. Good for physiological signals with smooth trends.
+- **Spline**
+- **Interp1d**
 
-- **Interp1d**: 
-  flexible 1D interpolation using SciPy. 
+Both are configured from the same settings card.
 
 Interface controls
 ------------------
 
 - **Interpolation technique**: select the desired method from the dropdown.
-- **Parameters**: the input field correspond to the new rate in Hz (specify the target sampling rate for the signal).
-- **Execute resampling**: applies the resampling technique and updates the results displayed in the interface.
-- **Core widgets**: the results are displayed using core widgets, more specifically, charts and spectrum widgets. For more details, refer to the
-  :doc:`Core Widgets <core_widgets>`.
+- **New sampling rate (Hz)**: define the target rate.
+- **Apply resampling**: execute the transformation and update the result area.
+- **Core widgets**: the output is displayed using the shared charts and spectrum views described in :doc:`Core Widgets <core_widgets>`.
 
-.. image:: _static/resampling_panel.png
-   :alt: Resampling panel screenshot
-   :width: 50%
+Once configured, the page:
+
+- Shows the execution status
+- Allows visual inspection of the resampled signal
+- Preserves the original signal for comparison
+- Supports the usual export tools from the chart area
+
+.. Screenshot: add a capture of the resampling settings and result area after a successful run.
+   Suggested file: ``docs/source/_static/resampling-page-result.png``.
+
+.. image:: _static/resampling-page-result.png
+   :alt: Resampling page result
+   :width: 85%
    :align: center
-
-Once configured, the interface:
-
-- Shows execution status via icons
-- Allows preview of the resampled signal
-- Enables export of the processed data and visual charts
-
-.. image:: _static/resampling_full_interface.png
-   :alt: Filtering full interface.
-   :width: 70%
-   :align: center
-
 
 Applications examples
 ---------------------
 
-- Upsampling an EDA signal from 4 Hz to 20 Hz to enable better filter application.
-- Resampling a PPG signal recorded with variable sampling to 100 Hz for standard analysis.
-- Harmonising input signals with different sampling frequencies before model training.
-
+- Upsampling an EDA signal before filtering.
+- Bringing recordings from different devices to the same frequency.
+- Preparing a signal for a later processing step that assumes a stable rate.

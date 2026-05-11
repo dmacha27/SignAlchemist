@@ -1,144 +1,88 @@
 Installation
 ============
 
-**SignAlchemist** uses Docker containers to simplify the installation and deployment process.
+**SignAlchemist** uses Docker containers to simplify both development and deployment. The same repository also contains the Sphinx documentation source used for Read the Docs and for the in-app documentation bundle.
 
-Environment Variables
-------------------------
+Environment Files
+-----------------
 
-Edit the environment variables file with:
+The repository uses three environment files:
+
+- ``.env`` as the fallback default
+- ``.env.dev`` for development
+- ``.env.prod`` for production
+
+The main values are:
+
+- ``VITE_BACKEND_PORT``
+- ``FRONTEND_PORT``
+- ``PYTHON_ENABLED``
+
+Development Mode
+----------------
+
+To run the development stack:
 
 .. code-block:: bash
 
-   nano .env
+   docker compose -f signalchemist/docker-compose.dev.yml --env-file signalchemist/.env.dev up --build
 
-Example configuration:
+This starts the frontend and backend in development mode.
+
+Production Mode
+---------------
+
+To build the production stack:
+
+.. code-block:: bash
+
+   docker compose -f signalchemist/docker-compose.prod.yml --env-file signalchemist/.env.prod up --build -d
+
+In production, the frontend is built as static files and served behind Nginx.
+
+How the Docs Are Served
+-----------------------
+
+The documentation source files live in:
 
 .. code-block:: none
 
-   VITE_BACKEND_PORT=     # Port where the backend server will run
-   FRONTEND_PORT=         # Port where the frontend will be accessible
-   PYTHON_ENABLED=        # Enable Python scripting support (true/false)
+   docs/source
 
-Three environment files are used depending on the context:
+The generated HTML is written to:
 
-- **.env**: Default. Used only when neither `.env.dev` nor `.env.prod` are provided.
-- **.env.dev**: Used for the development build.
-- **.env.prod**: Used for the production build (Python scripting disabled).
+.. code-block:: none
 
-Development Mode
--------------------
+   docs/build/html
 
-To start the application in **development mode**, run:
+The frontend serves the bundled documentation from:
 
-.. code-block:: bash
+.. code-block:: none
 
-   docker compose -f docker-compose.dev.yml --env-file .env.dev up --build
+   signalchemist/frontend/public/docs
 
-This will:
+During the production frontend build, ``Dockerfile.prod`` copies ``public/docs`` into ``dist/docs`` so the documentation becomes available from ``/docs/index.html``.
 
-- Build and run the containers in development configuration.
-- Use the settings from `.env.dev`.
+Updating Bundled Documentation
+------------------------------
 
-**Important:** Don't forget the `--env-file` flag to load the correct environment variables.
-
-
-Once the containers are running, you don't need to do anything else to access the application and its API — both will be available on the ports specified in the environment variables.
-
-It’s also important to note that these ports are not only used in the `docker-compose.yml` files but also in the `vite.config.js` configuration:
-
-.. code-block:: javascript
-
-   server: {
-     watch: {
-       usePolling: true,
-     },
-     host: true,
-     strictPort: true,
-     port: parseInt(process.env.FRONTEND_PORT || '5173'),
-     proxy: {
-       '/api': {
-         target: `http://backend:${process.env.VITE_BACKEND_PORT || '8000'}`,
-         changeOrigin: true,
-         rewrite: path => path.replace(/^\/api/, ''),
-       },
-     },
-   }
-
-The **proxy** section is essential during development. It ensures that any request to `/api` from the frontend is forwarded to the backend container. 
-The `rewrite` function strips the `/api` prefix from the URL path before forwarding the request to the backend.
-
-Production Mode
-------------------
-
-To launch the application in **production mode**, use:
+After editing the Sphinx files, rebuild and sync them into the frontend:
 
 .. code-block:: bash
 
-   docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
+   python -m pip install -r docs/requirements.txt
+   python -m sphinx -b html docs/source docs/build/html
 
-This will:
+Then copy the generated HTML into the frontend:
 
-- Run the app in detached mode (`-d`)
-- Use `.env.prod` as the configuration
+.. code-block:: bash
 
-**Note:** In production mode, Python scripting must be disabled for security reasons.
+   rm -rf signalchemist/frontend/public/docs
+   cp -r docs/build/html signalchemist/frontend/public/docs
 
-Production Architecture
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The important point is that ``signalchemist/frontend/public/docs`` should always contain the latest built HTML before shipping the frontend.
 
-In production, the application is composed of three containers:
+Read the Docs Hosting
+---------------------
 
-1. **backend** – Runs the Python API using Uvicorn.
-2. **frontend** – Serves the built static frontend files.
-3. **nginx** – Acts as the single public entrypoint, routing all incoming traffic.
-
-Port Behavior
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- ``VITE_BACKEND_PORT`` specifies the **internal port** used by the backend container.  
-- ``FRONTEND_PORT`` is the **host port** that maps to Nginx — this is the only port exposed to the outside world.
-- The **frontend container** listens on port `80` internally and is only accessed by Nginx.
-
-So, when a user accesses the application via http://localhost:<FRONTEND_PORT> (whatever domain/IP), the request is actually handled by the Nginx container.
-
-Nginx Routing Logic
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Nginx forwards requests based on their path:
-
-.. code-block:: nginx
-
-   server {
-       listen 80;
-
-       location /api/ {
-           proxy_pass http://backend:8000/;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-
-       location / {
-           proxy_pass http://frontend:80;
-       }
-   }
-
-
-.. image:: _static/request.png
-   :alt: Example of request
-   :width: 600px
-   :align: center
-
-- Requests to `/api/` are forwarded to the backend container.
-- All other requests (such as ``/about`` or ``/filtering``) are routed to the frontend container.
-
-.. important::
-
-   The value in `proxy_pass http://backend:8000/;` must match the backend port (`VITE_BACKEND_PORT`) defined in `.env.prod`.  
-   If you change `VITE_BACKEND_PORT`, **you must update this Nginx config manually**.
-
-
-It is up to the user to set up an additional reverse proxy on the host machine if needed. For example, route `example.com` to its `localhost:<FRONTEND_PORT>`.
+The repository already contains ``.readthedocs.yml`` pointing at ``docs/source/conf.py``. That means the same source can be used both for hosted documentation and for the bundled in-app documentation.

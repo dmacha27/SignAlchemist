@@ -8,18 +8,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to SignAlchemist! &mdash; SignAlchemist 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=8d563738"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" /> 
+    <link rel="next" title="About" href="about.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -43,13 +44,17 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="batch.html">Batch Processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="peaks.html">Peak Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hr.html">Heart Rate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 </ul>
 
         </div>
@@ -80,38 +85,66 @@
 </a>
 <section id="welcome-to-signalchemist">
 <h1>Welcome to SignAlchemist!<a class="headerlink" href="#welcome-to-signalchemist" title="Link to this heading"></a></h1>
-<p>SignAlchemist is an open-source web application designed to make physiological signal processing easy; nonetheless, any other signal can be processed.</p>
-<p>Its main aim is to be accessible to practitioners and researchers everywhere, providing a simple graphical user interface based on nodes for novice users, and more complex functionality for people with Python programming knowledge.</p>
-<p>The application has been designed with up-to-date web-based frameworks that make it responsive and easy to use on any device.</p>
-<section id="features-more-to-come">
-<h2>✨ Features (more to come!)<a class="headerlink" href="#features-more-to-come" title="Link to this heading"></a></h2>
+<p>SignAlchemist is an open-source web application for loading, inspecting, transforming, and validating physiological signals directly in the browser.</p>
+<p>Its purpose is to make signal processing easier for both novice and advanced users. For simple workflows, the application provides direct utilities such as resampling, filtering, peak detection, and heart-rate estimation. For more advanced cases, it also includes a node-based processing workspace and batch execution tools.</p>
+<p>The application has been designed as a web-based interface, so it can be used from any modern browser without requiring a local Python workflow from the user.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><strong>Resampling</strong>: changes the sampling rate of the signal by using several interpolation techniques such as spline or interp1d. This is useful when signals come from different sources or when they need to be normalized to a common frequency.</p></li>
-<li><p><strong>Filtering</strong>: removes artefacts (e.g., noise, high-frequency…) using different filters including Butterworth, Bessel, FIR, and Savitzky-Golay. Parameters such as cutoff frequencies can be set based on user needs. Furthermore, users can create and customize their own filters using Python by following the instructions on the page.</p></li>
-<li><p><strong>Outlier detection</strong>: identifies and removes unusual data that deviate significantly from the expected signal pattern. Techniques available include the Hampel filter and IQR-based detection, aiming to improve signal quality without affecting legitimate variations.</p></li>
+<li><p><strong>Home page</strong>: load a CSV file, define timestamps and signal values, preview the recording, and choose the next utility.</p></li>
+<li><p><strong>Processing workspace</strong>: create reusable preprocessing pipelines visually by connecting nodes.</p></li>
+<li><p><strong>Batch execution</strong>: run an exported pipeline over multiple files that share the same structure.</p></li>
+<li><p><strong>Standalone tools</strong>: use focused pages for resampling, filtering, peak detection, and heart-rate estimation.</p></li>
+<li><p><strong>Shared visual widgets</strong>: inspect raw and processed signals using charts, spectra, summaries, and comparison views.</p></li>
 </ul>
+</section>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading"></a></h2>
+<p>The documentation is organised around the main parts of the application:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> explains how to run the project and how the documentation is bundled into the frontend.</p></li>
+<li><p><a class="reference internal" href="usage.html"><span class="doc">Usage</span></a> describes how to access the app and move around the main interface.</p></li>
+<li><p><a class="reference internal" href="home.html"><span class="doc">Home</span></a> covers dataset loading and initial validation.</p></li>
+<li><p><a class="reference internal" href="processing.html"><span class="doc">Processing</span></a> and <a class="reference internal" href="batch.html"><span class="doc">Batch Processing</span></a> describe the reusable workflow features.</p></li>
+<li><p><a class="reference internal" href="resampling.html"><span class="doc">Resampling</span></a>, <a class="reference internal" href="filtering.html"><span class="doc">Filtering</span></a>, <a class="reference internal" href="peaks.html"><span class="doc">Peak Detection</span></a>, and <a class="reference internal" href="hr.html"><span class="doc">Heart Rate</span></a> describe the direct analysis utilities.</p></li>
+<li><p><a class="reference internal" href="core_widgets.html"><span class="doc">Core Widgets</span></a> summarises the shared visual components that appear across multiple pages.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/index-home-overview.png"><img alt="Home page overview" class="align-center" src="_images/index-home-overview.png" style="width: 85%;" />
+</a>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#environment-variables">Environment Variables</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#development-mode">Development Mode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#production-mode">Production Mode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="about.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="about.html#main-purpose">Main purpose</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#accessing-the-application">Accessing the Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="home.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home.html#upload-area">Upload Area</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home.html#dataset-configuration">Dataset Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home.html#preview-and-crop">Preview and Crop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home.html#next-step-panel">Next Step Panel</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#download">Download</a></li>
-<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#chart">Chart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#spectrum-chart">Spectrum Chart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#comparison-charts">Comparison Charts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#metrics">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#main-areas">Main areas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#workflow-editor">Workflow editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#available-nodes">Available nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html#charts-and-comparison">Charts and comparison</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="batch.html">Batch Processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#page-structure">Page Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#pipeline-input">Pipeline Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#dataset-setup">Dataset Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#execution-and-downloads">Execution and Downloads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#inspection-panel">Inspection Panel</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="resampling.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="resampling.html#interpolation-techniques">Interpolation techniques</a></li>
@@ -127,11 +160,41 @@
 <li class="toctree-l2"><a class="reference internal" href="filtering.html#applications-examples">Applications examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="processing.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="processing.html#features">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="processing.html#applications-examples">Applications examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="processing.html#workflow-example">Workflow example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="peaks.html">Peak Detection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="peaks.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="peaks.html#detection-modes">Detection modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="peaks.html#controls">Controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="peaks.html#results">Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hr.html">Heart Rate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hr.html#scope">Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hr.html#methods">Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hr.html#outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#signal-and-spectrum-views">Signal and Spectrum Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#charts">Charts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#signal-summary">Signal Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_widgets.html#pipeline-steps">Pipeline Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#environment-files">Environment Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#development-mode">Development Mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#production-mode">Production Mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#how-the-docs-are-served">How the Docs Are Served</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#updating-bundled-documentation">Updating Bundled Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#read-the-docs-hosting">Read the Docs Hosting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#accessing-the-application">Accessing the Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#main-navigation">Main navigation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#recommended-workflow">Recommended Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#documentation-access">Documentation Access</a></li>
 </ul>
 </li>
 </ul>
@@ -143,7 +206,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="about.html" class="btn btn-neutral float-right" title="About" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -8,18 +8,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Processing &mdash; SignAlchemist 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=8d563738"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Filtering" href="filtering.html" /> 
+    <link rel="next" title="Batch Processing" href="batch.html" />
+    <link rel="prev" title="Home" href="home.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -43,19 +45,25 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Processing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#applications-examples">Applications examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#workflow-example">Workflow example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#main-areas">Main areas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow-editor">Workflow editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#available-nodes">Available nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#charts-and-comparison">Charts and comparison</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="batch.html">Batch Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="peaks.html">Peak Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hr.html">Heart Rate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 </ul>
 
         </div>
@@ -84,66 +92,61 @@
              
   <section id="processing">
 <h1>Processing<a class="headerlink" href="#processing" title="Link to this heading"></a></h1>
-<p>The <strong>processing</strong> panel is the most powerful feature of SignAlchemist. It allows users to build and execute custom signal preprocessing pipelines using an interactive node-based interface.</p>
+<p>The <strong>Processing</strong> panel is one of the most powerful parts of SignAlchemist. It allows users to build and execute signal preprocessing pipelines through a visual node-based interface.</p>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
-<p>Inspired by tools like <a class="reference external" href="https://orangedatamining.com/">Orange</a>, <a class="reference external" href="https://www.knime.com/">KNIME</a> or <a class="reference external" href="https://nodered.org/">Node-RED</a>, the workflow editor lets users visually compose pipelines by connecting modular blocks (nodes). Each node corresponds to a preprocessing step, such as resampling, filtering, or outlier detection, and includes its own configurable parameters and controls.</p>
-<p>This interface removes the need for coding while maintaining flexibility and transparency in signal processing.</p>
+<p>Inspired by tools such as <a class="reference external" href="https://orangedatamining.com/">Orange</a>, <a class="reference external" href="https://www.knime.com/">KNIME</a>, or <a class="reference external" href="https://nodered.org/">Node-RED</a>, this workspace lets users connect modular processing blocks in order to define their own workflow.</p>
+<p>Each node represents a concrete operation, such as resampling, filtering, normalisation, peak detection, or heart-rate estimation. In this way, the user can build a pipeline without writing code while still keeping the execution flow visible.</p>
 </section>
-<section id="features">
-<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<section id="main-areas">
+<h2>Main areas<a class="headerlink" href="#main-areas" title="Link to this heading"></a></h2>
+<p>The page is organised into three main areas:</p>
 <ul class="simple">
-<li><p><strong>Modular preprocessing steps</strong>:
-Each node encapsulates a specific function:</p>
-<ul>
-<li><p>Resampling node</p></li>
-<li><p>Filtering node</p></li>
-<li><p>Outlier detection node</p></li>
-<li><p>Input and Output signal nodes</p></li>
+<li><p><strong>Pipeline Flow</strong>: the central canvas where nodes are added and connected.</p></li>
+<li><p><strong>Nodes</strong>: the side panel used to insert the available processing blocks.</p></li>
+<li><p><strong>Charts</strong>: the lower area where original and processed results can be compared.</p></li>
 </ul>
-</li>
-<li><p><strong>Drag-and-drop node system</strong>:
-Users can add, position, and connect nodes freely within the panel.</p></li>
-<li><p><strong>Custom parameters</strong>:
-Configure each node individually with signal-specific options.</p></li>
-<li><p><strong>Execution flow</strong>:
-Once the pipeline is built, it can be executed from start to finish. Each node shows:</p>
-<ul>
-<li><p>Execution status</p></li>
-<li><p>A preview of intermediate results</p></li>
-<li><p>Downloadable outputs</p></li>
+<p>The signal loaded from the Home page remains available during the whole workflow.</p>
+</section>
+<section id="workflow-editor">
+<h2>Workflow editor<a class="headerlink" href="#workflow-editor" title="Link to this heading"></a></h2>
+<p>The canvas starts with an input and an output node. Additional processing steps can then be inserted between them.</p>
+<p>Users can:</p>
+<ul class="simple">
+<li><p>Add nodes from the side panel</p></li>
+<li><p>Connect them to define the execution order</p></li>
+<li><p>Configure each node independently</p></li>
+<li><p>Import and export pipelines in JSON format</p></li>
+<li><p>Load predefined presets as a starting point</p></li>
 </ul>
-</li>
-<li><p><strong>Python integration</strong>:
-The filtering node optionally accepts custom Python code for advanced users, as explained in <a class="reference internal" href="filtering.html"><span class="doc">Filtering</span></a>.</p></li>
-</ul>
-<a class="reference internal image-reference" href="_images/resampling_full_interface.png"><img alt="Filtering full interface." class="align-center" src="_images/resampling_full_interface.png" style="width: 70%;" />
+<p>This makes it possible to design a reusable workflow and share it or execute it later in Batch.</p>
+<a class="reference internal image-reference" href="_images/processing-workspace-overview.png"><img alt="Processing workspace overview" class="align-center" src="_images/processing-workspace-overview.png" style="width: 100%;" />
 </a>
 </section>
-<section id="applications-examples">
-<h2>Applications examples<a class="headerlink" href="#applications-examples" title="Link to this heading"></a></h2>
+<section id="available-nodes">
+<h2>Available nodes<a class="headerlink" href="#available-nodes" title="Link to this heading"></a></h2>
+<p>The current workspace includes reusable blocks for:</p>
 <ul class="simple">
-<li><p>Beginners can build pipelines with predefined modules by simply connecting blocks —ideal for EDA or PPG signals.</p></li>
-<li><p>Advanced users can execute custom Python code for personalised filters.</p></li>
-<li><p>Researchers can visualise how each step affects the signal and export intermediate or final results.</p></li>
+<li><p>Resampling</p></li>
+<li><p>Filtering</p></li>
+<li><p>Outlier detection</p></li>
+<li><p>Normalisation</p></li>
+<li><p>Peak detection</p></li>
+<li><p>Heart-rate estimation</p></li>
 </ul>
+<p>Each node includes its own configuration, execution state, and output preview.</p>
 </section>
-<section id="workflow-example">
-<h2>Workflow example<a class="headerlink" href="#workflow-example" title="Link to this heading"></a></h2>
-<ol class="arabic simple">
-<li><p>Add a <strong>Resampling</strong> node (e.g., to 20 Hz).</p></li>
-<li><p>Connect it to the <strong>Original Signal</strong> node.</p></li>
-<li><p>Connect to a <strong>Filtering</strong> node using a Butterworth filter. Select both the low cutoff (e.g., 1 Hz) and high cutoff (e.g., 1.5 Hz) frequencies to isolate the desired band of the signal (this helps preserve relevant physiological frequencies while removing slow drifts and high-frequency noise).</p></li>
-<li><p>Optionally, add an <strong>Outlier Detection</strong> node.</p></li>
-<li><p>Finish with an <strong>Output Signal</strong> node to visualise and export results.</p></li>
-</ol>
-<p>Each connection defines the signal flow, and nodes can be inspected or reconfigured at any time.</p>
-<a class="reference internal image-reference" href="_images/processing_panel.png"><img alt="Example pipeline." class="align-center" src="_images/processing_panel.png" style="width: 100%;" />
+<section id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Link to this heading"></a></h2>
+<p>Once the workflow is built, the user can execute the pipeline from start to finish. The signal is propagated through the connected nodes in order, and each step can update the downstream result.</p>
+<p>Depending on the selected nodes, the page can also display intermediate information such as peak counts, beat counts, or output previews.</p>
+</section>
+<section id="charts-and-comparison">
+<h2>Charts and comparison<a class="headerlink" href="#charts-and-comparison" title="Link to this heading"></a></h2>
+<p>The lower section of the page provides the usual visual comparison tools, including signal and spectrum views.</p>
+<p>When both original and processed data are available, the user can inspect them side by side or in comparison mode in order to see how each preprocessing step affects the signal.</p>
+<a class="reference internal image-reference" href="_images/processing-comparison-area.png"><img alt="Processing comparison area" class="align-center" src="_images/processing-comparison-area.png" style="width: 85%;" />
 </a>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The processing panel enables iterative experimentation. Users can modify nodes and rerun the pipeline as needed.</p>
-</div>
 </section>
 </section>
 
@@ -151,7 +154,8 @@ The filtering node optionally accepts custom Python code for advanced users, as 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="filtering.html" class="btn btn-neutral float-left" title="Filtering" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="home.html" class="btn btn-neutral float-left" title="Home" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="batch.html" class="btn btn-neutral float-right" title="Batch Processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -8,19 +8,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Core Widgets &mdash; SignAlchemist 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=8d563738"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Home" href="home.html" />
-    <link rel="prev" title="Usage" href="usage.html" /> 
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Heart Rate" href="hr.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,42 +45,24 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Core Widgets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#download">Download</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#options">Options</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#chart">Chart</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#features">Features</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#spectrum-chart">Spectrum Chart</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Features</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#comparison-charts">Comparison Charts</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#signal-comparison">Signal Comparison</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id2">Features</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#frequency-comparison">Frequency Comparison</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id3">Features</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#metrics">Metrics</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id4">Features</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="batch.html">Batch Processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="peaks.html">Peak Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hr.html">Heart Rate</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Core Widgets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#signal-and-spectrum-views">Signal and Spectrum Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#charts">Charts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#signal-summary">Signal Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-steps">Pipeline Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 </ul>
 
         </div>
@@ -108,200 +91,62 @@
              
   <section id="core-widgets">
 <h1>Core Widgets<a class="headerlink" href="#core-widgets" title="Link to this heading"></a></h1>
-<p>This section describes common widgets or components used throughout the application.</p>
-<section id="download">
-<h2>Download<a class="headerlink" href="#download" title="Link to this heading"></a></h2>
-<p>The <cite>Download</cite> widget allows users to export the processed signal data with.</p>
-<a class="reference internal image-reference" href="_images/download.png"><img alt="Download widget" class="align-center" src="_images/download.png" style="width: 300px;" />
-</a>
-<section id="options">
-<h3>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h3>
-<ul>
-<li><p><strong>Signal values only</strong> (checkbox):
-If checked, only the signal values are included (timestamps excluded).
-<em>Default: Unchecked.</em></p></li>
-<li><p><strong>Include header</strong> (checkbox):
-Adds a header row with column names.
-<em>Default: Checked.</em></p></li>
-<li><p><strong>Separator</strong> (text input):
-Custom field separator for the output file.</p>
-<p>Validation rules:</p>
+<p>Several interface components appear across multiple pages in SignAlchemist. This section summarises those shared elements so they do not need to be repeated in every page-specific chapter.</p>
+<section id="signal-and-spectrum-views">
+<h2>Signal and Spectrum Views<a class="headerlink" href="#signal-and-spectrum-views" title="Link to this heading"></a></h2>
+<p>Many pages use the same result area to inspect original and processed data.</p>
+<p>This area usually includes:</p>
 <ul class="simple">
-<li><p>Must be a single character</p></li>
-<li><p>Cannot be a dot (<cite>.</cite>)</p></li>
-<li><p>Cannot be a number</p></li>
+<li><p><strong>Signal view</strong> for waveform inspection</p></li>
+<li><p><strong>Spectrum view</strong> for frequency-domain inspection</p></li>
+<li><p><strong>Side by side</strong> and <strong>Compare</strong> modes for layout changes</p></li>
 </ul>
-</li>
-<li><p><strong>File format</strong> (dropdown):
-Choose between <cite>.csv</cite> and <cite>.txt</cite>.</p></li>
-<li><p><strong>Download button</strong></p></li>
-</ul>
+<p>When both original and processed data are available, the export menu can generate PNG captures of each panel or a combined side-by-side export.</p>
+<a class="reference internal image-reference" href="_images/widgets-signal-tabs-export.png"><img alt="Signal and spectrum export menu" class="align-center" src="_images/widgets-signal-tabs-export.png" style="width: 100%;" />
+</a>
 </section>
-</section>
-<section id="chart">
-<h2>Chart<a class="headerlink" href="#chart" title="Link to this heading"></a></h2>
-<p>The <cite>Chart</cite> widget is a line chart that displays the signal in the time domain. The X-axis represents either:</p>
+<section id="charts">
+<h2>Charts<a class="headerlink" href="#charts" title="Link to this heading"></a></h2>
+<p>The chart widgets support the most common interactions expected during exploratory work:</p>
 <ul class="simple">
-<li><p>Datetime values (if Unix timestamps are available)</p></li>
-<li><p>Milliseconds from <cite>t=0</cite> (if timestamps were generated automatically)</p></li>
+<li><p>Hover tooltips</p></li>
+<li><p>Zoom and pan</p></li>
+<li><p>Reset actions</p></li>
+<li><p>Linked behaviour where appropriate</p></li>
 </ul>
-<p>The Y-axis displays the amplitude of the signal in arbitrary units.</p>
-<a class="reference internal image-reference" href="_images/chart.png"><img alt="Basic Chart Example" class="align-center" src="_images/chart.png" style="width: 400px;" />
-</a>
-<section id="features">
-<h3>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p><strong>Tooltip</strong>: When hovering over a point, a tooltip shows the time and value at that point.</p></li>
-<li><p><strong>Linked tooltip</strong>: If multiple charts are present on the page with signals of equal length, the tooltip will also appear on the other chart for comparison. This is not applied if the signal lengths differ (e.g. after resampling).</p></li>
-<li><p><strong>Click interaction</strong>: Clicking on a point zooms in and highlights it. If other chart with same signal length is present, it is also zoomed.</p></li>
-<li><p><strong>Mouse interactions</strong>:</p>
-<ul>
-<li><p>Zoom with mouse wheel</p></li>
-<li><p>Pan by clicking and dragging (only X axis)</p></li>
-</ul>
-</li>
-<li><p><strong>Control buttons</strong>:</p>
-<ul>
-<li><p><cite>Reset Zoom</cite>: Restores the original zoom level</p></li>
-<li><p><cite>Reset Style</cite>: Removes any point highlights</p></li>
-</ul>
-</li>
-<li><p><strong>Export</strong>: A button is provided to export the chart as a PNG image.</p></li>
-</ul>
-<figure class="align-center" id="id5">
-<a class="reference internal image-reference" href="_images/chart_features.png"><img alt="Chart widget example" src="_images/chart_features.png" style="width: 600px;" />
-</a>
-<figcaption>
-<p><span class="caption-text">Example of a signal chart after clicking and while hovering over a point on the original signal plot.</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-</section>
-</section>
-<section id="spectrum-chart">
-<h2>Spectrum Chart<a class="headerlink" href="#spectrum-chart" title="Link to this heading"></a></h2>
-<p>The <cite>Spectrum Chart</cite> displays the <strong>frequency-domain</strong> of the signal.</p>
-<p>The X-axis shows frequencies (in Hz), and the Y-axis shows the corresponding amplitudes, obtained from a <strong>Fourier Transform</strong>.</p>
-<a class="reference internal image-reference" href="_images/spectrumchart.png"><img alt="Spectrum Chart Example" class="align-center" src="_images/spectrumchart.png" style="width: 400px;" />
-</a>
-<section id="id1">
-<h3>Features<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p><strong>Tooltip</strong>: Displays the frequency and amplitude at the hovered point. This tooltip is <strong>not</strong> synchronized with other charts.</p></li>
-<li><p><strong>Mouse interactions</strong>:</p>
-<ul>
-<li><p>Zoom with the mouse wheel</p></li>
-<li><p>Pan by clicking and dragging (only X axis)</p></li>
-</ul>
-</li>
-<li><p><strong>Reset Zoom</strong>: Resets the zoom level</p></li>
-<li><p><strong>Reset Style</strong>: Clears any custom styling or range selection</p></li>
-<li><p><strong>Go to X</strong>: Input field and buttons:</p>
-<ul>
-<li><p><cite>Go</cite>: Zooms to the specified frequency value</p></li>
-<li><p><cite>Both</cite>: Applies the same zoom to the other chart if present</p></li>
-</ul>
-</li>
-<li><p><strong>Y Min / Y Max</strong>: Allows specifying a Y-axis range</p>
-<ul>
-<li><p><cite>Go</cite>: Zooms to the specified Y-range, fading out the signal outside this range</p></li>
-<li><p><cite>Both</cite>: Applies the same Y-range filtering to the other chart if present</p></li>
-</ul>
-</li>
-</ul>
-<figure class="align-center" id="id6">
-<a class="reference internal image-reference" href="_images/spectrumchart_gotox.png"><img alt="Chart widget example" src="_images/spectrumchart_gotox.png" style="width: 600px;" />
-</a>
-<figcaption>
-<p><span class="caption-text">Example of a spectrum chart after going to X on both charts.</span><a class="headerlink" href="#id6" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id7">
-<a class="reference internal image-reference" href="_images/spectrumchart_gotoy.png"><img alt="Chart widget example" src="_images/spectrumchart_gotoy.png" style="width: 600px;" />
-</a>
-<figcaption>
-<p><span class="caption-text">Example of a spectrum chart after going to Y range on both charts.</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-</section>
-</section>
-<section id="comparison-charts">
-<h2>Comparison Charts<a class="headerlink" href="#comparison-charts" title="Link to this heading"></a></h2>
-<section id="signal-comparison">
-<h3>Signal Comparison<a class="headerlink" href="#signal-comparison" title="Link to this heading"></a></h3>
-<p>The <strong>signal</strong> comparison chart consists of overlaying the original and the processed signals on a single <cite>Chart</cite>, sharing the same X and Y axes.</p>
-<a class="reference internal image-reference" href="_images/comparisonchart.png"><img alt="Signal comparison" class="align-center" src="_images/comparisonchart.png" style="width: 500px;" />
-</a>
-<section id="id2">
-<h4>Features<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
-<ul class="simple">
-<li><p><strong>Mouse interactions</strong>:</p>
-<ul>
-<li><p>Zoom with the mouse wheel</p></li>
-<li><p>Pan by clicking and dragging (only X axis)</p></li>
-</ul>
-</li>
-<li><p><strong>Reset Zoom</strong>: Resets the zoom level</p></li>
-<li><p><strong>Legend</strong>: It is recommended to use the legend to show or hide each signal by clicking on its name.</p></li>
-</ul>
-</section>
-</section>
-<section id="frequency-comparison">
-<h3>Frequency Comparison<a class="headerlink" href="#frequency-comparison" title="Link to this heading"></a></h3>
-<p>The <strong>frequency</strong> comparison chart overlays the <strong>frequency-domain</strong> of the original and the processed signals.</p>
-<a class="reference internal image-reference" href="_images/comparisonchart_spectrum.png"><img alt="Spectrum comparison" class="align-center" src="_images/comparisonchart_spectrum.png" style="width: 500px;" />
-</a>
-<section id="id3">
-<h4>Features<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
-<ul class="simple">
-<li><p><strong>Mouse interactions</strong>:</p>
-<ul>
-<li><p>Zoom with the mouse wheel</p></li>
-<li><p>Pan by clicking and dragging (only X axis)</p></li>
-</ul>
-</li>
-<li><p><strong>Reset Zoom</strong>: Resets the zoom level</p></li>
-<li><p><strong>Go to X</strong>: Input field and button:</p>
-<ul>
-<li><p><cite>Go</cite>: Zooms to the specified frequency value</p></li>
-</ul>
-</li>
-<li><p><strong>Y Min / Y Max</strong>: Allows specifying a Y-axis range</p>
-<ul>
-<li><p><cite>Go</cite>: Zooms to the specified Y-range, fading out the signal outside this range</p></li>
-</ul>
-</li>
-<li><p><strong>Legend</strong>: It is recommended to use the legend to show or hide each signal by clicking on its name.</p></li>
-</ul>
-<figure class="align-center" id="id8">
-<a class="reference internal image-reference" href="_images/comparisonchart_spectrum_gotox.png"><img alt="Chart widget example" src="_images/comparisonchart_spectrum_gotox.png" style="width: 500px;" />
-</a>
-<figcaption>
-<p><span class="caption-text">Example of a spectrum chart after going to X.</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id9">
-<a class="reference internal image-reference" href="_images/comparisonchart_spectrum_gotoy.png"><img alt="Chart widget example" src="_images/comparisonchart_spectrum_gotoy.png" style="width: 500px;" />
-</a>
-<figcaption>
-<p><span class="caption-text">Example of a spectrum chart after going to Y range.</span><a class="headerlink" href="#id9" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-</section>
-</section>
+<p>SignAlchemist includes dedicated widgets for single-signal charts, single-signal spectra, signal comparison charts, and spectrum comparison charts.</p>
 </section>
 <section id="metrics">
 <h2>Metrics<a class="headerlink" href="#metrics" title="Link to this heading"></a></h2>
-<p>The <cite>Metrics</cite> component displays several computed values for the signal, each presented as an individual card. These metrics are only available for <strong>EDA</strong> and <strong>PPG</strong> signal types.</p>
-<p>Each card represents a single scientific metric, extracted from signal processing literature.</p>
-<a class="reference internal image-reference" href="_images/metrics.png"><img alt="Example of metric cards" class="align-center" src="_images/metrics.png" style="width: 300px;" />
-</a>
-<section id="id4">
-<h3>Features<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<p>The metrics panel appears when the selected signal type provides quality indicators, mainly for EDA and PPG.</p>
+<p>Each metric card can provide:</p>
 <ul class="simple">
-<li><p><strong>Scientific reference</strong>: Each metric includes a citation to the original publication where it was proposed.</p></li>
-<li><p><strong>Interactive cards</strong>: Clicking on a metric card opens a small popover containing an intuition about how the metric works.</p></li>
+<li><p>A short label</p></li>
+<li><p>A brief interpretation</p></li>
+<li><p>Raw and processed values when comparison is available</p></li>
 </ul>
 </section>
+<section id="signal-summary">
+<h2>Signal Summary<a class="headerlink" href="#signal-summary" title="Link to this heading"></a></h2>
+<p>Several pages also include a compact summary of the loaded signal, usually showing:</p>
+<ul class="simple">
+<li><p>Duration</p></li>
+<li><p>Sampling rate</p></li>
+<li><p>Number of samples</p></li>
+</ul>
+<p>This helps the user confirm that the correct dataset is being analysed.</p>
+</section>
+<section id="pipeline-steps">
+<h2>Pipeline Steps<a class="headerlink" href="#pipeline-steps" title="Link to this heading"></a></h2>
+<p>Batch uses a pipeline summary widget to visualise the imported workflow at a glance.</p>
+<p>This is especially useful when:</p>
+<ul class="simple">
+<li><p>Reviewing an imported JSON pipeline</p></li>
+<li><p>Confirming the order of operations before execution</p></li>
+<li><p>Explaining a workflow to another user</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/widgets-pipeline-steps.png"><img alt="Pipeline steps widget" class="align-center" src="_images/widgets-pipeline-steps.png" style="width: 80%;" />
+</a>
 </section>
 </section>
 
@@ -309,8 +154,8 @@ Choose between <cite>.csv</cite> and <cite>.txt</cite>.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="home.html" class="btn btn-neutral float-right" title="Home" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hr.html" class="btn btn-neutral float-left" title="Heart Rate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

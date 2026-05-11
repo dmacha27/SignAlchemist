@@ -1,72 +1,81 @@
 Processing
 ==========
 
-The **processing** panel is the most powerful feature of SignAlchemist. It allows users to build and execute custom signal preprocessing pipelines using an interactive node-based interface.
+The **Processing** panel is one of the most powerful parts of SignAlchemist. It allows users to build and execute signal preprocessing pipelines through a visual node-based interface.
 
 Overview
 --------
 
-Inspired by tools like `Orange <https://orangedatamining.com/>`_, `KNIME <https://www.knime.com/>`_ or `Node-RED <https://nodered.org/>`_, the workflow editor lets users visually compose pipelines by connecting modular blocks (nodes). Each node corresponds to a preprocessing step, such as resampling, filtering, or outlier detection, and includes its own configurable parameters and controls.
+Inspired by tools such as `Orange <https://orangedatamining.com/>`_, `KNIME <https://www.knime.com/>`_, or `Node-RED <https://nodered.org/>`_, this workspace lets users connect modular processing blocks in order to define their own workflow.
 
-This interface removes the need for coding while maintaining flexibility and transparency in signal processing.
+Each node represents a concrete operation, such as resampling, filtering, normalisation, peak detection, or heart-rate estimation. In this way, the user can build a pipeline without writing code while still keeping the execution flow visible.
 
-Features
---------
+Main areas
+----------
 
-- **Modular preprocessing steps**: 
-  Each node encapsulates a specific function:
-  
-  - Resampling node
-  - Filtering node
-  - Outlier detection node
-  - Input and Output signal nodes
+The page is organised into three main areas:
 
-- **Drag-and-drop node system**: 
-  Users can add, position, and connect nodes freely within the panel.
+- **Pipeline Flow**: the central canvas where nodes are added and connected.
+- **Nodes**: the side panel used to insert the available processing blocks.
+- **Charts**: the lower area where original and processed results can be compared.
 
-- **Custom parameters**:
-  Configure each node individually with signal-specific options.
+The signal loaded from the Home page remains available during the whole workflow.
 
-- **Execution flow**:
-  Once the pipeline is built, it can be executed from start to finish. Each node shows:
+Workflow editor
+---------------
 
-  - Execution status 
-  - A preview of intermediate results
-  - Downloadable outputs
+The canvas starts with an input and an output node. Additional processing steps can then be inserted between them.
 
-- **Python integration**:
-  The filtering node optionally accepts custom Python code for advanced users, as explained in :doc:`Filtering <filtering>`.
+Users can:
 
+- Add nodes from the side panel
+- Connect them to define the execution order
+- Configure each node independently
+- Import and export pipelines in JSON format
+- Load predefined presets as a starting point
 
+This makes it possible to design a reusable workflow and share it or execute it later in Batch.
 
-.. image:: _static/resampling_full_interface.png
-   :alt: Filtering full interface.
-   :width: 70%
-   :align: center
+.. Screenshot: add a full-page capture of Processing with a small valid pipeline loaded.
+   Suggested file: ``docs/source/_static/processing-workspace-overview.png``.
 
-Applications examples
----------------------
-
-- Beginners can build pipelines with predefined modules by simply connecting blocks —ideal for EDA or PPG signals.
-- Advanced users can execute custom Python code for personalised filters.
-- Researchers can visualise how each step affects the signal and export intermediate or final results.
-
-Workflow example
-----------------
-
-1. Add a **Resampling** node (e.g., to 20 Hz). 
-2. Connect it to the **Original Signal** node.
-3. Connect to a **Filtering** node using a Butterworth filter. Select both the low cutoff (e.g., 1 Hz) and high cutoff (e.g., 1.5 Hz) frequencies to isolate the desired band of the signal (this helps preserve relevant physiological frequencies while removing slow drifts and high-frequency noise).
-4. Optionally, add an **Outlier Detection** node.
-5. Finish with an **Output Signal** node to visualise and export results.
-
-Each connection defines the signal flow, and nodes can be inspected or reconfigured at any time.
-
-
-.. image:: _static/processing_panel.png
-   :alt: Example pipeline.
+.. image:: _static/processing-workspace-overview.png
+   :alt: Processing workspace overview
    :width: 100%
    :align: center
 
-.. note::
-   The processing panel enables iterative experimentation. Users can modify nodes and rerun the pipeline as needed.
+Available nodes
+---------------
+
+The current workspace includes reusable blocks for:
+
+- Resampling
+- Filtering
+- Outlier detection
+- Normalisation
+- Peak detection
+- Heart-rate estimation
+
+Each node includes its own configuration, execution state, and output preview.
+
+Execution
+---------
+
+Once the workflow is built, the user can execute the pipeline from start to finish. The signal is propagated through the connected nodes in order, and each step can update the downstream result.
+
+Depending on the selected nodes, the page can also display intermediate information such as peak counts, beat counts, or output previews.
+
+Charts and comparison
+---------------------
+
+The lower section of the page provides the usual visual comparison tools, including signal and spectrum views.
+
+When both original and processed data are available, the user can inspect them side by side or in comparison mode in order to see how each preprocessing step affects the signal.
+
+.. Screenshot: add a capture of the chart area with a visible comparison.
+   Suggested file: ``docs/source/_static/processing-comparison-area.png``.
+
+.. image:: _static/processing-comparison-area.png
+   :alt: Processing comparison area
+   :width: 85%
+   :align: center

@@ -8,19 +8,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Home &mdash; SignAlchemist 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=8d563738"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Resampling" href="resampling.html" />
-    <link rel="prev" title="Core Widgets" href="core_widgets.html" /> 
+    <link rel="next" title="Processing" href="processing.html" />
+    <link rel="prev" title="About" href="about.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,13 +45,24 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upload-area">Upload Area</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-configuration">Dataset Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preview-and-crop">Preview and Crop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-step-panel">Next Step Panel</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="batch.html">Batch Processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="peaks.html">Peak Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hr.html">Heart Rate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 </ul>
 
         </div>
@@ -79,40 +91,79 @@
              
   <section id="home">
 <h1>Home<a class="headerlink" href="#home" title="Link to this heading"></a></h1>
-<p>Once accessed the deployment URL, it will display, and without registration required, the page to upload a csv file.</p>
-<p>This page is structured in two parts.</p>
-<p>Firstly, there is a drag and drop box to upload the file, it can also be done in the traditional way by clicking on the “Choose” button, which will display a file system window.</p>
-<a class="reference internal image-reference" href="_images/drag_and_drop.png"><img alt="Drag and Drop box" class="align-center" src="_images/drag_and_drop.png" style="width: 400px;" />
-</a>
-<p>For those who just want to test the application, there is a small button and a drop-down menu on the left to download two sample signals.</p>
-<p>Once the files have been loaded, a table with all the content of the csv file will be displayed at the very bottom.</p>
-<a class="reference internal image-reference" href="_images/signal_table.png"><img alt="CSV file content table" class="align-center" src="_images/signal_table.png" style="width: 400px;" />
-</a>
-<p>This will help the user to fill in the following fields:</p>
+<p>Once the application is opened, the Home page is the starting point for almost every workflow.</p>
+<p>This page is used to upload a CSV file, indicate how the signal should be interpreted, preview the data, and decide which utility to open next.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The page is structured around a simple sequence:</p>
+<ol class="arabic simple">
+<li><p>Load a CSV file, either from your own machine or from the sample signals included in the app.</p></li>
+<li><p>Configure the signal fields so the application knows which columns contain time and values.</p></li>
+<li><p>Inspect the preview and crop the signal if necessary.</p></li>
+<li><p>Continue to a specific utility or to the Processing workspace.</p></li>
+</ol>
+</section>
+<section id="upload-area">
+<h2>Upload Area<a class="headerlink" href="#upload-area" title="Link to this heading"></a></h2>
+<p>The upload area supports both drag-and-drop and manual file selection. There are also sample files available for users who simply want to test the application without preparing their own data first.</p>
+<p>After the file is loaded:</p>
 <ul class="simple">
-<li><p><strong>Signal type</strong>: Type of physiological signal. For EDA and PPG, SignAlchemist measures quality metrics for those signals.</p></li>
-<li><p><strong>Timestamp columns</strong>: To indicate which column of the csv contains the signal timestamps (SECONDS required). If this column is not available, it should be indicated as “No timestamps”. In this way, SignAlchemist will generate some artificial timestamps starting at 0s using the next field, Sampling rate.</p></li>
-<li><p><strong>Sampling rate (Hz)</strong>: Integer. If the timestamps are unknown, this parameter will be enabled. SignAlchemist cannot generate timestamps without knowing how many signal values were taken per second. Otherwise, SignAlchemist will automatically calculate these value based on the timestamps that are known.</p></li>
-<li><p><strong>Signal values</strong>: To indicate which csv column contain the signal values (undefined unit).</p></li>
+<li><p>The CSV headers become available in the configuration controls.</p></li>
+<li><p>A table with the loaded rows is shown so the file structure can be checked.</p></li>
+<li><p>The following steps remain disabled until the minimum required fields are set correctly.</p></li>
 </ul>
-<p><strong>Note:</strong> In case of knowing both timestamps and sampling rate, it is recommended to indicate the sampling rate manually. The automatic sampling rate calculation process could be altered by lack of precision or missing data.</p>
-<p>Finally, the signal can be cropped through an slider. The table will reflect this trim.</p>
-<a class="reference internal image-reference" href="_images/home_parameters.png"><img alt="CSV file content table" class="align-center" src="_images/home_parameters.png" style="width: 400px;" />
+<a class="reference internal image-reference" href="_images/home-upload.png"><img alt="Home upload card" class="align-center" src="_images/home-upload.png" style="width: 35%;" />
 </a>
-<p>Once the fields have been filled in, a graph of the signal will be displayed on the right side so the user can confirm whether the parameters are correct and make sense.</p>
-<a class="reference internal image-reference" href="_images/signal_graph.png"><img alt="Signal preview graph" class="align-center" src="_images/signal_graph.png" style="width: 400px;" />
+</section>
+<section id="dataset-configuration">
+<h2>Dataset Configuration<a class="headerlink" href="#dataset-configuration" title="Link to this heading"></a></h2>
+<p>Once the file is present, the configuration card is used to tell SignAlchemist how to interpret the selected columns.</p>
+<ul class="simple">
+<li><p><strong>Signal type</strong>: identifies whether the signal is EDA, PPG, or another type.</p></li>
+<li><p><strong>Timestamp column</strong>: specifies which column contains the timestamps. If the file has no timestamps, that option can be indicated explicitly.</p></li>
+<li><p><strong>Sampling rate</strong>: required when timestamps are not available. If timestamps are present, the application can estimate the effective sampling rate automatically.</p></li>
+<li><p><strong>Signal values</strong>: selects the column containing the signal amplitude values.</p></li>
+</ul>
+<p>This step is important because the rest of the application depends on this mapping to perform calculations correctly.</p>
+<a class="reference internal image-reference" href="_images/home-config.png"><img alt="Home configuration" class="align-center" src="_images/home-config.png" style="width: 35%;" />
 </a>
-<p>The last step is to click on “Select utility” to open a popup window to select the desired functionality.</p>
-<a class="reference internal image-reference" href="_images/process_popup.png"><img alt="Select utility popup window" class="align-center" src="_images/process_popup.png" style="width: 400px;" />
+</section>
+<section id="preview-and-crop">
+<h2>Preview and Crop<a class="headerlink" href="#preview-and-crop" title="Link to this heading"></a></h2>
+<p>After the required fields are valid, the page displays a preview of the signal.</p>
+<p>This section allows the user to:</p>
+<ul class="simple">
+<li><p>Inspect the waveform visually.</p></li>
+<li><p>Review the selected rows in tabular form.</p></li>
+<li><p>Crop the signal to a smaller segment before moving to the next utility.</p></li>
+</ul>
+<p>Cropping is especially useful when only a stable or relevant segment of the recording should be processed.</p>
+<a class="reference internal image-reference" href="_images/home-preview.png"><img alt="Home preview" class="align-center" src="_images/home-preview.png" style="width: 65%;" />
 </a>
+</section>
+<section id="next-step-panel">
+<h2>Next Step Panel<a class="headerlink" href="#next-step-panel" title="Link to this heading"></a></h2>
+<p>The final part of the page helps the user move to the desired workflow once the dataset is ready.</p>
+<p>From here it is possible to open:</p>
+<ul class="simple">
+<li><p><strong>Processing</strong>, to build a reusable node-based pipeline.</p></li>
+<li><p><strong>Batch</strong>, to run an exported pipeline over multiple files.</p></li>
+<li><p><strong>Resampling</strong>, for direct sampling-rate conversion.</p></li>
+<li><p><strong>Filtering</strong>, for a single filtering workflow.</p></li>
+<li><p><strong>Peak Detection</strong>, to locate peaks in the selected signal.</p></li>
+<li><p><strong>Heart Rate</strong>, to estimate heart rate from PPG data.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/home-next-step.png"><img alt="Home next-step panel" class="align-center" src="_images/home-next-step.png" style="width: 60%;" />
+</a>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="core_widgets.html" class="btn btn-neutral float-left" title="Core Widgets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="resampling.html" class="btn btn-neutral float-right" title="Resampling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="about.html" class="btn btn-neutral float-left" title="About" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="processing.html" class="btn btn-neutral float-right" title="Processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

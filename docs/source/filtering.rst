@@ -1,107 +1,120 @@
 Filtering
 =========
 
-Filtering is a fundamental step in signal preprocessing, especially for cleaning and enhancing physiological data such as photoplethysmogram (PPG) and electrodermal activity (EDA).
+Filtering is one of the most common preprocessing operations in physiological signal analysis. It is especially useful for reducing noise and isolating the frequency ranges of interest in signals such as PPG or EDA.
 
 Overview
 --------
 
-The filtering module enables users to apply a variety of signal filters with full configurability. It offers **several predefined filters** —including widely used digital filtering techniques that can be easily configured through intuitive UI controls— as well as support for **custom Python code** for more advanced use cases.
+The Filtering page allows users to apply predefined filters through a graphical interface, while still leaving room for more advanced configurations when needed.
 
+It supports both standard digital filtering techniques and a Python-based mode for users who want to define their own filtering function.
 
 Built-in filters
 ----------------
 
-You can select from several built-in filters via a dropdown:
+Several built-in filters are available from the dropdown menu:
 
 **Butterworth Filter**
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The `Butterworth filter <https://en.wikipedia.org/wiki/Butterworth_filter>`_ is a classic IIR (Infinite Impulse Response) filter known for having a maximally flat frequency response in the passband. This ensures minimal distortion of amplitude in the preserved frequency range.
+The `Butterworth filter <https://en.wikipedia.org/wiki/Butterworth_filter>`_ is a classic IIR (Infinite Impulse Response) filter known for having a maximally flat frequency response in the passband.
 
 - *Type*: IIR
 - *Phase response*: Non-linear
-- *Applications*: Ideal for general-purpose filtering when amplitude preservation is critical and phase delay is acceptable.
-- *Properties*: Smooth roll-off, configurable low-pass/high-pass/band-pass
+- *Applications*: useful for general-purpose filtering when amplitude preservation is important
+- *Properties*: smooth roll-off, configurable low-pass, high-pass, and band-pass variants
 
 **Bessel Filter**
 ~~~~~~~~~~~~~~~~~
 
-The `Bessel filter <https://en.wikipedia.org/wiki/Bessel_filter>`_ is designed to maintain the wave shape of signals in the time domain, making it valuable in applications that require minimal phase distortion.
+The `Bessel filter <https://en.wikipedia.org/wiki/Bessel_filter>`_ is designed to preserve waveform shape in the time domain, which makes it useful when phase distortion should be kept low.
 
 - *Type*: IIR
 - *Phase response*: Nearly linear
-- *Applications*: Signals linke EDA where timing of features must be preserved
-- *Properties*: Gentle roll-off, excellent waveform fidelity, slower transition band
+- *Applications*: signals where feature timing matters
+- *Properties*: gentle roll-off and good waveform fidelity
 
 **FIR (Finite Impulse Response) Filter**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`FIR filters <https://en.wikipedia.org/wiki/Finite_impulse_response>`_  are known for their inherent stability and linear phase behaviour. They are non-recursive and rely on a finite number of input samples.
+`FIR filters <https://en.wikipedia.org/wiki/Finite_impulse_response>`_ are stable and well suited to cases where linear phase behaviour is desired.
 
-- *Type*: FIR (non-recursive)
+- *Type*: FIR
 - *Phase response*: Linear
-- *Applications*: Situations requiring phase preservation (e.g., feature alignment across channels)
-- *Properties*: Very stable, supports high-order designs, ideal for multirate systems
+- *Applications*: situations where phase preservation is important
+- *Properties*: stable behaviour and support for high-order designs
 
 **Savitzky-Golay Filter**
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Unlike traditional frequency-based filters, the `Savitzky-Golay filter <https://en.wikipedia.org/wiki/Savitzky–Golay_filter>`_ smooths data by fitting successive subsets with low-degree polynomials using linear least squares.
+The `Savitzky-Golay filter <https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter>`_ smooths data by fitting successive subsets with low-degree polynomials.
 
 - *Type*: Smoothing filter
-- *Applications*: Peak preservation in PPG, EDA, and spectroscopic signals
-- *Properties*: Retains sharp features, excellent for denoising without destroying high-frequency events
+- *Applications*: denoising while preserving local features
+- *Properties*: useful when sharp events or peaks should not be overly flattened
 
+**Gaussian Filter**
+~~~~~~~~~~~~~~~~~~~
+
+The Gaussian filter performs smoothing based on a Gaussian kernel and is useful for soft denoising operations.
+
+- *Type*: Smoothing filter
+- *Applications*: quick removal of small fluctuations
+- *Properties*: controlled through the sigma parameter
 
 Custom filters
 --------------
 
-Advanced users can define their own filtering logic in Python.  
+Advanced users can also define their own filtering logic in Python.
+
 To do this:
 
-1. Select the «Python code» option inside the filtering node.
-2. Paste your function following this format:
+1. Select the Python code option.
+2. Paste a function following this format:
 
-    .. code-block:: python
+   .. code-block:: python
 
-      def filter_signal(signal): 
-            new_values = scipy.ndimage.gaussian_filter1d(signal, sigma=30) 
-            return new_values
+      def filter_signal(signal):
+          new_values = scipy.ndimage.gaussian_filter1d(signal, sigma=30)
+          return new_values
 
-    - Make sure the code is well written, with correct tabulations and blank spaces.
-    - The function must be named `filter_signal`.
-    - The input must be a **single** parameter that represents the signal values. 
-    - The output must be a filtered array with the **same shape**.
-    - If there is a **syntax error** in the code, an error message will be displayed.
-    - If the field is **left blank**, the filter will be executed with the other parameters from the form (this field will be ignored).
+   - Make sure the code is well written, with correct indentation.
+   - The function must be named ``filter_signal``.
+   - The input must be a single parameter that represents the signal values.
+   - The output must be a filtered array with the same shape.
+   - If there is a syntax error, an error message will be displayed.
 
-.. image:: _static/filtering_controls.png
-   :alt: Filtering panel with code.
-   :width: 50%
+This option is intended for users who need custom behaviour not covered by the predefined filters.
+
+.. Screenshot: add a capture of the filtering settings card with one filter selected.
+   Suggested file: ``docs/source/_static/filtering-settings-card.png``.
+
+.. image:: _static/filtering-settings-card.png
+   :alt: Filtering settings card
+   :width: 35%
    :align: center
-
-
 
 Interface controls
 ------------------
 
 - **Filtering technique**: dropdown menu to choose the method.
-- **Parameters**: input fields to specify frequency cutoffs (determines the frequency threshold) and filter order (controls the steepness of the transition band).
+- **Parameters**: input fields to specify cutoffs, order, or other method-specific values.
 - **Execute filter**: applies the filter and updates the results displayed in the interface.
-- **Core widgets**: the results are displayed using core widgets, more specifically, charts and spectrum widgets. For more details, refer to the
-  :doc:`Core Widgets <core_widgets>`.
+- **Core widgets**: the results are displayed using shared charts and spectrum widgets. For more details, refer to :doc:`Core Widgets <core_widgets>`.
 
-.. image:: _static/filtering_full_interface.png
-   :alt: Filtering full interface.
-   :width: 70%
+After execution, the page shows the processed result together with the usual comparison widgets.
+
+.. Screenshot: add a second capture showing the filtering result and comparison area.
+   Suggested file: ``docs/source/_static/filtering-results-view.png``.
+
+.. image:: _static/filtering-results-view.png
+   :alt: Filtering results view
+   :width: 100%
    :align: center
 
 Applications examples
 ---------------------
 
-- Denoising PPG signals to remove motion artifacts.
-- Extracting low-frequency trends in EDA.
-
-
-
+- Denoising PPG signals to reduce motion artefacts.
+- Extracting slow-varying components in EDA.

@@ -1,0 +1,185 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batch Processing &mdash; SignAlchemist 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Resampling" href="resampling.html" />
+    <link rel="prev" title="Processing" href="processing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SignAlchemist
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Batch Processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#page-structure">Page Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-input">Pipeline Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-setup">Dataset Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution-and-downloads">Execution and Downloads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inspection-panel">Inspection Panel</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filtering.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="peaks.html">Peak Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hr.html">Heart Rate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core_widgets.html">Core Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SignAlchemist</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Batch Processing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/batch.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="batch-processing">
+<h1>Batch Processing<a class="headerlink" href="#batch-processing" title="Link to this heading"></a></h1>
+<p>The Batch page allows users to execute an exported Processing pipeline over multiple CSV files that share the same structure.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>This page is designed for situations where the same preprocessing workflow must be applied repeatedly to many recordings.</p>
+<p>The general idea is simple:</p>
+<ol class="arabic simple">
+<li><p>Import a pipeline that has already been validated in Processing.</p></li>
+<li><p>Load a group of CSV files.</p></li>
+<li><p>Configure the shared dataset mapping.</p></li>
+<li><p>Run the workflow over the full queue.</p></li>
+</ol>
+</section>
+<section id="page-structure">
+<h2>Page Structure<a class="headerlink" href="#page-structure" title="Link to this heading"></a></h2>
+<p>The interface is organised into three main areas:</p>
+<ul class="simple">
+<li><p><strong>Pipeline</strong>: import a pipeline JSON or load a recommended preset</p></li>
+<li><p><strong>Batch setup</strong>: load many CSV files and define a shared dataset mapping</p></li>
+<li><p><strong>Execution</strong>: review queue, progress, downloadable outputs, and inspection charts</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/batch-execution-overview.png"><img alt="Batch execution overview" class="align-center" src="_images/batch-execution-overview.png" style="width: 100%;" />
+</a>
+</section>
+<section id="pipeline-input">
+<h2>Pipeline Input<a class="headerlink" href="#pipeline-input" title="Link to this heading"></a></h2>
+<p>The page accepts the JSON exported from the Processing workspace. Once imported, the workflow summary gives a compact visual representation of the execution order.</p>
+<p>Recommended presets can also be loaded directly from the page.</p>
+</section>
+<section id="dataset-setup">
+<h2>Dataset Setup<a class="headerlink" href="#dataset-setup" title="Link to this heading"></a></h2>
+<p>All files in the queue share the same dataset configuration:</p>
+<ul class="simple">
+<li><p>Signal type</p></li>
+<li><p>Timestamp column</p></li>
+<li><p>Sampling rate</p></li>
+<li><p>Signal values column</p></li>
+</ul>
+<p>If the selected files do not share the same headers, the interface warns the user because batch execution assumes a common structure across the dataset.</p>
+</section>
+<section id="execution-and-downloads">
+<h2>Execution and Downloads<a class="headerlink" href="#execution-and-downloads" title="Link to this heading"></a></h2>
+<p>During execution, the page shows:</p>
+<ul class="simple">
+<li><p>The queue of loaded files</p></li>
+<li><p>Per-file status</p></li>
+<li><p>Completed and failed counters</p></li>
+<li><p>A ZIP download action for the processed outputs that are already ready</p></li>
+</ul>
+<p>Each successful file can also be downloaded individually.</p>
+</section>
+<section id="inspection-panel">
+<h2>Inspection Panel<a class="headerlink" href="#inspection-panel" title="Link to this heading"></a></h2>
+<p>The inspection panel lets the user select one file from the queue and compare the original signal against the processed output.</p>
+<p>This is useful for checking whether the exported pipeline behaves consistently across the loaded dataset.</p>
+<a class="reference internal image-reference" href="_images/batch-inspect-panel.png"><img alt="Batch inspection panel" class="align-center" src="_images/batch-inspect-panel.png" style="width: 100%;" />
+</a>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="processing.html" class="btn btn-neutral float-left" title="Processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resampling.html" class="btn btn-neutral float-right" title="Resampling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, David Martínez-Acha &amp; Gadea Lucas-Pérez.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
