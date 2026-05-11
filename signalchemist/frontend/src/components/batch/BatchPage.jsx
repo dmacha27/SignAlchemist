@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { usePapaParse } from "react-papaparse";
 import PropTypes from "prop-types";
@@ -46,7 +46,7 @@ import {
   validatePipelineDefinition,
 } from "./batchShared";
 import { PIPELINE_PRESETS } from "../processing/pipelinePresets";
-import { SimpleMenu, uiGlassButtonClass } from "../common/ui";
+import { SimpleMenu, uiToolbarButtonClass } from "../common/ui";
 
 const statusTone = {
   queued:
@@ -107,37 +107,6 @@ const BatchPage = () => {
     [pipelineDefinition]
   );
 
-  useEffect(() => {
-    if (!datasets.length) {
-      return;
-    }
-
-    const configuredDataset = autoConfigureDataset(datasets[0], datasets[0].name);
-
-    setSignalType((current) => current || configuredDataset.signalType || "");
-    setTimestampColumn((current) => (
-      current >= 0 ? current : configuredDataset.timestampColumn
-    ));
-    setSignalValues((current) => (
-      current !== -1 && current !== "" ? current : configuredDataset.signalValues
-    ));
-  }, [datasets]);
-
-  useEffect(() => {
-    if (!datasets.length) {
-      setSelectedDatasetId(null);
-      return;
-    }
-
-    setSelectedDatasetId((current) => {
-      if (current && datasets.some((dataset) => dataset.id === current)) {
-        return current;
-      }
-
-      return datasets[0].id;
-    });
-  }, [datasets]);
-
   const hasHeaderMismatch = useMemo(() => {
     if (datasets.length <= 1) {
       return false;
@@ -154,7 +123,7 @@ const BatchPage = () => {
     signalValues !== -1 &&
     signalValues !== "" &&
     signalType &&
-    (timestampColumn !== headers.length - 1 || Number(samplingRate) > 0)
+    (timestampColumn !== headers.length - 1 || Number(effectiveSamplingRate) > 0)
   );
 
   const completedRuns = results.filter((result) => result.status === "success").length;
@@ -162,36 +131,35 @@ const BatchPage = () => {
   const hasDownloadableBatchResults = results.some(
     (result) => result.status === "success" && Array.isArray(result.outputTable)
   );
+  const downloadableResultsCount = results.filter(
+    (result) => result.status === "success" && Array.isArray(result.outputTable)
+  ).length;
+  const pendingRuns = Math.max(datasets.length - completedRuns - failedRuns, 0);
+  const downloadHelpText = [
+    t("pages.batch.downloadAllHelp", { ready: downloadableResultsCount }),
+    pendingRuns > 0
+      ? t("pages.batch.downloadAllPending", { pending: pendingRuns })
+      : null,
+  ].filter(Boolean).join(" ");
   const progressValue = datasets.length
     ? Math.round(((completedRuns + failedRuns) / datasets.length) * 100)
     : 0;
   const selectedDataset = datasets.find((dataset) => dataset.id === selectedDatasetId) ?? null;
   const selectedResult = results.find((result) => result.id === selectedDatasetId) ?? null;
-
-  useEffect(() => {
+  const selectedPreview = useMemo(() => {
     if (!selectedDataset) {
-      return;
+      return null;
     }
 
-    const preview = buildChartPreview({
+    return buildChartPreview({
       fileRows: selectedDataset.fileRows,
       headers: selectedDataset.headers,
       timestampColumn,
       signalValues,
       samplingRate,
     });
-
-    if (!preview) {
-      return;
-    }
-
-    if (
-      preview.calculatedSamplingRate !== null &&
-      preview.calculatedSamplingRate !== samplingRate
-    ) {
-      setSamplingRate(preview.calculatedSamplingRate);
-    }
   }, [selectedDataset, signalValues, samplingRate, timestampColumn]);
+  const effectiveSamplingRate = selectedPreview?.calculatedSamplingRate ?? samplingRate;
 
   const selectedSourceTable = useMemo(() => {
     if (!selectedDataset || timestampColumn < 0 || signalValues === -1 || signalValues === "") {
@@ -204,12 +172,12 @@ const BatchPage = () => {
         headers: selectedDataset.headers,
         timestampColumn,
         signalValues,
-        samplingRate: Number(samplingRate),
+        samplingRate: Number(effectiveSamplingRate),
       });
     } catch {
       return null;
     }
-  }, [selectedDataset, samplingRate, signalValues, timestampColumn]);
+  }, [effectiveSamplingRate, selectedDataset, signalValues, timestampColumn]);
 
   const handlePipelineImport = async (event) => {
     const selectedFile = event.target.files?.[0];
@@ -267,10 +235,23 @@ const BatchPage = () => {
           };
         })
       );
+      const firstDataset = parsedDatasets[0]
+        ? autoConfigureDataset(parsedDatasets[0], parsedDatasets[0].name)
+        : null;
 
       setDatasets(parsedDatasets);
       setResults([]);
       setSelectedDatasetId(parsedDatasets[0]?.id ?? null);
+      setSignalType(defaultState.signalType ?? firstDataset?.signalType ?? "");
+      setTimestampColumn(
+        Number.isInteger(defaultState.timestampColumn)
+          ? defaultState.timestampColumn
+          : firstDataset?.timestampColumn ?? -1
+      );
+      setSignalValues(
+        defaultState.signalValues ?? firstDataset?.signalValues ?? -1
+      );
+      setSamplingRate(defaultState.samplingRate ?? "");
       toast.success(t("pages.batch.toasts.loadedFiles", { count: parsedDatasets.length }));
     } catch (error) {
       console.error(error);
@@ -311,14 +292,14 @@ const BatchPage = () => {
             headers: dataset.headers,
             timestampColumn,
             signalValues,
-            samplingRate: Number(samplingRate),
+            samplingRate: Number(effectiveSamplingRate),
           });
 
           const output = await executePipelineForDataset({
             pipeline: pipelineDefinition,
             table: sourceTable,
             signalType,
-            samplingRate: Number(samplingRate),
+            samplingRate: Number(effectiveSamplingRate),
           });
 
           setResults((current) => current.map((result) => (
@@ -379,10 +360,14 @@ const BatchPage = () => {
           icon={<FaFileImport />}
           actions={(
             <div className="flex gap-2">
-              <WorkspaceSecondaryButton onClick={() => pipelineInputRef.current?.click()}>
+              <button
+                type="button"
+                onClick={() => pipelineInputRef.current?.click()}
+                className={uiToolbarButtonClass}
+              >
                 <FaFileImport />
                 {t("common.import")}
-              </WorkspaceSecondaryButton>
+              </button>
               <SimpleMenu
                 label={t("common.menu.recommendedPipelines")}
                 widthClass="w-56"
@@ -390,7 +375,7 @@ const BatchPage = () => {
                   <button
                     type="button"
                     title={t("common.menu.recommendedPipelines")}
-                    className={`${uiGlassButtonClass} text-xs`}
+                    className={uiToolbarButtonClass}
                   >
                     <FaMagic />
                     {t("common.presets")}
@@ -465,7 +450,7 @@ const BatchPage = () => {
                 signalType={signalType}
                 timestampColumn={timestampColumn}
                 signalValues={signalValues}
-                samplingRate={samplingRate}
+                samplingRate={effectiveSamplingRate}
                 headers={headers}
                 onSignalTypeChange={setSignalType}
                 onTimestampChange={setTimestampColumn}
@@ -492,6 +477,14 @@ const BatchPage = () => {
                     setDatasets([]);
                     setResults([]);
                     setSelectedDatasetId(null);
+                    setSignalType(defaultState.signalType ?? "");
+                    setTimestampColumn(
+                      Number.isInteger(defaultState.timestampColumn)
+                        ? defaultState.timestampColumn
+                        : -1
+                    );
+                    setSignalValues(defaultState.signalValues ?? -1);
+                    setSamplingRate(defaultState.samplingRate ?? "");
                   }}
                 >
                   <FaTrash />
@@ -509,17 +502,31 @@ const BatchPage = () => {
           description={t("pages.batch.executionDescription")}
           icon={<FaChartBar />}
           className="flex h-full min-h-0 flex-col overflow-hidden"
-          actions={(
-            <WorkspaceSecondaryButton
-              onClick={handleDownloadAll}
-              disabled={!hasDownloadableBatchResults}
-            >
-              <FaDownload />
-              {t("pages.batch.downloadAll")}
-            </WorkspaceSecondaryButton>
-          )}
         >
           <WorkspaceInnerCard className="space-y-4">
+            <div className="rounded-[1rem] border border-cyan-200 bg-cyan-50/80 p-3 dark:border-cyan-500/30 dark:bg-cyan-500/10">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-cyan-950 dark:text-cyan-100">
+                    {t("pages.batch.downloadProcessedZip")}
+                  </p>
+                  <p className="mt-1 text-xs leading-4 text-cyan-900/80 dark:text-cyan-100/80">
+                    {downloadHelpText}
+                  </p>
+                </div>
+                <WorkspaceSecondaryButton
+                  onClick={handleDownloadAll}
+                  disabled={!hasDownloadableBatchResults}
+                  title={t("pages.batch.downloadAllTitle", {
+                    count: downloadableResultsCount,
+                  })}
+                >
+                  <FaDownload />
+                  {t("pages.batch.downloadAllReady")}
+                </WorkspaceSecondaryButton>
+              </div>
+            </div>
+
             <div className="rounded-[1rem] border border-slate-200 bg-slate-50/80 p-3 dark:border-gray-700 dark:bg-gray-950/50">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">

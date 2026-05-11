@@ -577,6 +577,11 @@ const en = {
       executionDescription:
         "Review the queue and the processing progress in one place.",
       downloadAll: "Download all",
+      downloadProcessedZip: "Batch results",
+      downloadAllHelp: "{{ready}} file(s) ready to download",
+      downloadAllPending: "· {{pending}} pending",
+      downloadAllReady: "Download ZIP",
+      downloadAllTitle: "Download processed results",
       queue: "Queue",
       filesCount: "{{count}} files",
       fileNumber: "File {{index}}",

@@ -24,11 +24,11 @@ import LoaderMessage from "../common/LoaderMessage";
 import {
   SimpleConfirm,
   SimpleMenu,
+  uiToolbarButtonClass,
 } from "../common/ui";
 import {
   WorkspaceCard,
   WorkspaceInnerCard,
-  WorkspaceSecondaryButton,
 } from "../workspace/WorkspaceShell";
 import {
   getNodeDefinition,
@@ -134,22 +134,24 @@ const ProcessingFlowSectionInner = ({
     icon={<FaProjectDiagram />}
     actions={(
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
-        <WorkspaceSecondaryButton
+        <button
+          type="button"
           title={t("common.export")}
           onClick={exportPipeline}
-          className="px-3 py-2 text-xs"
+          className={uiToolbarButtonClass}
         >
           <FaFileExport />
           {t("common.export")}
-        </WorkspaceSecondaryButton>
-        <WorkspaceSecondaryButton
+        </button>
+        <button
+          type="button"
           title={t("common.import")}
           onClick={importPipeline}
-          className="px-3 py-2 text-xs"
+          className={uiToolbarButtonClass}
         >
           <FaFileImport />
           {t("common.import")}
-        </WorkspaceSecondaryButton>
+        </button>
         <SimpleMenu
           label={t("common.menu.recommendedPipelines")}
           widthClass="w-56"
@@ -157,7 +159,7 @@ const ProcessingFlowSectionInner = ({
             <button
               type="button"
               title={t("common.menu.recommendedPipelines")}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
+              className={uiToolbarButtonClass}
             >
               <FaMagic />
               {t("common.presets")}

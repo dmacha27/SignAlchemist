@@ -1,5 +1,4 @@
 import React from "react";
-import { Line } from "react-chartjs-2";
 
 /**
  * ErrorBoundary component to catch and handle rendering errors in its child components
@@ -23,26 +22,10 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      this.state.hasError = false;
       return (
-        <div className="relative">
-          <Line
-            data={{ datasets: [] }}
-            options={{
-              responsive: true,
-              scales: {
-                x: { grid: { color: "#e5e5e5" } },
-                y: { grid: { color: "#e5e5e5" } },
-              },
-              plugins: {
-                legend: { display: false },
-              },
-            }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-white dark:bg-gray-900 p-2 rounded shadow text-red-600">
-              Check parameters
-            </div>
+        <div className="flex min-h-[220px] items-center justify-center rounded-[1rem] border border-rose-200 bg-rose-50/80 p-4 text-center shadow-sm dark:border-rose-900/70 dark:bg-rose-950/30">
+          <div className="rounded-xl bg-white/80 px-4 py-3 text-sm font-medium text-rose-700 dark:bg-slate-950/60 dark:text-rose-200">
+            Check parameters
           </div>
         </div>
       );

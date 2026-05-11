@@ -581,6 +581,11 @@ const es = {
       executionDescription:
         "Revisa la cola y el progreso del procesamiento en un único lugar.",
       downloadAll: "Descargar todo",
+      downloadProcessedZip: "Resultados del batch",
+      downloadAllHelp: "{{ready}} archivo(s) listo(s) para descargar",
+      downloadAllPending: "· {{pending}} pendiente(s)",
+      downloadAllReady: "Descargar ZIP",
+      downloadAllTitle: "Descargar resultados procesados",
       queue: "Cola",
       filesCount: "{{count}} archivos",
       fileNumber: "Archivo {{index}}",

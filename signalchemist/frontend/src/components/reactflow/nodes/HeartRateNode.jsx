@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useEffectEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Handle,
@@ -38,22 +38,15 @@ function HeartRateNode({ id, data }) {
   });
 
   const { updateNodeData } = useReactFlow();
-  const [sourceNodeId, setSourceNodeId] = useState(null);
-  const [targetNodeId, setTargetNodeId] = useState(null);
   const [method, setMethod] = useState(
     initialConfig?.method ?? getDefaultHeartRateMethod()
   );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
+  const sourceNodeId = connections?.find((conn) => conn.target === id)?.source ?? null;
+  const targetNodeId = connections?.find((conn) => conn.source === id)?.target ?? null;
   const isPpg = data.signalType === "PPG";
-
-  useEffect(() => {
-    const sourceId = connections?.find((conn) => conn.target === id)?.source;
-    const targetId = connections?.find((conn) => conn.source === id)?.target;
-    setSourceNodeId(sourceId);
-    setTargetNodeId(targetId);
-  }, [connections, id]);
 
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
@@ -115,48 +108,57 @@ function HeartRateNode({ id, data }) {
     }
   }, [data.samplingRate, data.signalType, id, isPpg, method, targetNodeId, updateNodeData]);
 
+  const handleDeleteTable = useEffectEvent(() => {
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      table: null,
+      beatCount: 0,
+      outputKind: null,
+    }));
+
+    setExecutionState("waiting");
+
+    if (targetNodeId) {
+      dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+    }
+  });
+
+  const handleExecute = useEffectEvent(async (event) => {
+    const sourceTable = event.detail.table;
+
+    if (!sourceTable) {
+      return;
+    }
+
+    tableRef.current = sourceTable;
+
+    const result = await requestHeartRate();
+
+    if (targetNodeId && result?.table) {
+      dispatchWindowEvent(getExecuteEventName(targetNodeId), {
+        table: result.table,
+      });
+    }
+  });
+
   useEffect(() => {
-    const handleDeleteTable = () => {
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: null,
-        beatCount: 0,
-        outputKind: null,
-      }));
-
-      setExecutionState("waiting");
-
-      if (targetNodeId) {
-        dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
-      }
+    const executeEventName = getExecuteEventName(id);
+    const deleteEventName = getDeleteTablesEventName(id);
+    const onExecute = (event) => {
+      void handleExecute(event);
+    };
+    const onDelete = () => {
+      handleDeleteTable();
     };
 
-    const handleExecute = async (event) => {
-      const sourceTable = event.detail.table;
-
-      if (!sourceTable) {
-        return;
-      }
-
-      tableRef.current = sourceTable;
-
-      const result = await requestHeartRate();
-
-      if (targetNodeId && result?.table) {
-        dispatchWindowEvent(getExecuteEventName(targetNodeId), {
-          table: result.table,
-        });
-      }
-    };
-
-    window.addEventListener(getExecuteEventName(id), handleExecute);
-    window.addEventListener(getDeleteTablesEventName(id), handleDeleteTable);
+    window.addEventListener(executeEventName, onExecute);
+    window.addEventListener(deleteEventName, onDelete);
 
     return () => {
-      window.removeEventListener(getExecuteEventName(id), handleExecute);
-      window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
+      window.removeEventListener(executeEventName, onExecute);
+      window.removeEventListener(deleteEventName, onDelete);
     };
-  }, [id, requestHeartRate, targetNodeId, updateNodeData]);
+  }, [id]);
 
   useEffect(() => {
     dispatchWindowEvent(getDeleteTablesEventName(id));
@@ -183,7 +185,7 @@ function HeartRateNode({ id, data }) {
       deleteTestId={`delete${id}`}
       footer={(
         <NodeRunButton
-          disabled={!tableRef.current || !isPpg}
+          disabled={!incomingTable || !isPpg}
           onClick={requestHeartRate}
           accent="rose"
         >

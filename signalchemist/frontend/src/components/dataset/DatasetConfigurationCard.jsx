@@ -12,12 +12,12 @@ const CARD_CLASS =
   "rounded-[1.6rem] border border-slate-200/80 bg-white/85 p-3.5 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700 dark:bg-gray-900/85";
 
 const SectionBadge = ({ step }) => (
-  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white dark:bg-white dark:text-slate-900">
+  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white dark:bg-white dark:text-slate-900">
     {step}
   </span>
 );
 
-const SectionHeader = ({ step, title, description }) => (
+const SectionHeader = ({ step = null, title, description = "" }) => (
   <div className="mb-3 flex items-start gap-3">
     <div className="min-w-0 text-left">
       <div className="flex items-center gap-2.5">
@@ -57,7 +57,12 @@ const FieldCard = ({
   </div>
 );
 
-const HighlightFieldCard = ({ label, value, footer, tooltip }) => (
+const HighlightFieldCard = ({
+  label,
+  value,
+  footer = null,
+  tooltip = "",
+}) => (
   <div className="tuto-samplingRate flex min-h-[96px] flex-col justify-between rounded-[1.15rem] border border-cyan-200 bg-cyan-50/80 p-2.5 shadow-sm dark:border-cyan-500/30 dark:bg-cyan-500/10">
     <div className="block min-h-[32px] text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-200">
       {label}
@@ -249,11 +254,6 @@ SectionHeader.propTypes = {
   description: PropTypes.string,
 };
 
-SectionHeader.defaultProps = {
-  step: null,
-  description: "",
-};
-
 FieldCard.propTypes = {
   className: PropTypes.string,
   label: PropTypes.string.isRequired,
@@ -263,22 +263,11 @@ FieldCard.propTypes = {
   footerClassName: PropTypes.string,
 };
 
-FieldCard.defaultProps = {
-  className: "",
-  footer: null,
-  footerClassName: "",
-};
-
 HighlightFieldCard.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
   footer: PropTypes.string,
   tooltip: PropTypes.string,
-};
-
-HighlightFieldCard.defaultProps = {
-  footer: null,
-  tooltip: "",
 };
 
 DatasetConfigurationCard.propTypes = {
@@ -296,14 +285,6 @@ DatasetConfigurationCard.propTypes = {
   description: PropTypes.string,
   step: PropTypes.number,
   variant: PropTypes.oneOf(["card", "embedded"]),
-};
-
-DatasetConfigurationCard.defaultProps = {
-  samplingRate: null,
-  title: undefined,
-  description: undefined,
-  step: undefined,
-  variant: "card",
 };
 
 export default DatasetConfigurationCard;

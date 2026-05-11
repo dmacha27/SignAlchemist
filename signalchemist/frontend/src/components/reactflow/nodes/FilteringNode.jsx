@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useEffectEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Handle,
@@ -45,31 +45,24 @@ function FilteringNode({ id, data }) {
     name: data.filter,
     fields: data.fields,
   });
+  const baseFilterDefaults = createFilterDefaults(data.samplingRate);
   const filterDefaultsRef = useRef(createFilterDefaults(data.samplingRate));
 
   const { updateNodeData } = useReactFlow();
-  const [sourceNodeId, setSourceNodeId] = useState(null);
-  const [targetNodeId, setTargetNodeId] = useState(null);
   const [filter, setFilter] = useState(initialConfig?.name ?? "butterworth");
   const [fields, setFields] = useState(
     initialConfig?.fields
       ? {
-          ...filterDefaultsRef.current[initialConfig.name],
+          ...baseFilterDefaults[initialConfig.name],
           ...initialConfig.fields,
         }
-      : filterDefaultsRef.current[initialConfig?.name ?? "butterworth"]
+      : baseFilterDefaults[initialConfig?.name ?? "butterworth"]
   );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
-
-  // Set source and target node IDs based on the current connections
-  useEffect(() => {
-    const sourceId = connections?.find((conn) => conn.target === id)?.source;
-    const targetId = connections?.find((conn) => conn.source === id)?.target;
-    setSourceNodeId(sourceId);
-    setTargetNodeId(targetId);
-  }, [connections, id]);
+  const sourceNodeId = connections?.find((conn) => conn.target === id)?.source ?? null;
+  const targetNodeId = connections?.find((conn) => conn.source === id)?.target ?? null;
 
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
@@ -164,57 +157,58 @@ function FilteringNode({ id, data }) {
     }
   }, [fields, filter, id, targetNodeId, updateNodeData]);
 
+  const handleDeleteTable = useEffectEvent(() => {
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      table: null,
+    }));
+
+    setExecutionState("waiting");
+
+    if (targetNodeId) {
+      dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+    }
+  });
+
+  const handleExecute = useEffectEvent(async (event) => {
+    const tableSource = event.detail.table;
+
+    if (!tableSource) {
+      return;
+    }
+
+    tableRef.current = tableSource;
+    samplingRateRef.current =
+      inferSamplingRate(tableSource) ?? data.samplingRate;
+    filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
+
+    const nextTable = await requestFilter();
+
+    if (targetNodeId && nextTable) {
+      dispatchWindowEvent(getExecuteEventName(targetNodeId), {
+        table: nextTable,
+      });
+    }
+  });
+
   useEffect(() => {
-    /**
-     * Handler to delete the current node's table and propagate the event to the next node.
-     */
-    const handleDeleteTable = () => {
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: null,
-      }));
-
-      setExecutionState("waiting");
-
-      if (targetNodeId) {
-        dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
-      }
+    const executeEventName = getExecuteEventName(id);
+    const deleteEventName = getDeleteTablesEventName(id);
+    const onExecute = (event) => {
+      void handleExecute(event);
+    };
+    const onDelete = () => {
+      handleDeleteTable();
     };
 
-    /**
-     * Handler to execute the filtering process when an event is triggered.
-     * @param {Event} e - The event containing the table data to be filtered.
-     */
-    const handleExecute = async (e) => {
-      const table_source = e.detail.table;
-
-      if (table_source) {
-        tableRef.current = table_source;
-
-        samplingRateRef.current =
-          inferSamplingRate(table_source) ?? data.samplingRate;
-
-        filterDefaultsRef.current = createFilterDefaults(samplingRateRef.current);
-
-        const new_table = await requestFilter();
-
-        if (targetNodeId && new_table) {
-          dispatchWindowEvent(getExecuteEventName(targetNodeId), {
-            table: new_table,
-          });
-        }
-      }
-    };
-
-    window.addEventListener(getExecuteEventName(id), handleExecute);
-    window.addEventListener(getDeleteTablesEventName(id), handleDeleteTable);
+    window.addEventListener(executeEventName, onExecute);
+    window.addEventListener(deleteEventName, onDelete);
 
     return () => {
-      // Clean up events when dependencies change (avoid multiple listeners of the same type)
-      window.removeEventListener(getExecuteEventName(id), handleExecute);
-      window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
+      window.removeEventListener(executeEventName, onExecute);
+      window.removeEventListener(deleteEventName, onDelete);
     };
-  }, [data.samplingRate, id, requestFilter, targetNodeId, updateNodeData]);
+  }, [id]);
 
   /**
    * Trigger a delete event when filter configuration changes.
@@ -253,7 +247,7 @@ function FilteringNode({ id, data }) {
       deleteTestId={`delete${id}`}
       footer={
         <NodeRunButton
-          disabled={!tableRef.current}
+          disabled={!incomingTable}
           onClick={requestFilter}
           accent="emerald"
         >

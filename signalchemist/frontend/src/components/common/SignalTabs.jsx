@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { use, useState } from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,6 +22,8 @@ import ComparisonSpectrumChart from "./ComparisonSpectrumChart";
 import SpectrumChart from "./SpectrumChart";
 import LoaderMessage from "./LoaderMessage";
 import { SimpleMenu } from "./ui";
+
+const EMPTY_ANNOTATION_POINTS = [];
 
 const surfaceButtonClass =
   "flex w-full items-start gap-3 rounded-[1.1rem] border px-4 py-3 text-left transition";
@@ -59,11 +61,11 @@ const SignalTabs = ({
   rightIcon,
   chartDataOriginal,
   chartDataProcessed,
-  processedAnnotationPoints = [],
+  processedAnnotationPoints = EMPTY_ANNOTATION_POINTS,
   isRequesting = false,
 }) => {
   const { t } = useTranslation();
-  const theme = useContext(ThemeContext);
+  const theme = use(ThemeContext);
   const isDark = theme?.isDarkMode ?? false;
   const [analysisView, setAnalysisView] = useState("signal");
   const [comparisonView, setComparisonView] = useState("split");
@@ -319,7 +321,7 @@ EmptyState.propTypes = {
 };
 
 SignalTabs.propTypes = {
-  rightTitle: PropTypes.string.isRequired,
+  rightTitle: PropTypes.string,
   rightIcon: PropTypes.element.isRequired,
   chartDataOriginal: PropTypes.array,
   chartDataProcessed: PropTypes.array,
@@ -327,13 +329,6 @@ SignalTabs.propTypes = {
     PropTypes.arrayOf(PropTypes.number)
   ),
   isRequesting: PropTypes.bool,
-};
-
-SignalTabs.defaultProps = {
-  chartDataOriginal: null,
-  chartDataProcessed: null,
-  processedAnnotationPoints: [],
-  isRequesting: false,
 };
 
 export default SignalTabs;

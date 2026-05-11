@@ -70,14 +70,11 @@ const PeaksTable = ({ peaks }) => {
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
   const totalPages = Math.ceil(peaks.length / rowsPerPage);
+  const currentPage = Math.min(page, Math.max(totalPages, 1));
   const paginatedPeaks = peaks.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
   );
-
-  useEffect(() => {
-    setPage(1);
-  }, [peaks]);
 
   return (
     <div>
@@ -119,7 +116,11 @@ const PeaksTable = ({ peaks }) => {
 
       {totalPages > 1 ? (
         <div className="mt-4 overflow-x-auto">
-          <SimplePagination page={page} onChange={setPage} totalPages={totalPages} />
+          <SimplePagination
+            page={currentPage}
+            onChange={setPage}
+            totalPages={totalPages}
+          />
         </div>
       ) : null}
     </div>
@@ -136,19 +137,11 @@ const PeaksPage = () => {
   const [isRequesting, setIsRequesting] = useState(false);
   const [chartDataOriginal, setChartDataOriginal] = useState(null);
   const [peaks, setPeaks] = useState([]);
-  const [detector, setDetector] = useState(getDefaultDetector(signalType));
-  const [minDistanceSeconds, setMinDistanceSeconds] = useState(
+  const [detector, setDetector] = useState(() => getDefaultDetector(signalType));
+  const [minDistanceSeconds, setMinDistanceSeconds] = useState(() =>
     getDefaultMinDistance(signalType)
   );
   const [height, setHeight] = useState("");
-
-  useEffect(() => {
-    setMinDistanceSeconds(getDefaultMinDistance(signalType));
-  }, [signalType]);
-
-  useEffect(() => {
-    setDetector(getDefaultDetector(signalType));
-  }, [signalType]);
 
   useEffect(() => {
     if (!file) {
@@ -325,7 +318,14 @@ const PeaksPage = () => {
                 </p>
                 <p className="mt-1 text-2xl font-semibold">{peaks.length}</p>
               </div>
-              <PeaksTable peaks={peaks} />
+              <PeaksTable
+                key={
+                  peaks.length
+                    ? `${peaks.length}-${peaks[0].index}-${peaks[peaks.length - 1].index}`
+                    : "empty"
+                }
+                peaks={peaks}
+              />
               <DownloadPeakIndices peaks={peaks} />
             </div>
           ) : (

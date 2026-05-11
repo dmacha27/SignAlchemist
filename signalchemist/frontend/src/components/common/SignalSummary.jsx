@@ -9,7 +9,7 @@ function formatDuration(seconds, t) {
   return t("table.minutesSeconds", { minutes: mins, seconds: secs });
 }
 
-const SignalSummary = ({ table }) => {
+const SignalSummary = ({ table = null }) => {
   const { t } = useTranslation();
   if (!table || table.length < 2) {
     return null;
@@ -52,10 +52,6 @@ SignalSummary.propTypes = {
   table: PropTypes.arrayOf(
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number]))
   ),
-};
-
-SignalSummary.defaultProps = {
-  table: null,
 };
 
 export default SignalSummary;

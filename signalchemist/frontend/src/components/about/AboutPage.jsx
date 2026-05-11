@@ -65,7 +65,7 @@ const AboutPage = () => {
                   className="rounded-[1.1rem] border border-slate-200 bg-slate-50/90 p-4 dark:border-gray-700 dark:bg-gray-950/70"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm text-white dark:bg-white dark:text-slate-900">
+                    <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm text-white dark:bg-white dark:text-slate-900">
                       {item.icon}
                     </span>
                     <div className="min-w-0">

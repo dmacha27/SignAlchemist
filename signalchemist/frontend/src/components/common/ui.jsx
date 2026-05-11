@@ -23,6 +23,8 @@ export const uiGhostButtonClass =
   "btn btn-ghost min-h-0 h-auto rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-none hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-gray-800";
 export const uiGlassButtonClass =
   "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200/75 bg-white/70 px-3 py-2 text-sm font-semibold text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.10)] backdrop-blur-md transition-colors hover:bg-white/86 dark:border-gray-700/75 dark:bg-gray-900/70 dark:text-slate-200 dark:hover:bg-gray-900/86";
+export const uiToolbarButtonClass =
+  "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800 dark:hover:border-gray-600";
 
 export const SimpleTooltip = ({ label, children }) => (
   <div className="tooltip" data-tip={label}>
@@ -63,12 +65,6 @@ FormFieldLabel.propTypes = {
   label: PropTypes.string.isRequired,
   tooltip: PropTypes.string,
   className: PropTypes.string,
-};
-
-FormFieldLabel.defaultProps = {
-  tooltip: null,
-  className:
-    "block text-sm font-semibold text-slate-700 dark:text-slate-200",
 };
 
 export const SimpleMenu = ({ trigger, label, items, widthClass = "w-44" }) => {
@@ -201,11 +197,6 @@ SimpleMenu.propTypes = {
   widthClass: PropTypes.string,
 };
 
-SimpleMenu.defaultProps = {
-  label: null,
-  widthClass: "w-44",
-};
-
 export const SimpleDialog = ({ open, title, onClose, children }) => {
   const { t } = useTranslation();
   useEffect(() => {
@@ -326,7 +317,7 @@ export const SimplePagination = ({ page, totalPages, onChange }) => {
         {items.map((item, index) => (
           item === "ellipsis" ? (
             <span
-              key={`ellipsis-${index}`}
+              key={`ellipsis-${sortedPages[index - 1] ?? "start"}-${sortedPages[index] ?? "end"}`}
               className="px-1 text-sm font-semibold text-slate-400 dark:text-slate-500"
             >
               ...
@@ -418,8 +409,4 @@ SimpleConfirm.propTypes = {
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
   confirmLabel: PropTypes.string,
-};
-
-SimpleConfirm.defaultProps = {
-  confirmLabel: "Confirm",
 };

@@ -9,7 +9,7 @@ const GLASS_BUTTON_CLASS =
   "border border-slate-200/75 bg-white/70 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.10)] backdrop-blur-md transition-colors hover:bg-white/86 dark:border-gray-700/75 dark:bg-gray-900/70 dark:text-slate-200 dark:hover:bg-gray-900/86";
 
 export const WorkspacePage = ({ children }) => (
-  <div className="container mx-auto px-4 py-4">
+  <div className="container mx-auto p-4">
     <div className="mx-auto max-w-7xl">{children}</div>
   </div>
 );
@@ -25,52 +25,52 @@ export const WorkspaceHero = ({
   const { t } = useTranslation();
 
   return (
-  <header className="rounded-[1.75rem] border border-slate-200/90 bg-white px-5 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] dark:border-gray-700 dark:bg-gray-950 md:px-6">
-    <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-      <div className="flex flex-col items-start">
-        <Link
-          to={backTo}
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${GLASS_BUTTON_CLASS}`}
-        >
-          <FaArrowLeft size={11} />
-          {t("workspace.backHome")}
-        </Link>
-        <div className="mt-4 flex items-center gap-3">
-          <div className="text-[1.8rem] text-cyan-600 dark:text-cyan-400">
-            {icon}
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-[1.35rem] font-semibold text-slate-900 dark:text-white md:text-[1.55rem]">
-              {title}
-            </h1>
-            <p className="mt-1 max-w-3xl text-sm leading-5 text-slate-600 dark:text-slate-300">
-              {description}
-            </p>
+    <header className="rounded-[1.75rem] border border-slate-200/90 bg-white px-5 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] dark:border-gray-700 dark:bg-gray-950 md:px-6">
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
+        <div className="flex flex-col items-start">
+          <Link
+            to={backTo}
+            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${GLASS_BUTTON_CLASS}`}
+          >
+            <FaArrowLeft size={11} />
+            {t("workspace.backHome")}
+          </Link>
+          <div className="mt-4 flex items-center gap-3">
+            <div className="text-[1.8rem] text-cyan-600 dark:text-cyan-400">
+              {icon}
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-[1.35rem] font-semibold text-slate-900 dark:text-white md:text-[1.55rem]">
+                {title}
+              </h1>
+              <p className="mt-1 max-w-3xl text-sm leading-5 text-slate-600 dark:text-slate-300">
+                {description}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="h-full rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3.5 dark:border-gray-700 dark:bg-gray-900">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-          {t("common.context")}
-        </p>
-        {badge ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white dark:bg-white dark:text-slate-900">
-              {badge}
-            </span>
-          </div>
-        ) : null}
-        {action ? (
-          <div className={badge ? "mt-4" : "mt-3"}>{action}</div>
-        ) : (
-          <p className={badge ? "mt-4 text-sm leading-5 text-slate-600 dark:text-slate-300" : "mt-3 text-sm leading-5 text-slate-600 dark:text-slate-300"}>
-            {t("common.configureAndReview")}
+        <div className="h-full rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3.5 dark:border-gray-700 dark:bg-gray-900">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+            {t("common.context")}
           </p>
-        )}
+          {badge ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white dark:bg-white dark:text-slate-900">
+                {badge}
+              </span>
+            </div>
+          ) : null}
+          {action ? (
+            <div className={badge ? "mt-4" : "mt-3"}>{action}</div>
+          ) : (
+            <p className={badge ? "mt-4 text-sm leading-5 text-slate-600 dark:text-slate-300" : "mt-3 text-sm leading-5 text-slate-600 dark:text-slate-300"}>
+              {t("common.configureAndReview")}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
-  </header>
+    </header>
   );
 };
 
@@ -201,19 +201,9 @@ WorkspaceHero.propTypes = {
   action: PropTypes.node,
 };
 
-WorkspaceHero.defaultProps = {
-  badge: null,
-  backTo: "/",
-  action: null,
-};
-
 WorkspaceSection.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
-};
-
-WorkspaceSection.defaultProps = {
-  className: "",
 };
 
 WorkspaceCard.propTypes = {
@@ -225,22 +215,12 @@ WorkspaceCard.propTypes = {
   className: PropTypes.string,
 };
 
-WorkspaceCard.defaultProps = {
-  title: null,
-  description: null,
-  icon: null,
-  actions: null,
-  className: "",
-};
 
 WorkspaceInnerCard.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };
 
-WorkspaceInnerCard.defaultProps = {
-  className: "",
-};
 
 WorkspaceEmptyState.propTypes = {
   message: PropTypes.string.isRequired,
@@ -255,13 +235,6 @@ WorkspacePrimaryButton.propTypes = {
   title: PropTypes.string,
 };
 
-WorkspacePrimaryButton.defaultProps = {
-  onClick: undefined,
-  disabled: false,
-  className: "",
-  type: "button",
-  title: undefined,
-};
 
 WorkspaceSecondaryButton.propTypes = {
   children: PropTypes.node.isRequired,
@@ -270,19 +243,9 @@ WorkspaceSecondaryButton.propTypes = {
   title: PropTypes.string,
 };
 
-WorkspaceSecondaryButton.defaultProps = {
-  onClick: undefined,
-  className: "",
-  title: undefined,
-};
 
 WorkspaceActionLink.propTypes = {
   to: PropTypes.string,
   href: PropTypes.string,
   children: PropTypes.node.isRequired,
-};
-
-WorkspaceActionLink.defaultProps = {
-  to: null,
-  href: null,
 };

@@ -98,12 +98,6 @@ IconAction.propTypes = {
   dataTestId: PropTypes.string,
 };
 
-IconAction.defaultProps = {
-  title: undefined,
-  className: "",
-  dataTestId: undefined,
-};
-
 export const NodeShell = ({
   icon,
   title,
@@ -178,16 +172,6 @@ NodeShell.propTypes = {
   footer: PropTypes.node,
 };
 
-NodeShell.defaultProps = {
-  eyebrow: null,
-  accent: "slate",
-  executionState: null,
-  onStatusClick: undefined,
-  onDeleteClick: undefined,
-  deleteTestId: undefined,
-  footer: null,
-};
-
 export const NodeSection = ({
   label,
   tooltip,
@@ -220,13 +204,6 @@ NodeSection.propTypes = {
   compact: PropTypes.bool,
 };
 
-NodeSection.defaultProps = {
-  label: null,
-  tooltip: null,
-  fieldId: undefined,
-  compact: false,
-};
-
 export const NodeRunButton = ({ children, disabled, onClick, accent = "slate" }) => {
   const palette = accentStyles[accent] ?? accentStyles.slate;
 
@@ -247,11 +224,6 @@ NodeRunButton.propTypes = {
   disabled: PropTypes.bool,
   onClick: PropTypes.func.isRequired,
   accent: PropTypes.string,
-};
-
-NodeRunButton.defaultProps = {
-  disabled: false,
-  accent: "slate",
 };
 
 export const NodeOutputPreview = ({
@@ -293,12 +265,11 @@ NodeOutputPreview.propTypes = {
   accent: PropTypes.string,
 };
 
-NodeOutputPreview.defaultProps = {
-  rows: 0,
-  accent: "slate",
-};
-
-export const NodeDataTable = ({ headers, rows, emptyMessage }) => {
+export const NodeDataTable = ({
+  headers,
+  rows,
+  emptyMessage = "Waiting for data...",
+}) => {
   if (!rows || rows.length === 0) {
     return (
       <div className="rounded-[0.95rem] bg-slate-50 px-4 py-6 text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400">
@@ -327,9 +298,11 @@ export const NodeDataTable = ({ headers, rows, emptyMessage }) => {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
+            {rows.map((row, index) => {
+              const rowKey = `${index + 1}-${row.map((value) => String(value)).join("|")}`;
+              return (
               <tr
-                key={`${row[0]}-${index}`}
+                key={rowKey}
                 className="border-t border-slate-200 odd:bg-white even:bg-slate-50 dark:border-gray-800 dark:odd:bg-slate-950 dark:even:bg-slate-900"
               >
                 <td className="px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -344,7 +317,8 @@ export const NodeDataTable = ({ headers, rows, emptyMessage }) => {
                   </td>
                 ))}
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -356,8 +330,4 @@ NodeDataTable.propTypes = {
   headers: PropTypes.arrayOf(PropTypes.string).isRequired,
   rows: PropTypes.arrayOf(PropTypes.array).isRequired,
   emptyMessage: PropTypes.string,
-};
-
-NodeDataTable.defaultProps = {
-  emptyMessage: "Waiting for data...",
 };

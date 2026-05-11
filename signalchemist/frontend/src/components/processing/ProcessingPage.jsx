@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext, useRef } from "react";
+import { useState, useEffect, useCallback, useEffectEvent, use, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useNodesState,
@@ -74,7 +74,7 @@ const ProcessingPage = () => {
   const { file, signalType, timestampColumn, samplingRate, signalValues } =
     location.state || {};
   const { readString } = usePapaParse();
-  const { isDarkMode: isDark } = useContext(ThemeContext);
+  const { isDarkMode: isDark } = use(ThemeContext);
 
   const [confirmationOpened, setConfirmationOpened] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -282,57 +282,61 @@ const ProcessingPage = () => {
     addNode(nodeType);
   }, [addNode]);
 
+  const handleInsertNodeOnEdge = useEffectEvent((event) => {
+    const { edgeId, sourceId, targetId, nodeType } = event.detail || {};
+    if (!edgeId || !sourceId || !targetId || !nodeType) {
+      return;
+    }
+
+    if (!isInsertableNodeType(nodeType)) {
+      return;
+    }
+
+    const sourceNode = nodes.find((node) => node.id === sourceId);
+    const targetNode = nodes.find((node) => node.id === targetId);
+    if (!sourceNode || !targetNode) {
+      return;
+    }
+
+    const position = {
+      x: (sourceNode.position.x + targetNode.position.x) / 2,
+      y: (sourceNode.position.y + targetNode.position.y) / 2,
+    };
+
+    if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
+      return;
+    }
+
+    const insertedNodeId = addNode(nodeType, { position });
+
+    setEdges((currentEdges) => {
+      const filteredEdges = currentEdges.filter((edge) => edge.id !== edgeId);
+      return [
+        ...filteredEdges,
+        buildEdge({
+          id: `xy-edge__${sourceId}-${insertedNodeId}`,
+          source: sourceId,
+          target: insertedNodeId,
+        }),
+        buildEdge({
+          id: `xy-edge__${insertedNodeId}-${targetId}`,
+          source: insertedNodeId,
+          target: targetId,
+        }),
+      ];
+    });
+  });
+
   useEffect(() => {
-    const handleInsertNodeOnEdge = (event) => {
-      const { edgeId, sourceId, targetId, nodeType } = event.detail || {};
-      if (!edgeId || !sourceId || !targetId || !nodeType) {
-        return;
-      }
-
-      if (!isInsertableNodeType(nodeType)) {
-        return;
-      }
-
-      const sourceNode = nodes.find((node) => node.id === sourceId);
-      const targetNode = nodes.find((node) => node.id === targetId);
-      if (!sourceNode || !targetNode) {
-        return;
-      }
-
-      const position = {
-        x: (sourceNode.position.x + targetNode.position.x) / 2,
-        y: (sourceNode.position.y + targetNode.position.y) / 2,
-      };
-
-      if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
-        return;
-      }
-
-      const insertedNodeId = addNode(nodeType, { position });
-
-      setEdges((currentEdges) => {
-        const filteredEdges = currentEdges.filter((edge) => edge.id !== edgeId);
-        return [
-          ...filteredEdges,
-          buildEdge({
-            id: `xy-edge__${sourceId}-${insertedNodeId}`,
-            source: sourceId,
-            target: insertedNodeId,
-          }),
-          buildEdge({
-            id: `xy-edge__${insertedNodeId}-${targetId}`,
-            source: insertedNodeId,
-            target: targetId,
-          }),
-        ];
-      });
+    const onInsertNodeOnEdge = (event) => {
+      handleInsertNodeOnEdge(event);
     };
 
-    window.addEventListener("insert-node-on-edge", handleInsertNodeOnEdge);
+    window.addEventListener("insert-node-on-edge", onInsertNodeOnEdge);
     return () => {
-      window.removeEventListener("insert-node-on-edge", handleInsertNodeOnEdge);
+      window.removeEventListener("insert-node-on-edge", onInsertNodeOnEdge);
     };
-  }, [addNode, buildEdge, nodes, setEdges]);
+  }, []);
 
   return (
     <WorkspacePage>

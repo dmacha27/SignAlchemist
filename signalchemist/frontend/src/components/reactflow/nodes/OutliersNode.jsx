@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useEffectEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Handle,
@@ -39,22 +39,14 @@ function OutliersNode({ id, data }) {
   });
 
   const { updateNodeData } = useReactFlow();
-  const [sourceNodeId, setSourceNodeId] = useState(null);
-  const [targetNodeId, setTargetNodeId] = useState(null);
   const [outlierTechnique, setOutlierTechnique] = useState(
     initialConfig?.name ?? "hampel"
   );
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
-
-  // Update source and target node IDs when connections change
-  useEffect(() => {
-    const sourceId = connections?.find((conn) => conn.target === id)?.source;
-    const targetId = connections?.find((conn) => conn.source === id)?.target;
-    setSourceNodeId(sourceId);
-    setTargetNodeId(targetId);
-  }, [connections, id]);
+  const sourceNodeId = connections?.find((conn) => conn.target === id)?.source ?? null;
+  const targetNodeId = connections?.find((conn) => conn.source === id)?.target ?? null;
 
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
@@ -114,52 +106,55 @@ function OutliersNode({ id, data }) {
     }
   }, [id, outlierTechnique, targetNodeId, updateNodeData]);
 
+  const handleDeleteTable = useEffectEvent(() => {
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      table: null,
+    }));
+
+    setExecutionState("waiting");
+
+    if (targetNodeId) {
+      dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+    }
+  });
+
+  const handleExecute = useEffectEvent(async (event) => {
+    const tableSource = event.detail.table;
+
+    if (!tableSource) {
+      return;
+    }
+
+    tableRef.current = tableSource;
+
+    const nextTable = await requestOutliers();
+
+    if (targetNodeId && nextTable) {
+      dispatchWindowEvent(getExecuteEventName(targetNodeId), {
+        table: nextTable,
+      });
+    }
+  });
+
   useEffect(() => {
-    /**
-     * Deletes the current node's table and notifies the next node.
-     */
-    const handleDeleteTable = () => {
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: null,
-      }));
-
-      setExecutionState("waiting");
-
-      if (targetNodeId) {
-        dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
-      }
+    const executeEventName = getExecuteEventName(id);
+    const deleteEventName = getDeleteTablesEventName(id);
+    const onExecute = (event) => {
+      void handleExecute(event);
+    };
+    const onDelete = () => {
+      handleDeleteTable();
     };
 
-    /**
-     * Handles execution request: applies outlier detection to incoming table.
-     * @param {Event} e - The event containing the table data.
-     */
-    const handleExecute = async (e) => {
-      const table_source = e.detail.table;
-
-      if (table_source) {
-        tableRef.current = table_source;
-
-        const new_table = await requestOutliers();
-
-        if (targetNodeId && new_table) {
-          dispatchWindowEvent(getExecuteEventName(targetNodeId), {
-            table: new_table,
-          });
-        }
-      }
-    };
-
-    window.addEventListener(getExecuteEventName(id), handleExecute);
-    window.addEventListener(getDeleteTablesEventName(id), handleDeleteTable);
+    window.addEventListener(executeEventName, onExecute);
+    window.addEventListener(deleteEventName, onDelete);
 
     return () => {
-      // Clean up events when dependencies change (avoid multiple listeners of the same type)
-      window.removeEventListener(getExecuteEventName(id), handleExecute);
-      window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
+      window.removeEventListener(executeEventName, onExecute);
+      window.removeEventListener(deleteEventName, onDelete);
     };
-  }, [id, requestOutliers, targetNodeId, updateNodeData]);
+  }, [id]);
 
   /**
    * Trigger a delete event when filter configuration changes.
@@ -189,7 +184,7 @@ function OutliersNode({ id, data }) {
       deleteTestId={`delete${id}`}
       footer={
         <NodeRunButton
-          disabled={!tableRef.current}
+          disabled={!incomingTable}
           onClick={requestOutliers}
           accent="amber"
         >

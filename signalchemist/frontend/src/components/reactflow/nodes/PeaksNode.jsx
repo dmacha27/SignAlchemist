@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, useEffectEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Handle,
@@ -46,8 +46,6 @@ function PeaksNode({ id, data }) {
   });
 
   const { updateNodeData } = useReactFlow();
-  const [sourceNodeId, setSourceNodeId] = useState(null);
-  const [targetNodeId, setTargetNodeId] = useState(null);
   const [detector, setDetector] = useState(
     initialConfig?.detector ?? getDefaultDetector(data.signalType)
   );
@@ -58,13 +56,8 @@ function PeaksNode({ id, data }) {
   const [executionState, setExecutionState] = useState("waiting");
 
   const connections = useNodeConnections({ type: "target" });
-
-  useEffect(() => {
-    const sourceId = connections?.find((conn) => conn.target === id)?.source;
-    const targetId = connections?.find((conn) => conn.source === id)?.target;
-    setSourceNodeId(sourceId);
-    setTargetNodeId(targetId);
-  }, [connections, id]);
+  const sourceNodeId = connections?.find((conn) => conn.target === id)?.source ?? null;
+  const targetNodeId = connections?.find((conn) => conn.source === id)?.target ?? null;
 
   const currentNodeData = useNodesData(id);
   const sourceNodeData = useNodesData(sourceNodeId);
@@ -153,45 +146,56 @@ function PeaksNode({ id, data }) {
     updateNodeData,
   ]);
 
+  const handleDeleteTable = useEffectEvent(() => {
+    updateNodeData(id, (prev) => ({
+      ...prev,
+      table: null,
+      peaks: [],
+    }));
+
+    setExecutionState("waiting");
+
+    if (targetNodeId) {
+      dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
+    }
+  });
+
+  const handleExecute = useEffectEvent(async (event) => {
+    const sourceTable = event.detail.table;
+
+    if (!sourceTable) {
+      return;
+    }
+
+    tableRef.current = sourceTable;
+
+    const result = await requestPeaks();
+
+    if (targetNodeId) {
+      dispatchWindowEvent(getExecuteEventName(targetNodeId), {
+        table: result?.table ?? sourceTable,
+      });
+    }
+  });
+
   useEffect(() => {
-    const handleDeleteTable = () => {
-      updateNodeData(id, (prev) => ({
-        ...prev,
-        table: null,
-        peaks: [],
-      }));
-
-      setExecutionState("waiting");
-
-      if (targetNodeId) {
-        dispatchWindowEvent(getDeleteTablesEventName(targetNodeId));
-      }
+    const executeEventName = getExecuteEventName(id);
+    const deleteEventName = getDeleteTablesEventName(id);
+    const onExecute = (event) => {
+      void handleExecute(event);
+    };
+    const onDelete = () => {
+      handleDeleteTable();
     };
 
-    const handleExecute = async (event) => {
-      const sourceTable = event.detail.table;
-
-      if (sourceTable) {
-        tableRef.current = sourceTable;
-
-      const result = await requestPeaks();
-
-        if (targetNodeId) {
-          dispatchWindowEvent(getExecuteEventName(targetNodeId), {
-            table: result?.table ?? sourceTable,
-          });
-        }
-      }
-    };
-
-    window.addEventListener(getExecuteEventName(id), handleExecute);
-    window.addEventListener(getDeleteTablesEventName(id), handleDeleteTable);
+    window.addEventListener(executeEventName, onExecute);
+    window.addEventListener(deleteEventName, onDelete);
 
     return () => {
-      window.removeEventListener(getExecuteEventName(id), handleExecute);
-      window.removeEventListener(getDeleteTablesEventName(id), handleDeleteTable);
+      window.removeEventListener(executeEventName, onExecute);
+      window.removeEventListener(deleteEventName, onDelete);
     };
-  }, [id, requestPeaks, targetNodeId, updateNodeData]);
+  }, [id]);
 
   useEffect(() => {
     dispatchWindowEvent(getDeleteTablesEventName(id));
@@ -218,7 +222,7 @@ function PeaksNode({ id, data }) {
       deleteTestId={`delete${id}`}
       footer={(
         <NodeRunButton
-          disabled={!tableRef.current}
+          disabled={!incomingTable}
           onClick={requestPeaks}
           accent="rose"
         >

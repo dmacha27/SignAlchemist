@@ -12,6 +12,7 @@ import {
   Suspense,
   useEffect,
   useState,
+  useMemo,
 } from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
@@ -69,6 +70,11 @@ const getInitialTheme = () => {
   return false;
 };
 
+const getInitialReducedMotion = () =>
+  typeof window !== "undefined"
+  && typeof window.matchMedia === "function"
+  && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 // Redirect invalid routes to /home if no data is loaded
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
@@ -113,6 +119,23 @@ const AppLayout = () => {
   const { t, i18n } = useTranslation();
   // Dark Theme toogle
   const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    getInitialReducedMotion
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncReducedMotion = (event) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    mediaQuery.addEventListener("change", syncReducedMotion);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncReducedMotion);
+    };
+  }, []);
+
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
@@ -128,6 +151,13 @@ const AppLayout = () => {
       localStorage.setItem("theme", "light");
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle(
+      "reduced-motion",
+      prefersReducedMotion
+    );
+  }, [prefersReducedMotion]);
   const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
   // Navigation
@@ -151,9 +181,14 @@ const AppLayout = () => {
   };
 
   const isHome = location.pathname === "/" || location.pathname === "/about";
-  useEffect(() => {
-    setIsNavMenuOpen(false);
-  }, [location.pathname]);
+
+  const toastStyle = useMemo(
+    () => ({
+      background: isDarkMode ? "#1f2937" : "#f3f4f6",
+      color: isDarkMode ? "#ffffff" : "#000000",
+    }),
+    [isDarkMode]
+  );
 
   const currentLanguage = i18n.resolvedLanguage?.startsWith("es") ? "es" : "en";
   return (
@@ -165,10 +200,7 @@ const AppLayout = () => {
       >
           <Toaster
             toastOptions={{
-              style: {
-                background: isDarkMode ? "#1f2937" : "#f3f4f6", // bg-gray-800 / bg-gray-100
-                color: isDarkMode ? "#ffffff" : "#000000",
-              },
+              style: toastStyle,
             }}
           />
 
@@ -219,7 +251,7 @@ const AppLayout = () => {
             aria-label={t("app.feedback.aria")}
             className="fixed bottom-5 left-5 z-[1080] group"
           >
-            <div className="flex items-center gap-2 rounded-full border border-cyan-200/70 bg-cyan-50/80 px-3 py-2 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.12)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-50 dark:border-cyan-400/20 dark:bg-cyan-500/10 dark:text-slate-200 dark:hover:bg-cyan-500/12">
+            <div className="flex items-center gap-2 rounded-full border border-cyan-200/70 bg-cyan-50/80 px-3 py-2 text-cyan-950 shadow-[0_12px_28px_rgba(15,23,42,0.12)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-50 dark:border-cyan-400/20 dark:bg-cyan-500/10 dark:text-cyan-100 dark:hover:bg-cyan-500/12">
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/16 text-cyan-700 dark:bg-cyan-400/14 dark:text-cyan-300">
                 <FaRegCommentDots size={14} />
               </span>
