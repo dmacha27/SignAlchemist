@@ -37,7 +37,6 @@ const selectedModeButtonClass =
   "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900";
 const idleModeButtonClass =
   "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-slate-300 dark:hover:bg-gray-800";
-
 const ViewFrame = ({ title, icon, children }) => (
   <section>
     <div className="mb-3 flex items-center justify-center gap-2 text-center">
@@ -107,7 +106,6 @@ const SignalTabs = ({
       icon: <FaBalanceScale size={13} />,
     },
   ];
-
   const isSpectrum = analysisView === "spectrum";
   const renderOriginal = (data) =>
     isSpectrum ? (
@@ -135,13 +133,13 @@ const SignalTabs = ({
       <ComparisonSpectrumChart
         table1={originalData}
         table2={processedData}
-        name2={rightTitle}
+        name2={normalizedRightTitle}
       />
     ) : (
       <ComparisonChart
         table1={originalData}
         table2={processedData}
-        name2={rightTitle}
+        name2={normalizedRightTitle}
       />
     );
 

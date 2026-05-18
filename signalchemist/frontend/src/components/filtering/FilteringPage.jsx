@@ -53,11 +53,7 @@ const FilteringPage = () => {
     [samplingRate]
   );
 
-  const [fields, setFields] = useState(defaultFields[filter]);
-
-  useEffect(() => {
-    setFields(defaultFields[filter]);
-  }, [defaultFields, filter]);
+  const [fields, setFields] = useState(() => defaultFields[filter]);
 
   useEffect(() => {
     if (!file) {

@@ -241,9 +241,18 @@ const en = {
   metrics: {
     originalTitle: "Original Metrics",
     processedTitle: "Processed Metrics",
+    comparisonTitle: "Metrics",
+    comparisonDescription:
+      "Each metric keeps its own visual band so the slope stays readable even when scales differ.",
     calculating: "Calculating...",
     empty: "Please run processing to see results.",
+    compareEmpty: "Please run processing to compare metrics.",
     metricNumber: "Metric {{index}}",
+    originalShort: "Original",
+    processedShort: "Processed",
+    pending: "Pending",
+    pendingDescription: "Run processing to populate this side.",
+    delta: "Delta",
     noPreference: "No preference",
     noChange: "No change",
     improved: "Improved",
